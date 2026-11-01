@@ -34,13 +34,20 @@ E.migrate=function(saved,seed,legacy){
   return out;
 };
 E.validateBackup=function(d){
+  const object=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+  const arrays=(o,keys)=>keys.forEach(k=>{if(o[k]!=null&&!Array.isArray(o[k]))throw Error('Neispravan popis: '+k);});
   if(!d||typeof d!=='object'||Array.isArray(d)||!d.exercises||!d.protocols)throw Error('Nedostaju vježbe ili protokoli.');
   ['exercises','protocols','field'].forEach(k=>{if(d[k]&&(typeof d[k]!=='object'||Array.isArray(d[k])))throw Error('Neispravan odjeljak: '+k);});
   if(Object.keys(d.exercises).length>3000||Object.keys(d.protocols).length>1000)throw Error('Kopija sadrži previše zapisa.');
   ['exercises','protocols','field'].forEach(k=>Object.keys(d[k]||{}).forEach(id=>{if(['__proto__','constructor','prototype'].includes(id))throw Error('Neispravan identifikator.');}));
-  Object.entries(d.exercises).forEach(([id,e])=>{if(!e||typeof e.name!=='string'||!e.name.trim()||e.name.length>250)throw Error('Neispravna vježba: '+id);if(e.steps&&!Array.isArray(e.steps))throw Error('Neispravne upute.');});
+  Object.entries(d.exercises).forEach(([id,e])=>{if(!object(e)||typeof e.name!=='string'||!e.name.trim()||e.name.length>250)throw Error('Neispravna vježba: '+id);arrays(e,['steps','zones','sourceIds','regressionIds','progressionIds','stopRules','equipmentKeys']);});
   Object.entries(d.protocols).forEach(([id,p])=>{if(!p||typeof p.name!=='string'||!Array.isArray(p.items))throw Error('Neispravan protokol: '+id);p.items.forEach(it=>{if(!d.exercises[it.exId])throw Error('Protokol upućuje na nepostojeću vježbu.');if(num(it.sets,1)<1||num(it.sets,1)>30||num(it.rest)<0||num(it.rest)>1800)throw Error('Neispravno doziranje.');});});
-  if(d.log&&!Array.isArray(d.log))throw Error('Neispravna povijest.');
+  Object.entries(d.field||{}).forEach(([id,f])=>{if(!object(f)||typeof f.name_hr!=='string'||!Array.isArray(f.blocks)||f.blocks.some(b=>!object(b)))throw Error('Neispravan terenski trening: '+id);arrays(f,['ambiguities','requires_configuration']);f.blocks.forEach(b=>arrays(b,['target_time_s','routes']));});
+  arrays(d,['log','plan']);
+  (d.log||[]).forEach(l=>{if(!object(l)||l.records!=null&&(!object(l.records)||Object.values(l.records).some(r=>!object(r))))throw Error('Neispravna povijest.');});
+  (d.plan||[]).forEach(p=>{if(!object(p)||typeof p.date!=='string'||typeof p.kind!=='string')throw Error('Neispravan plan.');});
+  if(d.profile!=null){if(!object(d.profile))throw Error('Neispravan profil.');arrays(d.profile,['dumbbells','clubDays']);}
+  if(d.mediaBlobs!=null&&!object(d.mediaBlobs))throw Error('Neispravan odjeljak snimki.');
   return {exercises:Object.keys(d.exercises).length,protocols:Object.keys(d.protocols).length,sessions:(d.log||[]).length,media:Object.keys(d.mediaBlobs||{}).length};
 };
 E.itemsToSteps=function(items,exercises,settings={}){

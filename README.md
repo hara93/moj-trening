@@ -39,3 +39,14 @@ node --test tests/engine.test.cjs
 ```
 
 Provjere obuhvaćaju migraciju, pune MAS cikluse, zasebne strane, djelomične treninge, progresiju, realne korake utega, TRX postav, PDF krugove/udaljenosti i validaciju kopije. Sučelje je provjereno u pregledniku: filteri, vježbe, nastavak treninga, dnevnik, izvoz/uvoz, plan i PDF postavke. Potrebno je dodatno ispitivanje na stvarnom iPhone/Android uređaju za zvuk, wake lock i ponašanje zaključanog zaslona.
+
+
+## Jednostavniji prikaz (2.1)
+
+Početna stranica, knjižnica, detalj vježbe i player prikazuju samo glavne kontrole. Tehnika, upozorenja, izvori i napredovanje otvaraju se pod „Prikaži više”. Osobni podaci, doze, favoriti i povijest ostaju sačuvani.
+
+Stvarni prikazi povezani su po točnoj šifri vježbe u real-media.js. Izvori, autori, licence i promjene nalaze se u MEDIA-LICENSES.json. Nema GOWOD snimki, sintetiziranog pokreta ni zamjena drugim varijantama. Dio knjižnice još nema provjeren vlastiti prikaz; to je jasno označeno. Vlastitu snimku moguće je dodati uređivanjem vježbe.
+
+Aplikacija i naslovni kadrovi dostupni su izvan mreže nakon prvog otvaranja. Videozapisi zahtijevaju vezu; nisu dio izvanmrežne predmemorije.
+
+Provjere: `node --test tests/*.test.cjs`. Obuhvaćaju migraciju, progresiju, mjerenje, pauzu/nastavak, kvar spremanja, vraćanje kopije sa snimkama, nepravilne kopije, prikaz kataloga, medijske putanje i predmemoriju.
