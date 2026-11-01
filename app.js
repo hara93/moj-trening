@@ -285,10 +285,10 @@ function planSlots(){
   return out.sort((a,b) => a.day - b.day || a.name.localeCompare(b.name, 'hr'));
 }
 // a planned session counts as done when you trained it on any day of that week; each log entry fills one slot
-function weekStatus(ws){
+function weekStatus(ws, plan){
   const log = S.log.filter(l => l.at >= ws && l.at < ws + WEEK_MS);
   const used = {};
-  const slots = planSlots().map(p => {
+  const slots = (plan || planSlots()).map(p => {
     let k = log.findIndex((l, i) => !used[i] && l.refId === p.id && l.kind === p.kind && dayIdx(l.at) === p.day);
     if (k === -1) k = log.findIndex((l, i) => !used[i] && l.refId === p.id && l.kind === p.kind);
     if (k !== -1) used[k] = 1;
@@ -296,17 +296,19 @@ function weekStatus(ws){
   });
   return { slots, log, planned: slots.length, done: slots.filter(s => s.done).length };
 }
-function streakWeeks(){
-  if (!planSlots().length) return 0;
-  const now = weekStart(Date.now()); let n = 0;
-  const cur = weekStatus(now);
-  for (let ws = now - WEEK_MS, k = 0; k < 104; ws -= WEEK_MS, k++) { const s = weekStatus(ws); if (s.done >= s.planned) n++; else break; }
+function streakWeeks(plan){
+  plan = plan || planSlots();
+  if (!plan.length || !S.log.length) return 0;
+  const now = weekStart(Date.now()), first = weekStart(S.log[S.log.length - 1].at); let n = 0;
+  for (let ws = now - WEEK_MS; ws >= first; ws -= WEEK_MS) { const s = weekStatus(ws, plan); if (s.done >= s.planned) n++; else break; }
+  const cur = weekStatus(now, plan);
   return n + (cur.done >= cur.planned ? 1 : 0);
 }
 function weekHtml(){
   if (S.dbState !== 'ready') return '';
   const now = Date.now(), ws = weekStart(now), today = dayIdx(now);
-  const st = weekStatus(ws);
+  const plan = planSlots();
+  const st = weekStatus(ws, plan);
   const trainedDays = {}; st.log.forEach(l => trainedDays[dayIdx(l.at)] = 1);
   const strip = '<div class="week" role="group" aria-label="Ovaj tjedan">' + DAYS.map((L, i) => {
     const d = new Date(ws + i * DAY_MS + 12 * 3600e3);
@@ -322,7 +324,7 @@ function weekHtml(){
   let rows = '';
   if (todo.length) rows = todo.map(s => row(s, 'Danas: ')).join('');
   else if (missed.length) rows = row(missed[0], 'Nadoknadi: ');
-  const sk = streakWeeks();
+  const sk = streakWeeks(plan);
   const line = st.planned
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
@@ -777,6 +779,7 @@ VIEWS.field = function(t){
     '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap"><span class="tag">'+esc(f.goal_hr)+'</span><span class="tag">'+fieldMin(f)+' min</span>' + (f.week ? '<span class="tag">'+f.week+'. tjedan'+(f.dayHr ? ' · ' + esc(f.dayHr) : '')+'</span>' : '') + '</div>' +
     (spec ? '<figure class="pitch">' + pitchSvg(spec) + '<figcaption><div class="lgrow">' + pitchLegend(spec) + '</div>' + (spec.caption ? '<span>' + esc(spec.caption) + '</span>' : '') + '</figcaption></figure>' : '') +
     (f.summary_hr ? '<p style="margin:16px 17px 0;font-size:16px;line-height:24px;color:var(--text-body)">'+esc(f.summary_hr)+'</p>' : '') +
+    (f.when_hr ? '<p class="sub" style="margin-top:10px">U predsezonskom planu: '+esc(f.when_hr)+'</p>' : '') +
     (f.how_hr && f.how_hr.length ? '<div class="stack" style="gap:8px;margin:14px 17px 0">' + f.how_hr.map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') + '</div>' : '') +
     '<div style="margin-top:18px">' + daysPicker('fieldDays', f.id, f.days) + '</div>' +
     '<div class="stack" style="gap:16px;margin:20px 17px 0">' +

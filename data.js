@@ -1,3 +1,4 @@
+// Shipped content: your own changes on the phone always win over this file (see hash.js / seed-history.js).
 window.SEED = {
  "exercises": {
   "90-90": {
@@ -1953,6 +1954,1068 @@ window.SEED = {
     }
    ],
    "order": 6
+  },
+  "ss-pre-1a": {
+   "name_hr": "Run 1A · Izgradnja motora",
+   "goal_hr": "Aerobna baza · tempo",
+   "summary_hr": "Jednoliko trčanje umjerenim tempom kojim se prvo gradi volumen i aerobna baza, a tek kasnije intenzitet. Jedno ponavljanje je neprekinut niz od tri tamo-natrag dionice sve kraće duljine (oko 492 m).",
+   "how_hr": [
+    "Kreni s lijeve gol-linije (START).",
+    "Otrči do suprotne gol-linije i vrati se (2 × 105 m).",
+    "Bez pauze otrči do linije suprotnog šesnaesterca i natrag (2 × 88,5 m).",
+    "Nastavi do centra i natrag (2 × 52,5 m) – to je jedno ponavljanje, cilj 105–120 s.",
+    "Odmori 30 s i odradi drugo ponavljanje; nakon njega odmor traje 2 min.",
+    "Taj par ponavljanja napravi ukupno 4 puta (8 ponavljanja)."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 24.0,
+   "order": 100,
+   "group": "pre",
+   "code": "1A",
+   "week": 1,
+   "dayHr": "utorak",
+   "when_hr": "1. tj. uto, 2. tj. pon, 4. tj. sub",
+   "blocks": [
+    {
+     "label_hr": "Building the engine – 4 serije × 2 ponavljanja",
+     "sets": 4,
+     "reps": 2,
+     "work_s": 120,
+     "distance_m": 492,
+     "intensity_hr": "tempo – jednolik, umjeren ritam (~4,1–4,7 m/s)",
+     "rest_s": 30,
+     "set_rest_s": 120,
+     "cue_hr": "Bez stajanja: 105 m tamo-natrag, 88,5 m tamo-natrag, 52,5 m tamo-natrag. Cilj 105–120 s."
+    }
+   ]
+  },
+  "ss-pre-1b": {
+   "name_hr": "Run 1B · Veliki intervali",
+   "goal_hr": "Aerobni intervali · 3 × 5 min",
+   "summary_hr": "Neprekinuti blokovi od 5 minuta u kojima se po cijeloj duljini terena izmjenjuju jog, tempo, jog i hodanje. Cilj je aerobni rad s kratkim dijelovima bržeg tempa i ugrađenim aktivnim oporavkom.",
+   "how_hr": [
+    "Kreni s lijeve gol-linije (START) laganim trčanjem (jog) do linije šesnaesterca.",
+    "Od šesnaesterca do centra trči tempom.",
+    "Od centra do suprotnog šesnaesterca opet jog.",
+    "Od šesnaesterca do gol-linije hodaj.",
+    "Okreni se i isti redoslijed ponovi u suprotnom smjeru; tako gore-dolje 5 minuta bez pauze.",
+    "Nakon bloka odmori 2 min; ukupno 3 bloka."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 19.0,
+   "order": 101,
+   "group": "pre",
+   "code": "1B",
+   "week": 1,
+   "dayHr": "četvrtak",
+   "when_hr": "1. tj. čet, 2. tj. sri",
+   "blocks": [
+    {
+     "label_hr": "Veliki intervali – 3 bloka po 5 min",
+     "sets": 1,
+     "reps": 3,
+     "work_s": 300,
+     "distance_m": 850,
+     "intensity_hr": "kontinuirano 5 min: jog → tempo → jog → hod, gore-dolje po terenu",
+     "rest_s": 120,
+     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "cue_hr": "Jog do šesnaesterca, tempo do centra, jog do drugog šesnaesterca, hod do gol-linije – okret i isto natrag, 5 min bez stajanja."
+    }
+   ]
+  },
+  "ss-pre-1c": {
+   "name_hr": "Run 1C · 320-ice (4 × box-to-box)",
+   "goal_hr": "Visoki aerobni tempo",
+   "summary_hr": "Trčanje za aerobni kapacitet s nešto više intenziteta. Jedno ponavljanje su četiri box-to-box dionice zaredom koje treba završiti za 70 s, nakon čega slijedi 70 s odmora.",
+   "how_hr": [
+    "Stani na liniju jednog šesnaesterca.",
+    "Trči do linije suprotnog šesnaesterca, okreni se i vrati – ukupno četiri box-to-box dionice bez stajanja.",
+    "Cilj: sve četiri dionice za 70 s.",
+    "Odmori 70 s.",
+    "Odradi još jedno takvo ponavljanje (ukupno 2)."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 3.5,
+   "order": 102,
+   "group": "pre",
+   "code": "1C",
+   "week": 2,
+   "dayHr": "petak",
+   "when_hr": "2. tj. pet",
+   "blocks": [
+    {
+     "label_hr": "320s – 2 serije × 1 ponavljanje (4 × box-to-box)",
+     "sets": 2,
+     "reps": 1,
+     "work_s": 70,
+     "distance_m": 288,
+     "intensity_hr": "visoko aerobno, ujednačeno (~4,1 m/s na 288 m)",
+     "rest_s": 70,
+     "set_rest_s": 70,
+     "cue_hr": "Četiri box-to-box dionice zaredom bez stajanja – cijelo ponavljanje za 70 s."
+    }
+   ]
+  },
+  "ss-pre-2a": {
+   "name_hr": "Run 2A · Tempo cijelom duljinom",
+   "goal_hr": "Tempo · cijela duljina",
+   "summary_hr": "Tempo trčanja preko cijele duljine terena kojima se postupno podiže intenzitet kroz različita ciljana vremena i odmore. Svako ponavljanje je jedna duljina terena (105 m).",
+   "how_hr": [
+    "Run 1: 10 duljina, svaka za 22 s, 38 s odmora (ritam od 1 min).",
+    "Run 2: 6–8 duljina, svaka za 18 s, 32 s odmora – najbrži dio, s nešto metara visoke brzine.",
+    "Run 3: 10 duljina, svaka za 24 s, 36 s odmora (ritam od 1 min).",
+    "Svaka dionica ide od gol-linije do suprotne gol-linije; iduću kreni s mjesta gdje si stao."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 26.0,
+   "order": 103,
+   "group": "pre",
+   "code": "2A",
+   "week": 3,
+   "dayHr": "ponedjeljak",
+   "when_hr": "3. tj. pon",
+   "blocks": [
+    {
+     "label_hr": "Run 1 – 10 × cijela duljina",
+     "sets": 1,
+     "reps": 10,
+     "work_s": 22,
+     "distance_m": 105,
+     "intensity_hr": "tempo (~4,8 m/s)",
+     "rest_s": 38,
+     "cue_hr": "Gol-linija do gol-linije za 22 s; start svake minute."
+    },
+    {
+     "label_hr": "Run 2 – 6–8 × cijela duljina",
+     "sets": 1,
+     "reps": 8,
+     "work_s": 18,
+     "distance_m": 105,
+     "intensity_hr": "brži tempo, s nešto metara visoke brzine (HSR) (~5,8 m/s)",
+     "rest_s": 32,
+     "cue_hr": "Gol-linija do gol-linije za 18 s; 6–8 ponavljanja."
+    },
+    {
+     "label_hr": "Run 3 – 10 × cijela duljina",
+     "sets": 1,
+     "reps": 10,
+     "work_s": 24,
+     "distance_m": 105,
+     "intensity_hr": "tempo (~4,4 m/s)",
+     "rest_s": 36,
+     "cue_hr": "Gol-linija do gol-linije za 24 s; start svake minute."
+    }
+   ]
+  },
+  "ss-pre-2b": {
+   "name_hr": "Run 2B · Single – double – single",
+   "goal_hr": "Aerobni intervali box-to-box",
+   "summary_hr": "Aerobni intervali u nizu 'single – double – single': box-to-box, zatim od šesnaesterca do centra i natrag, pa opet box-to-box, s kratkim pauzama. Radi se 3 serije po 4 ponavljanja.",
+   "how_hr": [
+    "Single: box-to-box (72 m) za 15 s, zatim 4 s pauze.",
+    "Double: od šesnaesterca do centra i natrag (2 × 36 m) za 16 s, zatim 4 s pauze.",
+    "Single: box-to-box natrag (72 m) za 15 s.",
+    "Odmori 26 s pa odmah u sljedeće ponavljanje.",
+    "4 ponavljanja čine seriju; ukupno 3 serije (pauza između serija nije zadana)."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 18.5,
+   "order": 104,
+   "group": "pre",
+   "code": "2B",
+   "week": 3,
+   "dayHr": "utorak",
+   "when_hr": "3. tj. uto",
+   "blocks": [
+    {
+     "label_hr": "S1/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S1/3 · P1/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S1/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S1/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S1/3 · P2/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S1/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S1/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S1/3 · P3/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S1/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S1/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S1/3 · P4/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S1/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 120,
+     "rest_type_hr": "odmor između serija – trajanje nije otisnuto (procjena 120 s)",
+     "cue_hr": "Box-to-box natrag za 15 s. Kraj serije."
+    },
+    {
+     "label_hr": "S2/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S2/3 · P1/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S2/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S2/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S2/3 · P2/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S2/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S2/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S2/3 · P3/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S2/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S2/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S2/3 · P4/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S2/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 120,
+     "rest_type_hr": "odmor između serija – trajanje nije otisnuto (procjena 120 s)",
+     "cue_hr": "Box-to-box natrag za 15 s. Kraj serije."
+    },
+    {
+     "label_hr": "S3/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S3/3 · P1/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S3/3 · P1/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S3/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S3/3 · P2/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S3/3 · P2/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S3/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S3/3 · P3/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S3/3 · P3/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Zatim 26 s odmora."
+    },
+    {
+     "label_hr": "S3/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Box-to-box za 15 s."
+    },
+    {
+     "label_hr": "S3/3 · P4/4 · Double (box – centar – box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 16,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,5 m/s)",
+     "rest_s": 4,
+     "rest_type_hr": "kratka pauza na liniji (4 s)",
+     "cue_hr": "Do centra i natrag na šesnaesterac za 16 s."
+    },
+    {
+     "label_hr": "S3/3 · P4/4 · Single (box-to-box)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "distance_m": 72,
+     "intensity_hr": "aerobni interval (~4,8 m/s)",
+     "rest_s": 26,
+     "cue_hr": "Box-to-box natrag za 15 s. Kraj serije."
+    }
+   ]
+  },
+  "ss-pre-2c": {
+   "name_hr": "Run 2C · Speedy Gonzalez",
+   "goal_hr": "Brzinska izdržljivost",
+   "summary_hr": "Uvod u brzinsku izdržljivost kroz niz od tri sve kraće i brže dionice (177 m, 105 m, 52,5 m) s po 60 s odmora. Niz se odradi 6 puta zaredom bez dodatne pauze.",
+   "how_hr": [
+    "Run 1: s gol-linije do linije suprotnog šesnaesterca i natrag (2 × 88,5 m) za 30–35 s; 60 s odmora.",
+    "Run 2: od gol-linije do gol-linije (105 m) za 15–17 s; 60 s odmora.",
+    "Run 3: od gol-linije do centra (52,5 m) za 8–10 s; 60 s odmora.",
+    "Bez dodatne pauze ponovi Run 1–2–3; ukupno 6 krugova."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 23.0,
+   "order": 105,
+   "group": "pre",
+   "code": "2C",
+   "week": 3,
+   "dayHr": "četvrtak",
+   "when_hr": "3. tj. čet",
+   "blocks": [
+    {
+     "label_hr": "Krug 1/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 1/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 1/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+    },
+    {
+     "label_hr": "Krug 2/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 2/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 2/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+    },
+    {
+     "label_hr": "Krug 3/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 3/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 3/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+    },
+    {
+     "label_hr": "Krug 4/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 4/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 4/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+    },
+    {
+     "label_hr": "Krug 5/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 5/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 5/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+    },
+    {
+     "label_hr": "Krug 6/6 · Run 1 (177 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 177,
+     "intensity_hr": "brzinska izdržljivost (~5,1–5,9 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do suprotnog šesnaesterca i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 6/6 · Run 2 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    },
+    {
+     "label_hr": "Krug 6/6 · Run 3 (52,5 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 10,
+     "distance_m": 52.5,
+     "intensity_hr": "brzo (~5,3–6,6 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra za 8–10 s."
+    }
+   ]
+  },
+  "ss-pre-2d": {
+   "name_hr": "Run 2D · Brzinska izdržljivost",
+   "goal_hr": "Brzinska izdržljivost s okretima",
+   "summary_hr": "Nastavak rada na brzinskoj izdržljivosti kroz tri vrste dionica od kojih se svaka radi 5 puta. Kod Run 1 i Run 3 rad i odmor zajedno traju oko minute, pa brže trčanje donosi dulji odmor.",
+   "how_hr": [
+    "Run 1 (5×): gol-linija do gol-linije (105 m) za 15–20 s; odmor 45–40 s.",
+    "Run 2 (5×): do centra i natrag na gol-liniju (2 × 52,5 m) za 15–17 s; odmor 60 s.",
+    "Run 3 (5×): do linije šesnaesterca i natrag, pa bez stajanja cijela duljina (16,5 + 16,5 + 105 = 138 m) za 20–25 s; odmor 40–35 s."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 16.0,
+   "order": 106,
+   "group": "pre",
+   "code": "2D",
+   "week": 3,
+   "dayHr": "petak",
+   "when_hr": "3. tj. pet",
+   "blocks": [
+    {
+     "label_hr": "Run 1 – 5 × cijela duljina",
+     "sets": 1,
+     "reps": 5,
+     "work_s": 20,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost (~5,3–7,0 m/s)",
+     "rest_s": 40,
+     "cue_hr": "105 m za 15–20 s; odmor 45–40 s, tj. ponovni start na punu minutu."
+    },
+    {
+     "label_hr": "Run 2 – 5 × do centra i natrag",
+     "sets": 1,
+     "reps": 5,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzinska izdržljivost s okretom (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "cue_hr": "Do centra i natrag na gol-liniju za 15–17 s."
+    },
+    {
+     "label_hr": "Run 3 – 5 × šesnaesterac-natrag + cijela duljina",
+     "sets": 1,
+     "reps": 5,
+     "work_s": 25,
+     "distance_m": 138,
+     "intensity_hr": "brzinska izdržljivost s okretom (~5,5–6,9 m/s)",
+     "rest_s": 35,
+     "cue_hr": "Do šesnaesterca i natrag, pa bez stajanja cijela duljina – 20–25 s; odmor 40–35 s (start na punu minutu)."
+    }
+   ]
+  },
+  "ss-pre-3a": {
+   "name_hr": "Run 3A · Mali intervali (trokut)",
+   "goal_hr": "Kratki intervali s loptom",
+   "summary_hr": "Krug u obliku trokuta koji kombinira shuttle, dribling, sprint, jog i hodanje; svaki dio je 22 jarda (oko 20 m). Jedan krug treba odraditi za oko 45 s, s jednako dugim odmorom.",
+   "how_hr": [
+    "Od STARTA odradi shuttle visokog intenziteta kroz niz čunjeva (gore dva razmaka, natrag jedan, pa gore do zadnjeg čunja).",
+    "Jog 22 jd (~20 m) do lopte.",
+    "Dribling visokog intenziteta u slalomu oko četiri čunja (22 jd); bez lopte napravi sprint 'unutra-van' između čunjeva.",
+    "Jog 22 jd do gornjeg lijevog čunja.",
+    "Sprint 22 jd dijagonalno prema dolje.",
+    "Jog 22 jd dalje po dijagonali.",
+    "Hodaj 22 jd natrag do STARTA – to je jedan krug (~45 s).",
+    "Odmori 45 s; ukupno 12 krugova."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Čunjevi i lopta, površina oko 80 × 50 m",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 17.0,
+   "order": 107,
+   "group": "pre",
+   "code": "3A",
+   "week": 4,
+   "dayHr": "ponedjeljak",
+   "when_hr": "4. tj. pon",
+   "blocks": [
+    {
+     "label_hr": "Mali intervali – 12 krugova po 45 s",
+     "sets": 1,
+     "reps": 12,
+     "work_s": 45,
+     "distance_m": 151,
+     "intensity_hr": "mješovito: shuttle, dribling i sprint visoko; jog i hod kao oporavak unutar kruga",
+     "rest_s": 45,
+     "cue_hr": "Shuttle → jog → dribling → jog → sprint → jog → hod; krug za ~45 s."
+    }
+   ]
+  },
+  "ss-pre-3b": {
+   "name_hr": "Run 3B · Srednji intervali",
+   "goal_hr": "Intervali poprijeko terena",
+   "summary_hr": "Rad na maksimalnim ubrzanjima s oporavkom između njih, poprijeko terena (68 m). Svaki prijelaz je jog, ubrzanje, jog i hod, a trči se kontinuirano u blokovima od 4 minute.",
+   "how_hr": [
+    "Kreni s bočne (uzdužne) linije oko 36 m od gol-linije (START).",
+    "Jog oko 16,5 m, zatim maksimalno ubrzanje do sredine širine terena (~17,5 m).",
+    "Jog do ~16,5 m prije suprotne bočne linije, pa hodaj do linije.",
+    "Okreni se i ponovi isto u suprotnom smjeru; bez pauze 4 minute.",
+    "Odmor 90 s; ukupno 4 bloka."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 20.5,
+   "order": 108,
+   "group": "pre",
+   "code": "3B",
+   "week": 4,
+   "dayHr": "utorak",
+   "when_hr": "4. tj. uto",
+   "blocks": [
+    {
+     "label_hr": "Srednji intervali – 4 bloka po 4 min (poprijeko terena)",
+     "sets": 1,
+     "reps": 4,
+     "work_s": 240,
+     "distance_m": 630,
+     "intensity_hr": "maksimalna ubrzanja + jog/hod kao oporavak, kontinuirano 4 min",
+     "rest_s": 90,
+     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "cue_hr": "Jog ~16,5 m, maksimalno ubrzanje do sredine širine, jog, hod do bočne linije – okret i isto natrag, 4 min."
+    }
+   ]
+  },
+  "ss-pre-3c": {
+   "name_hr": "Run 3C · Speed demon",
+   "goal_hr": "Brzinska izdržljivost",
+   "summary_hr": "Brzinska izdržljivost kroz tri zahtjevne dionice s kratkim odmorom od 20 s: dvostruka duljina terena, dionica s okretima na rubovima centralnog kruga i jedna puna duljina. Broj ponavljanja u PDF-u nije naveden.",
+   "how_hr": [
+    "Run 1: s gol-linije do suprotne gol-linije i natrag (210 m) za 30–35 s; 20 s odmora.",
+    "Run 2: do dalje strane centralnog kruga, natrag do bliže strane kruga, pa do suprotne gol-linije (~142 m) za 20–25 s; 20 s odmora.",
+    "Run 3: od gol-linije do gol-linije (105 m) za 15–17 s."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine s oznakama",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 2.0,
+   "order": 109,
+   "group": "pre",
+   "code": "3C",
+   "week": 4,
+   "dayHr": "četvrtak",
+   "when_hr": "4. tj. čet",
+   "blocks": [
+    {
+     "label_hr": "Run 1 – gol-linija do gol-linije i natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 210,
+     "intensity_hr": "brzinska izdržljivost (~6,0–7,0 m/s)",
+     "rest_s": 20,
+     "cue_hr": "105 m tamo i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Run 2 – preko centralnog kruga i dalje",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 25,
+     "distance_m": 141.6,
+     "intensity_hr": "brzinska izdržljivost s okretima (~5,7–7,1 m/s)",
+     "rest_s": 20,
+     "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
+    },
+    {
+     "label_hr": "Run 3 – cijela duljina",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzo (~6,2–7,0 m/s)",
+     "rest_s": 0,
+     "rest_type_hr": "nije otisnuto",
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s."
+    }
+   ]
+  },
+  "ss-pre-3d": {
+   "name_hr": "Run 3D · Srednji intervali sa shuttleom",
+   "goal_hr": "Shuttle intervali",
+   "summary_hr": "Isti obrazac poprijeko terena kao 3B, ali u smjeru prema dolje umjesto ubrzanja dolazi shuttle visokog intenziteta kroz čunjeve razmaknute 7 jardi. Radi se u blokovima od 4 minute s 90 s odmora.",
+   "how_hr": [
+    "Kreni s bočne linije (START) i jogiraj oko 16,5 m (18 jd) do čunja A.",
+    "Shuttle: eksplozivno do 2. čunja (C), okret i natrag do 1. čunja (B), pa do 3. čunja (D); razmak 7 jd = 6,4 m, može s loptom ili bez.",
+    "Jog do čunja E (18 jd prije suprotne bočne linije), pa hodaj do bočne linije.",
+    "Natrag: jog do E, ubrzanje do D, jog do A, hod do bočne linije.",
+    "Ponavljaj 4 minute; odmor 90 s; ukupno 4 bloka."
+   ],
+   "source_url": null,
+   "source_title": "STATSports Pre-Season Training Program (PDF)",
+   "equipment_hr": "Teren pune veličine, čunjevi za shuttle (razmak 6,4 m)",
+   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "cooldown_hr": "5 min laganog hoda i istezanja.",
+   "total_min": 20.5,
+   "order": 110,
+   "group": "pre",
+   "code": "3D",
+   "week": 4,
+   "dayHr": "petak",
+   "when_hr": "4. tj. pet",
+   "blocks": [
+    {
+     "label_hr": "Srednji intervali sa shuttle-om – 4 bloka po 4 min (poprijeko terena)",
+     "sets": 1,
+     "reps": 4,
+     "work_s": 240,
+     "distance_m": 600,
+     "intensity_hr": "shuttle i ubrzanje maksimalno + jog/hod kao oporavak, kontinuirano 4 min",
+     "rest_s": 90,
+     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "cue_hr": "Dolje: jog, shuttle A→C→B→D, jog, hod. Gore: jog, ubrzanje, jog, hod. 4 min bez stajanja."
+    }
+   ]
   }
+ }
+};
+window.SEED_PLAN = {
+ "pre": {
+  "weeks": [
+   {
+    "week": 1,
+    "days": [
+     null,
+     "1A",
+     null,
+     "1B",
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "week": 2,
+    "days": [
+     "1A",
+     null,
+     "1B",
+     null,
+     "1C",
+     null,
+     null
+    ]
+   },
+   {
+    "week": 3,
+    "days": [
+     "2A",
+     "2B",
+     null,
+     "2C",
+     "2D",
+     null,
+     null
+    ]
+   },
+   {
+    "week": 4,
+    "days": [
+     "3A",
+     "3B",
+     null,
+     "3C",
+     "3D",
+     "1A",
+     null
+    ]
+   }
+  ],
+  "note": "Plan prvo daje dane odmora za svježinu, a zatim uvodi trčanja: najprije raste volumen, pa intenzitet. Trening snage koji propiše klub radi se uz ovaj plan. Dani bez oznake nemaju trčanje. Dodirni oznaku za trening."
  }
 };
