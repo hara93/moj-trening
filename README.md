@@ -50,3 +50,9 @@ Stvarni prikazi povezani su po točnoj šifri vježbe u real-media.js. Izvori, a
 Aplikacija i naslovni kadrovi dostupni su izvan mreže nakon prvog otvaranja. Videozapisi zahtijevaju vezu; nisu dio izvanmrežne predmemorije.
 
 Provjere: `node --test tests/*.test.cjs`. Obuhvaćaju migraciju, progresiju, mjerenje, pauzu/nastavak, kvar spremanja, vraćanje kopije sa snimkama, nepravilne kopije, prikaz kataloga, medijske putanje i predmemoriju.
+
+## Mobilni raspored (2.2)
+
+Četiri velike naslovne kartice, tri donje ikone, knjižnica s pretragom i filtrima te kružne kontrole treninga. Upute i ciljana područja tijela listaju se vodoravno; detalji ostaju pod „Prikaži više”. Plan, dnevnik, osobne postavke i vlastiti treninzi ostaju dostupni kroz Moj pregled i Moj profil.
+
+Naslovne fotografije imaju zasebne izvore u HERO-LICENSES.json i u aplikaciji pod Moj profil → Fotografije. One ilustriraju kategoriju, a nisu demonstracije pojedine vježbe. Izvorni shematski prikaz tijela označava opća područja prema postojećim oznakama vježbe. Nije promijenjen program, doza, progresija ni način pohrane.

@@ -3,7 +3,7 @@ const site=path.resolve(__dirname,'..'),E=require(path.join(site,'engine.js'));
 function harness(){
  const stored=new Map(),app={dataset:{},addEventListener(){},querySelector(){return null;},insertAdjacentHTML(){}};
  const ctx={TrainingEngine:E,console,Blob,URL,Date,setTimeout(){return 1;},clearTimeout(){},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){},navigator:{},localStorage:{getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)},document:{getElementById:id=>id==='app'?app:null,addEventListener(){}},window:{addEventListener(){}}};vm.createContext(ctx);
- for(const f of ['data.js','legacy.js','real-media.js'])vm.runInContext(fs.readFileSync(path.join(site,f),'utf8'),ctx);
+ for(const f of ['data.js','legacy.js','real-media.js','bodymap.js'])vm.runInContext(fs.readFileSync(path.join(site,f),'utf8'),ctx);
  const src=fs.readFileSync(path.join(site,'app.js'),'utf8').replace(/\ninit\(\);\n/,`\nrender=()=>{};toast=()=>{};applyData(E.migrate(null,window.SEED,window.LEGACY_SEED));S.dbState='ready';globalThis.audit={S,A,VIEWS,MEDIA,mediaHtml,thumbHtml,mediaCredit,mediaUrlSafe,safeUrl,libFiltered,startPlayer,enterStep,getP:()=>P};\n`);vm.runInContext(src,ctx);
  return {a:ctx.audit,window:ctx.window,stored};
 }
@@ -36,4 +36,27 @@ test('Changing a seeded movement never keeps a now-mismatched public demonstrati
 test('Personal media never inherits publisher credit or a stock position caption',()=>{
  const {a}=harness(),e=a.S.ex['dead-bug'];e.media='personal';e.mediaType='image';a.MEDIA.personal='blob:personal';
  assert.equal(a.mediaCredit(e),'');const out=a.mediaHtml(e);assert.match(out,/blob:personal/);assert.doesNotMatch(out,/Početni položaj/);
+});
+
+
+test('Three main destinations retain routes to plans, history and personal settings',()=>{
+ const {a}=harness();const home=a.VIEWS.home();assert.equal((home.match(/class="hcard photo-card"/g)||[]).length,4);
+ const dashboard=a.VIEWS.dashboard();for(const route of ['protocols','plan','history','library'])assert.match(dashboard,new RegExp('data-tab="'+route+'"'));
+ assert.match(a.VIEWS.account(),/data-a="profile"/);assert.match(a.VIEWS.account(),/data-a="dataSheet"/);
+ for(const route of ['plan','history','protocols','library'])assert.match(a.VIEWS[route](),/data-a="back"/,'can leave '+route);
+ a.S.stack=[{v:'history'}];a.S.tab='history';a.A.back();assert.equal(a.S.stack[0].v,'home');
+});
+test('Exercise instructions, broad target map and original doses survive the new presentation',()=>{
+ const {a}=harness();const e=a.S.ex['trx-veslanje'];a.S.stack=[{v:'ex',id:e.id,dose:1}];const out=a.VIEWS.ex(a.S.stack[0]);
+ for(const text of [e.name,e.steps[0],'Ciljana područja','Napredovanje i varijante','Izvori i snimke'])assert.ok(out.includes(text),text);
+ assert.match(out,/class="body-map"/);assert.match(out,/data-a="playEx"/);assert.match(out,/data-a="expandMedia"/);assert.doesNotMatch(out,/data-a="ring"/);
+ a.A.dose({i:2});a.A.quickDose({k:'reps',d:1});assert.equal(a.S.stack[0].customDose.reps,e.reps+1);assert.equal(e.reps,8,'seed dose stays unchanged');
+});
+test('Circular player pauses through current handler and manual completion keeps validation',()=>{
+ const {a}=harness(),e=a.S.ex['trx-veslanje'],it={exId:e.id,measure:'sets',sets:2,reps:8,rest:60};
+ a.startPlayer({mode:'ex',title:e.name,items:[it],steps:E.itemsToSteps([it],a.S.ex)});a.enterStep(1);
+ const out=a.VIEWS.play();assert.match(out,/data-a="pausePlay"/);assert.match(out,/data-a="completeStep"/);assert.doesNotMatch(out,/data-a="ring"/);
+ const p=a.getP(),i=p.i;p.paused=true;a.A.completeStep();assert.equal(p.i,i);assert.equal(Object.keys(p.records).length,0);
+ p.paused=false;p.setDraft.reps=0;a.A.completeStep();assert.equal(p.i,i);assert.equal(Object.keys(p.records).length,0);
+ p.setDraft.reps=8;a.A.completeStep();assert.ok(p.i>i);assert.equal(Object.keys(p.records).length,1);
 });
