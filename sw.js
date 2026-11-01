@@ -1,15 +1,5 @@
-const CACHE = 'mt-v1';
-const SHELL = ['./', './index.html', './style.css', './app.js', './data.js', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
-self.addEventListener('fetch', e => {
-  const req = e.request; if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin === location.origin) {
-    // network first so updates arrive; the cache is the offline fallback
-    e.respondWith(fetch(req).then(r => { const cp = r.clone(); caches.open(CACHE).then(c => c.put(req, cp)); return r; })
-      .catch(() => caches.match(req).then(r => r || caches.match('./index.html'))));
-  } else if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(caches.match(req).then(r => r || fetch(req).then(resp => { const cp = resp.clone(); caches.open(CACHE).then(c => c.put(req, cp)); return resp; })));
-  }
-});
+const CACHE='mt-v2-20261101';
+const SHELL=["./", "./index.html", "./style.css", "./v2.css", "./app.js", "./data.js", "./legacy.js", "./engine.js", "./visuals.js", "./pitch.js", "./media.js", "./manifest.webmanifest", "./icons/icon-maskable-512.png", "./icons/icon-192.png", "./icons/apple-touch-icon.png", "./icons/icon-512.png", "./assets/pdf/statsports-page-11.webp", "./assets/pdf/statsports-run-3a.webp", "./assets/pdf/statsports-run-3b.webp", "./assets/pdf/statsports-page-12.webp", "./assets/pdf/statsports-page-10.webp", "./assets/pdf/statsports-run-2a.webp", "./assets/pdf/statsports-run-1b.webp", "./assets/pdf/statsports-run-2d.webp", "./assets/pdf/statsports-page-03.webp", "./assets/pdf/statsports-run-2c.webp", "./assets/pdf/statsports-page-06.webp", "./assets/pdf/statsports-page-05.webp", "./assets/pdf/statsports-run-1c.webp", "./assets/pdf/statsports-page-08.webp", "./assets/pdf/statsports-page-04.webp", "./assets/pdf/statsports-run-3c.webp", "./assets/pdf/statsports-pitch.webp", "./assets/pdf/statsports-page-14.webp", "./assets/pdf/statsports-page-09.webp", "./assets/pdf/statsports-page-02.webp", "./assets/pdf/statsports-page-07.webp", "./assets/pdf/statsports-run-3d.webp", "./assets/pdf/statsports-run-1a.webp", "./assets/pdf/statsports-run-2b.webp", "./assets/pdf/statsports-page-13.webp"];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('mt-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+self.addEventListener('fetch',e=>{const req=e.request;if(req.method!=='GET')return;const u=new URL(req.url);if(u.origin===location.origin){e.respondWith(fetch(req).then(r=>{if(r.ok){const cp=r.clone();caches.open(CACHE).then(c=>c.put(req,cp));}return r;}).catch(async()=>{const cached=await caches.match(req);if(cached)return cached;if(req.mode==='navigate')return caches.match('./index.html');return Response.error();}));}else if(['fonts.googleapis.com','fonts.gstatic.com'].includes(u.hostname)){e.respondWith(caches.match(req).then(r=>r||fetch(req).then(resp=>{if(resp.ok){const cp=resp.clone();caches.open(CACHE).then(c=>c.put(req,cp));}return resp;})));}});

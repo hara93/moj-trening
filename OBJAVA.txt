@@ -1,0 +1,12 @@
+MOJ TRENING – VERZIJA 2
+
+Privatna objavljena aplikacija:
+https://moj-trening-v2-hara93.silly-owlet-4593.chatgpt.site
+
+ZIP sadrži cijelu statičku aplikaciju, upute i automatizirane provjere.
+Za GitHub Pages raspakiraj sadržaj u korijen repozitorija hara93/moj-trening, tako da index.html ostane u korijenu, te objavi promjene.
+Postojeća GitHub Pages stranica nije ažurirana jer povezana integracija nije imala pravo pisanja.
+
+Prije promjene izvezi podatke iz stare aplikacije. Za prijenos na novu adresu uvezi kopiju u novoj aplikaciji; preglednici ne dijele lokalne podatke između različitih adresa.
+
+Detalji, izvori, početne postavke i provjere opisani su u README.md.
