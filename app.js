@@ -214,7 +214,7 @@ VIEWS.protocols = function(){
       '<div class="list" style="margin-top:24px">' +
       (list.length ? list.map(p => {
         const first = p.items && p.items[0] && S.ex[p.items[0].exId];
-        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb" aria-hidden="true">' + (first && MEDIA[first.media] ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + (p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
+        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb" aria-hidden="true">' + (first ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + (p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
       }).join('') : '<div class="empty">Još nemaš protokol. Složi prvi od svojih vježbi.</div>') +
       '</div>' +
       '<h2 class="h2">Kondicija na terenu</h2>' +
@@ -788,7 +788,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet)
 const E=TrainingEngine;
 Object.assign(FORM_VIEWS,{readiness:1,profile:1,fieldEdit:1,planAdd:1,externalLog:1,pdfSchedule:1});
 const dateKey=E.dateKey;
-const safeUrl=u=>typeof u==='string'&&/^https?:\/\//.test(u)?u:'#';
+const safeUrl=u=>typeof u==='string'&&/^https?:\/\//.test(u)?esc(u):'#';
 const bullets=xs=>(xs||[]).map(x=>'<div class="bul">'+esc(x)+'</div>').join('');
 const noteBox=(title,body,cls='')=>'<section class="note-box '+cls+'"><b>'+esc(title)+'</b><div>'+body+'</div></section>';
 const actionBtn=(a,text,attrs='')=>'<button class="chip" data-a="'+a+'" '+attrs+'>'+esc(text)+'</button>';
@@ -812,17 +812,19 @@ tabbar=function(){return '<nav class="tabbar gut" aria-label="Glavna navigacija"
 ].map(([v,n,ic])=>'<button class="tab" data-a="tab" data-tab="'+v+'" aria-label="'+n+'" '+(S.tab===v?'aria-current="page"':'')+'>'+ic+'<span>'+n+'</span></button>').join('')+'</nav>';};
 const oldRender=render;
 render=function(){oldRender();if(['plan','history'].includes(top().v)&&!app.querySelector('.tabbar'))app.insertAdjacentHTML('beforeend',tabbar());};
-const originalHome=VIEWS.home;
+// The main screens keep explanations in disclosure panels; data and dose rules stay unchanged.
 VIEWS.home=function(){
- let html=originalHome();const today=dateKey(),dayEvents=(S.plan||[]).filter(x=>x.date===today);
+ const today=dateKey(),events=(S.plan||[]).filter(x=>x.date===today);
  const pending=(S.log||[]).filter(l=>l.v===2&&!l.nextDay&&Date.now()-l.at>12*3600000&&Date.now()-l.at<7*864e5);
- const card='<div class="home-insights gut">'+
- (S.resume?noteBox('Trening je spremljen', '<p>'+esc(S.resume.title)+'</p>'+actionBtn('resumePlay','Nastavi trening')+actionBtn('discardResume','Završi kao prekinuto')):'')+
- '<div class="section-line"><b>Danas · '+esc(new Date().toLocaleDateString('hr-HR',{day:'numeric',month:'long'}))+'</b>'+actionBtn('tab','Plan','data-tab="plan"')+'</div>'+
- (dayEvents.length?dayEvents.map(planRow).join(''):noteBox('Tvoj sljedeći trening','<p>Odaberi trening prema rasporedu nogometa i današnjem stanju.</p><div class="chips wrap">'+actionBtn('tab','Odaberi trening','data-tab="protocols"')+actionBtn('profile','Moja oprema i postavke')+'</div>'))+
- (pending.length?noteBox('Kako je bilo sljedeći dan?',pending.slice(0,2).map(l=>'<div class="feedback-row"><span>'+esc(l.name)+'</span>'+actionBtn('nextDay','Zabilježi','data-id="'+esc(l.id)+'"')+'</div>').join('')):'')+
- noteBox('Razrađena progresija','<p>Zapisuj serije, opterećenje i rezervu ponavljanja. Prijedlog sljedećeg koraka vidi uz svaku vježbu.</p>'+actionBtn('guide','Kako funkcionira'))+'</div>';
- const at=html.lastIndexOf('</div>');return html.slice(0,at)+card+html.slice(at);
+ const rehab=Object.values(S.pr).find(p=>p.home==='rehab'),akt=S.pr['aktivacija-kratka'];
+ return '<div class="view gut home-simple">'+topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i postavke">'+I.gear+'</button>')+
+ '<p class="eyebrow">'+esc(new Date().toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}))+'</p><h1 class="h1">Vrijeme za tebe.</h1>'+
+ (S.resume?noteBox('Nastavi gdje si stao','<p>'+esc(S.resume.title)+'</p>'+actionBtn('resumePlay','Nastavi trening')+actionBtn('discardResume','Završi kao prekinuto')):'')+
+ (events.length?'<section class="today-plan"><h2 class="h2">Danas na rasporedu</h2>'+events.map(planRow).join('')+'</section>':'')+
+ '<button class="home-feature" data-a="tab" data-tab="protocols"><span class="home-feature-art">'+realPoster('trx-veslanje',I.dumb)+'</span><span class="home-feature-copy"><small>TVOJ TEMPO</small><b>Odaberi trening</b><span>Snaga, kontrola i mobilnost '+I.chev+'</span></span></button>'+
+ '<div class="quick-grid">'+(rehab?'<button data-a="openPr" data-id="'+esc(rehab.id)+'">'+pathIcon(I.pulse,24)+'<b>Snaga i kontrola</b><small>'+protoMin(rehab)+' min</small></button>':'')+(akt?'<button data-a="openPr" data-id="'+esc(akt.id)+'">'+pathIcon(I.rope,24)+'<b>Aktivacija</b><small>Kratka priprema</small></button>':'')+'<button data-a="fieldList">'+pathIcon(I.run,24)+'<b>Na terenu</b><small>'+Object.keys(S.field).length+' treninga</small></button><button data-a="tab" data-tab="library">'+pathIcon(I.book,24)+'<b>Knjižnica</b><small>'+Object.keys(S.ex).length+' vježbi</small></button></div>'+
+ (pending.length?noteBox('Kako se osjećaš danas?',pending.slice(0,2).map(l=>'<div class="feedback-row"><span>'+esc(l.name)+'</span>'+actionBtn('nextDay','Zabilježi','data-id="'+esc(l.id)+'"')+'</div>').join('')):'')+
+ '<div class="home-links">'+actionBtn('profile','Oprema i postavke')+actionBtn('guide','Kako napredovati')+'</div></div>';
 };
 libFiltered=function(){
  const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -833,34 +835,39 @@ libFiltered=function(){
   if(S.lib.level&&Number(e.level)!==Number(S.lib.level))return false;
   if(S.lib.equipment&&!(e.equipmentKeys||[]).includes(S.lib.equipment))return false;
   if(S.lib.owned&&(e.optionalEquipment||e.availableByDefault===false))return false;
+  if(S.lib.recorded&&!realMedia(e)&&!MEDIA[e.media])return false;
   if(c==='Sve')return true;if(c==='Favoriti')return !!e.fav;
   if(c==='TRX')return /trx/i.test(e.name+' '+e.equipment);
   if(c==='Rehab kuka')return e.cat==='Rehab';if(c==='Uže i kolotur')return !!e.cord;
   return e.cat===c;
  }).sort((a,b)=>(a.order||999)-(b.order||999)||a.name.localeCompare(b.name,'hr'));
 };
-const originalLibrary=VIEWS.library;
-VIEWS.library=function(){let h=originalLibrary();const marker='<div class="list" id="liblist"';const filt='<div class="filter-grid">'+smallSelect('Područje','lib-zone',S.lib.zone||'',[['','Sva područja'],...[...new Set(Object.values(S.ex).flatMap(e=>e.zones||[]))].sort((a,b)=>a.localeCompare(b,'hr')).map(z=>[z,z])])+smallSelect('Zahtjevnost','lib-level',S.lib.level||'',[['','Sve razine'],['1','1 · Osnove'],['2','2 · Srednje'],['3','3 · Napredno'],['4','4 · Zahtjevno']])+smallSelect('Oprema','lib-equipment',S.lib.equipment||'',[['','Sva oprema'],...Object.entries(window.SEED.equipmentLabels||{})])+'</div><label class="checkline"><input type="checkbox" id="lib-owned" '+(S.lib.owned!==false?'checked':'')+'> Oprema iz moje teretane</label><p class="sub" id="filter-count">'+libFiltered().length+' vježbi · '+Object.keys(S.ex).length+' u knjižnici</p>';return h.replace(marker,filt+marker);};
+VIEWS.library=function(){
+ const picking=!!S.pick,favN=Object.values(S.ex).filter(e=>e.fav).length;
+ const active=!!(S.lib.zone||S.lib.level||S.lib.equipment||S.lib.recorded||S.lib.cat!=='Sve'||!S.lib.owned);
+ const head=picking?topbar('<button class="txtbtn" data-a="pickCancel">Odustani</button>','','DODAJ VJEŽBE'):topbar('','<button class="ib" data-a="newEx" aria-label="Nova vježba">'+I.plus+'</button>');
+ return '<div class="view gut library-simple">'+head+'<h1 class="h1">'+(picking?'Odaberi vježbe':'Knjižnica')+'</h1>'+
+ (picking?'':'<div class="tiles"><button class="tile" data-a="libCat" data-cat="Favoriti" aria-pressed="'+(S.lib.cat==='Favoriti')+'"><span class="circ">'+I.heart+'</span><span class="lbl"><b>Favoriti</b><span>'+nVj(favN)+'</span></span></button><button class="tile" data-a="tab" data-tab="protocols"><span class="circ">'+I.dots4+'</span><span class="lbl"><b>Moji treninzi</b><span>'+Object.keys(S.pr).length+' protokola</span></span></button></div>')+
+ '<div class="search-line"><div class="search">'+I.search+'<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'"></div><button class="filter-toggle '+(active?'is-active':'')+'" data-a="toggleFilters" aria-label="Filtri" aria-controls="exercise-filters" aria-expanded="'+!!S.lib.filtersOpen+'">'+I.gear+'</button></div>'+
+ '<div id="exercise-filters" '+(S.lib.filtersOpen?'':'hidden')+'><div class="chips wrap" role="group" aria-label="Kategorija">'+LIBCATS.map(c=>'<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('')+'</div><div class="filter-grid">'+smallSelect('Područje','lib-zone',S.lib.zone||'',[['','Sva područja'],...[...new Set(Object.values(S.ex).flatMap(e=>e.zones||[]))].sort((a,b)=>a.localeCompare(b,'hr')).map(z=>[z,z])])+smallSelect('Zahtjevnost','lib-level',S.lib.level||'',[['','Sve razine'],['1','Osnove'],['2','Srednje'],['3','Napredno'],['4','Zahtjevno']])+smallSelect('Oprema','lib-equipment',S.lib.equipment||'',[['','Sva oprema'],...Object.entries(window.SEED.equipmentLabels||{})])+'</div><label class="checkline"><input type="checkbox" id="lib-owned" '+(S.lib.owned?'checked':'')+'> Moja oprema</label><label class="checkline"><input type="checkbox" id="lib-recorded" '+(S.lib.recorded?'checked':'')+'> Samo sa snimkom</label>'+actionBtn('clearFilters','Poništi filtre')+'</div>'+
+ '<div class="list-caption"><span id="filter-count">'+libFiltered().length+' vježbi · '+Object.keys(S.ex).length+' u knjižnici</span>'+(active?'<button class="txtbtn" data-a="clearFilters">Poništi filtre</button>':'')+'</div><div class="list" id="liblist">'+libListHtml()+'</div></div>'+
+ (picking?'<div class="footer gut"><button class="btn" data-a="pickDone" '+(S.pick.ids.length?'':'disabled')+'>Dodaj u protokol ('+S.pick.ids.length+')</button></div>':'');
+};
 S.lib.owned=true;
 VIEWS.ex=function(t){
  const e=S.ex[t.id];if(!e)return '<div class="view gut">'+topbar(backBtn())+noteBox('Vježba nije dostupna','')+'</div>';
- const opts=doseOptions(e),sel=t.dose??1,it=opts[sel].it;
- const p=E.progression(e,it,S.log,S.profile),pg=e.progression||{};
- return '<div class="view"><div class="gut">'+topbar(backBtn(),'<button class="ib" data-a="fav" data-id="'+e.id+'" aria-label="Favorit" aria-pressed="'+!!e.fav+'">'+(e.fav?I.heartF:I.heart)+'</button><button class="ib" data-a="editEx" data-id="'+e.id+'" aria-label="Uredi vježbu">'+I.edit+'</button>')+'</div>'+
- mediaHtml(e,e.level?'Razina '+e.level:'')+'<div class="gut detail-body"><h1 class="exercise-title">'+esc(e.name)+'</h1><p class="subline">'+esc(e.goal||exMeta(e))+'</p>'+demoLinks(e)+
- '<div class="chips wrap" aria-label="Doziranje">'+opts.map((o,i)=>'<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+o.label+'</button>').join('')+'</div>'+
- '<div class="dose-summary"><strong>'+esc(dose(it))+'</strong><span>Odmor '+it.rest+' s · '+(e.tempo?'Tempo '+esc(e.tempo)+' · ':'')+'RIR '+esc(e.rir??2)+'</span></div>'+
+ const opts=doseOptions(e),sel=t.dose??1,it=opts[sel].it,p=E.progression(e,it,S.log,S.profile),pg=e.progression||{};
+ const more='<h3>Priprema</h3><p>'+esc(e.setup||e.equipment)+'</p><h3>Izvedba</h3>'+bullets(e.steps)+'<h3>Na što pripaziti</h3><p>'+esc(e.note||'')+'</p>'+bullets(e.stopRules||[])+'<h3>Kontrola pokreta</h3>'+bullets(e.techniqueChecks||[])+'<h3>Česte pogreške</h3>'+bullets(e.commonErrors||[])+'<p>'+esc(e.counting||'')+' '+esc(e.loadRule?.note||'')+'</p>'+
+ '<h3>Sljedeći korak</h3><b>'+esc(p.label)+'</b><p>'+esc(p.reason)+'</p>'+(p.action!=='hold'&&p.action!=='review'?actionBtn('useProgress','Primijeni prijedlog'):'')+
+ fold('Kriteriji napredovanja','<b>Prije početka</b>'+bullets(pg.entry)+'<b>Napreduj kada</b>'+bullets(pg.advance)+'<b>Smanji zahtjevnost kada</b>'+bullets(pg.regress))+
+ ((e.regressionIds||[]).length?'<h3>Lakše varijante</h3><div class="chips wrap">'+e.regressionIds.map(exLink).join('')+'</div>':'')+
+ ((e.progressionIds||[]).length?'<h3>Sljedeće varijante</h3><div class="chips wrap">'+e.progressionIds.map(exLink).join('')+'</div>':'')+
+ fold('Izvori i snimke',mediaCredit(e)+demoLinks(e)+sourceLinks(e));
+ return '<div class="view exercise-simple"><div class="gut">'+topbar(backBtn(),'<button class="ib" data-a="fav" data-id="'+e.id+'" aria-label="Favorit" aria-pressed="'+!!e.fav+'">'+(e.fav?I.heartF:I.heart)+'</button><button class="ib" data-a="editEx" data-id="'+e.id+'" aria-label="Uredi vježbu">'+I.edit+'</button>')+'</div>'+mediaHtml(e)+'<div class="gut detail-body"><h1 class="exercise-title">'+esc(e.name)+'</h1><p class="subline">'+esc(exMeta(e))+'</p>'+
+ '<div class="chips dose-chips" aria-label="Doziranje">'+opts.map((o,i)=>'<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+o.label+'</button>').join('')+'</div><div class="dose-summary"><strong>'+esc(dose(it))+'</strong><span>Odmor '+it.rest+' s'+(e.tempo?' · Tempo '+esc(e.tempo):'')+'</span></div>'+
  (sel===2?'<div class="panel">'+quickDose('Serije','sets',it.sets)+quickDose(it.measure==='time'?'Sekunde':'Ponavljanja',it.measure==='time'?'sec':'reps',it.measure==='time'?it.sec:it.reps)+quickDose('Odmor (s)','rest',it.rest)+(it.measure==='sets'?quickDose('Težina (kg)','kg',it.kg||0):'')+'</div>':'')+
- '<p class="micro">'+esc(e.counting||'')+(e.loadRule?.unit?.includes('kg')?' Jedinica: '+esc(e.loadRule.unit)+'. ':' ')+esc(e.loadRule?.note||'')+'</p>'+noteBox('Priprema opreme','<p>'+esc(e.setup||e.equipment)+'</p>')+
- noteBox('Izvedba',bullets(e.steps))+noteBox('Kontrola pokreta',bullets(e.techniqueChecks||[]))+
- ((e.note||(e.stopRules||[]).length)?noteBox('Na što pripaziti','<p>'+esc(e.note||'')+'</p>'+bullets(e.stopRules||[]),'caution'):'')+
- noteBox('Česte pogreške',bullets(e.commonErrors||[]))+
- noteBox('Sljedeći korak','<h3>'+esc(p.label)+'</h3><p>'+esc(p.reason)+'</p>'+(p.action!=='hold'&&p.action!=='review'?actionBtn('useProgress','Primijeni prijedlog'):'')+'<p class="micro">RIR = koliko bi još kvalitetnih ponavljanja mogao napraviti. Prijedlog nije potvrda spremnosti nakon ozljede.</p>')+
- '<details class="detail-accordion"><summary>Kriteriji progresije i regresije</summary><b>Prije početka</b>'+bullets(pg.entry)+'<b>Napreduj kada</b>'+bullets(pg.advance)+'<b>Smanji zahtjevnost kada</b>'+bullets(pg.regress)+'</details>'+
- ((e.regressionIds||[]).length?noteBox('Lakše varijante','<div class="chips wrap">'+e.regressionIds.map(exLink).join('')+'</div>'):'')+
- ((e.progressionIds||[]).length?noteBox('Sljedeće varijante','<div class="chips wrap">'+e.progressionIds.map(exLink).join('')+'</div>'):'')+
- '<details class="detail-accordion"><summary>Oprema i stručni izvori</summary><p>'+esc(e.equipment)+'</p>'+sourceLinks(e)+'<p class="micro">Izvori podržavaju obrazac, tehniku ili načela doziranja. Ne potvrđuju da je svaka varijanta prikladna za svaku ozljedu.</p></details></div></div>'+
- '<div class="footer gut"><div class="seg"><button class="btn sec" data-a="addTo" data-id="'+e.id+'">Dodaj u protokol</button><button class="btn" data-a="playEx" data-id="'+e.id+'">Pokreni</button></div></div>';
+ (p.action==='review'?'<p class="warning">'+esc(p.label)+': '+esc(p.reason)+'</p>':'')+
+ fold('Prikaži više',more,'Tehnika, na što pripaziti i napredovanje')+'</div></div><div class="footer gut"><div class="seg"><button class="btn sec" data-a="addTo" data-id="'+e.id+'">Dodaj u trening</button><button class="btn" data-a="playEx" data-id="'+e.id+'">'+I.play+'Pokreni</button></div></div>';
 };
 function quickDose(label,key,value){return '<div class="prow"><span>'+label+'</span><div class="step">'+actionBtn('quickDose','−','data-k="'+key+'" data-d="-1"')+'<b>'+value+'</b>'+actionBtn('quickDose','+','data-k="'+key+'" data-d="1"')+'</div></div>';}
 function planRow(x){const p=x.kind==='protocol'?S.pr[x.refId]:x.kind==='field'?S.field[x.refId]:null;const title=p?(p.name||p.name_hr):x.name||({club:'Klupski trening',match:'Utakmica',rest:'Oporavak'}[x.kind]||'Trening');return '<div class="plan-row"><div><b>'+esc(title)+'</b><span>'+esc(x.time||'')+' · '+esc(x.intensity==='high'?'Zahtjevniji dan':x.kind==='rest'?'Oporavak':'Planirano')+'</span></div>'+(p?actionBtn(x.kind==='protocol'?'openPr':'openField','Otvori','data-id="'+esc(x.refId)+'"'):'')+'</div>';}
@@ -927,13 +934,13 @@ VIEWS.play=function(){
  const big=isDistance?fmt(Math.max(0,((P.paused?P.pauseAt:Date.now())-(P.stepStartedAt||Date.now())-(P.stepPausedMs||0))/1000)):v.big;
  const media=P.mode==='field'?'<div class="pitch-card">'+pitch(P.f,st.g,st.rep||1)+'</div>':mediaHtml(v.e,st.side?st.side+' · '+st.set+'/'+st.it.sets:'');
  const details=P.mode==='field'?noteBox(st.kind==='active'?'Aktivni oporavak':st.kind==='rest'?'Odmor':'Dionica','<p>'+esc(st.b?.label_hr||P.title)+'</p><p>'+esc(st.kind==='active'?'Trči na 70 % MAS; ovo nije stajanje.':st.kind==='rest'?st.label||'Odmor':st.b?.intensity_hr||'')+'</p>'+(st.b?.distance_m&&isWork?'<strong>'+st.b.distance_m+' m</strong>':'')+(st.b?.target_time_s&&isWork?'<p>Cilj: '+st.b.target_time_s.join('–')+' s · ručno mjerenje</p>':'')+'<p>'+esc(st.b?.cue_hr||'')+'</p>'):
- noteBox('Izvedba',bullets(v.e?.steps)+(v.e?.note?'<p class="warning">'+esc(v.e.note)+'</p>':'')+bullets(v.e?.stopRules||[]));
- return '<div class="view"><div class="gut">'+topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>','<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>')+'</div><div class="prog" role="progressbar" aria-label="Odrađeni koraci" aria-valuenow="'+Math.round(done/Math.max(1,total)*100)+'"><i id="progbar" style="width:'+(done/Math.max(1,total)*100)+'%"></i></div>'+media+
+ fold('Prikaži više','<h3>Izvedba</h3>'+bullets(v.e?.steps)+(v.e?.note?'<p>'+esc(v.e.note)+'</p>':'')+'<h3>Na što pripaziti</h3>'+bullets(v.e?.stopRules||[])+mediaCredit(v.e));
+ return '<div class="view player-simple"><div class="gut">'+topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>','<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>')+'</div><div class="prog" role="progressbar" aria-label="Odrađeni koraci" aria-valuenow="'+Math.round(done/Math.max(1,total)*100)+'"><i id="progbar" style="width:'+(done/Math.max(1,total)*100)+'%"></i></div>'+media+
  '<div class="gut"><h1 class="player-title">'+esc(P.mode==='field'?st.b?.label_hr||P.title:v.title)+'</h1><p class="meta">'+esc(P.mode==='field'?'Ponavljanje '+(st.rep||1)+'/'+(st.reps||1)+' · serija '+(st.set||1)+'/'+(st.sets||1):v.meta)+'</p>'+
  (P.backgroundPaused?'<p class="warning">Trening je pauziran pri izlasku iz aplikacije. Nastavi kada si spreman.</p>':'')+
- '<div class="timer-display" id="fbig">'+(P.paused?'Pauza':esc(big))+'</div><p class="hint">'+esc(isManual?'Odradi označenu stranu i zapiši rezultat.':isDistance?'Dodirni „Dionica gotova” po stvarnom završetku.':st.kind==='active'?'Aktivni oporavak u pokretu':st.kind==='switch'?'Namjesti se za drugu stranu':st.kind==='rest'?'Odmor':st.kind==='prep'?'Pripremi se za prvi radni korak.':'Kontrolirano odradi interval.')+'</p>'+
+ '<div class="timer-display" id="fbig" aria-live="off">'+(P.paused?'Pauza':esc(big))+'</div><p class="hint">'+esc(isManual?'Odradi označenu stranu i zapiši rezultat.':isDistance?'Dodirni „Dionica gotova” po stvarnom završetku.':st.kind==='active'?'Aktivni oporavak u pokretu':st.kind==='switch'?'Namjesti se za drugu stranu':st.kind==='rest'?'Odmor':st.kind==='prep'?'Pripremi se za prvi radni korak.':'Kontrolirano odradi interval.')+'</p>'+
  (isManual?'<div class="set-entry">'+fieldInput('Ponavljanja','set-reps',P.setDraft.reps??st.it.reps,'number','min="0" max="100"')+fieldInput('Težina kg','set-kg',P.setDraft.kg??st.it.kg??0,'number','min="0" max="400" step="0.5"')+fieldInput('RIR 0–10','set-rir',P.setDraft.rir??'','number','min="0" max="10"')+'</div>'+(['trx','band','band-assistance'].includes(st.e?.loadRule?.type)?fieldInput('Postav opreme · kut / duljina / otpor','set-setup',P.setDraft.setup||''):''):'')+details+'</div></div>'+
- '<div class="player-footer gut"><div class="player-actions">'+actionBtn('pausePlay',P.paused?'Nastavi':'Pauza')+actionBtn('skipStep',isWork?'Preskoči seriju':'Preskoči odmor')+actionBtn('toggleSound',S.settings.sound?'Zvuk uključen':'Bez zvuka')+'</div>'+(isManual||isDistance?'<button class="btn" data-a="completeStep" '+(P.paused?'disabled':'')+'>'+(isDistance?'Dionica gotova':'Serija gotova')+'</button>':'<button class="btn sec" data-a="jump" data-d="1">Sljedeća vježba / blok</button>')+'</div>';
+ '<div class="player-footer gut"><div class="player-actions">'+actionBtn('pausePlay',P.paused?'Nastavi':'Pauza')+actionBtn('skipStep',isWork?'Preskoči seriju':'Preskoči odmor')+'</div>'+(isManual||isDistance?'<button class="btn" data-a="completeStep" '+(P.paused?'disabled':'')+'>'+(isDistance?'Dionica gotova':'Serija gotova')+'</button>':'<button class="btn sec" data-a="jump" data-d="1">Sljedeća vježba / blok</button>')+'</div>';
 };
 paintPlayer=function(full){if(top().v!=='play'||!P)return;if(full){render();return;}const st=P.steps[P.i];if(!st)return;const fb=document.getElementById('fbig');if(fb&&!P.paused){const val=st.kind==='distance'?fmt(Math.max(0,(Date.now()-(P.stepStartedAt||Date.now())-(P.stepPausedMs||0))/1000)):st.kind==='manual'?st.set+'/'+st.it.sets:(remaining()>=60?fmt(remaining()):String(Math.ceil(remaining())));fb.textContent=val;}if(P._lastI!==P.i){P._lastI=P.i;render();}};
 const val=id=>document.getElementById(id)?.value||'';
@@ -976,8 +983,11 @@ Object.assign(A,{
  finishPlay:()=>runForm(()=>{
   const rpe=numberValue('finish-rpe',1,10),pain=numberValue('finish-pain',0,10),quality=val('finish-quality'),notes=val('finish-notes');
   const entry={v:2,id:uid('log'),name:P.title,kind:P.ref?.kind||'protocol',refId:P.ref?.id||null,at:Date.now(),secs:P.secs||0,rpe,pain,quality,notes,records:clone(P.records),status:P.summary?.status||'partial',readiness:P.readiness||null,nextDay:null};
+  const previousLog=S.log,previousProfile={...S.profile};
   if(P.ref?.id==='mas-test-5-min'&&entry.status==='complete'&&val('finish-mas')){const metres=numberValue('finish-mas',100,2500);entry.masDistance=metres;entry.mas=Number((metres/300).toFixed(2));S.profile.mas=entry.mas;S.profile.masMeasuredAt=entry.at;}
-  S.log.unshift(entry);S.log=S.log.slice(0,1000);persist();localStorage.removeItem('mt.active.v2');P=null;S.resume=null;clearInterval(ticker);keepAwake(false);S.stack=[{v:'history'}];S.tab='history';render();toast('Trening i rezultati su spremljeni.');
+  S.log=[entry,...S.log].slice(0,1000);
+  if(!persist()){S.log=previousLog;S.profile=previousProfile;checkpoint();return;}
+  localStorage.removeItem('mt.active.v2');P=null;S.resume=null;clearInterval(ticker);keepAwake(false);S.stack=[{v:'history'}];S.tab='history';render();toast('Trening i rezultati su spremljeni.');
  }),
  nextDay:d=>{const l=S.log.find(x=>(x.id||String(x.at))===d.id);if(l&&dateKey(l.at)===dateKey()){toast('Reakciju zabilježi sutra, nakon oporavka.');return;}S.sheet={kind:'nextDay',id:d.id};render();},
  saveNextDay:d=>{const l=S.log.find(x=>(x.id||String(x.at))===d.id);if(l){l.nextDay=d.value;l.nextDayAt=Date.now();persist();}S.sheet=null;render();toast('Reakcija je spremljena.');},
@@ -1000,7 +1010,7 @@ sheetHtml=function(){
  let body='';
  if(s.kind==='nextDay')body='<h3>Reakcija sljedeći dan</h3><p>Usporedi simptome i uobičajeno kretanje s danom prije treninga.</p>'+[['same','Isto, bez pogoršanja'],['better','Bolje'],['worse','Lošije / jači simptomi']].map(([v,l])=>'<button class="opt" data-a="saveNextDay" data-id="'+esc(s.id)+'" data-value="'+v+'">'+l+'</button>').join('');
  if(s.kind==='template')body='<h3>Primjer tjedna</h3><p>'+esc(S.profile.season==='preseason'?'Pripreme: dva treninga snage, jedan MAS trening i prostor za mobilnost i klupski rad. MAS trening traži osobni rezultat.':S.profile.returnMode?'Povratak: raspored unesi ručno prema dogovorenom planu; ovaj predložak neće dodati utakmicu ili zahtjevne treninge.':'Natjecateljski tjedan: dva treninga snage, lagana priprema prije utakmice i prostor za oporavak.')+'</p><p>Dodaju se samo prazni dani. Klupske treninge unesi zasebno i provjeri ukupno opterećenje.</p><button class="btn" data-a="applyTemplate" data-date="'+s.date+'">Dodaj primjer</button>';
- if(s.kind==='data')body='<h3>Moji podaci</h3><p>Podaci i snimke ostaju na ovom uređaju. Redovito spremi kopiju.</p><button class="opt" data-a="exportData">Izvezi podatke</button><button class="opt" data-a="exportFull">Izvezi podatke i snimke</button><label class="opt" for="importFile">Uvezi kopiju</label><input id="importFile" class="vsr" type="file" accept="application/json,.json"><button class="opt" data-a="profile">Oprema i postavke</button><button class="opt" data-a="guide">Pravila progresije</button><p class="micro">'+Object.keys(S.ex).length+' vježbi · '+S.log.length+' treninga · verzija 2.0</p>';
+ if(s.kind==='data')body='<h3>Moji podaci</h3><p>Podaci i snimke ostaju na ovom uređaju. Redovito spremi kopiju.</p><button class="opt" data-a="exportData">Izvezi podatke</button><button class="opt" data-a="exportFull">Izvezi podatke i snimke</button><label class="opt" for="importFile">Uvezi kopiju</label><input id="importFile" class="vsr" type="file" accept="application/json,.json"><button class="opt" data-a="profile">Oprema i postavke</button><button class="opt" data-a="guide">Pravila progresije</button><p class="micro">'+Object.keys(S.ex).length+' vježbi · '+S.log.length+' treninga · verzija 2.1</p>';
  if(s.kind==='importPreview'){const c=S.importCounts;body='<h3>Pregled sigurnosne kopije</h3><p>'+c.exercises+' vježbi · '+c.protocols+' protokola · '+c.sessions+' treninga · '+c.media+' snimki.</p><p>Spajanje čuva postojeće zapise. Zamjena prethodno čuva lokalnu kopiju za oporavak.</p><button class="btn" data-a="confirmImport" data-mode="merge">Spoji podatke</button><button class="opt" data-a="confirmImport" data-mode="replace">Zamijeni ovom kopijom</button>';}
  if(!body){let h=oldSheet();if(s.kind==='settings')h=h.replace('<h3>Postavke playera</h3>','<h3>Postavke playera</h3><button class="opt" data-a="toggleVoice">Govorne upute: '+(S.settings.voice?'uključene':'isključene')+'</button>');return h;}
  return '<div class="sheet-bg" data-a="sheetClose"><div class="sheet gut" data-stop="1" role="dialog" aria-modal="true"><div class="grab"></div>'+body+'<button class="txtbtn" data-a="closeSheet">Zatvori</button></div></div>';
@@ -1012,7 +1022,7 @@ app.addEventListener('input',ev=>{
  if(P&&t.id.startsWith('finish-')){P.feedback=P.feedback||{};P.feedback[t.id.slice(7)]=t.value;checkpoint();}
  if(t.id==='libq'){const c=document.getElementById('filter-count');if(c)c.textContent=libFiltered().length+' vježbi · '+Object.keys(S.ex).length+' u knjižnici';}
 });
-app.addEventListener('change',ev=>{const t=ev.target;if(t.id==='lib-equipment'){S.lib.equipment=t.value;render();}if(t.id==='lib-zone'){S.lib.zone=t.value;render();}if(t.id==='lib-level'){S.lib.level=t.value;render();}if(t.id==='lib-owned'){S.lib.owned=t.checked;render();}});
+app.addEventListener('change',ev=>{const t=ev.target;if(t.id==='lib-recorded'){S.lib.recorded=t.checked;render();}if(t.id==='lib-equipment'){S.lib.equipment=t.value;render();}if(t.id==='lib-zone'){S.lib.zone=t.value;render();}if(t.id==='lib-level'){S.lib.level=t.value;render();}if(t.id==='lib-owned'){S.lib.owned=t.checked;render();}});
 function backupObject(){return {v:2,exportedAt:new Date().toISOString(),exercises:S.ex,protocols:S.pr,field:S.field,log:S.log,plan:S.plan,profile:S.profile,seedBaseline:S.seedBaseline,_deleted:S._deleted||[],settings:S.settings};}
 function downloadBackup(d,suffix=''){
  const blob=new Blob([JSON.stringify(d)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='moj-trening-'+dateKey()+suffix+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},3000);
@@ -1040,6 +1050,8 @@ Object.assign(A,{
     const newId=uid('m');await IDB.put(newId,{type,buf:bytes.buffer});mediaMap[id]=newId;
    }
    for(const [id,e] of Object.entries(prepared.exercises))if(mediaMap[e.media]&&!(d.mode==='merge'&&current.exercises[id]))e.media=mediaMap[e.media];
+   // Embedded media belongs to the transfer file; clips are stored in IndexedDB.
+   delete prepared.mediaBlobs;
    localStorage.setItem(STORE_KEY,JSON.stringify(prepared));applyData(prepared);S._deleted=prepared._deleted;
    if(incoming.settings&&d.mode!=='merge'){S.settings={...S.settings,...incoming.settings};lsSet('mt.settings',S.settings);}
    S.sheet=null;S.importDraft=null;S.stack=[{v:S.tab}];render();await loadMedia();toast('Podaci su uvezeni. Kopija prije uvoza je sačuvana.');
@@ -1050,13 +1062,52 @@ Object.assign(A,{
 });
 app.addEventListener('change',async ev=>{const t=ev.target;if(t.id!=='importFile'||!t.files?.[0])return;try{if(t.files[0].size>150*1024*1024)throw Error('Kopija je prevelika (najviše 150 MB).');const d=JSON.parse(await t.files[0].text());S.importCounts=E.validateBackup(d);S.importDraft=d;S.sheet={kind:'importPreview'};render();}catch(e){toast(e.message||'Neispravna sigurnosna kopija.');}});
 VIEWS.protocolProgress=function(t){const p=S.pr[t.id];return '<div class="view gut">'+topbar(backBtn())+'<h1 class="h1">Progresija treninga</h1><p class="sub">'+esc(p.name)+'</p>'+noteBox('Pregled prije promjene','<p>Svaka vježba napreduje zasebno. Gumb mijenja samo doze koje zadovoljavaju kriterije; povećanje je tvoj izbor. Za lakši tjedan smanji serije u uređivanju protokola prema umoru i rasporedu.</p>')+p.items.map(it=>{const e=S.ex[it.exId],pr=E.progression(e,it,S.log,S.profile);return noteBox(e.name,'<p>'+esc(dose(it))+'</p><b>'+esc(pr.label)+'</b><p>'+esc(pr.reason)+'</p>'+(['reps','time','load'].includes(pr.action)?'<p>Prijedlog: '+esc(dose(pr.next))+'</p>':'')+exLink(e.id));}).join('')+'</div><div class="footer gut"><button class="btn" data-a="applyProtocolProgress" data-id="'+p.id+'">Primijeni dostupne prijedloge</button></div>';};
-const detailedPr=VIEWS.pr;
-VIEWS.pr=function(t){let h=detailedPr(t);const p=S.pr[t.id];const details=noteBox('Prije i poslije glavnog dijela','<p>'+esc(p.warmupNote||'5–10 min postupne pripreme te pripremne serije prve vježbe s lakšim teretom. Pripremne serije nisu uključene u radni volumen.')+'</p><p>'+esc(p.weeklyNote||'Uskladi s klupskim radom. Ne zbrajaj sve predloške istog dana; na početku uvodi jedan novi zahtjevan element.')+'</p>'+actionBtn('protocolProgress','Pregledaj progresiju','data-id="'+p.id+'"'));return h.replace('<h2 class="h2" style="margin-top:8px">Vježbe</h2>',details+'<h2 class="h2" style="margin-top:8px">Vježbe</h2>');};
+VIEWS.pr=function(t){
+ const p=S.pr[t.id];if(!p)return '<div class="view gut">'+topbar(backBtn())+noteBox('Trening nije dostupan','')+'</div>';
+ return '<div class="view gut protocol-simple">'+topbar(backBtn(),'<button class="ib" data-a="editPr" data-id="'+esc(p.id)+'" aria-label="Uredi protokol">'+I.edit+'</button>')+'<h1 class="h1">'+esc(p.name)+'</h1><p class="sub">'+nVj(p.items.length)+' · '+protoMin(p)+' min</p>'+
+ '<div class="list">'+p.items.map((it,i)=>{const e=S.ex[it.exId];return '<button class="row" data-a="openEx" data-id="'+esc(it.exId)+'"><span class="thumb">'+(e?thumbHtml(e):i+1)+'</span><span class="tx"><span class="t">'+esc(e?.name||'Vježba nije dostupna')+'</span><span class="m">'+esc(dose(it))+'</span></span>'+I.chev+'</button>';}).join('')+'</div>'+
+ fold('Prikaži više','<p>'+esc(p.desc||p.purpose||'')+'</p><h3>Priprema</h3><p>'+esc(p.warmupNote||'5–10 min postupne pripreme i pripremne serije prve vježbe s lakšim teretom.')+'</p><h3>Raspored i napredovanje</h3><p>'+esc(p.weeklyNote||'Uskladi trening s klupskim radom i oporavkom.')+'</p><p>'+esc(p.progressionNote||'')+'</p>'+actionBtn('protocolProgress','Pregledaj progresiju','data-id="'+p.id+'"'),'Priprema i napredovanje')+'</div><div class="footer gut"><button class="btn" data-a="startPr" data-id="'+p.id+'" '+(p.items.length?'':'disabled')+'>Pokreni trening</button></div>';
+};
 const completeSheet=sheetHtml;
 sheetHtml=function(){let h=completeSheet();if(S.sheet?.kind==='data'&&lsGet('mt.before-import.v2',null))h=h.replace('<button class="opt" data-a="profile">','<button class="opt" data-a="restoreBackup">Oporavi podatke prije zadnjeg uvoza</button><button class="opt" data-a="profile">');return h;};
 
 Object.assign(A,{previewBlock:d=>{top().block=Number(d.block);render();},previewRep:()=>{top().rep=((top().rep||1)%3)+1;render();}});
-VIEWS.fieldList=function(){return '<div class="view gut">'+topbar(backBtn())+'<h1 class="h1">Kondicija na terenu</h1><p class="sub">21 trening · izmjerene dionice i izvorne upute</p><div class="list" style="margin-top:24px">'+Object.values(S.field).sort((a,b)=>(a.order||0)-(b.order||0)).map(f=>{const nf=normalizedField(f),st=E.fieldSteps(nf,S.profile),tm=E.fieldDuration(nf,S.profile);return '<button class="row" data-a="openField" data-id="'+f.id+'"><span class="thumb">'+pathIcon(I.run,28)+'</span><span class="tx"><span class="t">'+esc(f.name_hr)+'</span><span class="m">'+(tm.manual?st.filter(s=>s.recordKey).length+' dionica · ručni završetak':fmt(tm.seconds)+' · glavni dio + 10 s pripreme')+'</span><span class="m">'+(f.requires_configuration?.length&&!f.configured?'Prvo potvrdi postavke':f.source_page?'PDF · stranica '+f.source_page:'STATSports')+'</span></span>'+I.chev+'</button>';}).join('')+'</div><div style="margin:20px 0">'+actionBtn('pdfSchedule','Otvori četverotjedni plan iz PDF-a')+'</div></div>';};
+VIEWS.fieldList=function(){return '<div class="view gut">'+topbar(backBtn())+'<h1 class="h1">Kondicija na terenu</h1><p class="sub">'+Object.keys(S.field).length+' treninga</p><div class="list" style="margin-top:24px">'+Object.values(S.field).sort((a,b)=>(a.order||0)-(b.order||0)).map(f=>{const nf=normalizedField(f),st=E.fieldSteps(nf,S.profile),tm=E.fieldDuration(nf,S.profile);return '<button class="row" data-a="openField" data-id="'+f.id+'"><span class="thumb">'+pathIcon(I.run,28)+'</span><span class="tx"><span class="t">'+esc(f.name_hr)+'</span><span class="m">'+(tm.manual?st.filter(s=>s.recordKey).length+' dionica · ručni završetak':fmt(tm.seconds)+' · glavni dio + 10 s pripreme')+'</span><span class="m">'+(f.requires_configuration?.length&&!f.configured?'Prvo potvrdi postavke':f.source_page?'PDF · stranica '+f.source_page:'STATSports')+'</span></span>'+I.chev+'</button>';}).join('')+'</div><div style="margin:20px 0">'+actionBtn('pdfSchedule','Otvori četverotjedni plan iz PDF-a')+'</div></div>';};
+
+/* ---------- compact presentation and exact exercise demonstrations ---------- */
+function fold(label,body,caption=''){
+ return '<details class="detail-accordion compact-details"><summary><span>'+esc(label)+(caption?'<small>'+esc(caption)+'</small>':'')+'</span><span aria-hidden="true" class="disclosure-plus">+</span></summary><div class="disclosure-body">'+body+'</div></details>';
+}
+function mediaUrlSafe(u){return typeof u==='string'&&/^assets\/(exercises|trx|basics)\/[a-z0-9._-]+$/.test(u)?esc(u):safeUrl(u);}
+function realMedia(e){
+ if(e?.media&&MEDIA[e.media])return null;
+ const original=e&&window.SEED.exercises[e.id];
+ if(!original||['name','steps','equipment','visualKey','visualVariant'].some(k=>JSON.stringify(e[k])!==JSON.stringify(original[k])))return null;
+ return (window.REAL_MEDIA||{})[e.id]||null;
+}
+function realPoster(id,fallback){const e=S.ex[id],m=realMedia(e);return m?.poster?'<img src="'+mediaUrlSafe(m.poster)+'" alt="" loading="lazy">':pathIcon(fallback,48);}
+function mediaCredit(e){const m=realMedia(e);return m?'<p class="media-credit">Snimka: '+esc(m.credit||m.publisher||'')+' · '+esc(m.license||'')+'<br><a target="_blank" rel="noopener" href="'+safeUrl(m.source)+'">Izvor snimke ↗</a>'+(m.licenseUrl?' · <a target="_blank" rel="noopener" href="'+safeUrl(m.licenseUrl)+'">Licencija</a>':'')+(m.caption?'<br>'+esc(m.caption):'')+(m.changes?'<br>'+esc(m.changes):'')+(m.notice?'<br>'+esc(m.notice):'')+'</p>':'';}
+thumbHtml=function(e){
+ if(e?.media&&MEDIA[e.media])return e.mediaType==='image'?'<img alt="" src="'+esc(mediaUrl(e.media))+'">':'<video muted playsinline preload="metadata" src="'+esc(mediaUrl(e.media))+'#t=0.5"></video>';
+ const m=realMedia(e);return m?.poster?'<img alt="" src="'+mediaUrlSafe(m.poster)+'" loading="lazy">':pathIcon(catIcon(e?.cat),28);
+};
+mediaHtml=function(e,badge=''){
+ if(!e)return '';
+ const m=realMedia(e);let inner='';badge=[badge,m?.label].filter(Boolean).join(' · ');
+ if(e.media&&MEDIA[e.media])inner=e.mediaType==='image'?'<img alt="Tvoj prikaz vježbe" src="'+esc(mediaUrl(e.media))+'">':'<video src="'+esc(mediaUrl(e.media))+'" autoplay muted loop playsinline controls></video>';
+ else if(m?.video)inner='<video class="real-demo" src="'+mediaUrlSafe(m.video)+'" poster="'+mediaUrlSafe(m.poster)+'" autoplay muted loop playsinline controls preload="metadata" aria-label="Izvođenje: '+esc(e.name)+'"></video>';
+ else if(m?.image)inner='<img alt="Izvođenje: '+esc(e.name)+'" src="'+mediaUrlSafe(m.image)+'">';
+ else if(m?.embed)inner='<div class="video-launch">'+(m.poster?'<img alt="" src="'+mediaUrlSafe(m.poster)+'">':'')+'<button class="btn" data-a="watchDemo" data-id="'+esc(e.id)+'">'+I.play+'Pogledaj izvođenje</button></div>';
+ else return '<div class="media-unavailable">'+I.video+'<span>Snimka još nije dodana</span>'+(top().v==='play'?'':'<button class="txtbtn" data-a="editEx" data-id="'+esc(e.id)+'">Dodaj svoju</button>')+'</div>';
+ return '<div class="media real-media">'+inner+(badge?'<span class="badge">'+esc(badge)+'</span>':'')+'</div><p class="media-error" hidden>Snimka nije dostupna. Pokušaj ponovo kad budeš povezan.</p>';
+};
+Object.assign(A,{
+ toggleFilters:()=>{S.lib.filtersOpen=!S.lib.filtersOpen;render();},
+ clearFilters:()=>{Object.assign(S.lib,{cat:'Sve',zone:'',level:'',equipment:'',owned:true,recorded:false,q:''});lsSet('mt.libcat','Sve');render();},
+ watchDemo:d=>{const m=realMedia(S.ex[d.id]);if(!m?.embed)return;if(P&&!P.done&&!P.paused)pausePlayer();go({v:'demo',id:d.id});}
+});
+VIEWS.demo=function(t){const e=S.ex[t.id],m=realMedia(e);return '<div class="view gut">'+topbar(backBtn())+'<h1 class="h1">'+esc(e?.name||'Izvođenje')+'</h1><div class="embedded-demo"><iframe title="Izvođenje: '+esc(e?.name)+'" src="'+safeUrl(m?.embed)+'" allow="fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="micro">Ako se video ne otvori: <a href="'+safeUrl(m?.source)+'" target="_blank" rel="noopener">pogledaj kod autora ↗</a>.</p>'+mediaCredit(e)+'</div>';};
+app.addEventListener('error',ev=>{const t=ev.target;if(t.matches?.('video.real-demo')){const err=t.parentElement.nextElementSibling;if(err?.classList.contains('media-error'))err.hidden=false;}},true);
 
 init();
 })();
