@@ -175,3 +175,71 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .hero .ic svg{width:110px;height:110px}
 .over{position:absolute;top:0;left:0;right:0;z-index:2}
 .vsr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* 1.1: week strip on the home screen */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:18px 25px 0}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:var(--text-2);padding:0;font-size:12px;font-weight:600}
+.wd .c{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:2px solid transparent;color:var(--text);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.wd .c.plan{border-color:var(--border)}
+.wd .c.done{background:var(--accent);color:#fff}
+.wd .c.miss{border-color:var(--danger);color:var(--danger)}
+.wd[aria-current="date"] .l{color:var(--text)}
+.wd[aria-current="date"] .c:not(.done){border-color:var(--accent)}
+.wline{text-align:center;margin:10px 17px 0;line-height:19px}
+.row.today{min-height:64px;border-color:var(--accent)}
+
+/* library filter button */
+.search .fbtn{position:absolute;right:7px;top:7px;width:44px;height:44px;border-radius:16px;color:var(--text-2)}
+.search .fbtn svg{position:static;width:22px;height:22px;color:currentColor}
+.search .fbtn[aria-pressed="true"]{color:var(--accent-text);background:var(--tag-bg)}
+.search .fbtn .cnt{position:absolute;right:4px;top:4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
+.search .input{padding-right:58px}
+
+/* exercise detail */
+.media img.fit{object-fit:contain}
+.credit{position:absolute;left:10px;bottom:10px;max-width:60%;padding:4px 8px;border-radius:7px;background:var(--scrim);color:var(--text-2);font-size:11px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bul.num::before,.bul.warn::before{display:none}
+.bul.num i{flex:none;width:22px;height:22px;margin-top:1px;border-radius:11px;background:var(--tag-bg);color:var(--accent-text);font-style:normal;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.bul.warn{position:relative;padding-left:22px}
+.bul.warn::after{content:"";position:absolute;left:3px;top:9px;width:10px;height:2px;border-radius:1px;background:var(--danger);box-shadow:0 0 0 0 transparent}
+.hrow{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2);min-height:26px}
+.hrow b{font-weight:600;color:var(--text);flex:1}
+.spark{width:100%;height:64px;margin:4px 0 6px}
+
+/* weekly plan days */
+.days{display:flex;flex-direction:column;gap:10px}
+.drow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dchip{height:44px;border-radius:14px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:15px;font-weight:600;padding:0}
+.dchip[aria-pressed="true"]{border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
+
+/* supersets and circuits */
+.sgroup{display:flex;flex-direction:column;gap:8px;padding:10px 8px 8px 12px;border-radius:24px;border-left:3px solid var(--accent);background:rgba(87,137,232,.06)}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 6px 2px 6px;font-size:13px;color:var(--text-2)}
+.ghead b{color:var(--accent-text);font-size:14px;font-weight:700;letter-spacing:.02em}
+.sslab{display:inline-block;min-width:24px;padding:1px 5px;margin-right:2px;border-radius:6px;background:var(--tag-bg);color:var(--accent-text);font-size:12px;font-weight:700;text-align:center}
+
+/* pitch diagrams */
+.pitch{margin:18px 0 0;padding:0}
+.pitch .pitchsvg{display:block;width:100%;height:auto;border-radius:18px}
+.pitch.inplay .pitchsvg{border-radius:14px;margin-top:4px}
+.pitch figcaption{display:flex;flex-direction:column;gap:6px;margin:10px 17px 0;font-size:13px;line-height:18px;color:var(--text-2)}
+.lgrow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--text-body)}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.ptxt{fill:#fff;font-family:var(--font);font-weight:600;paint-order:stroke;stroke:rgba(18,40,24,.85);stroke-width:.45px}
+.thumb.pthumb{background:#2A6639}
+.thumb.pthumb .pitchsvg{width:100%;height:100%}
+
+/* end-of-session questions */
+.done.compact{flex:none;padding-top:18px}
+.pq{min-height:72px;padding:8px 0}
+.pq .k{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pq .k b{font-size:15px;font-weight:600;color:var(--text)}
+.pq .k span{font-size:13px;color:var(--text-2)}
+.pq .k .nx{color:var(--accent-text);font-weight:600}
+.hcard{height:clamp(300px, 52svh, 500px)}
+
+/* published 4-week pre-season schedule */
+.plangrid{display:grid;grid-template-columns:28px repeat(7,1fr);gap:6px;margin:14px 0 0;align-items:center}
+.plangrid .ph{font-size:12px;font-weight:600;color:var(--text-2);text-align:center}
+.plangrid .pc{height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.plangrid .pe{height:36px;border-radius:10px;background:rgba(255,255,255,.025)}

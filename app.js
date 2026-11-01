@@ -29,7 +29,14 @@ const I = {
   tabGrid:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="9" height="11.5" rx="2"/><rect x="13" y="2" width="9" height="7" rx="2"/><rect x="2" y="15.5" width="9" height="6.5" rx="2"/><rect x="13" y="11" width="9" height="11" rx="2"/></svg>',
   tabPlay:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M9.5 7.2l7.5 4.8-7.5 4.8z" fill="#191D25"/></svg>',
   tabLib:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="18" rx="1.5"/><rect x="9.5" y="3" width="5" height="18" rx="1.5"/><path d="M16.2 4.6l3.3-.9 3 15.5-3.3.9z"/></svg>',
+  filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/></svg>',
+  trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
   pulse:'M3 12h4l3-7 4 14 3-7h4',
+  jump:'M12 3v11M7.5 7.5L12 3l4.5 4.5M5 21h14M8 17.5h8',
+  core:'M9 3h6l3 5-2 13H8L6 8zM6.5 8h11M9.5 13h5',
   bolt:'M13 2L4 14h7l-1 8 9-12h-7z',
   run:'M13.5 4.5a1.6 1.6 0 1 0 0 .01M7 21l3-6 3 2 1.5-5 4 3M9 9l3-2.5 3 1.5 2 3',
   book:'M4 5h16M4 12h16M4 19h10',
@@ -45,13 +52,33 @@ const uid = p => (p||'x') + Date.now().toString(36) + Math.random().toString(36)
 const clone = o => JSON.parse(JSON.stringify(o));
 const plural = (n, one, few, many) => { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return one; if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few; return many; };
 const nVj = n => n + ' ' + plural(n, 'vježba', 'vježbe', 'vježbi');
+const fmtKg = v => String(Math.round(v * 100) / 100).replace('.', ',') + ' kg';
 const fmt = s => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s/60), r = s%60; return m + ':' + (r<10?'0':'') + r; };
 const MEDIA = {};
 const mediaUrl = id => MEDIA[id] || '';
-const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Kondicija'];
-const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Core','Koljeno','Gležanj','Leđa','Ramena'];
-const LIBCATS = ['Sve','Favoriti','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Kondicija'];
-const catIcon = c => ({Rehab:I.pulse, Aktivacija:I.bolt, Mobilnost:I.leaf, Snaga:I.dumb, Kondicija:I.run}[c] || I.pulse);
+const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Eksplozivnost', 'Trup', 'Kondicija'];
+const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Core','Koljeno','Gležanj','Leđa','Prsa','Ramena','Ruke','Cijelo tijelo'];
+const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
+const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Bez opreme'];
+const DAYS = ['P','U','S','Č','P','S','N'];
+const DAYNAMES = ['ponedjeljak','utorak','srijeda','četvrtak','petak','subota','nedjelja'];
+const daysText = ds => (ds||[]).slice().sort().map(i => DAYNAMES[i].slice(0,3)).join(', ');
+const catIcon = c => ({Rehab:I.pulse, Aktivacija:I.bolt, Mobilnost:I.leaf, Snaga:I.dumb, Eksplozivnost:I.jump, Trup:I.core, Kondicija:I.run}[c] || I.pulse);
+// diacritic-insensitive text for search: "cucanj" finds "čučanj"
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+// equipment tags: explicit on newer exercises, otherwise read from the free-text "Oprema" field
+const EQ_WORDS = [[/trx/,'TRX'],[/sipk|olimpijsk/,'Šipka'],[/kavez|rack/,'Kavez'],[/klup/,'Klupa'],[/bucic/,'Bučice'],[/girj|kettlebell/,'Girja'],[/landmine/,'Landmine'],[/medicin/,'Medicinka'],[/plyo|kutij|stepenic/,'Plyo box'],[/ljestv/,'Švedske ljestve'],[/kolotur/,'Kolotur'],[/mini (traka|guma)|kratk[ae] gum/,'Mini guma'],[/uze|traka|guma/,'Elastično uže'],[/velika pilates|velik[ai] lopt/,'Velika pilates lopta'],[/mala pilates|mal[ai] lopt/,'Mala pilates lopta'],[/kotac|roller|roler/,'Kotač'],[/bugarsk|postolj/,'Bugarsko postolje'],[/podlog|strunjac|tatami/,'Strunjača'],[/cunj/,'Čunjevi'],[/bez opreme/,'Bez opreme']];
+function exEquip(e){
+  if (!e) return [];
+  if (Array.isArray(e.equip) && e.equip.length) return e.equip;
+  const t = norm(e.equipment); const out = [];
+  EQ_WORDS.forEach(([re, tag]) => { if (re.test(t) && out.indexOf(tag) === -1) out.push(tag); });
+  if (out.indexOf('Mini guma') !== -1) { const i = out.indexOf('Elastično uže'); if (i !== -1 && !/uze/.test(t)) out.splice(i, 1); }
+  return out.length ? out : ['Bez opreme'];
+}
+// stable fingerprint of shipped items (hash.js, shared with tools/seed-history.cjs)
+const contentHash = window.mtContentHash;
+const HASH_SKIP = window.mtHashSkip;
 
 function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -61,7 +88,8 @@ const S = {
   dbState: 'loading', loaded: {},
   ex: {}, pr: {}, field: {}, log: [],
   tab: 'home', stack: [{v:'home'}],
-  lib: { cat: lsGet('mt.libcat', 'Sve'), q: '' },
+  lib: { cat: lsGet('mt.libcat', 'Sve'), q: '', eq: lsGet('mt.libeq', []) },
+  pack: lsGet('mt.pack', null),
   draft: null, pick: null, sheet: null, toast: null,
   settings: Object.assign({ sound: true, switchSec: 5, transSec: 10 }, lsGet('mt.settings', {})),
   canWrite: true
@@ -69,12 +97,11 @@ const S = {
 const top = () => S.stack[S.stack.length - 1];
 
 /* ---------- durations ---------- */
-function itemSecs(it){
-  if (it.measure === 'time') { const n = it.sets || 1; return n * ((it.sec||30) * (it.sides ? 2 : 1) + (it.sides ? S.settings.switchSec : 0)) + (n - 1) * (it.rest || 0) + S.settings.transSec; }
-  const reps = it.reps || 10, sets = it.sets || 1;
-  return sets * reps * 3 * (it.sides ? 2 : 1) + (sets - 1) * (it.rest || 45) + S.settings.transSec;
+// estimated from the same step list the player runs, so supersets and circuits are timed the way they are trained
+function protoMin(p){
+  const s = stepsFromItems(p.items || []).reduce((a, st) => a + (st.dur || (st.kind === 'manual' ? (st.it.reps || 10) * 3 * (st.it.sides ? 2 : 1) + (st.it.sides ? 5 : 0) : 0)), 0);
+  return Math.max(1, Math.round(s / 60));
 }
-function protoMin(p){ const s = (p.items||[]).reduce((a,it) => a + itemSecs(it), 0); return Math.max(1, Math.round(s/60)); }
 function fieldMin(f){
   if (f.total_min) return String(f.total_min).replace('.', ',');
   let s = 0; (f.blocks||[]).forEach(b => { const sets = b.sets||1, reps = b.reps||1; s += sets*reps*(b.work_s||0) + sets*(reps-1)*(b.rest_s||0) + (sets-1)*(b.set_rest_s||b.rest_s||0) + (b.rest_s||0); });
@@ -82,18 +109,29 @@ function fieldMin(f){
 }
 function dose(it){
   if (it.measure === 'time') return ((it.sets||1) > 1 ? it.sets + ' × ' : '') + (it.sec||30) + ' s' + (it.sides ? ' po strani' : '');
-  return (it.sets||1) + ' × ' + (it.reps||10) + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + it.kg + ' kg' : '');
+  return (it.sets||1) + ' × ' + (it.reps||10) + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
 }
 function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0 }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
 function exMeta(e){ return (e.zones && e.zones.length ? e.zones.slice(0,2).join(' • ') : e.cat) ; }
+// what an exercise shows: your own video or photo, then the private photo pack, then openly licensed media shipped with the app
+function exMedia(e){
+  if (!e) return null;
+  if (e.media && MEDIA[e.media]) return { type: e.mediaType === 'image' ? 'image' : 'video', src: MEDIA[e.media], own: true };
+  if (MEDIA['pack:' + e.id]) return { type: 'image', src: MEDIA['pack:' + e.id], credit: (S.pack && S.pack.credit) || 'Privatni paket slika' };
+  const m = (window.EXMEDIA || {})[e.id];
+  if (m) return { type: m.video ? 'video' : 'image', src: m.video || m.img, poster: m.img, credit: m.credit, url: m.url };
+  return null;
+}
 function thumbHtml(e){
-  if (e && e.media && MEDIA[e.media]) return e.mediaType === 'image' ? '<img alt="" src="'+esc(mediaUrl(e.media))+'">' : '<video muted playsinline preload="metadata" src="'+esc(mediaUrl(e.media))+'#t=0.5"></video>';
+  const m = exMedia(e);
+  if (m) return m.type === 'image' || m.poster ? '<img alt="" loading="lazy" src="'+esc(m.type === 'image' ? m.src : m.poster)+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
   return pathIcon(catIcon(e && e.cat), 28);
 }
+function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.1';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, log:S.log, _deleted:S._deleted||[] })); return true; }
@@ -115,9 +153,50 @@ const IDB = {
   del(id){ return this.tx('readwrite', st => st.delete(id)); }
 };
 async function loadMedia(){
-  const ids = Object.values(S.ex).map(e => e.media).filter(Boolean);
+  const ids = Object.values(S.ex).map(e => e.media).filter(Boolean).concat(((S.pack && S.pack.ids) || []).map(id => 'pack:' + id));
   for (const id of ids) { if (MEDIA[id]) continue; try { const rec = await IDB.get(id); if (rec) MEDIA[id] = URL.createObjectURL(rec instanceof Blob ? rec : new Blob([rec.buf], { type: rec.type })); } catch(e){} }
   softRender();
+}
+// the private photo pack (e.g. photos from programmes you bought) lives only on this phone, never in the public app
+async function importPack(file){
+  const d = JSON.parse(await file.text());
+  if (!d || d.kind !== 'moj-trening-media-pack' || !Array.isArray(d.items)) throw new Error('bad pack');
+  const ids = [];
+  for (const it of d.items) {
+    if (!it || !it.ex || !it.data) continue;
+    const bin = atob(it.data); const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    const type = it.type || 'image/jpeg';
+    await IDB.put('pack:' + it.ex, { type, buf: buf.buffer });
+    if (MEDIA['pack:' + it.ex]) URL.revokeObjectURL(MEDIA['pack:' + it.ex]);
+    MEDIA['pack:' + it.ex] = URL.createObjectURL(new Blob([buf], { type }));
+    ids.push(it.ex);
+  }
+  const old = (S.pack && S.pack.ids) || [];
+  S.pack = { title: d.title || 'Paket slika', credit: d.credit || 'Privatni paket slika', at: Date.now(), ids: old.concat(ids.filter(id => old.indexOf(id) === -1)) };
+  lsSet('mt.pack', S.pack);
+  return ids.length;
+}
+async function removePack(){
+  for (const id of (S.pack && S.pack.ids) || []) { try { await IDB.del('pack:' + id); } catch(e){} if (MEDIA['pack:' + id]) { URL.revokeObjectURL(MEDIA['pack:' + id]); delete MEDIA['pack:' + id]; } }
+  S.pack = null; try { localStorage.removeItem('mt.pack'); } catch(e){}
+}
+function mergeSeed(seed){
+  // New items are added; items you never changed follow the app's improvements; your edits and deletions always win.
+  const hist = window.SEED_HISTORY || {};
+  let changed = false;
+  ['exercises','protocols','field'].forEach(c => Object.keys(seed[c]||{}).forEach(id => {
+    const map = c === 'exercises' ? S.ex : c === 'protocols' ? S.pr : S.field;
+    if (S._deleted.indexOf(c + '/' + id) !== -1) return;
+    const fresh = seed[c][id], local = map[id];
+    if (!local) { map[id] = Object.assign({}, fresh, { id }); changed = true; return; }
+    const h = contentHash(local);
+    if (h === contentHash(fresh)) return;
+    if ((hist[c] && hist[c][id] || []).indexOf(h) === -1) return; // you changed it, keep yours
+    const keep = {}; Object.keys(HASH_SKIP).forEach(k => { if (k !== 'id' && local[k] !== undefined) keep[k] = local[k]; });
+    map[id] = Object.assign({}, fresh, keep, { id }); changed = true;
+  }));
+  return changed;
 }
 async function init(){
   let d = null;
@@ -126,13 +205,7 @@ async function init(){
   if (!d) { d = JSON.parse(JSON.stringify(seed)); applyData(d); S._deleted = []; persist(); }
   else {
     applyData(d); S._deleted = d._deleted || [];
-    // items shipped in later versions are added, without touching your own edits or what you deleted
-    let added = false;
-    ['exercises','protocols','field'].forEach(c => Object.keys(seed[c]||{}).forEach(id => {
-      const map = c === 'exercises' ? S.ex : c === 'protocols' ? S.pr : S.field;
-      if (!map[id] && S._deleted.indexOf(c + '/' + id) === -1) { map[id] = Object.assign({}, seed[c][id], { id }); added = true; }
-    }));
-    if (added) persist();
+    if (mergeSeed(seed)) persist();
   }
   S.dbState = 'ready';
   render();
@@ -201,6 +274,61 @@ function stateNote(){
   return '';
 }
 
+/* ---------- weekly plan & progress ---------- */
+const DAY_MS = 864e5, WEEK_MS = 7 * DAY_MS;
+const dayIdx = t => (new Date(t).getDay() + 6) % 7; // 0 = Monday
+function weekStart(t){ const d = new Date(t); d.setHours(0,0,0,0); d.setDate(d.getDate() - dayIdx(d)); return d.getTime(); }
+function planSlots(){
+  const out = [];
+  Object.values(S.pr).forEach(p => (p.days||[]).forEach(day => out.push({ day, kind:'protocol', id:p.id, name:p.name, min: protoMin(p) })));
+  Object.values(S.field).forEach(f => (f.days||[]).forEach(day => out.push({ day, kind:'field', id:f.id, name:f.name_hr, min: fieldMin(f) })));
+  return out.sort((a,b) => a.day - b.day || a.name.localeCompare(b.name, 'hr'));
+}
+// a planned session counts as done when you trained it on any day of that week; each log entry fills one slot
+function weekStatus(ws){
+  const log = S.log.filter(l => l.at >= ws && l.at < ws + WEEK_MS);
+  const used = {};
+  const slots = planSlots().map(p => {
+    let k = log.findIndex((l, i) => !used[i] && l.refId === p.id && l.kind === p.kind && dayIdx(l.at) === p.day);
+    if (k === -1) k = log.findIndex((l, i) => !used[i] && l.refId === p.id && l.kind === p.kind);
+    if (k !== -1) used[k] = 1;
+    return Object.assign({ done: k !== -1 }, p);
+  });
+  return { slots, log, planned: slots.length, done: slots.filter(s => s.done).length };
+}
+function streakWeeks(){
+  if (!planSlots().length) return 0;
+  const now = weekStart(Date.now()); let n = 0;
+  const cur = weekStatus(now);
+  for (let ws = now - WEEK_MS, k = 0; k < 104; ws -= WEEK_MS, k++) { const s = weekStatus(ws); if (s.done >= s.planned) n++; else break; }
+  return n + (cur.done >= cur.planned ? 1 : 0);
+}
+function weekHtml(){
+  if (S.dbState !== 'ready') return '';
+  const now = Date.now(), ws = weekStart(now), today = dayIdx(now);
+  const st = weekStatus(ws);
+  const trainedDays = {}; st.log.forEach(l => trainedDays[dayIdx(l.at)] = 1);
+  const strip = '<div class="week" role="group" aria-label="Ovaj tjedan">' + DAYS.map((L, i) => {
+    const d = new Date(ws + i * DAY_MS + 12 * 3600e3);
+    const plan = st.slots.filter(s => s.day === i);
+    const missed = i < today && plan.some(s => !s.done);
+    const cls = trainedDays[i] ? 'done' : missed ? 'miss' : plan.length ? 'plan' : '';
+    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : '');
+    return '<button class="wd" data-a="daySheet" data-i="'+i+'"' + (i === today ? ' aria-current="date"' : '') + ' aria-label="'+esc(label)+'"><span class="l">'+L+'</span><span class="c '+cls+'">'+d.getDate()+'</span></button>';
+  }).join('') + '</div>';
+  const todo = st.slots.filter(s => s.day === today && !s.done);
+  const missed = st.slots.filter(s => s.day < today && !s.done);
+  const row = (s, pre) => '<button class="row today" data-a="'+(s.kind === 'field' ? 'openField' : 'openPr')+'" data-id="'+esc(s.id)+'"><span class="thumb" style="width:52px;height:52px">'+pathIcon(s.kind === 'field' ? I.run : I.dumb, 24)+'</span><span class="tx"><span class="t">'+esc(pre + s.name)+'</span><span class="m"><span>'+s.min+' min</span></span></span>'+I.chev+'</button>';
+  let rows = '';
+  if (todo.length) rows = todo.map(s => row(s, 'Danas: ')).join('');
+  else if (missed.length) rows = row(missed[0], 'Nadoknadi: ');
+  const sk = streakWeeks();
+  const line = st.planned
+    ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today) ? ' • danas odrađeno' : '')
+    : 'Odaberi dane u protokolu i složi svoj tjedni plan';
+  return strip + '<p class="sub wline">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
+}
+
 /* ---------- views ---------- */
 const VIEWS = {};
 
@@ -217,6 +345,7 @@ VIEWS.home = function(){
   return '<div class="view" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
     topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
     '<h1 class="greet">Bok, Tomislav</h1>' +
+    weekHtml() +
     '<div class="carousel" id="car" aria-label="Kategorije treninga">' +
       cards.map(c => '<button class="hcard" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span><span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
     '</div>' +
@@ -234,7 +363,7 @@ VIEWS.protocols = function(){
       '<div class="list" style="margin-top:24px">' +
       (list.length ? list.map(p => {
         const first = p.items && p.items[0] && S.ex[p.items[0].exId];
-        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (first && MEDIA[first.media] ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + (p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
+        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (exMedia(first) ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + ((p.days||[]).length ? '<span class="tag">'+esc(daysText(p.days))+'</span>' : p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
       }).join('') : '<div class="empty">Još nemaš protokol. Složi prvi od svojih vježbi.</div>') +
       '</div>' +
       '<h2 class="h2">Kondicija na terenu</h2>' +
@@ -245,11 +374,13 @@ VIEWS.protocols = function(){
 };
 
 function libFiltered(){
-  const q = S.lib.q.trim().toLowerCase(), c = S.lib.cat;
+  const words = norm(S.lib.q).split(/\s+/).filter(Boolean), c = S.lib.cat, eq = S.lib.eq || [];
   return Object.values(S.ex).filter(e => {
-    if (q && e.name.toLowerCase().indexOf(q) === -1) return false;
+    if (words.length) { const hay = norm([e.name, e.alt, e.equipment, (e.zones||[]).join(' '), e.cat].join(' ')); if (!words.every(w => hay.indexOf(w) !== -1)) return false; }
+    if (eq.length) { const mine = exEquip(e); if (!eq.some(x => mine.indexOf(x) !== -1)) return false; }
     if (c === 'Sve') return true;
     if (c === 'Favoriti') return !!e.fav;
+    if (c === 'TRX') return exEquip(e).indexOf('TRX') !== -1;
     if (c === 'Rehab kuka') return e.cat === 'Rehab' || !!e.phase;
     if (c === 'Uže i kolotur') return !!e.cord;
     return e.cat === c;
@@ -283,7 +414,8 @@ VIEWS.library = function(){
       '<button class="tile" data-a="tab" data-tab="protocols"><span class="circ">'+I.dots4+'</span><span class="lbl"><b>Moji protokoli</b><span>'+prN+' '+plural(prN,'protokol','protokola','protokola')+'</span></span></button>' +
     '</div>' +
     '<h2 class="h2">Popis vježbi</h2>') +
-    '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'"></div>' +
+    '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'">' +
+      '<button class="ib fbtn" data-a="eqSheet" aria-label="Filtriraj po opremi'+((S.lib.eq||[]).length ? ', odabrano ' + S.lib.eq.length : '')+'"'+((S.lib.eq||[]).length ? ' aria-pressed="true"' : '')+'>' + I.filter + ((S.lib.eq||[]).length ? '<span class="cnt">'+S.lib.eq.length+'</span>' : '') + '</button></div>' +
     '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + LIBCATS.map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
     '<div class="list" id="liblist" style="margin-top:14px">' + libListHtml() + '</div>' +
     '<div style="height:20px"></div></div>' +
@@ -291,10 +423,33 @@ VIEWS.library = function(){
 };
 
 function mediaHtml(e, badge){
-  let inner;
-  if (e && e.media && MEDIA[e.media]) inner = e.mediaType === 'image' ? '<img alt="" src="'+esc(mediaUrl(e.media))+'">' : '<video src="'+esc(mediaUrl(e.media))+'" autoplay muted loop playsinline></video>';
-  else inner = '<div class="ph">' + I.video + '<span>Ovdje ide tvoj video</span></div>';
-  return '<div class="media">' + inner + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
+  const m = exMedia(e); let inner, credit = '';
+  if (m) {
+    inner = m.type === 'image' ? '<img class="fit" alt="" src="'+esc(m.src)+'">' : '<video src="'+esc(m.src)+'"'+(m.poster ? ' poster="'+esc(m.poster)+'"' : '')+' autoplay muted loop playsinline></video>';
+    if (m.credit) credit = m.url ? '<a class="credit" href="'+esc(m.url)+'" target="_blank" rel="noopener">'+esc(m.credit)+'</a>' : '<span class="credit">'+esc(m.credit)+'</span>';
+  } else inner = '<div class="ph">' + pathIcon(catIcon(e && e.cat), 44) + '<span>Dodaj svoj video ili sliku u uređivanju</span></div>';
+  return '<div class="media">' + inner + credit + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
+}
+function historyOf(exId){
+  const out = [];
+  S.log.forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId) out.push(Object.assign({ at: l.at }, it)); }));
+  return out; // newest first, like the log
+}
+function sparkSvg(vals){
+  if (vals.length < 2) return '';
+  const w = 300, h = 64, lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => [ (i / (vals.length - 1)) * (w - 12) + 6, h - 8 - ((v - lo) / span) * (h - 20) ]);
+  return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Napredak kroz zadnje treninge"><polyline points="'+pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + pts.map((p, i) => '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(i === pts.length - 1 ? 4 : 2.5)+'" fill="'+(i === pts.length - 1 ? 'var(--accent)' : 'var(--text-2)')+'"/>').join('') + '</svg>';
+}
+function progressCard(e){
+  const h = historyOf(e.id);
+  if (!h.length) return '<section class="icard" aria-label="Napredak"><span class="lb">Napredak</span><p style="color:var(--text-2)">Kad odradiš ovu vježbu u protokolu, ovdje se vidi kako rastu kilogrami, ponavljanja ili vrijeme.</p></section>';
+  const last = h.slice(0, 8).reverse();
+  const useKg = last.some(x => x.kg > 0);
+  const vals = last.map(x => x.measure === 'time' ? (x.sec || 0) : useKg ? (x.kg || 0) : (x.reps || 0) * (x.sets || 1));
+  const unit = last[0].measure === 'time' ? 'trajanje (s)' : useKg ? 'težina (kg)' : 'ukupno ponavljanja';
+  return '<section class="icard" aria-label="Napredak"><span class="lb">Napredak · ' + unit + '</span>' + sparkSvg(vals) +
+    h.slice(0, 4).map(x => '<div class="hrow"><span>' + esc(new Date(x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' })) + '</span><b>' + esc(dose(x)) + '</b>' + (x.easy ? '<span class="tag">lako</span>' : '') + '</div>').join('') + '</section>';
 }
 function doseOptions(e){
   if (e.measure === 'time') { const b = e.sec||30; return [b, b+15, b+30].map(s => ({ label: s + ' s', it: Object.assign(exItem(e), {sec:s}) })); }
@@ -308,18 +463,22 @@ VIEWS.ex = function(t){
     '<div class="gut">' + topbar(backBtn(), '<button class="ib" data-a="fav" data-id="'+esc(e.id)+'" aria-pressed="'+(!!e.fav)+'" aria-label="Favorit">'+(e.fav?I.heartF:I.heart)+'</button><button class="ib" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'</button>') + '</div>' +
     mediaHtml(e, e.sides ? 'Lijeva i desna' : '') +
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
+    (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips" role="group" aria-label="Doziranje" style="justify-content:center;margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
-    '<div class="cards">' +
+    '<div class="cards" aria-label="Upute, greške, detalji i napredak">' +
       '<section class="icard" aria-label="Upute">' +
         (e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(e.feel)+'</p>' : '') +
-        '<span class="lb">Upute</span>' + ((e.steps||[]).length ? (e.steps||[]).map(s => '<div class="bul">'+esc(s)+'</div>').join('') : '<p style="color:var(--text-2)">Dodaj upute u uređivanju.</p>') +
+        '<span class="lb">Upute</span>' + ((e.steps||[]).length ? (e.steps||[]).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') : '<p style="color:var(--text-2)">Dodaj upute u uređivanju.</p>') +
       '</section>' +
+      ((e.mistakes||[]).length ? '<section class="icard" aria-label="Česte greške"><span class="lb">Česte greške</span>' + e.mistakes.map(s => '<div class="bul warn">'+esc(s)+'</div>').join('') + '</section>' : '') +
       '<section class="icard" aria-label="Detalji">' +
         '<span class="lb">Ciljana područja</span><div class="tagrow">' + ((e.zones||[]).map(z => '<span class="tag">'+esc(z)+'</span>').join('') || '<span style="color:var(--text-2)">—</span>') + '</div>' +
-        '<span class="lb" style="margin-top:8px">Oprema</span><p>' + esc(e.equipment || 'Bez opreme') + '</p>' +
-        (e.note ? '<span class="lb" style="margin-top:8px">Napomena</span><p>'+esc(e.note)+'</p>' : '') +
-        (e.source ? '<span class="lb" style="margin-top:8px">Izvor</span><p><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '') +
+        '<span class="lb">Oprema</span><p>' + esc(e.equipment || exEquip(e).join(', ')) + '</p>' +
+        (e.note ? '<span class="lb">Napomena</span><p>'+esc(e.note)+'</p>' : '') +
+        (e.video ? '<span class="lb">Video</span><p><a href="'+esc(e.video)+'" target="_blank" rel="noopener">'+esc(e.videoTitle || 'Pogledaj demonstraciju')+' ↗</a></p>' : '') +
+        (e.source ? '<span class="lb">Izvor</span><p><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '') +
       '</section>' +
+      progressCard(e) +
     '</div>' +
     '<div style="height:8px"></div></div>' +
     '<div class="ctrl gut">' +
@@ -344,10 +503,12 @@ VIEWS.exEdit = function(t){
     '<h1 class="h1">' + (isNew ? 'Nova vježba' : 'Uredi vježbu') + '</h1>' +
     '<div class="stack" style="gap:22px;margin-top:22px">' +
       '<div>' + mediaBox + '<input id="mfile" class="vsr" type="file" accept="video/*,image/*"' + (S.canWrite ? '' : ' disabled') + '></div>' +
-      '<div class="field"><label class="label" for="f-name">Naziv</label><input id="f-name" class="input" data-bind="name" value="'+esc(d.name)+'" placeholder="npr. Abdukcija s užetom"></div>' +
+      '<div class="field"><label class="label" for="f-name">Naziv</label><input id="f-name" class="input" data-bind="name" value="'+esc(d.name)+'" placeholder="npr. Bench press ili Abdukcija s užetom"></div>' +
+      '<div class="field"><label class="label" for="f-alt">Drugi naziv (po želji)</label><input id="f-alt" class="input" data-bind="alt" value="'+esc(d.alt)+'" placeholder="npr. Potisak s klupe"></div>' +
       '<div class="field"><span class="label">Kategorija</span><div class="chips wrap">' + CATS.map(c => '<button class="chip" data-a="dset" data-k="cat" data-v="'+c+'" aria-pressed="'+(d.cat===c)+'">'+c+'</button>').join('') + '</div></div>' +
       (d.cat === 'Rehab' || d.cat === 'Mobilnost' ? '<div class="field"><span class="label">Faza rehabilitacije</span><div class="chips wrap">' + [0,1,2,3].map(p => '<button class="chip" data-a="dset" data-k="phase" data-v="'+p+'" aria-pressed="'+((d.phase||0)===p)+'">'+(p?'Faza '+p:'Bez faze')+'</button>').join('') + '</div></div>' : '') +
-      '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6 mm'],['Ø8','Ø8 mm'],['Ø6/Ø8','Ø6 ili Ø8']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
+      '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6'],['Ø8','Ø8'],['Ø6/Ø8','Ø6 ili Ø8'],['Ø10','Ø10'],['Ø12','Ø12'],['Ø16','Ø16']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
+      '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Ciljana područja</span><div class="chips wrap">' + ZONES.map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+((d.zones||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Serije</button></div>' +
@@ -355,17 +516,38 @@ VIEWS.exEdit = function(t){
           (d.measure === 'time' ? stepper('Trajanje','sec',d.sec, d.sec+' s') + stepper('Serije','sets',d.sets, d.sets) + stepper('Odmor','rest',d.rest, d.rest+' s') : stepper('Serije','sets',d.sets, d.sets) + stepper('Ponavljanja','reps',d.reps, d.reps) + stepper('Odmor','rest',d.rest, d.rest+' s') + stepper('Težina','kg',d.kg, d.kg ? d.kg+' kg' : '—')) +
           '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="dflag" data-k="sides" aria-checked="'+(!!d.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>' +
         '</div></div>' +
-      '<div class="field"><label class="label" for="f-eq">Oprema</label><input id="f-eq" class="input" data-bind="equipment" value="'+esc(d.equipment)+'" placeholder="npr. Uže Ø6 + kolotur"></div>' +
+      '<div class="field"><label class="label" for="f-eq">Oprema (opis)</label><input id="f-eq" class="input" data-bind="equipment" value="'+esc(d.equipment)+'" placeholder="npr. Uže Ø6 + kolotur"></div>' +
       '<div class="field"><label class="label" for="f-feel">Osjećaj</label><input id="f-feel" class="input" data-bind="feel" value="'+esc(d.feel)+'" placeholder="Gdje se vježba osjeća"></div>' +
-      '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedna točka)</label><textarea id="f-steps" class="input" rows="4" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
-      '<div class="field"><label class="label" for="f-note">Napomena</label><textarea id="f-note" class="input" rows="2" data-bind="note">'+esc(d.note)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedan korak)</label><textarea id="f-steps" class="input" rows="5" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-mis">Česte greške (svaki red jedna)</label><textarea id="f-mis" class="input" rows="3" data-bind="mistakesText">'+esc(d.mistakesText)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-note">Napomena</label><textarea id="f-note" class="input" rows="3" data-bind="note">'+esc(d.note)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-video">Link na video demonstraciju (po želji)</label><input id="f-video" class="input" type="url" inputmode="url" data-bind="video" value="'+esc(d.video)+'" placeholder="https://"></div>' +
       (isNew ? '' : '<button class="btn danger" data-a="delEx">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši vježbu') + '</button>') +
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="saveEx">Spremi vježbu</button></div>';
 };
 
+function daysPicker(action, id, days){
+  days = days || [];
+  return '<div class="days" role="group" aria-label="Dani u tjednu"><span class="label" style="padding-left:17px">Dani u tjednu' + (days.length ? '' : ' · dodirni dane kad ga radiš') + '</span><div class="drow">' +
+    DAYS.map((L, i) => '<button class="dchip" data-a="'+action+'" data-id="'+esc(id)+'" data-i="'+i+'" aria-pressed="'+(days.indexOf(i) !== -1)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div></div>';
+}
+function groupHead(items, g, L){
+  const R = Math.max.apply(null, g.idx.map(i => items[i].sets || 1)), last = items[g.idx[g.idx.length - 1]];
+  return '<div class="ghead"><b>' + (g.idx.length > 2 ? 'Krug ' : 'Superset ') + L + '</b><span>' + R + ' ' + plural(R, 'krug', 'kruga', 'krugova') + (last.rest ? ' • odmor ' + last.rest + ' s nakon kruga' : '') + '</span></div>';
+}
+function itemRowsHtml(items, lab){
+  return groupsOf(items).map(g => {
+    const rows = g.idx.map(i => {
+      const it = items[i], e = S.ex[it.exId], l = lab[i];
+      const fresh = it.up && Date.now() - it.up < 21 * DAY_MS;
+      return '<button class="row'+(l ? ' inss' : '')+'" data-a="openEx" data-id="'+esc(it.exId)+'" style="min-height:72px"><span class="thumb" style="width:62px;height:62px">'+(exMedia(e) ? thumbHtml(e) : (l ? l.L + l.k : i + 1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span>'+(fresh ? '<span class="tag">↑ napredak</span>' : '')+'</span></span>'+I.chev+'</button>';
+    }).join('');
+    return g.ss ? '<div class="sgroup">' + groupHead(items, g, lab[g.idx[0]].L) + rows + '</div>' : rows;
+  }).join('');
+}
 function featRows(p){
-  const eq = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; if (e && e.equipment) e.equipment.split(/,| i /).forEach(x => { x = x.trim(); if (x && !/^bez opreme$/i.test(x)) eq[x] = 1; }); });
+  const eq = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; if (e) exEquip(e).forEach(x => { if (x !== 'Bez opreme') eq[x] = 1; }); });
   const zones = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; (e && e.zones || []).forEach(z => zones[z] = 1); });
   return '<div class="feat">'+I.clock+'<span>' + protoMin(p) + ' minuta • ' + nVj((p.items||[]).length) + '</span></div>' +
     (Object.keys(zones).length ? '<div class="feat">'+I.target+'<span>' + esc(Object.keys(zones).slice(0,4).join(', ')) + '</span></div>' : '') +
@@ -375,15 +557,18 @@ VIEWS.pr = function(t){
   const p = S.pr[t.id];
   if (!p) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj protokol više ne postoji.</div></div>';
   const first = p.items && p.items[0] && S.ex[p.items[0].exId];
+  const fm = exMedia(first);
+  const lab = ssLetters(p.items || []);
   return '<div class="view" style="position:relative">' +
-    '<div class="hero">' + (first && MEDIA[first.media] ? (first.mediaType==='image' ? '<img alt="" src="'+esc(mediaUrl(first.media))+'">' : '<video src="'+esc(mediaUrl(first.media))+'" autoplay muted loop playsinline></video>') : '<span class="ic">'+pathIcon(p.home==='aktivacija'?I.rope:I.pulse,110)+'</span>') + '<span class="fade"></span></div>' +
+    '<div class="hero">' + (fm ? (fm.type === 'image' ? '<img alt="" src="'+esc(fm.src)+'">' : '<video src="'+esc(fm.src)+'" autoplay muted loop playsinline></video>') : '<span class="ic">'+pathIcon(p.home==='aktivacija'?I.rope:p.home==='rehab'?I.pulse:I.dumb,110)+'</span>') + '<span class="fade"></span></div>' +
     '<div class="over gut">' + topbar(backBtn(), '<button class="ib" data-a="editPr" data-id="'+esc(p.id)+'" aria-label="Uredi protokol">'+I.edit+'</button>') + '</div>' +
     '<div class="gut stack" style="gap:18px;margin-top:-6px">' +
       '<h1 style="margin:0 17px;font-size:30px;line-height:36px;font-weight:600;text-wrap:balance">' + esc(p.name) + '</h1>' +
       (p.desc ? '<p style="margin:0 17px;font-size:16px;line-height:24px;color:var(--text-body)">' + esc(p.desc) + '</p>' : '') +
       '<div class="stack" style="gap:16px;margin:4px 17px 0">' + featRows(p) + '</div>' +
-      '<h2 class="h2" style="margin-top:8px">Vježbe</h2>' +
-      '<div class="list">' + (p.items||[]).map((it,i) => { const e = S.ex[it.exId]; return '<button class="row" data-a="openEx" data-id="'+esc(it.exId)+'" style="min-height:72px"><span class="thumb" style="width:62px;height:62px">'+(e && MEDIA[e.media] ? thumbHtml(e) : (i+1))+'</span><span class="tx"><span class="t">'+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span></span></span>'+I.chev+'</button>'; }).join('') + '</div>' +
+      daysPicker('prDays', p.id, p.days) +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2><button class="txtbtn" data-a="progInfo" style="height:32px;font-size:14px;padding:0">Kako napredujem?</button></div>' +
+      '<div class="list">' + itemRowsHtml(p.items || [], lab) + '</div>' +
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"' + ((p.items||[]).length ? '' : ' disabled') + '>Krenimo!</button></div>';
 };
@@ -398,27 +583,37 @@ VIEWS.build = function(){
     '<div class="field" style="margin-top:22px"><label class="label" for="p-name">Naziv</label><input id="p-name" class="input" data-bind="name" value="'+esc(d.name)+'" placeholder="npr. Aktivacija prije treninga" style="font-weight:600;font-size:17px"></div>' +
     '<div class="field" style="margin-top:16px"><label class="label" for="p-desc">Opis</label><textarea id="p-desc" class="input" rows="2" data-bind="desc" placeholder="Kada i zašto ga radiš">'+esc(d.desc)+'</textarea></div>' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:28px 17px 14px"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2><span style="font-size:14px;color:var(--text-body)">'+nVj(d.items.length)+' • ≈ '+total+' min</span></div>' +
-    '<div class="list">' + d.items.map((it, i) => {
-      const e = S.ex[it.exId]; const open = d._open === i;
-      return '<div style="border-radius:20px;background:var(--surface);border:1px solid '+(open?'var(--accent)':'var(--border)')+'">' +
-        '<button class="row" data-a="itOpen" data-i="'+i+'" aria-expanded="'+open+'" style="border:0;background:transparent">' +
-          '<span class="thumb">'+(e && MEDIA[e.media] ? thumbHtml(e) : (i+1))+'</span><span class="tx"><span class="t">'+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span></span></span>' +
-          '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate('+(open?'-90':'90')+'deg)"><path d="M9 4.5l7.5 7.5L9 19.5"/></svg>' +
-        '</button>' +
-        (open ? '<div style="padding:0 16px 16px;border-top:1px solid var(--border)">' +
-          '<div class="seg" style="margin-top:12px"><button class="chip" data-a="iset" data-k="measure" data-v="time" aria-pressed="'+(it.measure==='time')+'">Na vrijeme</button><button class="chip" data-a="iset" data-k="measure" data-v="sets" aria-pressed="'+(it.measure!=='time')+'">Serije</button></div>' +
-          (it.measure === 'time'
-            ? istep('Trajanje','sec',i,it.sec+' s') + istep('Serije','sets',i,it.sets||1) + istep('Odmor','rest',i,(it.rest||0)+' s')
-            : istep('Serije','sets',i,it.sets) + istep('Ponavljanja','reps',i,it.reps) + istep('Odmor','rest',i,it.rest+' s')) +
-          '<div class="prow"><span class="k">Lijeva i desna posebno</span><button class="switch" role="switch" data-a="iflag" data-i="'+i+'" aria-checked="'+(!!it.sides)+'" aria-label="Lijeva i desna posebno"></button></div>' +
-          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">' +
-            '<button class="chip" data-a="imove" data-i="'+i+'" data-d="-1"'+(i===0?' disabled style="opacity:.35"':'')+'>↑ Gore</button>' +
-            '<button class="chip" data-a="imove" data-i="'+i+'" data-d="1"'+(i===d.items.length-1?' disabled style="opacity:.35"':'')+'>↓ Dolje</button>' +
-            '<button class="chip" data-a="idel" data-i="'+i+'" style="color:var(--danger)">Ukloni</button>' +
-          '</div></div>' : '') +
-      '</div>';
-    }).join('') +
+    '<div class="list">' + (function(){
+      const lab = ssLetters(d.items);
+      const card = (it, i) => {
+        const e = S.ex[it.exId]; const open = d._open === i; const l = lab[i];
+        const linked = i < d.items.length - 1 && it.ss && d.items[i+1].ss === it.ss;
+        const inGroup = !!l, lastInGroup = inGroup && !linked;
+        const restLabel = !inGroup ? 'Odmor između serija' : lastInGroup ? 'Odmor nakon kruga' : 'Odmor prije sljedeće';
+        return '<div style="border-radius:20px;background:var(--surface);border:1px solid '+(open?'var(--accent)':'var(--border)')+'">' +
+          '<button class="row" data-a="itOpen" data-i="'+i+'" aria-expanded="'+open+'" style="border:0;background:transparent">' +
+            '<span class="thumb">'+(exMedia(e) ? thumbHtml(e) : (l ? l.L + l.k : i+1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span></span></span>' +
+            '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate('+(open?'-90':'90')+'deg)"><path d="M9 4.5l7.5 7.5L9 19.5"/></svg>' +
+          '</button>' +
+          (open ? '<div style="padding:0 16px 16px;border-top:1px solid var(--border)">' +
+            '<div class="seg" style="margin-top:12px"><button class="chip" data-a="iset" data-k="measure" data-v="time" aria-pressed="'+(it.measure==='time')+'">Na vrijeme</button><button class="chip" data-a="iset" data-k="measure" data-v="sets" aria-pressed="'+(it.measure!=='time')+'">Serije</button></div>' +
+            (it.measure === 'time'
+              ? istep('Trajanje','sec',i,it.sec+' s') + istep(inGroup ? 'Krugovi' : 'Serije','sets',i,it.sets||1) + istep(restLabel,'rest',i,(it.rest||0)+' s')
+              : istep(inGroup ? 'Krugovi' : 'Serije','sets',i,it.sets) + istep('Ponavljanja','reps',i,it.reps) + istep('Težina','kg',i,it.kg ? fmtKg(it.kg) : '—') + istep(restLabel,'rest',i,(it.rest||0)+' s')) +
+            '<div class="prow"><span class="k">Lijeva i desna posebno</span><button class="switch" role="switch" data-a="iflag" data-i="'+i+'" aria-checked="'+(!!it.sides)+'" aria-label="Lijeva i desna posebno"></button></div>' +
+            (i < d.items.length - 1 ? '<div class="prow"><span class="k">Superset sa sljedećom vježbom<br><span style="font-size:13px;color:var(--text-2)">Radiš ih naizmjence, odmor tek nakon kruga</span></span><button class="switch" role="switch" data-a="ilink" data-i="'+i+'" aria-checked="'+linked+'" aria-label="Superset sa sljedećom vježbom"></button></div>' : '') +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">' +
+              '<button class="chip" data-a="imove" data-i="'+i+'" data-d="-1"'+(i===0?' disabled style="opacity:.35"':'')+'>↑ Gore</button>' +
+              '<button class="chip" data-a="imove" data-i="'+i+'" data-d="1"'+(i===d.items.length-1?' disabled style="opacity:.35"':'')+'>↓ Dolje</button>' +
+              '<button class="chip" data-a="idel" data-i="'+i+'" style="color:var(--danger)">Ukloni</button>' +
+            '</div></div>' : '') +
+        '</div>';
+      };
+      return groupsOf(d.items).map(g => g.ss ? '<div class="sgroup">' + groupHead(d.items, g, lab[g.idx[0]].L) + g.idx.map(i => card(d.items[i], i)).join('') + '</div>' : card(d.items[g.idx[0]], g.idx[0])).join('');
+    })() +
       '<button class="dash" data-a="pickStart">'+I.plus.replace('<svg','<svg width="18" height="18"')+'Dodaj vježbe iz knjižnice</button>' +
+      '<div style="margin:8px 0 0">' + daysPicker('ddays', d.id, d.days) + '</div>' +
+      (isNew ? '' : '<button class="btn sec" data-a="copyPr" style="height:48px">Kopiraj protokol</button>') +
       (isNew ? '' : '<button class="btn danger" data-a="delPr">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši protokol') + '</button>') +
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="savePr" data-start="1"' + (d.items.length ? '' : ' disabled') + '>Spremi i kreni</button></div>';
@@ -427,16 +622,142 @@ function istep(label, key, i, shown){
   return '<div class="prow" style="border:0"><span class="k">'+label+'</span><div class="step"><button class="sbtn" data-a="istep" data-k="'+key+'" data-i="'+i+'" data-d="-1" aria-label="'+label+' manje">−</button><b>'+esc(shown)+'</b><button class="sbtn" data-a="istep" data-k="'+key+'" data-i="'+i+'" data-d="1" aria-label="'+label+' više">+</button></div></div>';
 }
 
+const FIELD_GROUPS = [
+  { key:'pre', title:'Predsezonski plan · 4 tjedna', sub:'STATSports Pre-Season Training Program: trčanja za pripreme, po tjednima' },
+  { key:'web', title:'Treninzi sa statsports.com', sub:'Treninzi trčanja koje je STATSports objavio na svojim stranicama' }
+];
+// the published 4-week schedule: tap a code to open that run
+function fieldPlanHtml(){
+  const plan = (window.SEED_PLAN || {}).pre; if (!plan) return '';
+  return '<div class="plangrid" role="table" aria-label="Raspored po tjednima"><span></span>' + DAYS.map(L => '<span class="ph">'+L+'</span>').join('') +
+    plan.weeks.map(w => '<span class="ph">'+w.week+'.</span>' + DAYS.map((L, i) => { const code = w.days[i]; const f = code && S.field['ss-pre-' + code.toLowerCase()];
+      return code ? (f ? '<button class="pc" data-a="openField" data-id="'+esc(f.id)+'" aria-label="'+esc(w.week+'. tjedan, '+DAYNAMES[i]+': '+f.name_hr)+'">'+esc(code)+'</button>' : '<span class="pc">'+esc(code)+'</span>') : '<span class="pe"></span>'; }).join('')).join('') +
+    '</div><p class="sub" style="margin-right:17px;line-height:19px">'+esc(plan.note || '')+'</p>';
+}
+function fieldRow(f){
+  const spec = (window.PITCH || {})[f.id];
+  const when = f.week ? f.week + '. tjedan' + (f.dayHr ? ' · ' + f.dayHr : '') : '';
+  return '<button class="row" data-a="openField" data-id="'+esc(f.id)+'"><span class="thumb pthumb">'+(spec ? pitchSvg(spec, { thumb:true }) : pathIcon(I.run,28))+'</span><span class="tx"><span class="t">'+esc(f.name_hr)+'</span><span class="m"><span>'+fieldMin(f)+' min</span><span class="tag">'+esc(when || f.goal_hr)+'</span></span></span>'+I.chev+'</button>';
+}
 VIEWS.fieldList = function(){
-  const list = Object.values(S.field).sort((a,b) => (a.order||99) - (b.order||99));
+  const all = Object.values(S.field).sort((a,b) => (a.order||99) - (b.order||99));
+  let body;
+  if (S.dbState !== 'ready') body = stateNote();
+  else if (!all.length) body = '<div class="empty">Treninzi s terena se pripremaju. Uskoro će se pojaviti ovdje.</div>';
+  else body = FIELD_GROUPS.map(g => {
+    const list = all.filter(f => (f.group || 'web') === g.key);
+    return list.length ? '<h2 class="h2">'+esc(g.title)+'</h2><p class="sub">'+esc(g.sub)+'</p>' + (g.key === 'pre' ? fieldPlanHtml() : '') + '<div class="list" style="margin-top:14px">' + list.map(fieldRow).join('') + '</div>' : '';
+  }).join('');
   return '<div class="view gut">' + topbar(backBtn()) +
     '<h1 class="h1">Kondicija na terenu</h1>' +
-    '<p class="sub">Treninzi trčanja koje je javno objavio STATSports</p>' +
-    '<div class="list" style="margin-top:22px">' +
-    (S.dbState !== 'ready' ? stateNote() : list.length ? list.map(f => '<button class="row" data-a="openField" data-id="'+esc(f.id)+'"><span class="thumb" style="background:#33404A">'+pathIcon(I.run,28)+'</span><span class="tx"><span class="t">'+esc(f.name_hr)+'</span><span class="m"><span>'+fieldMin(f)+' min</span><span class="tag">'+esc(f.goal_hr)+'</span></span></span>'+I.chev+'</button>').join('')
-      : '<div class="empty">Treninzi s terena se pripremaju. Uskoro će se pojaviti ovdje.</div>') +
-    '</div><div style="height:20px"></div></div>';
+    '<p class="sub">Nacrt terena pokazuje odakle i kamo trčiš</p>' +
+    body + '<div style="height:20px"></div></div>';
 };
+
+/* ---------- pitch diagrams: geometry in metres lives in pitch.js, drawn here ---------- */
+const PSTYLE = {
+  sprint:{ c:'#FFD54A', w:.8, d:'' }, run:{ c:'#FFFFFF', w:.6, d:'' }, jog:{ c:'#FFFFFF', w:.55, d:'2 1.6' },
+  walk:{ c:'#D8EADB', w:.5, d:'.3 1.3' }, shuttle:{ c:'#FF9F5A', w:.7, d:'' }, dribble:{ c:'#7FD3FF', w:.6, d:'1.2 1' }, pass:{ c:'#FFFFFF', w:.4, d:'.6 .8' }
+};
+const PLABEL = { sprint:'sprint', run:'trčanje', jog:'lagano trčanje', walk:'hod', shuttle:'tamo-natrag', dribble:'vođenje lopte', pass:'dodavanje' };
+const PSPEED = { sprint:7.5, run:5.5, jog:3.5, walk:1.6, shuttle:6, dribble:3, pass:12 };
+function pitchSvg(spec, opt){
+  opt = opt || {};
+  const full = !spec.pitch || spec.pitch === 'full';
+  const W = full ? 105 : spec.pitch.w, H = full ? 68 : spec.pitch.h;
+  const mg = full ? 3 : Math.max(1.2, W * .07);
+  const Y = y => +(H - y).toFixed(2), X = x => +(+x).toFixed(2);
+  const thumb = !!opt.thumb, fs = full ? 3.1 : Math.max(.55, W * .042);
+  // text follows its line, turned so it always reads left to right or bottom to top
+  const rot = (x1, y1, x2, y2, cx, cy) => { let a = Math.atan2(-(y2 - y1), x2 - x1) * 180 / Math.PI; if (a > 90) a -= 180; if (a <= -90) a += 180; return Math.abs(a) < 1 ? '' : ' transform="rotate(' + a.toFixed(1) + ' ' + cx + ' ' + cy + ')"'; };
+  const lw = full ? .3 : Math.max(.06, W * .006);
+  let s = '<svg class="pitchsvg" viewBox="'+[-mg, -mg, W + 2*mg, H + 2*mg].map(X).join(' ')+'" role="img" aria-label="'+esc(spec.alt || 'Nacrt terena')+'" preserveAspectRatio="xMidYMid meet">';
+  s += '<rect x="'+(-mg)+'" y="'+(-mg)+'" width="'+(W + 2*mg)+'" height="'+(H + 2*mg)+'" rx="'+(mg*.6)+'" fill="#2A6639"/>';
+  const n = full ? 14 : Math.max(4, Math.round(W / 2));
+  for (let i = 0; i < n; i += 2) s += '<rect x="'+X(i*W/n)+'" y="0" width="'+X(W/n)+'" height="'+H+'" fill="#2E6F3E"/>';
+  const L = ' fill="none" stroke="rgba(255,255,255,.82)" stroke-width="'+lw+'"';
+  s += '<rect x="0" y="0" width="'+W+'" height="'+H+'"'+L+'/>';
+  if (full) {
+    s += '<line x1="52.5" y1="0" x2="52.5" y2="68"'+L+'/><circle cx="52.5" cy="34" r="9.15"'+L+'/><circle cx="52.5" cy="34" r=".4" fill="#fff"/>';
+    [0, 1].forEach(r => { const x0 = r ? 105 : 0, dx = r ? -1 : 1, ax = x0 + dx*16.5, dy = Math.sqrt(9.15*9.15 - 5.5*5.5).toFixed(2);
+      s += '<rect x="'+(r ? 88.5 : 0)+'" y="13.84" width="16.5" height="40.32"'+L+'/><rect x="'+(r ? 99.5 : 0)+'" y="24.84" width="5.5" height="18.32"'+L+'/>' +
+        '<circle cx="'+(x0 + dx*11)+'" cy="34" r=".35" fill="#fff"/><path d="M'+ax+' '+(34 - dy)+'A9.15 9.15 0 0 '+(r ? 0 : 1)+' '+ax+' '+(34 + +dy)+'"'+L+'/>' +
+        '<rect x="'+(r ? 105 : -1.8)+'" y="30.34" width="1.8" height="7.32"'+L+'/>'; });
+  }
+  const dimmed = p => opt.block != null && p.block != null && (Array.isArray(p.block) ? p.block.indexOf(opt.block) === -1 : p.block !== opt.block);
+  const paths = (spec.paths || []).slice().sort((a,b) => (a.order||0) - (b.order||0));
+  const used = {};
+  if (!thumb) (spec.dims || []).forEach(dm => {
+    const [x1,y1] = dm.from, [x2,y2] = dm.to, len = Math.hypot(x2-x1, y2-y1) || 1, nx = -(y2-y1)/len, ny = (x2-x1)/len, t = fs*.4;
+    s += '<g class="dim" opacity=".9"><line x1="'+X(x1)+'" y1="'+Y(y1)+'" x2="'+X(x2)+'" y2="'+Y(y2)+'" stroke="#fff" stroke-width="'+(lw*.8)+'" stroke-dasharray="'+(fs*.35)+' '+(fs*.25)+'"/>' +
+      '<line x1="'+X(x1+nx*t)+'" y1="'+Y(y1+ny*t)+'" x2="'+X(x1-nx*t)+'" y2="'+Y(y1-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/><line x1="'+X(x2+nx*t)+'" y1="'+Y(y2+ny*t)+'" x2="'+X(x2-nx*t)+'" y2="'+Y(y2-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/>' +
+      (function(){ const cx = X((x1+x2)/2 + nx*fs*.9), cy = Y((y1+y2)/2 + ny*fs*.9); return '<text x="'+cx+'" y="'+cy+'" font-size="'+(fs*.85)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle"'+rot(x1, y1, x2, y2, cx, cy)+'>'+esc(dm.label)+'</text>'; })() + '</g>';
+  });
+  paths.forEach(p => {
+    const st = PSTYLE[p.kind] || PSTYLE.run; used[p.kind || 'run'] = 1;
+    const pts = p.points || [];
+    if (pts.length < 2) return;
+    const d = 'M' + pts.map(q => X(q[0]) + ' ' + Y(q[1])).join('L');
+    const w = (thumb ? st.w * 2.2 : st.w) * (full ? 1 : W / 60);
+    s += '<path d="'+d+'" fill="none" stroke="'+st.c+'" stroke-width="'+w.toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"'+(st.d ? ' stroke-dasharray="'+st.d.split(' ').map(v => (v * (full ? 1 : W / 60)).toFixed(2)).join(' ')+'"' : '')+(dimmed(p) ? ' opacity=".25"' : '')+'/>';
+    if (p.arrow !== false && !thumb) {
+      const [ax, ay] = pts[pts.length - 1], [bx, by] = pts[pts.length - 2];
+      const a = Math.atan2(ay - by, ax - bx), hl = fs * .75;
+      const tip = [ax, ay], l = [ax - hl*Math.cos(a - .45), ay - hl*Math.sin(a - .45)], r = [ax - hl*Math.cos(a + .45), ay - hl*Math.sin(a + .45)];
+      s += '<path d="M'+X(l[0])+' '+Y(l[1])+'L'+X(tip[0])+' '+Y(tip[1])+'L'+X(r[0])+' '+Y(r[1])+'" fill="none" stroke="'+st.c+'" stroke-width="'+w.toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"'+(dimmed(p) ? ' opacity=".25"' : '')+'/>';
+    }
+    if (p.label && !thumb && !dimmed(p)) {
+      let best = 0, bi = 0; for (let i = 1; i < pts.length; i++) { const sl = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); if (sl > best) { best = sl; bi = i; } }
+      const [x1,y1] = pts[bi-1], [x2,y2] = pts[bi], ln = best || 1, off = p.labelSide === 'below' ? -1 : 1;
+      const cx = X((x1+x2)/2 - (y2-y1)/ln*fs*.8*off), cy = Y((y1+y2)/2 + (x2-x1)/ln*fs*.8*off);
+      s += '<text x="'+cx+'" y="'+cy+'" font-size="'+(fs*.8)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle"'+rot(x1, y1, x2, y2, cx, cy)+'>'+esc(p.label)+'</text>';
+    }
+  });
+  (spec.markers || []).forEach(mk => {
+    const x = X(mk.x), y = Y(mk.y), r = fs * .42;
+    if (mk.kind === 'cone') s += '<path d="M'+x+' '+(y - r*1.25)+'L'+(x + r)+' '+(y + r*.8)+'L'+(x - r)+' '+(y + r*.8)+'Z" fill="#FF8A3D" stroke="#fff" stroke-width="'+(lw*.6)+'"/>';
+    else if (mk.kind === 'pole') s += '<circle cx="'+x+'" cy="'+y+'" r="'+(r*.7)+'" fill="#FFD54A" stroke="#7A5B00" stroke-width="'+(lw*.6)+'"/>';
+    else if (mk.kind === 'start') s += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#E5484D" stroke="#fff" stroke-width="'+(lw*.9)+'"/>';
+    else if (mk.kind === 'ball') s += '<circle cx="'+x+'" cy="'+y+'" r="'+(r*.8)+'" fill="#fff" stroke="#1E2A22" stroke-width="'+(lw*.8)+'"/><path d="M'+(x - r*.45)+' '+y+'h'+(r*.9)+'M'+x+' '+(y - r*.45)+'v'+(r*.9)+'" stroke="#1E2A22" stroke-width="'+(lw*.5)+'"/>';
+    else s += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="#fff" stroke-width="'+(lw*1.2)+'"/>';
+    if (mk.label && !thumb) s += '<text x="'+(x + r*1.6)+'" y="'+(y - r*1.3)+'" font-size="'+(fs*.75)+'" class="ptxt">'+esc(mk.label)+'</text>';
+  });
+  if (!thumb) (spec.labels || []).forEach(l => { s += '<text x="'+X(l.x)+'" y="'+Y(l.y)+'" font-size="'+(fs*.8)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle">'+esc(l.text)+'</text>'; });
+  const still = opt.still || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (!thumb && !still) {
+    const route = paths.filter(p => !dimmed(p) && (p.points||[]).length > 1).map(p => ({ k: p.kind || 'run', pts: p.points.map(q => [X(q[0]), Y(q[1])]) }));
+    if (route.length) s += '<g class="runner" transform="translate('+route[0].pts[0][0]+' '+route[0].pts[0][1]+')" data-route="'+esc(JSON.stringify(route))+'"><circle r="'+(fs*.95)+'" fill="rgba(255,255,255,.22)"/><circle r="'+(fs*.5)+'" fill="#fff" stroke="#5789E8" stroke-width="'+(lw*1.4)+'"/></g>';
+  }
+  return s + '</svg>';
+}
+function pitchLegend(spec){
+  const kinds = {}; (spec.paths || []).forEach(p => kinds[p.kind || 'run'] = 1);
+  return Object.keys(kinds).map(k => { const st = PSTYLE[k] || PSTYLE.run; return '<span class="lg"><svg width="28" height="8" viewBox="0 0 28 8"><line x1="1" y1="4" x2="27" y2="4" stroke="'+st.c+'" stroke-width="2.4" stroke-linecap="round"'+(st.d ? ' stroke-dasharray="'+st.d.split(' ').map(v => (v*3).toFixed(1)).join(' ')+'"' : '')+'/></svg>'+esc(PLABEL[k] || k)+'</span>'; }).join('');
+}
+// one animation loop moves every runner on screen along its route; it stops by itself when none is left
+let runnerRaf = null;
+function startRunners(){
+  if (runnerRaf || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const t0 = performance.now();
+  const step = now => {
+    const gs = app.querySelectorAll('g.runner');
+    if (!gs.length) { runnerRaf = null; return; }
+    gs.forEach(g => {
+      if (!g._plan) {
+        const route = JSON.parse(g.dataset.route); let T = 0; const segs = [];
+        route.forEach(r => { let len = 0; for (let i = 1; i < r.pts.length; i++) len += Math.hypot(r.pts[i][0]-r.pts[i-1][0], r.pts[i][1]-r.pts[i-1][1]); const d = len / (PSPEED[r.k] || 5); segs.push({ r, len, d, at: T }); T += d + .6; });
+        const scale = T > 14 ? 14 / T : T < 5 ? 5 / T : 1; segs.forEach(sg => { sg.d *= scale; sg.at *= scale; }); g._plan = { segs, T: T * scale };
+      }
+      const P2 = g._plan, t = ((now - t0) / 1000) % P2.T;
+      let sg = P2.segs[0]; for (const x of P2.segs) if (t >= x.at) sg = x;
+      const f = Math.min(1, Math.max(0, (t - sg.at) / sg.d)); let want = f * sg.len, pt = sg.r.pts[0];
+      for (let i = 1; i < sg.r.pts.length; i++) { const a = sg.r.pts[i-1], b = sg.r.pts[i], l = Math.hypot(b[0]-a[0], b[1]-a[1]); if (want <= l || i === sg.r.pts.length - 1) { const u = l ? Math.min(1, want / l) : 1; pt = [a[0] + (b[0]-a[0])*u, a[1] + (b[1]-a[1])*u]; break; } want -= l; }
+      g.setAttribute('transform', 'translate(' + pt[0].toFixed(2) + ' ' + pt[1].toFixed(2) + ')');
+    });
+    runnerRaf = requestAnimationFrame(step);
+  };
+  runnerRaf = requestAnimationFrame(step);
+}
 function blockLine(b){
   const parts = [];
   parts.push((b.sets > 1 ? b.sets + ' × ' : '') + (b.reps||1) + ' × ' + (b.distance_m ? b.distance_m + ' m' : fmt(b.work_s)));
@@ -450,10 +771,14 @@ VIEWS.field = function(t){
   const f = S.field[t.id];
   const akt = Object.values(S.pr).find(p => p.home === 'aktivacija');
   if (!f) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj trening više ne postoji.</div></div>';
+  const spec = (window.PITCH || {})[f.id];
   return '<div class="view gut">' + topbar(backBtn()) +
     '<h1 class="h1">' + esc(f.name_hr) + '</h1>' +
-    '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap"><span class="tag">'+esc(f.goal_hr)+'</span><span class="tag">'+fieldMin(f)+' min</span></div>' +
+    '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap"><span class="tag">'+esc(f.goal_hr)+'</span><span class="tag">'+fieldMin(f)+' min</span>' + (f.week ? '<span class="tag">'+f.week+'. tjedan'+(f.dayHr ? ' · ' + esc(f.dayHr) : '')+'</span>' : '') + '</div>' +
+    (spec ? '<figure class="pitch">' + pitchSvg(spec) + '<figcaption><div class="lgrow">' + pitchLegend(spec) + '</div>' + (spec.caption ? '<span>' + esc(spec.caption) + '</span>' : '') + '</figcaption></figure>' : '') +
     (f.summary_hr ? '<p style="margin:16px 17px 0;font-size:16px;line-height:24px;color:var(--text-body)">'+esc(f.summary_hr)+'</p>' : '') +
+    (f.how_hr && f.how_hr.length ? '<div class="stack" style="gap:8px;margin:14px 17px 0">' + f.how_hr.map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') + '</div>' : '') +
+    '<div style="margin-top:18px">' + daysPicker('fieldDays', f.id, f.days) + '</div>' +
     '<div class="stack" style="gap:16px;margin:20px 17px 0">' +
       (f.equipment_hr ? '<div class="feat">'+I.bars+'<span>'+esc(f.equipment_hr)+'</span></div>' : '') +
       (f.warmup_hr ? '<div class="feat">'+I.clock+'<span>Zagrijavanje: '+esc(f.warmup_hr)+'</span></div>' : '') +
@@ -462,7 +787,7 @@ VIEWS.field = function(t){
     '<h2 class="h2">Blokovi</h2>' +
     '<div class="list" style="margin-top:14px">' + (f.blocks||[]).map((b,i) => '<div class="blk"><span class="no">'+(i+1)+'</span><span class="bt"><b>'+esc(b.label_hr)+'</b><span>'+esc(blockLine(b))+'</span>'+(b.cue_hr?'<span style="color:var(--text-2)">'+esc(b.cue_hr)+'</span>':'')+'</span></div>').join('') + '</div>' +
     (f.cooldown_hr ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Hlađenje: '+esc(f.cooldown_hr)+'</p>' : '') +
-    '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: <a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a></p>' +
+    '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: ' + (f.source_url ? '<a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a>' : esc(f.source_title || 'STATSports')) + (spec ? ' · nacrt je vlastiti prikaz prema izvoru' : '') + '</p>' +
     '<div style="height:20px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="startField" data-id="'+esc(f.id)+'">Krenimo!</button></div>';
 };
@@ -480,26 +805,69 @@ async function keepAwake(on){
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && P && !P.done) keepAwake(true); });
 
+// Consecutive items that share "ss" form a superset (2 exercises) or a circuit (3+): one set of each in turn,
+// then the last exercise's rest closes the round. Everything else runs set after set as before.
+function groupsOf(items){
+  const out = [];
+  items.forEach((it, i) => { const last = out[out.length - 1]; if (it.ss && last && last.ss === it.ss) last.idx.push(i); else out.push({ ss: it.ss || null, idx: [i] }); });
+  out.forEach(g => { if (g.idx.length < 2) g.ss = null; });
+  return out;
+}
+function ssLetters(items){
+  const lab = {}; let n = 0;
+  groupsOf(items).forEach(g => { if (!g.ss) return; const L = String.fromCharCode(65 + n++); g.idx.forEach((i, k) => lab[i] = { L, k: k + 1, size: g.idx.length }); });
+  return lab;
+}
+// keeps supersets well-formed after moving or removing: a key used by a single item is dropped, a key split in two becomes two groups
+function normGroups(items){
+  const seen = {};
+  items.forEach((it, i) => {
+    if (!it.ss) return;
+    const prev = items[i - 1];
+    if (prev && prev.ss === it.ss) return;
+    if (seen[it.ss]) { const old = it.ss, nk = uid('s'); for (let k = i; k < items.length && items[k].ss === old; k++) items[k].ss = nk; }
+    seen[it.ss] = 1;
+  });
+  groupsOf(items).forEach(g => { if (!g.ss) g.idx.forEach(i => { delete items[i].ss; }); });
+  return items;
+}
 function stepsFromItems(items){
   const steps = []; const ss = S.settings.switchSec, ts = S.settings.transSec;
-  steps.push({ kind:'prep', dur:5, g:0, title:'Pripremi se', label:'Kreće za' });
-  items.forEach((it, g) => {
-    const e = S.ex[it.exId] || { name:'Vježba', steps:[] };
-    const base = { g, e, it };
-    if (g > 0) steps.push(Object.assign({}, base, { kind:'rest', dur:ts, label:'Sljedeće', trans:true }));
+  const lab = ssLetters(items);
+  const exOf = it => S.ex[it.exId] || { name:'Vježba', steps:[] };
+  const pushSet = (it, base) => {
     if (it.measure === 'time') {
-      const n = it.sets || 1;
+      if (it.sides) { steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Lijeva strana' })); steps.push(Object.assign({}, base, { kind:'switch', dur:ss, side:'Promjena strane' })); steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Desna strana' })); }
+      else steps.push(Object.assign({}, base, { kind:'work', dur:it.sec }));
+    } else steps.push(Object.assign({}, base, { kind:'manual', side: it.reps + ' ponavljanja' + (it.sides ? ' po strani' : '') }));
+  };
+  steps.push({ kind:'prep', dur:5, g:0, title:'Pripremi se', label:'Kreće za' });
+  groupsOf(items).forEach((grp, gi) => {
+    const first = grp.idx[0];
+    if (gi > 0) steps.push({ kind:'rest', dur:ts, label:'Sljedeće', trans:true, g:first, e:exOf(items[first]), it:items[first], set:1, ss: lab[first] });
+    if (!grp.ss) {
+      const g = first, it = items[g], e = exOf(it), n = it.sets || 1;
       for (let s = 1; s <= n; s++) {
-        const b2 = Object.assign({}, base, { set: s });
-        if (it.sides) { steps.push(Object.assign({}, b2, { kind:'work', dur:it.sec, side:'Lijeva strana' })); steps.push(Object.assign({}, b2, { kind:'switch', dur:ss, side:'Promjena strane' })); steps.push(Object.assign({}, b2, { kind:'work', dur:it.sec, side:'Desna strana' })); }
-        else steps.push(Object.assign({}, b2, { kind:'work', dur:it.sec }));
-        if (s < n && it.rest) steps.push(Object.assign({}, b2, { kind:'rest', dur:it.rest, label:'Odmor' }));
+        const base = { g, e, it, set: s };
+        pushSet(it, base);
+        if (s < n && it.rest) steps.push(Object.assign({}, base, { kind:'rest', dur:it.rest, label:'Odmor' }));
       }
-    } else {
-      for (let s = 1; s <= it.sets; s++) {
-        steps.push(Object.assign({}, base, { kind:'manual', set:s, side: it.reps + ' ponavljanja' + (it.sides ? ' po strani' : '') }));
-        if (s < it.sets) steps.push(Object.assign({}, base, { kind:'rest', dur:it.rest, set:s, label:'Odmor' }));
-      }
+      return;
+    }
+    const R = Math.max.apply(null, grp.idx.map(i => items[i].sets || 1));
+    for (let r = 1; r <= R; r++) {
+      const active = grp.idx.filter(i => (items[i].sets || 1) >= r);
+      active.forEach((g, k) => {
+        const it = items[g], e = exOf(it);
+        const base = { g, e, it, set: r, round: r, rounds: R, ss: lab[g] };
+        pushSet(it, base);
+        if (k === active.length - 1) { if (r < R && it.rest) steps.push(Object.assign({}, base, { kind:'rest', dur:it.rest, label:'Odmor nakon kruga' })); }
+        else {
+          const nx = items[active[k + 1]], ne = exOf(nx);
+          if (it.rest) steps.push(Object.assign({}, base, { kind:'rest', dur:it.rest, label:'Sljedeće: ' + ne.name }));
+          else if (nx.measure === 'time') steps.push(Object.assign({}, base, { kind:'switch', dur:ss, side:'Sljedeće: ' + ne.name, nextEx:true }));
+        }
+      });
     }
   });
   return steps;
@@ -556,18 +924,26 @@ function finish(){
   P.secs = Math.round((Date.now() - P.startedAt)/1000);
   if (top().v === 'play') render();
 }
-function groupFirst(g){ return P.steps.findIndex(s => s.g === g && s.kind !== 'rest'); }
+// Skipping moves by "slots": a whole exercise when it stands alone, one exercise of one round inside a superset.
+function slotOf(st){ if (!st) return ''; if (st.kind === 'prep') return 'prep'; if (st.trans) return 't' + st.g; return st.ss ? st.g + ':' + st.set : 'g' + st.g; }
+const isWork = s => s && (s.kind === 'work' || s.kind === 'manual');
+function slotFirstWork(i){
+  const sl = slotOf(P.steps[i]); let j = i;
+  while (j > 0 && slotOf(P.steps[j - 1]) === sl) j--;
+  while (j < P.steps.length - 1 && slotOf(P.steps[j]) === sl && !isWork(P.steps[j])) j++;
+  return slotOf(P.steps[j]) === sl && isWork(P.steps[j]) ? j : i;
+}
 function jump(dir){
-  const st = P.steps[P.i]; if (!st) return;
+  const i = P.i, st = P.steps[i]; if (!st) return;
   if (dir > 0) {
-    const nextG = (st.trans || st.kind === 'prep') ? st.g : st.g + 1;
-    const idx = P.steps.findIndex((s, k) => k > P.i && s.g >= nextG && s.kind !== 'rest' && s.kind !== 'prep');
-    if (idx === -1) { finish(); return; }
-    enterStep(idx);
+    const sl = slotOf(st);
+    const k = P.steps.findIndex((s, x) => x > i && isWork(s) && slotOf(s) !== sl);
+    if (k === -1) { finish(); return; }
+    enterStep(k);
   } else {
-    let g = st.g; const first = groupFirst(g);
-    if (P.i <= first || st.kind === 'prep') g = Math.max(0, g - 1);
-    const idx = groupFirst(g); enterStep(idx === -1 ? 0 : idx);
+    const j = slotFirstWork(i);
+    if (isWork(P.steps[j]) && j < i) enterStep(j);
+    else { let k = j - 1; while (k >= 0 && !isWork(P.steps[k])) k--; enterStep(k < 0 ? 0 : slotFirstWork(k)); }
   }
   P.paused = false; render();
 }
@@ -597,20 +973,91 @@ function curView(){
     const e = st.e || (nextWork && nextWork.e); v.e = e;
     const it = st.it || (nextWork && nextWork.it);
     const groups = P.items.length;
+    const lab = st.trans ? (nextWork && nextWork.ss) : st.ss;
     v.title = st.kind === 'prep' ? (e ? e.name : P.title) : (st.trans ? 'Sljedeće: ' + (nextWork && nextWork.e ? nextWork.e.name : '') : (e ? e.name : ''));
-    v.meta = it ? ((st.trans ? (nextWork.g+1) : (st.g+1)) + '/' + groups + ' • ' + dose(it) + (e && e.cat ? ' • ' + e.cat : '')) : '';
-    v.badge = st.kind === 'manual' ? 'Serija ' + st.set + '/' + it.sets + ' • ' + st.side
-      : ((it && it.measure === 'time' && (it.sets||1) > 1 && st.set && !st.trans ? 'Serija ' + st.set + '/' + it.sets + (st.side ? ' • ' : '') : '') + (st.side || ''));
+    v.meta = it ? ((lab ? lab.L + lab.k + ' • ' : (st.trans ? (nextWork.g+1) : (st.g+1)) + '/' + groups + ' • ') + dose(it) + (e && e.cat ? ' • ' + e.cat : '')) : '';
+    const setTxt = st.ss ? (st.ss.size > 2 ? 'Krug ' : 'Superset ') + st.ss.L + ' • krug ' + st.round + '/' + st.rounds : 'Serija ' + st.set + '/' + (it ? it.sets : 1);
+    v.badge = st.kind === 'manual' ? setTxt + ' • ' + st.side
+      : st.nextEx ? st.side
+      : ((it && st.set && !st.trans && (st.ss || (it.measure === 'time' && (it.sets||1) > 1)) ? setTxt + (st.side ? ' • ' : '') : '') + (st.side || ''));
     v.hint = st.kind === 'manual' ? (it.sides ? 'Odradi obje strane pa dodirni krug' : 'Dodirni krug kad završiš seriju')
-      : st.kind === 'rest' && !st.trans ? 'Odmor • dodirni krug da preskočiš'
+      : st.kind === 'rest' && !st.trans ? (st.label && st.label !== 'Odmor' ? st.label + ' • dodirni krug da preskočiš' : 'Odmor • dodirni krug da preskočiš')
+      : st.nextEx ? 'Prijeđi na sljedeću vježbu'
       : st.kind === 'switch' ? 'Namjesti se za drugu stranu'
       : st.kind === 'prep' ? 'Namjesti se'
       : 'Dodirni krug za pauzu';
   }
-  if (st.kind === 'manual') { v.big = st.set + '/' + (st.it ? st.it.sets : ''); v.ringFrac = (st.set - 1) / (st.it ? st.it.sets : 1); }
+  if (st.kind === 'manual') { const tot = st.ss ? st.rounds : (st.it ? st.it.sets : 1); v.big = st.set + '/' + tot; v.ringFrac = (st.set - 1) / tot; }
   else { const r = remaining(); v.big = r >= 60 ? fmt(r) : String(Math.ceil(r)); v.ringFrac = st.dur ? r / st.dur : 0; }
   if (st.kind === 'switch' || st.kind === 'rest' || st.kind === 'prep') v.ringColor = 'var(--muted)';
   return v;
+}
+/* ---------- progression: the "2-for-2" rule (NSCA) with double progression for coarse weight jumps ---------- */
+const DB_STEPS = [2.5, 5, 7.5, 10, 15, 20];   // your dumbbell pairs
+const LOWER_ZONES = ['Kvadriceps','Gluteus','Gluteus medius','Stražnja loža','Kuk','Aduktori','Lisni mišić'];
+const PROG_CATS = { Snaga:1, Eksplozivnost:1, Trup:1 };
+const PROG_REFS = [
+  { t:'ACSM (2009): +2–10 % opterećenja kad dva treninga zaredom napraviš 1–2 ponavljanja više', url:'https://doi.org/10.1249/MSS.0b013e3181915670' },
+  { t:'Plotkin i sur. (2022): dodavanje ponavljanja jednako je učinkovito kao dodavanje kilograma', url:'https://peerj.com/articles/14142/' }
+];
+function progKind(e, it){
+  if (it.measure === 'time') return 'time';
+  const eq = exEquip(e);
+  if (it.kg > 0 && (eq.indexOf('Šipka') !== -1 || eq.indexOf('Landmine') !== -1 || /trap bar/i.test(e.equipment || ''))) return 'bar';
+  if (it.kg > 0 && eq.indexOf('Bučice') !== -1) return 'db';
+  if (eq.indexOf('Girja') !== -1) return 'kb';
+  return 'reps';
+}
+// the next dose after two easy sessions in a row; item null means "time for a harder variation"
+function nextDose(e, it){
+  const k = progKind(e, it), n = Object.assign({}, it);
+  const eq = exEquip(e);
+  if (k === 'reps' && !(it.kg > 0) && (eq.indexOf('Šipka') !== -1 || eq.indexOf('Landmine') !== -1 || eq.indexOf('Bučice') !== -1)) return { item:null, text:'Upiši kilograme u uređivanju protokola pa ću ih povećavati' };
+  const r0 = it.r0 || it.reps || 10, r1 = it.r1 || Math.min(Math.max(r0 + 4, 6), 20);
+  const moreReps = () => { n.reps = (it.reps || r0) + 1; n.r0 = r0; n.r1 = r1; return { item:n, text: (it.reps || r0) + ' → ' + n.reps + ' ponavljanja' }; };
+  if (k === 'time') { const cap = it.cap || 60; if ((it.sec || 30) >= cap) return { item:null, text:'Dosegnuo si ' + cap + ' s: prijeđi na težu varijantu' }; n.sec = Math.min(cap, (it.sec || 30) + 5); return { item:n, text:(it.sec || 30) + ' → ' + n.sec + ' s' }; }
+  if (k === 'bar') { const lower = (e.zones || []).some(z => LOWER_ZONES.indexOf(z) !== -1); n.kg = Math.round((it.kg + (lower ? 5 : 2.5)) * 100) / 100; return { item:n, text: fmtKg(it.kg) + ' → ' + fmtKg(n.kg) }; }
+  if (k === 'db') {
+    if ((it.reps || r0) < r1) return moreReps();
+    const nx = DB_STEPS.find(w => w > it.kg);
+    if (!nx) return { item:null, text:'Najteže bučice su svladane: dodaj seriju ili težu varijantu' };
+    n.kg = nx; n.reps = r0; n.r0 = r0; n.r1 = r1; return { item:n, text: fmtKg(it.kg) + ' → ' + fmtKg(nx) + ', opet ' + r0 + ' ponavljanja' };
+  }
+  if (k === 'kb') {
+    if ((it.reps || r0) < r1) return moreReps();
+    if ((it.sets || 1) < 5) { n.sets = (it.sets || 1) + 1; n.reps = r0; n.r0 = r0; n.r1 = r1; return { item:n, text:(it.sets || 1) + ' → ' + n.sets + ' serije, opet ' + r0 + ' ponavljanja' }; }
+    return { item:null, text:'S girjom od 20 kg dalje ide teža varijanta' };
+  }
+  if ((it.reps || r0) < r1) return moreReps();
+  return { item:null, text:'Gornja granica ponavljanja: prijeđi na težu varijantu' };
+}
+function progCandidates(){
+  if (!P || P.mode !== 'ex' || !P.ref || P.ref.kind !== 'protocol') return [];
+  const p = S.pr[P.ref.id]; if (!p) return [];
+  P.answers = P.answers || {};
+  const out = [];
+  (p.items || []).forEach((it, j) => {
+    const e = S.ex[it.exId]; const was = P.items[j];
+    if (!e || !was || was.exId !== it.exId) return;
+    if (!PROG_CATS[e.cat] && !(it.kg > 0)) return;
+    out.push({ j, e, it, next: nextDose(e, it) });
+  });
+  return out;
+}
+function applyProgress(){
+  const cands = progCandidates(); if (!cands.length) return [];
+  const p = S.pr[P.ref.id]; const n = clone(p); delete n.id; const changes = [];
+  cands.forEach(c => {
+    const it = n.items[c.j];
+    if (!P.answers[c.j]) { it.easy = 0; return; }
+    if ((it.easy || 0) >= 1) {
+      if (c.next.item) { n.items[c.j] = Object.assign(clone(c.next.item), { easy: 0, up: Date.now() }); changes.push(c.e.name + ': ' + c.next.text); }
+      else { it.easy = 0; changes.push(c.e.name + ': ' + c.next.text); }
+    } else it.easy = 1;
+  });
+  n.updatedAt = Date.now();
+  S.pr[P.ref.id] = Object.assign({ id: P.ref.id }, n);
+  return changes;
 }
 function ringSvg(frac, color){
   const C = 2 * Math.PI * 35;
@@ -619,8 +1066,19 @@ function ringSvg(frac, color){
 VIEWS.play = function(){
   if (!P) return VIEWS.home();
   if (P.done) {
+    const cands = progCandidates();
+    const wk = weekStatus(weekStart(Date.now()));
+    const willCount = P.ref && planSlots().some(s => s.id === P.ref.id && s.kind === P.ref.kind);
     return '<div class="view gut stack">' + topbar('', '') +
-      '<div class="done"><span class="ck">'+I.check+'</span><h1 style="margin:10px 0 0;font-size:30px;font-weight:600">Bravo!</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmt(P.secs) + ' min</span></div></div>' +
+      '<div class="done'+(cands.length ? ' compact' : '')+'"><span class="ck">'+I.check+'</span><h1 style="margin:10px 0 0;font-size:30px;font-weight:600">Bravo!</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmt(P.secs) + ' min</span>' +
+        (wk.planned && willCount ? '<span class="sub" style="margin:0">Ovaj tjedan ' + Math.min(wk.planned, wk.done + 1) + '/' + wk.planned + ' po planu</span>' : '') + '</div>' +
+      (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2><p class="sub" style="margin-right:17px;line-height:20px">Uključi vježbe kod kojih si u zadnjoj seriji mogao još barem 2 ponavljanja (ili 10 s) uz dobru tehniku. Dva takva treninga zaredom = veće opterećenje sljedeći put.</p>' +
+        '<div class="list" style="margin-top:14px">' + cands.map(c => {
+          const on = !!P.answers[c.j];
+          const msg = !on ? '' : (c.it.easy || 0) >= 1 ? (c.next.item ? 'Sljedeći put: ' + c.next.text : c.next.text) : 'Još jedan ovakav trening i ide povećanje';
+          return '<div class="prow pq"><span class="k"><b>' + esc(c.e.name) + '</b><span>' + esc(dose(c.it)) + '</span>' + (msg ? '<span class="nx">' + esc(msg) + '</span>' : '') + '</span><button class="switch" role="switch" data-a="answer" data-j="'+c.j+'" aria-checked="'+on+'" aria-label="'+esc(c.e.name)+': mogao sam još 2+"></button></div>';
+        }).join('') + '</div><button class="txtbtn" data-a="progInfo" style="align-self:center;margin-top:6px">Kako napredujem?</button>' : '') +
+      '<div style="height:12px"></div></div>' +
       '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">Završi</button><button class="txtbtn" data-a="restartPlay" style="align-self:center">Ponovi</button></div>';
   }
   const v = curView();
@@ -628,9 +1086,14 @@ VIEWS.play = function(){
   const media = P.mode === 'field'
     ? '<div class="media"><div class="fblock '+v.fieldPanel.cls+'" id="fpanel"><span class="ph1">'+v.fieldPanel.ph+'</span><span class="big" id="fbig">'+esc(v.big)+'</span>' + (v.fieldPanel.dist ? '<span class="sm" style="font-size:20px;font-weight:600;color:var(--text)">'+esc(v.fieldPanel.dist)+'</span>' : '') + '<span class="sm">'+esc(v.fieldPanel.sm)+'</span></div></div>'
     : mediaHtml(v.e, v.badge);
+  const fspec = P.mode === 'field' && (window.PITCH || {})[P.f.id];
   const card = P.mode === 'field'
-    ? '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') + '<span class="lb" style="margin-top:8px">Izvor</span><p style="font-size:14px"><a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a></p></section>'
-    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' + (v.e && v.e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(v.e.feel)+'</p>' : '') + '<span class="lb">Upute</span>' + ((v.e && v.e.steps || []).map(s => '<div class="bul">'+esc(s)+'</div>').join('') || '<p style="color:var(--text-2)">Bez uputa.</p>') + '</section>';
+    ? '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' +
+        (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
+        '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
+        '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p></section>'
+    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' + (v.e && v.e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(v.e.feel)+'</p>' : '') + '<span class="lb">Upute</span>' + ((v.e && v.e.steps || []).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') || '<p style="color:var(--text-2)">Bez uputa.</p>') +
+        (v.e && (v.e.mistakes||[]).length ? '<span class="lb">Česte greške</span>' + v.e.mistakes.map(s => '<div class="bul warn">'+esc(s)+'</div>').join('') : '') + '</section>';
   return '<div class="view">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
@@ -664,11 +1127,38 @@ function sheetHtml(){
     const list = Object.values(S.pr).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
     body = '<h3>Dodaj u protokol</h3>' + list.map(p => '<button class="opt" data-a="addToPick" data-id="'+esc(p.id)+'"><span>'+esc(p.name)+'</span><span style="color:var(--text-2);font-size:14px">'+nVj((p.items||[]).length)+'</span></button>').join('') +
       '<button class="opt" data-a="addToNew" style="color:var(--accent-text);font-weight:600"><span>+ Novi protokol s ovom vježbom</span></button>';
+  } else if (s.kind === 'eq') {
+    const eq = S.lib.eq || [];
+    const counts = {}; Object.values(S.ex).forEach(e => exEquip(e).forEach(t => counts[t] = (counts[t] || 0) + 1));
+    body = '<h3>Oprema</h3><p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Prikaži vježbe za opremu koju odabereš.</p>' +
+      '<div class="chips wrap">' + EQUIP.filter(t => counts[t]).map(t => '<button class="tagbtn" data-a="eqToggle" data-v="'+esc(t)+'" aria-pressed="'+(eq.indexOf(t) !== -1)+'">'+esc(t)+' <span style="opacity:.6">'+counts[t]+'</span></button>').join('') + '</div>' +
+      '<div class="seg" style="margin-top:18px"><button class="btn sec" data-a="eqClear" style="height:48px">Očisti</button><button class="btn" data-a="sheetDone" style="height:48px;font-size:16px">Prikaži ' + libFiltered().length + '</button></div>';
+  } else if (s.kind === 'day') {
+    const ws = weekStart(Date.now()), st = weekStatus(ws), i = s.i;
+    const plan = st.slots.filter(x => x.day === i), done = st.log.filter(l => dayIdx(l.at) === i);
+    const d = new Date(ws + i * DAY_MS + 12 * 3600e3);
+    body = '<h3>' + esc(DAYNAMES[i].charAt(0).toUpperCase() + DAYNAMES[i].slice(1)) + ', ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.</h3>' +
+      (plan.length ? '<p class="label" style="padding:0 0 6px">Plan</p>' + plan.map(x => '<button class="opt" data-a="'+(x.kind === 'field' ? 'openField' : 'openPr')+'" data-id="'+esc(x.id)+'"><span>'+esc(x.name)+'</span><span class="tag">'+(x.done ? 'odrađeno' : 'čeka')+'</span></button>').join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
+      (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+fmt(l.secs || 0)+' min</span></div>').join('') : '') +
+      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu i treningu na terenu (Dani u tjednu).</p>';
+  } else if (s.kind === 'progInfo') {
+    body = '<h3>Kako napredujem?</h3>' +
+      '<div class="stack" style="gap:10px;font-size:15px;line-height:22px;color:var(--text-body)">' +
+      '<p style="margin:0">Na kraju treninga označiš vježbe kod kojih si u zadnjoj seriji mogao još barem 2 ponavljanja s dobrom tehnikom. Kad se to dogodi <b>dva treninga zaredom</b>, aplikacija sama podigne opterećenje za sljedeći put. To je konzervativno pravilo „2 za 2” iz NSCA-ova priručnika, a ACSM preporučuje isto: 2–10 % više opterećenja, manje za male mišićne skupine.</p>' +
+      '<div class="bul">Šipka i landmine: +2,5 kg za gornji dio tijela, +5 kg za noge i kukove.</div>' +
+      '<div class="bul">Bučice (2,5–20 kg): prvo +1 ponavljanje po seriji do gornje granice raspona, onda sljedeći par bučica i povratak na početni broj ponavljanja.</div>' +
+      '<div class="bul">Girja 20 kg, TRX i vlastita težina: +1 ponavljanje do gornje granice, zatim teža varijanta (ili serija više kod girje).</div>' +
+      '<div class="bul">Vježbe na vrijeme: +5 s do 60 s, zatim teža varijanta.</div>' +
+      '<p style="margin:0">Ako nisi označio vježbu, opterećenje ostaje isto. Kilograme i ponavljanja uvijek možeš ručno promijeniti u uređivanju protokola.</p>' +
+      '<p style="margin:0;font-size:13px;line-height:19px;color:var(--text-2)">Izvori: ' + PROG_REFS.map(r => '<a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.t)+'</a>').join(' · ') + '</p></div>';
   } else if (s.kind === 'data') {
+    const pk = S.pack;
     body = '<h3>Moji podaci</h3>' +
-      '<p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Vježbe, protokoli i videi spremaju se samo na ovom mobitelu. Povremeno izvezi kopiju da ih ne izgubiš. Videi nisu dio kopije.</p>' +
+      '<p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Vježbe, protokoli, plan i povijest spremaju se samo na ovom mobitelu. Povremeno izvezi kopiju da ih ne izgubiš. Videi i slike nisu dio kopije.</p>' +
       '<button class="opt" data-a="exportData"><span>Izvezi sigurnosnu kopiju</span></button>' +
       '<label class="opt" for="importFile" style="cursor:pointer"><span>Uvezi kopiju</span></label><input id="importFile" class="vsr" type="file" accept="application/json,.json">' +
+      '<label class="opt" for="packFile" style="cursor:pointer"><span>' + (S.sheet._busy ? 'Uvozim slike…' : 'Uvezi paket slika') + '</span><span style="color:var(--text-2);font-size:14px">' + (pk ? pk.ids.length + ' slika' : 'privatno') + '</span></label><input id="packFile" class="vsr" type="file" accept=".json,.mtpack,application/json">' +
+      (pk ? '<button class="opt" data-a="packRemove" style="color:var(--danger)"><span>' + (s._confirm ? 'Dodirni još jednom za uklanjanje' : 'Ukloni paket slika') + '</span></button>' : '') +
       '<p style="margin:14px 0 0;font-size:13px;color:var(--text-2)">' + nVj(Object.keys(S.ex).length) + ' • ' + Object.keys(S.pr).length + ' ' + plural(Object.keys(S.pr).length,'protokol','protokola','protokola') + ' • ' + S.log.length + ' ' + plural(S.log.length,'trening','treninga','treninga') + ' u povijesti</p>' +
       '<p style="margin:6px 0 0;font-size:13px;color:var(--text-2)">Verzija ' + APP_VERSION + '</p>';
   } else if (s.kind === 'settings') {
@@ -680,9 +1170,9 @@ function sheetHtml(){
       '<p style="font-size:13px;color:var(--text-2);margin:0">Nove postavke vrijede od sljedećeg pokretanja.</p>';
   } else if (s.kind === 'playList') {
     const groups = [];
-    P.steps.forEach((st, k) => { if (st.kind === 'rest' || st.kind === 'prep') return; if (!groups.some(g => g.g === st.g)) groups.push({ g: st.g, k, name: P.mode === 'field' ? (st.b ? st.b.label_hr : '') : (st.e ? st.e.name : '') }); });
+    P.steps.forEach((st, k) => { if (!isWork(st)) return; if (!groups.some(g => g.g === st.g)) groups.push({ g: st.g, k, lab: st.ss ? st.ss.L + st.ss.k : String(st.g + 1) + '.', name: P.mode === 'field' ? (st.b ? st.b.label_hr : '') : (st.e ? st.e.name : '') }); });
     const cur = (P.steps[P.i] || {}).g;
-    body = '<h3>' + esc(P.title) + '</h3>' + groups.map(g => '<button class="opt" data-a="jumpTo" data-k="'+g.k+'"><span>'+(g.g+1)+'. '+esc(g.name)+'</span>'+(g.g===cur?'<span class="tag">sada</span>':'')+'</button>').join('');
+    body = '<h3>' + esc(P.title) + '</h3>' + groups.map(g => '<button class="opt" data-a="jumpTo" data-k="'+g.k+'"><span>'+esc(g.lab)+' '+esc(g.name)+'</span>'+(g.g===cur?'<span class="tag">sada</span>':'')+'</button>').join('');
   }
   return '<div class="sheet-bg" data-a="sheetClose"><div class="sheet gut" data-stop="1" role="dialog" aria-modal="true"><div class="grab"></div>' + body + '</div></div>';
 }
@@ -698,11 +1188,12 @@ function after(t){
     }, { passive: true });
   }
   if (t.v === 'play' && P) P._lastI = P.i;
+  if (app.querySelector('g.runner')) startRunners();
 }
 
 /* ---------- actions ---------- */
 function newExDraft(){
-  return { id: uid('e'), name:'', cat:'Aktivacija', phase:null, cord:'', zones:[], measure:'sets', sec:30, sets:2, reps:12, rest:30, kg:0, sides:true, equipment:'', feel:'', stepsText:'', note:'', media:null, mediaType:null, fav:false };
+  return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', mistakesText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
   tab: d => setTab(d.tab),
@@ -716,7 +1207,7 @@ const A = {
   dose: d => { top().dose = +d.i; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
   newEx: () => { S.draft = newExDraft(); go({ v:'exEdit' }); },
-  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n') }); go({ v:'exEdit' }); },
+  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n'), mistakesText: (e.mistakes||[]).join('\n'), equip: exEquip(e).slice(), alt: e.alt || '', video: e.video || '' }); go({ v:'exEdit' }); },
   dset: d => { const dr = S.draft; let v = d.v; if (d.k === 'phase') v = +v || null; dr[d.k] = v; if (d.k === 'cat' && v !== 'Rehab' && v !== 'Mobilnost') dr.phase = null; if (d.k === 'cat' && v === 'Rehab' && !dr.phase) dr.phase = 1; if (d.k === 'measure' && v === 'time' && dr.sets > 3) dr.sets = 1; render(); },
   dzone: d => { const z = S.draft.zones = S.draft.zones || []; const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i,1); render(); },
   dflag: d => { S.draft[d.k] = !S.draft[d.k]; render(); },
@@ -725,8 +1216,11 @@ const A = {
   saveEx: async () => {
     const d = S.draft; const name = (d.name||'').trim();
     if (!name) { toast('Upiši naziv vježbe.'); const el = document.getElementById('f-name'); if (el) el.focus(); return; }
-    const body = { name, cat:d.cat, phase: (d.cat === 'Rehab' || d.cat === 'Mobilnost') && d.phase ? d.phase : null, cord: d.cord || '', zones: d.zones||[], measure: d.measure, sec: d.sec, sets: d.sets, reps: d.reps, rest: d.rest, kg: d.kg||0, sides: !!d.sides,
-      equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: (d.stepsText||'').split('\n').map(s => s.trim()).filter(Boolean), note: (d.note||'').trim(),
+    const lines = t => (t||'').split('\n').map(s => s.trim()).filter(Boolean);
+    const video = (d.video||'').trim();
+    const body = { name, alt: (d.alt||'').trim(), cat:d.cat, phase: (d.cat === 'Rehab' || d.cat === 'Mobilnost') && d.phase ? d.phase : null, cord: d.cord || '', zones: d.zones||[], equip: (d.equip||[]).slice(), measure: d.measure, sec: d.sec, sets: d.sets, reps: d.reps, rest: d.rest, kg: d.kg||0, sides: !!d.sides,
+      equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: lines(d.stepsText), mistakes: lines(d.mistakesText), note: (d.note||'').trim(),
+      video: /^https?:\/\//i.test(video) ? video : '', videoTitle: d.videoTitle || null,
       media: d.media || null, mediaType: d.mediaType || null, fav: !!d.fav, order: d.order || 500, source: d.source || null, sourceTitle: d.sourceTitle || null };
     const prev = S.ex[d.id];
     const ok = await save('exercises', d.id, body); if (!ok) return;
@@ -757,10 +1251,17 @@ const A = {
   editPr: d => { const p = S.pr[d.id]; if (!p) return; S.draft = Object.assign(clone(p), { _open: null }); S.draft.items = S.draft.items || []; go({ v:'build' }); },
   itOpen: d => { const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
   iset: d => { const it = S.draft.items[S.draft._open]; it[d.k] = d.v; render(); },
-  istep: d => { const it = S.draft.items[+d.i], k = d.k, dir = +d.d; const step = { sec:5, sets:1, reps:1, rest:15 }[k]; const min = { sec:5, sets:1, reps:1, rest:0 }[k]; const max = { sec:600, sets:10, reps:60, rest:300 }[k]; it[k] = Math.min(max, Math.max(min, (+it[k]||0) + dir*step)); render(); },
+  istep: d => {
+    const items = S.draft.items, it = items[+d.i], k = d.k, dir = +d.d;
+    const step = { sec:5, sets:1, reps:1, rest:15, kg:2.5 }[k]; const min = { sec:5, sets:1, reps:1, rest:0, kg:0 }[k]; const max = { sec:600, sets:10, reps:60, rest:300, kg:300 }[k];
+    it[k] = Math.min(max, Math.max(min, Math.round(((+it[k]||0) + dir*step) * 100) / 100));
+    if (k === 'reps') { delete it.r0; delete it.r1; }
+    if (k === 'sets' && it.ss) items.forEach(x => { if (x.ss === it.ss) x.sets = it.sets; }); // a superset shares its rounds
+    render();
+  },
   iflag: d => { const it = S.draft.items[+d.i]; it.sides = !it.sides; render(); },
-  imove: d => { const i = +d.i, j = i + (+d.d), items = S.draft.items; if (j < 0 || j >= items.length) return; const t = items[i]; items[i] = items[j]; items[j] = t; S.draft._open = j; render(); },
-  idel: d => { S.draft.items.splice(+d.i, 1); S.draft._open = null; render(); },
+  imove: d => { const i = +d.i, j = i + (+d.d), items = S.draft.items; if (j < 0 || j >= items.length) return; const t = items[i]; items[i] = items[j]; items[j] = t; normGroups(items); S.draft._open = j; render(); },
+  idel: d => { S.draft.items.splice(+d.i, 1); normGroups(S.draft.items); S.draft._open = null; render(); },
   pickStart: () => { S.pick = { ids: [] }; S.lib.q = ''; S.stack.push({ v:'library' }); render(); },
   pickToggle: d => { const ids = S.pick.ids, i = ids.indexOf(d.id); if (i === -1) ids.push(d.id); else ids.splice(i,1); const list = document.getElementById('liblist'); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   pickCancel: () => { S.pick = null; S.stack.pop(); render(); },
@@ -768,7 +1269,8 @@ const A = {
   savePr: async d => {
     const dr = S.draft; const name = (dr.name||'').trim();
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
-    const body = { name, desc: (dr.desc||'').trim(), items: dr.items.map(it => ({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 })), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null };
+    const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
+    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
     const ok = await save('protocols', dr.id, body); if (!ok) return;
     S.pr[dr.id] = Object.assign({ id: dr.id }, body);
     const id = dr.id; S.draft = null; S.stack.pop();
@@ -804,9 +1306,32 @@ const A = {
   restartPlay: () => { const cfg = { mode:P.mode, title:P.title, items:P.items, f:P.f, steps:P.steps, ref:P.ref }; S.stack.pop(); startPlayer(cfg); },
   finishPlay: async () => {
     const entry = { name: P.title, kind: P.ref ? P.ref.kind : 'protocol', refId: P.ref ? P.ref.id : null, at: Date.now(), secs: P.secs || 0 };
-    P = null; S.stack.pop(); render();
-    S.log.unshift(entry); S.log = S.log.slice(0, 300); persist(); render();
-  }
+    if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => ({ exId: it.exId, measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides, easy: !!(P.answers && P.answers[j]) }));
+    const changes = applyProgress();
+    if (changes.length) entry.changes = changes;
+    P = null; S.stack.pop();
+    S.log.unshift(entry); S.log = S.log.slice(0, 500); persist(); render();
+    if (changes.length) toast('Napredak za sljedeći put: ' + changes.join(' • '));
+  },
+  answer: d => { P.answers = P.answers || {}; P.answers[+d.j] = !P.answers[+d.j]; const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  progInfo: () => { S.sheet = { kind:'progInfo' }; render(); },
+  sheetDone: () => { S.sheet = null; render(); },
+  daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
+  eqSheet: () => { S.sheet = { kind:'eq' }; render(); },
+  eqToggle: d => { const eq = S.lib.eq = (S.lib.eq || []).slice(); const i = eq.indexOf(d.v); if (i === -1) eq.push(d.v); else eq.splice(i, 1); lsSet('mt.libeq', eq); render(); },
+  eqClear: () => { S.lib.eq = []; lsSet('mt.libeq', []); S.sheet = null; render(); },
+  prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; render(); await save('protocols', d.id, n); },
+  fieldDays: async d => { const f = S.field[d.id]; if (!f) return; const n = clone(f); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.field[d.id].days = ds; render(); await save('field', d.id, n); },
+  ddays: d => { const ds = S.draft.days = (S.draft.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); render(); },
+  ilink: d => {
+    const items = S.draft.items, i = +d.i, a = items[i], b = items[i + 1]; if (!a || !b) return;
+    if (a.ss && b.ss === a.ss) { const old = a.ss; for (let k = i + 1; k < items.length && items[k].ss === old; k++) items[k].ss = uid('s'); }
+    else { const key = a.ss || b.ss || uid('s'); const oldB = b.ss; a.ss = key; for (let k = i + 1; k < items.length && (k === i + 1 || (oldB && items[k].ss === oldB)); k++) items[k].ss = key; if (!a.rest || a.rest > 30) a.rest = 0; }
+    normGroups(items); render();
+  },
+  copyPr: () => { const d = S.draft; const c = clone(d); c.id = uid('p'); c.name = (d.name || 'Protokol') + ' (kopija)'; c.home = null; c.days = []; c._confirmDel = false; c._open = null; S.draft = c; render(); toast('Kopija je spremna. Promijeni naziv i spremi.'); },
+  dequip: d => { const z = S.draft.equip = (S.draft.equip || []).slice(); const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i, 1); render(); },
+  packRemove: async () => { if (!S.sheet || !S.sheet._confirm) { S.sheet._confirm = true; render(); return; } await removePack(); S.sheet = null; render(); toast('Paket slika je uklonjen.'); }
 };
 
 app.addEventListener('click', ev => {
@@ -830,6 +1355,12 @@ app.addEventListener('change', async ev => {
       if (!d || typeof d !== 'object' || !d.exercises || !d.protocols) throw new Error('bad');
       applyData(d); S._deleted = d._deleted || []; persist(); S.sheet = null; S.stack = [{ v: S.tab }]; render(); toast('Podaci su vraćeni iz kopije.');
     } catch(e){ toast('Ta datoteka nije kopija ove aplikacije.'); }
+    return;
+  }
+  if (t.id === 'packFile' && t.files && t.files[0]) {
+    if (S.sheet) { S.sheet._busy = true; render(); }
+    try { const n = await importPack(t.files[0]); S.sheet = null; render(); toast(n ? 'Dodano ' + n + ' slika vježbi.' : 'U paketu nema slika za tvoje vježbe.'); }
+    catch(e){ console.error('pack import failed', e); if (S.sheet) S.sheet._busy = false; render(); toast('Ta datoteka nije paket slika ove aplikacije.'); }
     return;
   }
   if (t.id !== 'mfile' || !t.files || !t.files[0] || !S.draft) return;
