@@ -30,6 +30,8 @@ const I = {
   tabPlay:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M9.5 7.2l7.5 4.8-7.5 4.8z" fill="#191D25"/></svg>',
   tabLib:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="18" rx="1.5"/><rect x="9.5" y="3" width="5" height="18" rx="1.5"/><path d="M16.2 4.6l3.3-.9 3 15.5-3.3.9z"/></svg>',
   filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+  medal:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm-4 1.6L6.5 22l5.5-2.5 5.5 2.5L16 16.6a8 8 0 0 1-8 0z"/></svg>',
+  tabProg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/></svg>',
   trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
@@ -137,7 +139,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.3';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] })); return true; }
@@ -271,7 +273,7 @@ function render(){
   const t = top();
   const fn = VIEWS[t.v] || VIEWS.home;
   let html = fn(t);
-  const rootView = (t.v === 'home' || t.v === 'protocols' || t.v === 'library') && !S.pick;
+  const rootView = (t.v === 'home' || t.v === 'protocols' || t.v === 'library' || t.v === 'progress') && !S.pick;
   if (rootView) html += tabbar();
   if (S.sheet) html += sheetHtml();
   if (S.toast) html += '<div class="toast" role="status">' + esc(S.toast) + '</div>';
@@ -294,6 +296,7 @@ function tabbar(){
     '<button class="tab" data-a="tab" data-tab="protocols" aria-label="Moji protokoli"' + (t==='protocols'?' aria-current="page"':'') + '>' + I.tabGrid + '</button>' +
     '<button class="tab" data-a="tab" data-tab="home" aria-label="Početna"' + (t==='home'?' aria-current="page"':'') + '>' + I.tabPlay + '</button>' +
     '<button class="tab" data-a="tab" data-tab="library" aria-label="Knjižnica vježbi"' + (t==='library'?' aria-current="page"':'') + '>' + I.tabLib + '</button>' +
+    '<button class="tab" data-a="tab" data-tab="progress" aria-label="Napredak"' + (t==='progress'?' aria-current="page"':'') + '>' + I.tabProg + '</button>' +
   '</nav>';
 }
 function topbar(left, right, center){
@@ -486,7 +489,7 @@ function progressCard(e){
   const vals = last.map(x => x.measure === 'time' ? (x.sec || 0) : useKg ? (x.kg || 0) : (x.reps || 0) * (x.sets || 1));
   const unit = last[0].measure === 'time' ? 'trajanje (s)' : useKg ? 'težina (kg)' : 'ukupno ponavljanja';
   return '<section class="icard" aria-label="Napredak"><span class="lb">Napredak · ' + unit + '</span>' + sparkSvg(vals) +
-    h.slice(0, 4).map(x => '<div class="hrow"><span>' + esc(new Date(x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' })) + '</span><b>' + esc(dose(x)) + '</b>' + (x.easy ? '<span class="tag">lako</span>' : '') + '</div>').join('') + '</section>';
+    h.slice(0, 4).map(x => '<div class="hrow"><span>' + esc(new Date(x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' })) + '</span><b>' + esc(dose(x)) + '</b>' + (x.done === false ? '<span class="tag">nije uspio' + (x.lastReps != null ? ' · ' + x.lastReps : '') + '</span>' : '') + '</div>').join('') + '</section>';
 }
 function doseOptions(e){
   if (e.measure === 'time') { const b = e.sec||30; return [b, b+15, b+30].map(s => ({ label: s + ' s', it: Object.assign(exItem(e), {sec:s}) })); }
@@ -1126,34 +1129,104 @@ function nextDose(e, it){
   if ((it.reps || r0) < r1) return moreReps();
   return { item:null, text:'Gornja granica ponavljanja: prijeđi na težu varijantu' };
 }
+// Exercises asked about at the end of a session. Programme sessions (e.g. TAE) are only recorded: their weeks set the doses.
 function progCandidates(){
   if (!P || P.mode !== 'ex' || !P.ref || P.ref.kind !== 'protocol') return [];
-  const p = S.pr[P.ref.id]; if (!p || p.program) return [];
-  P.answers = P.answers || {};
+  const p = S.pr[P.ref.id]; if (!p) return [];
+  P.answers = P.answers || {}; P.lastReps = P.lastReps || {};
   const out = [];
   (p.items || []).forEach((it, j) => {
     const e = S.ex[it.exId]; const was = P.items[j];
     if (!e || !was || was.exId !== it.exId) return;
     if (!PROG_CATS[e.cat] && !(it.kg > 0)) return;
-    out.push({ j, e, it, next: nextDose(e, it) });
+    out.push({ j, e, it, prog: !!p.program, next: nextDose(e, it) });
   });
   return out;
 }
+const progN = () => S.settings.progN === 3 ? 3 : 2;
+// counts sessions with every set done (ok) or not (fail); doses change only when you accept a suggestion
 function applyProgress(){
   const cands = progCandidates(); if (!cands.length) return [];
-  const p = S.pr[P.ref.id]; const n = clone(p); delete n.id; const changes = [];
+  const p = S.pr[P.ref.id]; const n = clone(p); delete n.id; const news = [];
   cands.forEach(c => {
+    if (c.prog) return;
     const it = n.items[c.j];
-    if (!P.answers[c.j]) { it.easy = 0; return; }
-    if ((it.easy || 0) >= 1) {
-      if (c.next.item) { n.items[c.j] = Object.assign(clone(c.next.item), { easy: 0, up: Date.now() }); changes.push(c.e.name + ': ' + c.next.text); }
-      else { it.easy = 0; changes.push(c.e.name + ': ' + c.next.text); }
-    } else it.easy = 1;
+    if (P.answers[c.j] !== false) { it.ok = (it.ok || 0) + 1; it.fail = 0; if (it.ok === progN() && c.next.item) news.push(c.e.name); }
+    else { it.ok = 0; it.fail = (it.fail || 0) + 1; it.snoozeOk = 0; }
   });
   n.updatedAt = Date.now();
   S.pr[P.ref.id] = Object.assign({ id: P.ref.id }, n);
-  return changes;
+  return news;
 }
+function doneMsg(c){
+  const N = progN(), it = c.it;
+  if (c.prog) return P.answers[c.j] === false ? 'Zabilježeno' : '';
+  if (P.answers[c.j] === false) return it.prev && (it.fail || 0) + 1 >= 2 ? 'Dvaput zaredom: na stranici Napredak možeš vratiti ' + doseBase(it.prev) : 'Zabilježeno: ostaje ' + doseBase(it) + ', probaj opet';
+  const ok = (it.ok || 0) + 1;
+  if (ok >= N) return c.next.item ? 'Spremno: prijedlog ' + c.next.text + ' čeka te na stranici Napredak' : c.next.text;
+  return ok + '/' + N + ' · još ' + (N - ok) + ' ' + plural(N - ok, 'ovakav trening', 'ovakva treninga', 'ovakvih treninga');
+}
+/* ---------- the Progress tab ---------- */
+function progSuggestions(){
+  const N = progN(), out = [];
+  Object.values(S.pr).forEach(p => { if (p.program) return; (p.items || []).forEach((it, j) => {
+    const e = S.ex[it.exId]; if (!e) return;
+    const eq = exEquip(e), needsKg = !(it.kg > 0) && it.measure !== 'time' && (eq.indexOf('Šipka') !== -1 || eq.indexOf('Landmine') !== -1 || eq.indexOf('Bučice') !== -1);
+    if (needsKg) { if ((it.ok || 0) + (it.fail || 0) > 0) out.push({ kind:'nokg', p, j, e, it }); return; }
+    if (it.prev && (it.fail || 0) >= 2) out.push({ kind:'revert', p, j, e, it });
+    else if ((it.ok || 0) >= N && (it.ok || 0) > (it.snoozeOk || 0)) { const nd = nextDose(e, it); out.push({ kind: nd.item ? 'up' : 'variant', p, j, e, it, nd }); }
+    else if ((it.ok || 0) > 0 && (it.ok || 0) < N) out.push({ kind:'way', p, j, e, it });
+  }); });
+  return out;
+}
+const e1rm = (kg, reps) => kg * (1 + reps / 30);   // Epley estimate of the one-rep max
+function progHistory(){
+  const by = {};
+  S.log.slice().reverse().forEach(l => (l.items || []).forEach(x => { (by[x.exId] = by[x.exId] || []).push(Object.assign({ at: l.at }, x)); }));
+  return by; // oldest first per exercise
+}
+function sugCard(x){
+  const pr = esc(x.p.id), j = x.j;
+  if (x.kind === 'revert') return '<div class="lift warn"><div class="top"><b>'+esc(x.e.name)+'</b><span>'+esc(dose(x.it))+'</span></div><div class="why">Dvaput zaredom nisi stigao sve. Prerano je za ovu težinu.</div><div class="acts"><button class="bt amber" data-a="sugRevert" data-p="'+pr+'" data-j="'+j+'">Vrati na '+esc(doseBase(x.it.prev))+'</button><button class="bt ghost" data-a="sugRetry" data-p="'+pr+'" data-j="'+j+'">Probat ću opet</button></div><div class="pfrom">'+esc(x.p.name)+'</div></div>';
+  if (x.kind === 'variant') return '<div class="lift go"><div class="top"><b>'+esc(x.e.name)+'</b><span>'+esc(dose(x.it))+'</span></div><div class="why">'+esc(x.nd.text)+'.</div><div class="acts"><button class="bt ghost" data-a="sugLater" data-p="'+pr+'" data-j="'+j+'">U redu</button></div><div class="pfrom">'+esc(x.p.name)+'</div></div>';
+  if (x.kind === 'up') return '<div class="lift go"><div class="top"><b>'+esc(x.e.name)+'</b><span>'+esc(dose(x.it))+'</span></div><div class="why">'+progN()+' treninga zaredom sa svim serijama. Prijedlog: '+esc(x.nd.text)+'.</div><div class="acts"><button class="bt" data-a="sugUp" data-p="'+pr+'" data-j="'+j+'">Prihvati: '+esc(doseBase(x.nd.item))+'</button><button class="bt ghost" data-a="sugLater" data-p="'+pr+'" data-j="'+j+'">Još ne</button></div><div class="pfrom">'+esc(x.p.name)+'</div></div>';
+  const N = progN(), ok = x.it.ok || 0;
+  return '<div class="lift"><div class="top"><b>'+esc(x.e.name)+'</b><span>'+esc(dose(x.it))+'</span></div><div class="pips">'+Array.from({ length: N }, (_, k) => '<i class="pip'+(k < ok ? ' on' : '')+'"></i>').join('')+'<span>'+ok+'/'+N+' · '+esc(x.p.name)+'</span></div></div>';
+}
+VIEWS.progress = function(){
+  const plan = planSlots(), ws = weekStart(Date.now()), wk = weekStatus(ws, plan);
+  let sk = plan.length ? streakWeeks(plan) : 0;
+  if (!plan.length) for (let w = ws, k = 0; k < 104; w -= WEEK_MS, k++) { if (S.log.some(l => l.at >= w && l.at < w + WEEK_MS)) sk++; else if (w !== ws) break; }
+  const thisWeek = S.log.filter(l => l.at >= ws).length;
+  const sugs = progSuggestions(), act = sugs.filter(x => x.kind === 'up' || x.kind === 'revert' || x.kind === 'variant'), way = sugs.filter(x => x.kind === 'way');
+  const nokg = {}; sugs.filter(x => x.kind === 'nokg').forEach(x => { (nokg[x.p.id] = nokg[x.p.id] || { p: x.p, names: [] }).names.push(x.e.name); });
+  const nokgHtml = Object.values(nokg).map(g => '<div class="lift"><div class="top"><b>Upiši početne težine</b><span>'+esc(g.p.name)+'</span></div><div class="why">'+esc(g.names.join(', '))+': bez kilograma ne mogu predložiti povećanje.</div><div class="acts" style="grid-template-columns:1fr"><button class="bt ghost" data-a="editPr" data-id="'+esc(g.p.id)+'">Upiši kilograme</button></div></div>').join('');
+  const hist = progHistory();
+  const lifts = Object.keys(hist).filter(id => S.ex[id] && hist[id].length >= 2).sort((a, b) => hist[b].length - hist[a].length).slice(0, 4);
+  const charts = lifts.map(id => {
+    const h = hist[id].slice(-10), useKg = h.some(x => x.kg > 0);
+    const val = x => x.measure === 'time' ? (x.sec || 0) : useKg ? (x.kg || 0) : (x.reps || 0) * (x.sets || 1);
+    const a = val(h[0]), b = val(h[h.length - 1]), d = Math.round((b - a) * 10) / 10;
+    const unit = h[0].measure === 'time' ? ' s' : useKg ? ' kg' : ' pon.';
+    return '<div class="chart"><div class="top"><b>'+esc(S.ex[id].name)+'</b><span class="delta'+(d < 0 ? ' neg' : d === 0 ? ' same' : '')+'">'+(d === 0 ? 'bez promjene' : (d > 0 ? '+' : '')+String(d).replace('.', ',')+unit)+'</span></div><div class="sub2">'+esc(doseBase(h[0]))+' → '+esc(doseBase(h[h.length - 1]))+'</div>'+sparkSvg(h.map(val))+'</div>';
+  }).join('');
+  // records: the best estimated max per exercise, if it was set in the last 30 days
+  const prs = Object.keys(hist).map(id => { let best = null; hist[id].forEach(x => { if (!(x.kg > 0) || x.done === false) return; const v = e1rm(x.kg, x.reps || 1); if (!best || v > best.v + .01) best = { v, x }; }); return best && Date.now() - best.x.at < 30 * DAY_MS && hist[id].length > 1 ? { id, best } : null; }).filter(Boolean).slice(0, 4);
+  const days = {}; S.log.forEach(l => { const d = new Date(l.at); d.setHours(0,0,0,0); days[d.getTime()] = (days[d.getTime()] || 0) + 1; });
+  const start = ws - 11 * WEEK_MS; let heat = '';
+  for (let d = 0; d < 7; d++) for (let w = 0; w < 12; w++) { const t = start + w * WEEK_MS + d * DAY_MS; const n = days[t] || 0; heat += '<i class="'+(t > Date.now() ? 'fut' : n >= 2 ? 'l3' : n === 1 ? 'l2' : '')+'"></i>'; }
+  return '<div class="view gut">' + topbar('', '', 'NAPREDAK') +
+    '<h1 class="h1">Napredak</h1>' +
+    '<div class="stats"><div class="stat"><b>'+(wk.planned ? wk.done + '/' + wk.planned : thisWeek)+'</b><span>'+(wk.planned ? 'treninga ovaj tjedan po planu' : 'treninga ovaj tjedan')+'</span></div><div class="stat"><b>'+sk+'</b><span>'+plural(sk, 'tjedan', 'tjedna', 'tjedana')+(plan.length ? ' zaredom po planu' : ' zaredom s treningom')+'</span></div><div class="stat"><b>'+S.log.length+'</b><span>treninga ukupno</span></div></div>' +
+    '<div class="sec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
+    (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 2px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
+    (way.length ? '<div class="sec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
+    (charts ? '<div class="sec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
+    (prs.length ? '<div class="sec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+r.best.x.reps+'</b><br><span>'+esc(new Date(r.best.x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' }))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
+    '<div class="sec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat">'+heat+'</div></div>' +
+    '<div class="sec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
+    '<div style="height:20px"></div></div>';
+};
 function ringSvg(frac, color){
   const C = 2 * Math.PI * 35;
   return '<svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--track)" stroke-width="3.5"/><circle id="ringArc" cx="38" cy="38" r="35" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(C*Math.max(0,Math.min(1,frac))).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 38 38)"/></svg>';
@@ -1167,12 +1240,16 @@ VIEWS.play = function(){
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length ? ' compact' : '')+'"><span class="ck">'+I.check+'</span><h1 style="margin:10px 0 0;font-size:30px;font-weight:600">Bravo!</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmt(P.secs) + ' min</span>' +
         (wk.planned && willCount ? '<span class="sub" style="margin:0">Ovaj tjedan ' + Math.min(wk.planned, wk.done + 1) + '/' + wk.planned + ' po planu</span>' : '') + '</div>' +
-      (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2><p class="sub" style="margin-right:17px;line-height:20px">Uključi vježbe kod kojih si u zadnjoj seriji mogao još barem 2 ponavljanja (ili 10 s) uz dobru tehniku. Dva takva treninga zaredom = veće opterećenje sljedeći put.</p>' +
-        '<div class="list" style="margin-top:14px">' + cands.map(c => {
-          const on = !!P.answers[c.j];
-          const msg = !on ? '' : (c.it.easy || 0) >= 1 ? (c.next.item ? 'Sljedeći put: ' + c.next.text : c.next.text) : 'Još jedan ovakav trening i ide povećanje';
-          return '<div class="prow pq"><span class="k"><b>' + esc(c.e.name) + '</b><span>' + esc(dose(c.it)) + '</span>' + (msg ? '<span class="nx">' + esc(msg) + '</span>' : '') + '</span><button class="switch" role="switch" data-a="answer" data-j="'+c.j+'" aria-checked="'+on+'" aria-label="'+esc(c.e.name)+': mogao sam još 2+"></button></div>';
-        }).join('') + '</div><button class="txtbtn" data-a="progInfo" style="align-self:center;margin-top:6px">Kako napredujem?</button>' : '') +
+      (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
+        '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
+          const failed = P.answers[c.j] === false, msg = doneMsg(c);
+          const lr = P.lastReps[c.j] != null ? P.lastReps[c.j] : Math.max(0, (c.it.reps || 10) - 2);
+          return '<div class="xrow"><div class="tx"><b>' + esc(c.e.name) + ' · ' + esc(dose(c.it)) + '</b>' +
+            (c.it.measure === 'time' ? '' : '') +
+            '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+(!failed)+'" class="'+(!failed ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
+            (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Manje">−</button><b>'+lr+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Više">+</button> ponavljanja</div>' : '') +
+            (msg ? '<em class="'+(failed ? 'a' : (!c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'">' + esc(msg) + '</em>' : '') + '</div></div>';
+        }).join('') + '</div>' : '') +
       '<div style="height:12px"></div></div>' +
       '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">Završi</button><button class="txtbtn" data-a="restartPlay" style="align-self:center">Ponovi</button></div>';
   }
@@ -1239,12 +1316,12 @@ function sheetHtml(){
   } else if (s.kind === 'progInfo') {
     body = '<h3>Kako napredujem?</h3>' +
       '<div class="stack" style="gap:10px;font-size:15px;line-height:22px;color:var(--text-body)">' +
-      '<p style="margin:0">Na kraju treninga označiš vježbe kod kojih si u zadnjoj seriji mogao još barem 2 ponavljanja s dobrom tehnikom. Kad se to dogodi <b>dva treninga zaredom</b>, aplikacija sama podigne opterećenje za sljedeći put. To je konzervativno pravilo „2 za 2” iz NSCA-ova priručnika, a ACSM preporučuje isto: 2–10 % više opterećenja, manje za male mišićne skupine.</p>' +
+      '<p style="margin:0">Na kraju treninga svaka vježba je unaprijed označena kao „Sve odrađeno”. Ako nisi stigao sve serije i ponavljanja, označiš „Nisam uspio” i upišeš koliko si napravio u zadnjoj seriji.</p>' +
+      '<p style="margin:0">Kad ' + progN() + ' treninga zaredom odradiš sve, na stranici <b>Napredak</b> dobiješ prijedlog za veće opterećenje. Ti ga prihvatiš ili odgodiš. Ako nova težina dvaput zaredom ne ide, nudi se povratak na prethodnu.</p>' +
       '<div class="bul">Šipka i landmine: +2,5 kg za gornji dio tijela, +5 kg za noge i kukove.</div>' +
       '<div class="bul">Bučice (2,5–20 kg): prvo +1 ponavljanje po seriji do gornje granice raspona, onda sljedeći par bučica i povratak na početni broj ponavljanja.</div>' +
-      '<div class="bul">Girja 20 kg, TRX i vlastita težina: +1 ponavljanje do gornje granice, zatim teža varijanta (ili serija više kod girje).</div>' +
-      '<div class="bul">Vježbe na vrijeme: +5 s do 60 s, zatim teža varijanta.</div>' +
-      '<p style="margin:0">Ako nisi označio vježbu, opterećenje ostaje isto. Kilograme i ponavljanja uvijek možeš ručno promijeniti u uređivanju protokola.</p>' +
+      '<div class="bul">Girja, TRX i vlastita težina: +1 ponavljanje do gornje granice, zatim teža varijanta. Vježbe na vrijeme: +5 s do 60 s.</div>' +
+      '<p style="margin:0">To je konzervativno pravilo „2 za 2” iz NSCA-ova priručnika, a ACSM preporučuje isto: 2–10 % više opterećenja, manje za male mišićne skupine. Treninzi iz programa (npr. TAE) se samo bilježe, jer njihove doze određuju tjedni programa.</p>' +
       '<p style="margin:0;font-size:13px;line-height:19px;color:var(--text-2)">Izvori: ' + PROG_REFS.map(r => '<a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.t)+'</a>').join(' · ') + '</p></div>';
   } else if (s.kind === 'data') {
     const pk = S.pack;
@@ -1366,7 +1443,7 @@ const A = {
     const dr = S.draft; const name = (dr.name||'').trim();
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
-    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
+    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','ok','fail','prev','snoozeOk'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
     ['program','week','slot','pack'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     const ok = await save('protocols', dr.id, body); if (!ok) return;
     S.pr[dr.id] = Object.assign({ id: dr.id }, body);
@@ -1403,14 +1480,24 @@ const A = {
   restartPlay: () => { const cfg = { mode:P.mode, title:P.title, items:P.items, f:P.f, steps:P.steps, ref:P.ref }; S.stack.pop(); startPlayer(cfg); },
   finishPlay: async () => {
     const entry = { name: P.title, kind: P.ref ? P.ref.kind : 'protocol', refId: P.ref ? P.ref.id : null, at: Date.now(), secs: P.secs || 0 };
-    if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => ({ exId: it.exId, measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides, easy: !!(P.answers && P.answers[j]) }));
-    const changes = applyProgress();
-    if (changes.length) entry.changes = changes;
+    if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => { const failed = P.answers && P.answers[j] === false; const x = { exId: it.exId, measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides, done: !failed };
+      if (failed && P.lastReps && P.lastReps[j] != null) x.lastReps = P.lastReps[j]; return x; });
+    const news = applyProgress();
     P = null; S.stack.pop();
     S.log.unshift(entry); S.log = S.log.slice(0, 500); persist(); render();
-    if (changes.length) toast('Napredak za sljedeći put: ' + changes.join(' • '));
+    if (news.length) toast('Novi prijedlog na stranici Napredak: ' + news.join(', '));
   },
-  answer: d => { P.answers = P.answers || {}; P.answers[+d.j] = !P.answers[+d.j]; const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  lrep: d => { P.lastReps = P.lastReps || {}; const it = P.items[+d.j] || {}; const cur = P.lastReps[+d.j] != null ? P.lastReps[+d.j] : Math.max(0, (it.reps || 10) - 2); P.lastReps[+d.j] = Math.max(0, Math.min(it.reps || 30, cur + (+d.d))); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  setProgN: d => { S.settings.progN = +d.v; lsSet('mt.settings', S.settings); render(); },
+  sugUp: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j], e = S.ex[it.exId], nd = nextDose(e, it); if (!nd.item) return;
+    n.items[+d.j] = Object.assign(clone(nd.item), { prev: { measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides }, ok: 0, fail: 0, snoozeOk: 0, up: Date.now() });
+    S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); toast(e.name + ': ' + nd.text); },
+  sugLater: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j]; it.snoozeOk = it.ok || 0; S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); },
+  sugRevert: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j]; if (!it.prev) return;
+    n.items[+d.j] = Object.assign({}, it, it.prev, { prev: null, ok: 0, fail: 0, snoozeOk: 0 }); delete n.items[+d.j].prev;
+    S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); toast('Vraćeno na ' + doseBase(n.items[+d.j]) + '.'); },
+  sugRetry: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; n.items[+d.j].fail = 0; S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); },
+  answer: d => { P.answers = P.answers || {}; P.answers[+d.j] = d.v === '0' ? false : true; const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progInfo: () => { S.sheet = { kind:'progInfo' }; render(); },
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },

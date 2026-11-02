@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.3 — 2. 11. 2026
+
+- **Napredak** je nova, četvrta tipka dolje: treninzi ovaj tjedan, niz tjedana, prijedlozi, krivulje glavnih vježbi, rekordi i kalendar dosljednosti zadnjih 12 tjedana.
+- **Prijedlozi umjesto automatike:** kad 2 (ili 3, po izboru) treninga zaredom odradiš sve serije, aplikacija predloži veće opterećenje, a ti ga prihvatiš ili odgodiš. Ako nova težina dvaput zaredom ne ide, nudi povratak na prethodnu.
+- **Kraj treninga:** svaka vježba je unaprijed „Sve odrađeno”; ako nisi uspio, to označiš i upišeš koliko si napravio u zadnjoj seriji.
+- Vježbe sa šipkom ili bučicama bez kilograma dobivaju podsjetnik „Upiši početne težine”.
+
 ## 1.2.1 — 2. 11. 2026
 
 - Čip „TAE” u knjižnici prikazuje sve vježbe iz uvezenog programa. TAE-ovi video linkovi iz PDF-a više ne rade (njihova stranica je ugašena, a videi se puštaju samo kod njih), pa ih aplikacija ne prikazuje; gdje postoji arhivirana TAE stranica s opisom i rasporedom, vježba ima taj link.
