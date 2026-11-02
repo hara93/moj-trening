@@ -6763,10 +6763,10 @@ window.SEED = {
    ]
   },
   "snaga-a": {
-   "name": "Snaga A · donji dio",
-   "desc": "Glavni trening snage za noge i kukove: mrtvo dizanje, zatim dva superseta. Kilograme za mrtvo dizanje upiši u uređivanju.",
+   "name": "Trening A · noge i kukovi",
+   "desc": "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Cilj (snaga, hipertrofija ili izdržljivost) biraš u Napretku → Doziranje; kilograme upisuješ sam.",
    "home": null,
-   "tag": "Snaga",
+   "tag": "Teretana",
    "updatedAt": 1,
    "items": [
     {
@@ -6826,10 +6826,10 @@ window.SEED = {
    ]
   },
   "snaga-b": {
-   "name": "Snaga B · gornji dio i trup",
-   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Trajanje oko 40 minuta.",
+   "name": "Trening B · gornji dio i trup",
+   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Cilj biraš u Napretku → Doziranje.",
    "home": null,
-   "tag": "Snaga",
+   "tag": "Teretana",
    "updatedAt": 4,
    "items": [
     {
@@ -6901,10 +6901,10 @@ window.SEED = {
    ]
   },
   "snaga-c": {
-   "name": "Snaga C · noge i stražnja loža",
-   "desc": "Drugi trening nogu: čučanj, zatim supersetovi za stražnju ložu, listove i trup.",
+   "name": "Trening C · noge i stražnja loža",
+   "desc": "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Cilj biraš u Napretku → Doziranje.",
    "home": null,
-   "tag": "Snaga",
+   "tag": "Teretana",
    "updatedAt": 5,
    "items": [
     {
@@ -7064,7 +7064,7 @@ window.SEED = {
    "name": "Eksplozivnost",
    "desc": "Skokovi i bacanja dok si svjež, prije treninga snage. Svako ponavljanje maksimalno, s punim odmorom.",
    "home": null,
-   "tag": "Snaga",
+   "tag": "Teretana",
    "updatedAt": 7,
    "items": [
     {
@@ -9056,4 +9056,5 @@ window.SEED_PLAN = {
   "note": "Plan prvo daje dane odmora za svježinu, a zatim uvodi trčanja: najprije raste volumen, pa intenzitet. Trening snage koji propiše klub radi se uz ovaj plan. Dani bez oznake nemaju trčanje. Dodirni oznaku za trening."
  }
 };
+window.SEED_RENAMED = {"protocols": {"snaga-a": {"name": ["Snaga A · donji dio"], "desc": ["Glavni trening snage za noge i kukove: mrtvo dizanje, zatim dva superseta. Kilograme za mrtvo dizanje upiši u uređivanju.", "Glavni trening snage za noge i kukove."], "tag": ["Snaga"]}, "snaga-b": {"name": ["Snaga B · gornji dio i trup"], "desc": ["Guranje i povlačenje u supersetovima, pa trup i nošenje. Trajanje oko 40 minuta."], "tag": ["Snaga"]}, "snaga-c": {"name": ["Snaga C · noge i stražnja loža"], "desc": ["Drugi trening nogu: čučanj, zatim supersetovi za stražnju ložu, listove i trup."], "tag": ["Snaga"]}, "eksplozivnost": {"tag": ["Snaga"]}}};
 window.SEED_RETIRED = {"exercises": ["uze-skare"]};

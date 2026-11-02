@@ -139,7 +139,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.4.1';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] })); return true; }
@@ -220,6 +220,15 @@ function mergeSeed(seed){
     if ((hist[c] && hist[c][id] || []).indexOf(h) === -1) return; // you changed it, keep yours
     const keep = {}; Object.keys(HASH_SKIP).forEach(k => { if (k !== 'id' && local[k] !== undefined) keep[k] = local[k]; });
     map[id] = Object.assign({}, fresh, keep, { id }); changed = true;
+  }));
+  // new names for shipped items: applied even if you changed the item, never if you gave it your own name
+  const renamed = window.SEED_RENAMED || {};
+  ['exercises','protocols','field'].forEach(c => Object.keys(renamed[c] || {}).forEach(id => {
+    const map = c === 'exercises' ? S.ex : c === 'protocols' ? S.pr : S.field, local = map[id], fresh = (seed[c] || {})[id];
+    if (!local || !fresh) return;
+    Object.keys(renamed[c][id]).forEach(k => { if ((renamed[c][id][k] || []).indexOf(local[k]) !== -1 && fresh[k] !== undefined && local[k] !== fresh[k]) { local[k] = fresh[k]; changed = true; } });
+    // finished sessions keep the name they had: rename those that carry an old shipped name
+    if (c === 'protocols' && renamed[c][id].name && local.name === fresh.name) S.log.forEach(l => { if (l.refId === id && renamed[c][id].name.indexOf(l.name) !== -1) { l.name = fresh.name; changed = true; } });
   }));
   const retired = window.SEED_RETIRED || {};
   ['exercises','protocols','field'].forEach(c => (retired[c] || []).forEach(id => {
@@ -400,7 +409,7 @@ VIEWS.protocols = function(){
       '<div class="list" style="margin-top:24px">' +
       (list.length ? list.map(p => {
         const first = p.items && p.items[0] && S.ex[p.items[0].exId];
-        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (exMedia(first) ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + ((p.days||[]).length ? '<span class="tag">'+esc(daysText(p.days))+'</span>' : p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
+        return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (exMedia(first) ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + (p.goal && GOALS[p.goal] ? '<span class="tag">'+esc(GOALS[p.goal].name)+'</span>' : '') + ((p.days||[]).length ? '<span class="tag">'+esc(daysText(p.days))+'</span>' : !p.goal && p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
       }).join('') : '<div class="empty">Još nemaš protokol. Složi prvi od svojih vježbi.</div>') +
       '</div>' +
       (progs.length ? '<h2 class="h2">Programi</h2><div class="list" style="margin-top:14px">' + progs.map(g => { const st = progStatus(g); const ex0 = progCover(g);
@@ -1257,9 +1266,9 @@ function kgPlan(p){
 function weekAdvice(){
   const b = S.settings.ballN != null ? S.settings.ballN : 3, m = S.settings.matchDay != null ? S.settings.matchDay : -1;
   const dn = i => DAYS_IN[(i + 7) % 7];
-  if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' snage tjedno, s barem jednim danom između.'; }
+  if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani tjedno, s barem jednim danom između.'; }
   const n = b >= 4 ? 1 : 2;
-  return 'Preporuka: ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' snage. Teži najkasnije ' + dn(m - 4) + ' (4 dana prije utakmice)' + (n === 2 ? ', lakši s eksplozivnošću ' + dn(m - 2) : '') +
+  return 'Preporuka: ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani. Teži najkasnije ' + dn(m - 4) + ' (4 dana prije utakmice)' + (n === 2 ? ', lakši s eksplozivnošću ' + dn(m - 2) : '') +
     '. Dan prije utakmice (' + DAYNAMES[(m + 6) % 7] + ') bez teških nogu, samo aktivacija; dan poslije (' + DAYNAMES[(m + 1) % 7] + ') mobilnost i oporavak. U sezoni je jedan trening snage tjedno dovoljan da zadržiš snagu i brzinu.';
 }
 function dosingHtml(){
@@ -1268,7 +1277,7 @@ function dosingHtml(){
   const rng = (e, v, k) => { const G = GOALS[k]; const lo = G.light ? goalLoad(e, v, k) : roundLoad(e, v * pctFor(G.reps[1])), hi = G.light ? lo : roundLoad(e, v * pctFor(G.reps[0])); return lo === hi ? String(lo).replace('.', ',') : String(lo).replace('.', ',') + '–' + String(hi).replace('.', ','); };
   return '<div class="psec"><h2>Cilj ovog razdoblja</h2><span>za vježbe s opterećenjem</span></div><div class="goal">' +
     Object.keys(GOALS).map(k => '<button class="'+(g === k ? 'on' : '')+'" data-a="setGoal" data-v="'+k+'" aria-pressed="'+(g === k)+'"><b>'+GOALS[k].name+'</b><span>'+esc(GOALS[k].desc)+'</span></button>').join('') + '</div>' +
-    (g ? '<p class="sub" style="margin:10px 2px 0;line-height:19px">Otvori protokol snage: dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”, koji potvrđuješ.</p>' : '') +
+    (g ? '<p class="sub" style="margin:10px 2px 0;line-height:19px">Otvori trening u teretani: dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”, koji potvrđuješ.</p>' : '') +
     '<div class="psec"><h2>Nogometni tjedan</h2><span>ovaj tjedan</span></div><div class="chart">' +
       '<div class="prow" style="border:0;min-height:52px"><span class="k">Treninzi s loptom</span><div class="step"><button class="sbtn" data-a="setBall" data-d="-1" aria-label="Manje">−</button><b>'+b+'</b><button class="sbtn" data-a="setBall" data-d="1" aria-label="Više">+</button></div></div>' +
       '<span class="label" style="padding:4px 0 8px">Utakmica</span><div class="drow" style="grid-template-columns:1.6fr repeat(7,1fr)"><button class="dchip" data-a="setMatch" data-v="-1" aria-pressed="'+(m < 0)+'">Nema</button>' + DAYS.map((L, i) => '<button class="dchip" data-a="setMatch" data-v="'+i+'" aria-pressed="'+(m === i)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div>' +

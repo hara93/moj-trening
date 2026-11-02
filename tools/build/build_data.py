@@ -14,6 +14,6 @@ if os.path.exists(pr): seed['protocols'] = json.load(open(pr))
 fu = os.path.join(W, 'field_updates.json')
 if os.path.exists(fu):
     for k, v in json.load(open(fu)).items(): seed['field'][k] = v
-out = '// Shipped content: your own changes on the phone always win over this file (see hash.js / seed-history.js).\nwindow.SEED = ' + json.dumps(seed, ensure_ascii=False, indent=1) + ';\nwindow.SEED_PLAN = ' + json.dumps(plan, ensure_ascii=False, indent=1) + ';\nwindow.SEED_RETIRED = ' + json.dumps(json.load(open(os.path.join(W, 'retired.json'))) if os.path.exists(os.path.join(W, 'retired.json')) else {}) + ';\n'
+out = '// Shipped content: your own changes on the phone always win over this file (see hash.js / seed-history.js).\nwindow.SEED = ' + json.dumps(seed, ensure_ascii=False, indent=1) + ';\nwindow.SEED_PLAN = ' + json.dumps(plan, ensure_ascii=False, indent=1) + ';\nwindow.SEED_RENAMED = ' + json.dumps(json.load(open(os.path.join(W, 'renamed.json'))) if os.path.exists(os.path.join(W, 'renamed.json')) else {}, ensure_ascii=False) + ';\nwindow.SEED_RETIRED = ' + json.dumps(json.load(open(os.path.join(W, 'retired.json'))) if os.path.exists(os.path.join(W, 'retired.json')) else {}) + ';\n'
 open(os.path.join(REPO, 'data.js'), 'w').write(out)
 print('data.js:', len(seed['exercises']), 'exercises,', len(seed['protocols']), 'protocols,', len(seed['field']), 'field sessions')

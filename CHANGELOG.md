@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.4.1 — 2. 11. 2026
+
+- Treninzi u teretani više se ne zovu po cilju: **Trening A · noge i kukovi**, **Trening B · gornji dio i trup** i **Trening C · noge i stražnja loža** (prije Snaga A/B/C). Svaki od njih možeš raditi kao snagu, hipertrofiju, izdržljivost ili eksplozivnost; cilj biraš u treningu, a popis protokola ga pokazuje uz naziv.
+- Na mobitelu se mijenjaju samo nazivi i opisi koje nisi dirao. Tvoji kilogrami, dani, cilj i napredak ostaju, a protokol koji si sam preimenovao zadržava tvoj naziv. Već odrađeni treninzi u povijesti dobivaju novi naziv.
+- Ni ostali tekstovi više ne pretpostavljaju cilj: savjet u Doziranju govori o treninzima u teretani, a Eksplozivnost ima oznaku Teretana umjesto Snaga.
+
 ## 1.4 — 2. 11. 2026
 
 - **Doziranje** (Napredak → Doziranje):
