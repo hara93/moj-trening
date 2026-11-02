@@ -59,7 +59,7 @@ const mediaUrl = id => MEDIA[id] || '';
 const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Eksplozivnost', 'Trup', 'Kondicija'];
 const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Core','Koljeno','Gležanj','Leđa','Prsa','Ramena','Ruke','Cijelo tijelo'];
 const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
-const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Bez opreme'];
+const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Sobni bicikl','Bez opreme'];
 const DAYS = ['P','U','S','Č','P','S','N'];
 const DAYNAMES = ['ponedjeljak','utorak','srijeda','četvrtak','petak','subota','nedjelja'];
 const daysText = ds => (ds||[]).slice().sort().map(i => DAYNAMES[i].slice(0,3)).join(', ');
@@ -67,7 +67,7 @@ const catIcon = c => ({Rehab:I.pulse, Aktivacija:I.bolt, Mobilnost:I.leaf, Snaga
 // diacritic-insensitive text for search: "cucanj" finds "čučanj"
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
 // equipment tags: explicit on newer exercises, otherwise read from the free-text "Oprema" field
-const EQ_WORDS = [[/trx/,'TRX'],[/sipk|olimpijsk/,'Šipka'],[/kavez|rack/,'Kavez'],[/klup/,'Klupa'],[/bucic/,'Bučice'],[/girj|kettlebell/,'Girja'],[/landmine/,'Landmine'],[/medicin/,'Medicinka'],[/plyo|kutij|stepenic/,'Plyo box'],[/ljestv/,'Švedske ljestve'],[/kolotur/,'Kolotur'],[/mini (traka|guma)|kratk[ae] gum/,'Mini guma'],[/uze|traka|guma/,'Elastično uže'],[/velika pilates|velik[ai] lopt/,'Velika pilates lopta'],[/mala pilates|mal[ai] lopt/,'Mala pilates lopta'],[/kotac|roller|roler/,'Kotač'],[/bugarsk|postolj/,'Bugarsko postolje'],[/podlog|strunjac|tatami/,'Strunjača'],[/cunj/,'Čunjevi'],[/bez opreme/,'Bez opreme']];
+const EQ_WORDS = [[/trx/,'TRX'],[/sipk|olimpijsk/,'Šipka'],[/kavez|rack/,'Kavez'],[/klup/,'Klupa'],[/bucic/,'Bučice'],[/girj|kettlebell/,'Girja'],[/landmine/,'Landmine'],[/medicin/,'Medicinka'],[/plyo|kutij|stepenic/,'Plyo box'],[/ljestv/,'Švedske ljestve'],[/kolotur/,'Kolotur'],[/mini (traka|guma)|kratk[ae] gum/,'Mini guma'],[/uze|traka|guma/,'Elastično uže'],[/velika pilates|velik[ai] lopt/,'Velika pilates lopta'],[/mala pilates|mal[ai] lopt/,'Mala pilates lopta'],[/kotac|roller|roler/,'Kotač'],[/bugarsk|postolj/,'Bugarsko postolje'],[/podlog|strunjac|tatami/,'Strunjača'],[/cunj/,'Čunjevi'],[/bicikl/,'Sobni bicikl'],[/bez opreme/,'Bez opreme']];
 function exEquip(e){
   if (!e) return [];
   if (Array.isArray(e.equip) && e.equip.length) return e.equip;
@@ -86,7 +86,7 @@ function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(
 /* ---------- state ---------- */
 const S = {
   dbState: 'loading', loaded: {},
-  ex: {}, pr: {}, field: {}, log: [],
+  ex: {}, pr: {}, field: {}, prog: {}, log: [],
   tab: 'home', stack: [{v:'home'}],
   lib: { cat: lsGet('mt.libcat', 'Sve'), q: '', eq: lsGet('mt.libeq', []) },
   pack: lsGet('mt.pack', null),
@@ -107,7 +107,12 @@ function fieldMin(f){
   let s = 0; (f.blocks||[]).forEach(b => { const sets = b.sets||1, reps = b.reps||1; s += sets*reps*(b.work_s||0) + sets*(reps-1)*(b.rest_s||0) + (sets-1)*(b.set_rest_s||b.rest_s||0) + (b.rest_s||0); });
   return Math.max(1, Math.round(s/60));
 }
+function repsOf(it, set){ return (it.repsList && it.repsList[set - 1]) || it.reps || 10; }
 function dose(it){
+  if (it.measure !== 'time' && Array.isArray(it.repsList) && it.repsList.some(r => r !== it.repsList[0])) return it.repsList.length + ' × ' + it.repsList.join('/') + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '') + (it.note ? ' · ' + it.note : '');
+  return doseBase(it) + (it.note ? ' · ' + it.note : '');
+}
+function doseBase(it){
   if (it.measure === 'time') return ((it.sets||1) > 1 ? it.sets + ' × ' : '') + (it.sec||30) + ' s' + (it.sides ? ' po strani' : '');
   return (it.sets||1) + ' × ' + (it.reps||10) + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
 }
@@ -128,13 +133,14 @@ function thumbHtml(e){
   if (m) return m.type === 'image' || m.poster ? '<img alt="" loading="lazy" src="'+esc(m.type === 'image' ? m.src : m.poster)+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
   return pathIcon(catIcon(e && e.cat), 28);
 }
+function packVideo(e){ return e && ((S.pack && S.pack.videos || {})[e.id] || (e.pack && e.source && /talentaintenough|wistia/.test(e.source) ? e.source : '')) || ''; }
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
-  try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, log:S.log, _deleted:S._deleted||[] })); return true; }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] })); return true; }
   catch(e){ toast('Spremanje na mobitel nije uspjelo. Oslobodi malo prostora.'); return false; }
 }
 function applyData(d){
@@ -142,6 +148,7 @@ function applyData(d){
   Object.keys(d.exercises||{}).forEach(id => S.ex[id] = Object.assign({}, d.exercises[id], { id }));
   Object.keys(d.protocols||{}).forEach(id => S.pr[id] = Object.assign({}, d.protocols[id], { id }));
   Object.keys(d.field||{}).forEach(id => S.field[id] = Object.assign({}, d.field[id], { id }));
+  for (const k in S.prog) delete S.prog[k]; Object.keys(d.programs||{}).forEach(id => S.prog[id] = Object.assign({}, d.programs[id], { id }));
   S.log = Array.isArray(d.log) ? d.log : [];
 }
 const IDB = {
@@ -172,13 +179,28 @@ async function importPack(file){
     MEDIA['pack:' + it.ex] = URL.createObjectURL(new Blob([buf], { type }));
     ids.push(it.ex);
   }
+  // exercises, sessions and programmes in the pack join your data; ones already on the phone stay as they are
+  const packId = d.id || 'pack'; let exN = 0, prN = 0;
+  Object.keys(d.exercises || {}).forEach(id => { if (!S.ex[id]) { S.ex[id] = Object.assign({}, d.exercises[id], { id, pack: packId }); exN++; } });
+  Object.keys(d.protocols || {}).forEach(id => { if (!S.pr[id]) { S.pr[id] = Object.assign({}, d.protocols[id], { id, pack: packId }); prN++; } });
+  Object.keys(d.programs || {}).forEach(id => { S.prog[id] = Object.assign({}, d.programs[id], { id, pack: packId }); });
+  if (exN || prN || d.programs) persist();
   const old = (S.pack && S.pack.ids) || [];
-  S.pack = { title: d.title || 'Paket slika', credit: d.credit || 'Privatni paket slika', at: Date.now(), ids: old.concat(ids.filter(id => old.indexOf(id) === -1)) };
+  S.pack = { id: packId, title: d.title || 'Paket slika', credit: d.credit || 'Privatni paket slika', at: Date.now(), ids: old.concat(ids.filter(id => old.indexOf(id) === -1)),
+    videos: Object.assign({}, (S.pack && S.pack.videos) || {}, d.videos || {}) };
   lsSet('mt.pack', S.pack);
-  return ids.length;
+  return { photos: ids.length, exercises: exN, sessions: prN, programs: Object.keys(d.programs || {}).length };
 }
 async function removePack(){
   for (const id of (S.pack && S.pack.ids) || []) { try { await IDB.del('pack:' + id); } catch(e){} if (MEDIA['pack:' + id]) { URL.revokeObjectURL(MEDIA['pack:' + id]); delete MEDIA['pack:' + id]; } }
+  const pid = S.pack && S.pack.id;
+  if (pid) {
+    Object.keys(S.prog).forEach(id => { if (S.prog[id].pack === pid) delete S.prog[id]; });
+    Object.keys(S.pr).forEach(id => { if (S.pr[id].pack === pid) delete S.pr[id]; });
+    const used = {}; Object.values(S.pr).forEach(p => (p.items || []).forEach(it => used[it.exId] = 1));
+    Object.keys(S.ex).forEach(id => { if (S.ex[id].pack === pid && !used[id]) delete S.ex[id]; });
+    persist();
+  }
   S.pack = null; try { localStorage.removeItem('mt.pack'); } catch(e){}
 }
 function mergeSeed(seed){
@@ -195,6 +217,14 @@ function mergeSeed(seed){
     if ((hist[c] && hist[c][id] || []).indexOf(h) === -1) return; // you changed it, keep yours
     const keep = {}; Object.keys(HASH_SKIP).forEach(k => { if (k !== 'id' && local[k] !== undefined) keep[k] = local[k]; });
     map[id] = Object.assign({}, fresh, keep, { id }); changed = true;
+  }));
+  const retired = window.SEED_RETIRED || {};
+  ['exercises','protocols','field'].forEach(c => (retired[c] || []).forEach(id => {
+    const map = c === 'exercises' ? S.ex : c === 'protocols' ? S.pr : S.field;
+    const local = map[id]; if (!local) return;
+    if ((hist[c] && hist[c][id] || []).indexOf(contentHash(local)) === -1) return;
+    if (c === 'exercises' && Object.values(S.pr).some(p => (p.items || []).some(it => it.exId === id))) return;
+    delete map[id]; changed = true;
   }));
   return changed;
 }
@@ -357,7 +387,8 @@ VIEWS.home = function(){
 };
 
 VIEWS.protocols = function(){
-  const list = Object.values(S.pr).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+  const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+  const progs = Object.values(S.prog);
   const fieldN = Object.keys(S.field).length;
   return '<div class="view gut">' + topbar('', '') +
     '<h1 class="h1">Moji protokoli</h1>' +
@@ -368,6 +399,8 @@ VIEWS.protocols = function(){
         return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (exMedia(first) ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + ((p.days||[]).length ? '<span class="tag">'+esc(daysText(p.days))+'</span>' : p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
       }).join('') : '<div class="empty">Još nemaš protokol. Složi prvi od svojih vježbi.</div>') +
       '</div>' +
+      (progs.length ? '<h2 class="h2">Programi</h2><div class="list" style="margin-top:14px">' + progs.map(g => { const st = progStatus(g); const ex0 = progCover(g);
+        return '<button class="row" data-a="openProg" data-id="'+esc(g.id)+'"><span class="thumb">'+(ex0 ? thumbHtml(ex0) : pathIcon(I.dumb, 28))+'</span><span class="tx"><span class="t">'+esc(g.name)+'</span><span class="m"><span>'+st.done+'/'+st.total+' treninga</span><span class="tag">'+esc(st.next ? 'Sljedeće: ' + st.next.short : 'Završeno')+'</span></span></span>'+I.chev+'</button>'; }).join('') + '</div>' : '') +
       '<h2 class="h2">Kondicija na terenu</h2>' +
       '<div class="list" style="margin-top:14px"><button class="row" data-a="fieldList"><span class="thumb" style="background:#33404A">' + pathIcon(I.run, 28) + '</span><span class="tx"><span class="t">Treninzi s terena</span><span class="m"><span>' + (fieldN ? fieldN + ' ' + plural(fieldN,'trening','treninga','treninga') : 'Učitavanje') + '</span><span class="tag">STATSports</span></span></span>' + I.chev + '</button></div>'
     )) +
@@ -383,6 +416,7 @@ function libFiltered(){
     if (c === 'Sve') return true;
     if (c === 'Favoriti') return !!e.fav;
     if (c === 'TRX') return exEquip(e).indexOf('TRX') !== -1;
+    if (c === 'TAE') return !!(e.pack || (S.pack && S.pack.videos && S.pack.videos[e.id]));
     if (c === 'Rehab kuka') return e.cat === 'Rehab' || !!e.phase;
     if (c === 'Uže i kolotur') return !!e.cord;
     return e.cat === c;
@@ -418,7 +452,7 @@ VIEWS.library = function(){
     '<h2 class="h2">Popis vježbi</h2>') +
     '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'">' +
       '<button class="ib fbtn" data-a="eqSheet" aria-label="Filtriraj po opremi'+((S.lib.eq||[]).length ? ', odabrano ' + S.lib.eq.length : '')+'"'+((S.lib.eq||[]).length ? ' aria-pressed="true"' : '')+'>' + I.filter + ((S.lib.eq||[]).length ? '<span class="cnt">'+S.lib.eq.length+'</span>' : '') + '</button></div>' +
-    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + LIBCATS.map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
+    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && S.pack.videos ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
     '<div class="list" id="liblist" style="margin-top:14px">' + libListHtml() + '</div>' +
     '<div style="height:20px"></div></div>' +
     (picking ? '<div class="footer gut"><button class="btn" data-a="pickDone"'+(S.pick.ids.length?'':' disabled')+'>Dodaj u protokol ('+S.pick.ids.length+')</button></div>' : '');
@@ -478,6 +512,7 @@ VIEWS.ex = function(t){
         '<span class="lb">Oprema</span><p>' + esc(e.equipment || exEquip(e).join(', ')) + '</p>' +
         (e.note ? '<span class="lb">Napomena</span><p>'+esc(e.note)+'</p>' : '') +
         (e.video ? '<span class="lb">Video</span><p><a href="'+esc(e.video)+'" target="_blank" rel="noopener">'+esc(e.videoTitle || 'Pogledaj demonstraciju')+' ↗</a></p>' : '') +
+        (packVideo(e) ? '<span class="lb">TAE video</span><p><a href="'+esc(packVideo(e))+'" target="_blank" rel="noopener">Pogledaj kod TAE ↗</a></p>' : '') +
         (e.source ? '<span class="lb">Izvor</span><p><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '') +
       '</section>' +
       progressCard(e) +
@@ -534,20 +569,49 @@ function daysPicker(action, id, days){
   return '<div class="days" role="group" aria-label="Dani u tjednu"><span class="label" style="padding-left:17px">Dani u tjednu' + (days.length ? '' : ' · dodirni dane kad ga radiš') + '</span><div class="drow">' +
     DAYS.map((L, i) => '<button class="dchip" data-a="'+action+'" data-id="'+esc(id)+'" data-i="'+i+'" aria-pressed="'+(days.indexOf(i) !== -1)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div></div>';
 }
+const groupWord = n => n === 2 ? 'Superset' : n === 3 ? 'Triset' : 'Krug';
 function groupHead(items, g, L){
   const R = Math.max.apply(null, g.idx.map(i => items[i].sets || 1)), last = items[g.idx[g.idx.length - 1]];
-  return '<div class="ghead"><b>' + (g.idx.length > 2 ? 'Krug ' : 'Superset ') + L + '</b><span>' + R + ' ' + plural(R, 'krug', 'kruga', 'krugova') + (last.rest ? ' • odmor ' + last.rest + ' s nakon kruga' : '') + '</span></div>';
+  return '<div class="ghead"><b>' + groupWord(g.idx.length) + ' ' + L + '</b><span>' + R + ' ' + plural(R, 'krug', 'kruga', 'krugova') + (last.rest ? ' • odmor ' + last.rest + ' s nakon kruga' : '') + '</span></div>';
 }
 function itemRowsHtml(items, lab){
+  let sec = null;
   return groupsOf(items).map(g => {
+    const s0 = items[g.idx[0]].section; const head = s0 && s0 !== sec ? '<div class="sechead">' + esc(s0) + '</div>' : ''; if (s0) sec = s0;
     const rows = g.idx.map(i => {
       const it = items[i], e = S.ex[it.exId], l = lab[i];
       const fresh = it.up && Date.now() - it.up < 21 * DAY_MS;
       return '<button class="row'+(l ? ' inss' : '')+'" data-a="openEx" data-id="'+esc(it.exId)+'" style="min-height:72px"><span class="thumb" style="width:62px;height:62px">'+(exMedia(e) ? thumbHtml(e) : (l ? l.L + l.k : i + 1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span>'+(fresh ? '<span class="tag">↑ napredak</span>' : '')+'</span></span>'+I.chev+'</button>';
     }).join('');
-    return g.ss ? '<div class="sgroup">' + groupHead(items, g, lab[g.idx[0]].L) + rows + '</div>' : rows;
+    return head + (g.ss ? '<div class="sgroup">' + groupHead(items, g, lab[g.idx[0]].L) + rows + '</div>' : rows);
   }).join('');
 }
+/* ---------- programmes: fixed weekly order of sessions, e.g. a purchased 6-week plan from your private pack ---------- */
+function progSessions(g){ const out = []; (g.weeks || []).forEach(w => (w.sessions || []).forEach((x, k) => out.push({ week: w.week, k, label: x.label, short: w.week + '. tj. · ' + x.label, pr: x.pr }))); return out; }
+function progStatus(g){
+  const all = progSessions(g), doneIds = {};
+  S.log.forEach(l => { if (l.kind === 'protocol' && l.refId) doneIds[l.refId] = (doneIds[l.refId] || 0) + 1; });
+  const items = all.map(x => Object.assign({ done: !!doneIds[x.pr] }, x));
+  return { items, total: items.length, done: items.filter(x => x.done).length, next: items.find(x => !x.done && S.pr[x.pr]) };
+}
+function progCover(g){ for (const x of progSessions(g)) { const p = S.pr[x.pr]; const it = p && (p.items || []).find(i => exMedia(S.ex[i.exId])); if (it) return S.ex[it.exId]; } return null; }
+VIEWS.program = function(t){
+  const g = S.prog[t.id];
+  if (!g) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj program više ne postoji.</div></div>';
+  const st = progStatus(g), pct = st.total ? st.done / st.total : 0, C = 2 * Math.PI * 30;
+  const cols = Math.max.apply(null, (g.weeks || []).map(w => (w.sessions || []).length).concat([1]));
+  return '<div class="view gut">' + topbar(backBtn()) +
+    '<h1 class="h1">' + esc(g.name) + '</h1>' + (g.desc ? '<p class="sub" style="margin-right:17px;line-height:20px">' + esc(g.desc) + '</p>' : '') +
+    '<div class="progtop"><svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--track)" stroke-width="6"/><circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 36 36)"/></svg>' +
+      '<div><b>' + st.done + ' od ' + st.total + '</b><span>' + (st.next ? 'Sljedeće: ' + esc(st.next.short) : 'Program je završen. Bravo!') + '</span></div></div>' +
+    '<div class="pgrid" style="grid-template-columns:44px repeat('+cols+',1fr)">' + (g.weeks || []).map(w => '<span class="pw">' + w.week + '. tj.</span>' + (w.sessions || []).map(x => {
+      const it = st.items.find(y => y.pr === x.pr) || {}; const cls = it.done ? 'done' : (st.next && st.next.pr === x.pr) ? 'next' : '';
+      return '<button class="pcell ' + cls + '" data-a="openPr" data-id="'+esc(x.pr)+'" aria-label="'+esc(w.week + '. tjedan, ' + x.label + (it.done ? ', odrađeno' : ''))+'">'+esc(x.label)+'</button>'; }).join('')).join('') + '</div>' +
+    ((g.notes || []).length ? '<h2 class="h2">Kako ga raditi</h2><div class="stack" style="gap:8px;margin:12px 17px 0">' + g.notes.map(n => '<div class="bul">'+esc(n)+'</div>').join('') + '</div>' : '') +
+    (g.credit ? '<p class="sub" style="margin-top:16px">' + esc(g.credit) + '</p>' : '') +
+    '<div style="height:20px"></div></div>' +
+    (st.next ? '<div class="footer gut"><button class="btn" data-a="openPr" data-id="'+esc(st.next.pr)+'">Sljedeći trening</button></div>' : '');
+};
 function featRows(p){
   const eq = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; if (e) exEquip(e).forEach(x => { if (x !== 'Bez opreme') eq[x] = 1; }); });
   const zones = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; (e && e.zones || []).forEach(z => zones[z] = 1); });
@@ -568,8 +632,8 @@ VIEWS.pr = function(t){
       '<h1 style="margin:0 17px;font-size:30px;line-height:36px;font-weight:600;text-wrap:balance">' + esc(p.name) + '</h1>' +
       (p.desc ? '<p style="margin:0 17px;font-size:16px;line-height:24px;color:var(--text-body)">' + esc(p.desc) + '</p>' : '') +
       '<div class="stack" style="gap:16px;margin:4px 17px 0">' + featRows(p) + '</div>' +
-      daysPicker('prDays', p.id, p.days) +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2><button class="txtbtn" data-a="progInfo" style="height:32px;font-size:14px;padding:0">Kako napredujem?</button></div>' +
+      (p.program ? '' : daysPicker('prDays', p.id, p.days)) +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2>' + (p.program ? '' : '<button class="txtbtn" data-a="progInfo" style="height:32px;font-size:14px;padding:0">Kako napredujem?</button>') + '</div>' +
       '<div class="list">' + itemRowsHtml(p.items || [], lab) + '</div>' +
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"' + ((p.items||[]).length ? '' : ' disabled') + '>Krenimo!</button></div>';
@@ -669,9 +733,7 @@ function pitchSvg(spec, opt){
   const W = full ? 105 : spec.pitch.w, H = full ? 68 : spec.pitch.h;
   const mg = full ? 3 : Math.max(1.2, W * .07);
   const Y = y => +(H - y).toFixed(2), X = x => +(+x).toFixed(2);
-  const thumb = !!opt.thumb, fs = full ? 3.1 : Math.max(.55, W * .042);
-  // text follows its line, turned so it always reads left to right or bottom to top
-  const rot = (x1, y1, x2, y2, cx, cy) => { let a = Math.atan2(-(y2 - y1), x2 - x1) * 180 / Math.PI; if (a > 90) a -= 180; if (a <= -90) a += 180; return Math.abs(a) < 1 ? '' : ' transform="rotate(' + a.toFixed(1) + ' ' + cx + ' ' + cy + ')"'; };
+  const thumb = !!opt.thumb, fs = full ? 3.3 : Math.max(.6, W * .045);
   const lw = full ? .3 : Math.max(.06, W * .006);
   let s = '<svg class="pitchsvg" viewBox="'+[-mg, -mg, W + 2*mg, H + 2*mg].map(X).join(' ')+'" role="img" aria-label="'+esc(spec.alt || 'Nacrt terena')+'" preserveAspectRatio="xMidYMid meet">';
   s += '<rect x="'+(-mg)+'" y="'+(-mg)+'" width="'+(W + 2*mg)+'" height="'+(H + 2*mg)+'" rx="'+(mg*.6)+'" fill="#2A6639"/>';
@@ -688,15 +750,27 @@ function pitchSvg(spec, opt){
   }
   const dimmed = p => opt.block != null && p.block != null && (Array.isArray(p.block) ? p.block.indexOf(opt.block) === -1 : p.block !== opt.block);
   const paths = (spec.paths || []).slice().sort((a,b) => (a.order||0) - (b.order||0));
-  const used = {};
+  // Labels are collected first and placed at the end: each gets a few candidate spots and takes the first one
+  // that touches no other label and no marker. A label that fits nowhere is left out; the legend still explains the lines.
+  const labels = [], blocked = [];
+  const angleOf = (x1, y1, x2, y2) => { let a = Math.atan2(-(y2 - y1), x2 - x1) * 180 / Math.PI; if (a > 90) a -= 180; if (a <= -90) a += 180; return Math.abs(a) < 2 ? 0 : a; };
+  const alongLine = (x1, y1, x2, y2, side) => (w, h) => {
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / len, uy = (y2 - y1) / len, a = angleOf(x1, y1, x2, y2), off = lw + h / 2 + fs * .12, out = [];
+    const sides = side < 0 ? [-1, 1] : [1, -1];
+    // close to the line first, then a little further out (clears cones standing on the line), then shifted along it
+    [[0, off], [0, off + fs * .9], [.22, off], [-.22, off], [.22, off + fs * .9], [-.22, off + fs * .9], [.36, off], [-.36, off]].forEach(([t, o]) =>
+      sides.forEach(sd => out.push({ x: X((x1 + x2) / 2 + ux * len * t - uy * o * sd), y: Y((y1 + y2) / 2 + uy * len * t + ux * o * sd), a })));
+    return out;
+  };
+  const addLabel = (text, size, pri, cands) => { if (text && !thumb) labels.push({ text: String(text), size, pri, cands, i: labels.length }); };
   if (!thumb) (spec.dims || []).forEach(dm => {
-    const [x1,y1] = dm.from, [x2,y2] = dm.to, len = Math.hypot(x2-x1, y2-y1) || 1, nx = -(y2-y1)/len, ny = (x2-x1)/len, t = fs*.4;
-    s += '<g class="dim" opacity=".9"><line x1="'+X(x1)+'" y1="'+Y(y1)+'" x2="'+X(x2)+'" y2="'+Y(y2)+'" stroke="#fff" stroke-width="'+(lw*.8)+'" stroke-dasharray="'+(fs*.35)+' '+(fs*.25)+'"/>' +
-      '<line x1="'+X(x1+nx*t)+'" y1="'+Y(y1+ny*t)+'" x2="'+X(x1-nx*t)+'" y2="'+Y(y1-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/><line x1="'+X(x2+nx*t)+'" y1="'+Y(y2+ny*t)+'" x2="'+X(x2-nx*t)+'" y2="'+Y(y2-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/>' +
-      (function(){ const cx = X((x1+x2)/2 + nx*fs*.9), cy = Y((y1+y2)/2 + ny*fs*.9); return '<text x="'+cx+'" y="'+cy+'" font-size="'+(fs*.85)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle"'+rot(x1, y1, x2, y2, cx, cy)+'>'+esc(dm.label)+'</text>'; })() + '</g>';
+    const [x1,y1] = dm.from, [x2,y2] = dm.to, len = Math.hypot(x2-x1, y2-y1) || 1, nx = -(y2-y1)/len, ny = (x2-x1)/len, t = fs*.35;
+    s += '<g class="dim" opacity=".85"><line x1="'+X(x1)+'" y1="'+Y(y1)+'" x2="'+X(x2)+'" y2="'+Y(y2)+'" stroke="#fff" stroke-width="'+(lw*.8)+'" stroke-dasharray="'+(fs*.35)+' '+(fs*.25)+'"/>' +
+      '<line x1="'+X(x1+nx*t)+'" y1="'+Y(y1+ny*t)+'" x2="'+X(x1-nx*t)+'" y2="'+Y(y1-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/><line x1="'+X(x2+nx*t)+'" y1="'+Y(y2+ny*t)+'" x2="'+X(x2-nx*t)+'" y2="'+Y(y2-ny*t)+'" stroke="#fff" stroke-width="'+lw+'"/></g>';
+    addLabel(dm.label, fs * .78, 1, alongLine(x1, y1, x2, y2, 1));
   });
   paths.forEach(p => {
-    const st = PSTYLE[p.kind] || PSTYLE.run; used[p.kind || 'run'] = 1;
+    const st = PSTYLE[p.kind] || PSTYLE.run;
     const pts = p.points || [];
     if (pts.length < 2) return;
     const d = 'M' + pts.map(q => X(q[0]) + ' ' + Y(q[1])).join('L');
@@ -708,11 +782,10 @@ function pitchSvg(spec, opt){
       const tip = [ax, ay], l = [ax - hl*Math.cos(a - .45), ay - hl*Math.sin(a - .45)], r = [ax - hl*Math.cos(a + .45), ay - hl*Math.sin(a + .45)];
       s += '<path d="M'+X(l[0])+' '+Y(l[1])+'L'+X(tip[0])+' '+Y(tip[1])+'L'+X(r[0])+' '+Y(r[1])+'" fill="none" stroke="'+st.c+'" stroke-width="'+w.toFixed(2)+'" stroke-linecap="round" stroke-linejoin="round"'+(dimmed(p) ? ' opacity=".25"' : '')+'/>';
     }
-    if (p.label && !thumb && !dimmed(p)) {
-      let best = 0, bi = 0; for (let i = 1; i < pts.length; i++) { const sl = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); if (sl > best) { best = sl; bi = i; } }
-      const [x1,y1] = pts[bi-1], [x2,y2] = pts[bi], ln = best || 1, off = p.labelSide === 'below' ? -1 : 1;
-      const cx = X((x1+x2)/2 - (y2-y1)/ln*fs*.8*off), cy = Y((y1+y2)/2 + (x2-x1)/ln*fs*.8*off);
-      s += '<text x="'+cx+'" y="'+cy+'" font-size="'+(fs*.8)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle"'+rot(x1, y1, x2, y2, cx, cy)+'>'+esc(p.label)+'</text>';
+    if (p.label && !dimmed(p)) {
+      let best = 0, bi = 1; for (let i = 1; i < pts.length; i++) { const sl = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); if (sl > best) { best = sl; bi = i; } }
+      const [x1,y1] = pts[bi-1], [x2,y2] = pts[bi];
+      addLabel(p.label, fs * .82, 3, alongLine(x1, y1, x2, y2, p.labelSide === 'below' ? -1 : 1));
     }
   });
   (spec.markers || []).forEach(mk => {
@@ -722,9 +795,27 @@ function pitchSvg(spec, opt){
     else if (mk.kind === 'start') s += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#E5484D" stroke="#fff" stroke-width="'+(lw*.9)+'"/>';
     else if (mk.kind === 'ball') s += '<circle cx="'+x+'" cy="'+y+'" r="'+(r*.8)+'" fill="#fff" stroke="#1E2A22" stroke-width="'+(lw*.8)+'"/><path d="M'+(x - r*.45)+' '+y+'h'+(r*.9)+'M'+x+' '+(y - r*.45)+'v'+(r*.9)+'" stroke="#1E2A22" stroke-width="'+(lw*.5)+'"/>';
     else s += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="#fff" stroke-width="'+(lw*1.2)+'"/>';
-    if (mk.label && !thumb) s += '<text x="'+(x + r*1.6)+'" y="'+(y - r*1.3)+'" font-size="'+(fs*.75)+'" class="ptxt">'+esc(mk.label)+'</text>';
+    blocked.push([x - r*1.2, y - r*1.4, x + r*1.2, y + r*1.2]);
+    addLabel(mk.label, fs * .74, 2, (w, h) => { const g = r * 1.3; return [
+      { x: x + g + w/2, y: y, a: 0 }, { x: x, y: y - g - h/2, a: 0 }, { x: x - g - w/2, y: y, a: 0 }, { x: x, y: y + g + h/2, a: 0 }]; });
   });
-  if (!thumb) (spec.labels || []).forEach(l => { s += '<text x="'+X(l.x)+'" y="'+Y(l.y)+'" font-size="'+(fs*.8)+'" class="ptxt" text-anchor="middle" dominant-baseline="middle">'+esc(l.text)+'</text>'; });
+  (spec.labels || []).forEach(l => addLabel(l.text, fs * .78, 2, (w, h) => [0, 1, -1, 2, -2].map(k => ({ x: X(l.x), y: Y(l.y) + k * h * 1.1, a: 0 }))));
+  const placed = [], hit = (b, c) => b[0] < c[2] && c[0] < b[2] && b[1] < c[3] && c[1] < b[3];
+  labels.sort((a, b) => b.pri - a.pri || a.i - b.i).forEach(lb => {
+    const w = lb.text.length * lb.size * .56 + lb.size * .9, h = lb.size * 1.45;
+    for (const c of lb.cands(w, h)) {
+      const rad = c.a * Math.PI / 180, bw = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad)), bh = Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad));
+      const box = [c.x - bw/2, c.y - bh/2, c.x + bw/2, c.y + bh/2];
+      if (box[0] < -mg || box[1] < -mg || box[2] > W + mg || box[3] > H + mg) continue;
+      if (placed.some(q => hit(q.box, box)) || blocked.some(q => hit(q, box))) continue;
+      placed.push({ box, lb, c, w, h }); break;
+    }
+  });
+  placed.forEach(({ lb, c, w, h }) => {
+    const tr = c.a ? ' transform="rotate(' + c.a.toFixed(1) + ' ' + c.x + ' ' + c.y + ')"' : '';
+    s += '<g' + tr + '><rect x="'+(c.x - w/2).toFixed(2)+'" y="'+(c.y - h/2).toFixed(2)+'" width="'+w.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="'+(h/2).toFixed(2)+'" fill="rgba(14,32,20,.72)"/>' +
+      '<text x="'+c.x+'" y="'+c.y+'" font-size="'+lb.size.toFixed(2)+'" class="ptxt" text-anchor="middle" dominant-baseline="central">'+esc(lb.text)+'</text></g>';
+  });
   const still = opt.still || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   if (!thumb && !still) {
     const route = paths.filter(p => !dimmed(p) && (p.points||[]).length > 1).map(p => ({ k: p.kind || 'run', pts: p.points.map(q => [X(q[0]), Y(q[1])]) }));
@@ -842,7 +933,7 @@ function stepsFromItems(items){
     if (it.measure === 'time') {
       if (it.sides) { steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Lijeva strana' })); steps.push(Object.assign({}, base, { kind:'switch', dur:ss, side:'Promjena strane' })); steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Desna strana' })); }
       else steps.push(Object.assign({}, base, { kind:'work', dur:it.sec }));
-    } else steps.push(Object.assign({}, base, { kind:'manual', side: it.reps + ' ponavljanja' + (it.sides ? ' po strani' : '') }));
+    } else steps.push(Object.assign({}, base, { kind:'manual', side: repsOf(it, base.set) + ' ponavljanja' + (it.sides ? ' po strani' : '') + (it.note ? ' · ' + it.note : '') }));
   };
   steps.push({ kind:'prep', dur:5, g:0, title:'Pripremi se', label:'Kreće za' });
   groupsOf(items).forEach((grp, gi) => {
@@ -979,7 +1070,7 @@ function curView(){
     const lab = st.trans ? (nextWork && nextWork.ss) : st.ss;
     v.title = st.kind === 'prep' ? (e ? e.name : P.title) : (st.trans ? 'Sljedeće: ' + (nextWork && nextWork.e ? nextWork.e.name : '') : (e ? e.name : ''));
     v.meta = it ? ((lab ? lab.L + lab.k + ' • ' : (st.trans ? (nextWork.g+1) : (st.g+1)) + '/' + groups + ' • ') + dose(it) + (e && e.cat ? ' • ' + e.cat : '')) : '';
-    const setTxt = st.ss ? (st.ss.size > 2 ? 'Krug ' : 'Superset ') + st.ss.L + ' • krug ' + st.round + '/' + st.rounds : 'Serija ' + st.set + '/' + (it ? it.sets : 1);
+    const setTxt = st.ss ? groupWord(st.ss.size) + ' ' + st.ss.L + ' • krug ' + st.round + '/' + st.rounds : 'Serija ' + st.set + '/' + (it ? it.sets : 1);
     v.badge = st.kind === 'manual' ? setTxt + ' • ' + st.side
       : st.nextEx ? st.side
       : ((it && st.set && !st.trans && (st.ss || (it.measure === 'time' && (it.sets||1) > 1)) ? setTxt + (st.side ? ' • ' : '') : '') + (st.side || ''));
@@ -1036,7 +1127,7 @@ function nextDose(e, it){
 }
 function progCandidates(){
   if (!P || P.mode !== 'ex' || !P.ref || P.ref.kind !== 'protocol') return [];
-  const p = S.pr[P.ref.id]; if (!p) return [];
+  const p = S.pr[P.ref.id]; if (!p || p.program) return [];
   P.answers = P.answers || {};
   const out = [];
   (p.items || []).forEach((it, j) => {
@@ -1206,6 +1297,7 @@ const A = {
   fieldList: () => go({ v:'fieldList' }),
   openField: d => go({ v:'field', id:d.id }),
   openPr: d => go({ v:'pr', id:d.id }),
+  openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
   dose: d => { top().dose = +d.i; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
@@ -1273,7 +1365,8 @@ const A = {
     const dr = S.draft; const name = (dr.name||'').trim();
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
-    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
+    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
+    ['program','week','slot','pack'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     const ok = await save('protocols', dr.id, body); if (!ok) return;
     S.pr[dr.id] = Object.assign({ id: dr.id }, body);
     const id = dr.id; S.draft = null; S.stack.pop();
@@ -1297,7 +1390,7 @@ const A = {
   dataSheet: () => { S.sheet = { kind:'data' }; render(); },
   exportData: () => {
     try {
-      const blob = new Blob([JSON.stringify({ v:1, exportedAt: new Date().toISOString(), exercises:S.ex, protocols:S.pr, field:S.field, log:S.log, _deleted:S._deleted||[] }, null, 1)], { type:'application/json' });
+      const blob = new Blob([JSON.stringify({ v:1, exportedAt: new Date().toISOString(), exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] }, null, 1)], { type:'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'moj-trening-kopija-' + new Date().toISOString().slice(0,10) + '.json';
       document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
       toast('Kopija je spremljena.');
@@ -1362,7 +1455,9 @@ app.addEventListener('change', async ev => {
   }
   if (t.id === 'packFile' && t.files && t.files[0]) {
     if (S.sheet) { S.sheet._busy = true; render(); }
-    try { const n = await importPack(t.files[0]); S.sheet = null; render(); toast(n ? 'Dodano ' + n + ' slika vježbi.' : 'U paketu nema slika za tvoje vježbe.'); }
+    try { const r = await importPack(t.files[0]); S.sheet = null; render();
+      const parts = [r.photos ? r.photos + ' slika' : '', r.exercises ? r.exercises + ' vježbi' : '', r.programs ? r.programs + ' program' + (r.sessions ? ' s ' + r.sessions + ' treninga' : '') : ''].filter(Boolean);
+      toast(parts.length ? 'Dodano: ' + parts.join(', ') + '.' : 'Ovaj paket je već uvezen.'); }
     catch(e){ console.error('pack import failed', e); if (S.sheet) S.sheet._busy = false; render(); toast('Ta datoteka nije paket slika ove aplikacije.'); }
     return;
   }

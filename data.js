@@ -407,52 +407,6 @@ window.SEED = {
    "media": null,
    "mediaType": null
   },
-  "uze-skare": {
-   "name": "Recipročne škare s užetom",
-   "alt": "Banded scissor switches",
-   "cat": "Aktivacija",
-   "phase": null,
-   "cord": "Ø6/Ø8",
-   "zones": [
-    "Kuk",
-    "Fleksori kuka",
-    "Gluteus"
-   ],
-   "equip": [
-    "Elastično uže",
-    "Kolotur"
-   ],
-   "equipment": "Elastično uže Ø6 ili Ø8 provučeno kroz kolotur pričvršćen nisko (u visini gležnja), krajevi oko oba stopala",
-   "measure": "time",
-   "sets": 2,
-   "reps": 10,
-   "sec": 30,
-   "rest": 15,
-   "kg": 0,
-   "sides": false,
-   "feel": "Obje noge rade istovremeno: prednja strana kukova i stražnjica",
-   "steps": [
-    "Kolotur pričvrsti nisko, provuci elastično uže kroz njega, a krajeve užeta stavi oko oba stopala.",
-    "Stani licem prema koloturu i odmakni se dok uže ne bude lagano napeto, a po potrebi se rukama drži za kavez.",
-    "Postavi se u mali raskorak, s težinom na prednjem dijelu stopala i uspravnim trupom.",
-    "Ritmično mijenjaj noge kao škare, uz lagani niski poskok, tako da jedna noga ide naprijed, a druga istovremeno natrag.",
-    "Pokret vodi iz kukova, koljena drži blago savijena, a stopala spuštaj meko i tiho.",
-    "Drži ujednačen ritam cijelih 30 s, uz miran trup."
-   ],
-   "mistakes": [
-    "Trup se ljulja naprijed-natrag – zategni trbuh i drži ramena mirna.",
-    "Raskorak je prevelik – radi male i brze izmjene.",
-    "Tvrdo doskačeš na pete – spuštaj se na prednji dio stopala.",
-    "Ritam se raspada – uspori dok izmjene ne budu ujednačene."
-   ],
-   "note": "Recipročne škare povezuju rad pregibača kuka jedne noge i ekstenzora druge, kao u sprintu, i podižu tjelesnu temperaturu prije treninga. Radi ih na početku zagrijavanja s užetom, prije treninga s loptom. Lakše: sporiji ritam, manji raspon ili tanje uže; teže: deblje uže (Ø10 ili Ø12) ili brži ritam uz isti raspon. Ako se javi bol u preponi ili s prednje strane kuka, smanji raspon i brzinu.",
-   "source": "https://us.physitrack.com/home-exercise-video/scissor-jumps",
-   "sourceTitle": "Scissors Jumps (exercise video) – Physitrack",
-   "order": 110,
-   "fav": true,
-   "media": null,
-   "mediaType": null
-  },
   "uze-fleksija": {
    "name": "Fleksija kuka s užetom",
    "alt": "Standing cable hip flexion",
@@ -1012,7 +966,7 @@ window.SEED = {
    "reps": 6,
    "sec": 30,
    "rest": 120,
-   "kg": 85,
+   "kg": 0,
    "sides": false,
    "feel": "Stražnjica, natkoljenice i stražnja loža, uz stabilan trup",
    "steps": [
@@ -1057,7 +1011,7 @@ window.SEED = {
    "reps": 8,
    "sec": 30,
    "rest": 90,
-   "kg": 14,
+   "kg": 0,
    "sides": true,
    "feel": "Prednja noga (natkoljenica i stražnjica); istezanje prednje strane kuka stražnje noge",
    "steps": [
@@ -1102,7 +1056,7 @@ window.SEED = {
    "reps": 10,
    "sec": 30,
    "rest": 90,
-   "kg": 70,
+   "kg": 0,
    "sides": false,
    "feel": "Stražnjica, manje stražnja loža",
    "steps": [
@@ -1556,7 +1510,7 @@ window.SEED = {
     "Plyo box",
     "Bučice"
    ],
-   "equipment": "Stuba ili klupa do visine koljena (plyo box od 45 cm samo ako kuk ne štipa), par bučica",
+   "equipment": "Plyo box na strani od 40 cm ili niža stuba, par bučica",
    "measure": "sets",
    "sets": 3,
    "reps": 8,
@@ -1566,7 +1520,7 @@ window.SEED = {
    "sides": true,
    "feel": "Gluteus i kvadriceps noge na kutiji",
    "steps": [
-    "Odaberi stabilnu podlogu na kojoj ti je bedro radne noge paralelno s podom ili niže: najniža strana plyo boxa (45 cm) je na toj granici, pa ako kuk štipa, uzmi nižu stubu na stubištu ili tribini.",
+    "Odaberi stabilnu podlogu na kojoj ti je bedro radne noge paralelno s podom ili niže: najniža strana plyo boxa (40 cm) za većinu je dobra visina, a ako kuk štipa, uzmi nižu stubu.",
     "Stani ispred podloge s bučicom u svakoj ruci i cijelo stopalo radne noge stavi na nju.",
     "Blago nagni trup naprijed, prebaci težinu na nogu na podlozi i popni se guranjem kroz cijelo stopalo dok ne staneš uspravno.",
     "Ne odguruj se nogom s poda; ona samo prati pokret i na vrhu staje uz radnu nogu.",
@@ -3498,7 +3452,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Plyo box (strane 45, 50 i 60 cm) na neklizavoj podlozi",
+   "equipment": "Plyo box (strane 40, 50 i 60 cm) na neklizavoj podlozi",
    "measure": "sets",
    "sets": 4,
    "reps": 5,
@@ -3522,7 +3476,7 @@ window.SEED = {
     "Skakanje unatrag s kutije – siđi korak po korak da poštediš tetive i zglobove.",
     "Skokovi u nizu bez pauze – resetiraj se između skokova da svaki bude maksimalan."
    ],
-   "note": "Box jump razvija eksplozivnu snagu nogu za start, skok na glavu i duel, a zbog doskoka na povišenje manje opterećuje zglobove od skokova na pod. Kutija neka bude niža od tvog vertikalnog skoka: kreni sa stranom od 45 cm, a 50 i 60 cm uzmi tek kad i na njima doskačeš u polučučanj, a vježbu radi odmoran na početku treninga, u predsezoni 1–2 puta tjedno, u sezoni u manjem volumenu i ne dan prije utakmice. Lakša varijanta je squat jump bez kutije ili niža kutija, a teža viša kutija (uz doskok i dalje u polučučanj) ili odraz s jedne noge. Ako osjetiš bol u kuku, koljenu ili tetivama, stani, a zbog kuka izbjegavaj doskok u duboki, bolni čučanj.",
+   "note": "Box jump razvija eksplozivnu snagu nogu za start, skok na glavu i duel, a zbog doskoka na povišenje manje opterećuje zglobove od skokova na pod. Kutija neka bude niža od tvog vertikalnog skoka: kreni sa stranom od 40 cm, a 50 i 60 cm uzmi tek kad i na njima doskačeš u polučučanj, a vježbu radi odmoran na početku treninga, u predsezoni 1–2 puta tjedno, u sezoni u manjem volumenu i ne dan prije utakmice. Lakša varijanta je squat jump bez kutije ili niža kutija, a teža viša kutija (uz doskok i dalje u polučučanj) ili odraz s jedne noge. Ako osjetiš bol u kuku, koljenu ili tetivama, stani, a zbog kuka izbjegavaj doskok u duboki, bolni čučanj.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/115/box-jumps/",
    "sourceTitle": "Butt & Hip Exercises | Box Jumps",
    "video": "https://www.youtube.com/watch?v=DXu-8TAJwi4",
@@ -3693,7 +3647,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Plyo box na najnižoj strani (45 cm)",
+   "equipment": "Plyo box na najnižoj strani (40 cm)",
    "measure": "sets",
    "sets": 3,
    "reps": 4,
@@ -3703,7 +3657,7 @@ window.SEED = {
    "sides": false,
    "feel": "Listovi, kvadricepsi i gluteusi, uz brz, opružni odraz od poda",
    "steps": [
-    "Postavi plyo box na najnižu stranu (45 cm) i stani na njegov rub, sa stopalima u širini kukova i rukama već zamahnutima unatrag.",
+    "Postavi plyo box na najnižu stranu (40 cm) i stani na njegov rub, sa stopalima u širini kukova i rukama već zamahnutima unatrag.",
     "Iskorači s kutije i pusti se da padneš ravno dolje – ne skači s nje prema gore ni naprijed.",
     "Doskoči istodobno na oba stopala, prvo prednjim dijelom stopala, uz blago savijena koljena i kukove.",
     "Odmah se odrazi u maksimalni vertikalni skok, uz snažan zamah rukama i što kraći kontakt s podom.",
@@ -3711,13 +3665,13 @@ window.SEED = {
     "Između ponavljanja odmori 15–20 sekundi kako bi svaki skok bio kvalitetan."
    ],
    "mistakes": [
-    "Doskok propada u duboki čučanj – ostani na 45 cm (strane od 50 i 60 cm previsoke su za depth jump) i vrati se na depth drop dok kontakt ne bude kratak i čvrst.",
+    "Doskok propada u duboki čučanj – ostani na 40 cm (strane od 50 i 60 cm previsoke su za depth jump) i vrati se na depth drop dok kontakt ne bude kratak i čvrst.",
     "Skok s kutije prema gore ili daleko naprijed – samo iskorači i padni ravno dolje.",
     "Dug kontakt i zastoj u čučnju – zamisli da je pod vruć i odmah se odrazi.",
     "Koljena upadaju prema unutra pri doskoku – drži koljena u liniji sa stopalima.",
     "Doskok na pete s ispruženim koljenima – doskoči prvo prednjim dijelom stopala uz savijena koljena."
    ],
-   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Tvoja najniža visina od 45 cm je ujedno i gornja granica: prva 2–3 tjedna radi depth drop (silazak s kutije i zadržani doskok bez skoka), a tek onda depth jump. Višu kutiju ne trebaš; teža varijanta je odraz naprijed ili na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
+   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Najniža strana od 40 cm prava je visina za ovu vježbu: prva 2–3 tjedna radi depth drop (silazak s kutije i zadržani doskok bez skoka), a tek onda depth jump. Strane od 50 i 60 cm ne trebaš; teža varijanta je odraz naprijed ili na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
    "source": "https://catalystathletics.com/exercise/551/Depth-Jump/",
    "sourceTitle": "Depth Jump - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "video": "https://www.youtube.com/watch?v=GeN0S3XCZnM",
@@ -6002,7 +5956,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Stepenica 15–20 cm (stuba na stubištu ili tribini); plyo box od 45 cm je previsok",
+   "equipment": "Stepenica 15–20 cm (stuba na stubištu ili tribini); plyo box od 40 cm je previsok",
    "measure": "sets",
    "sets": 3,
    "reps": 10,
@@ -6139,7 +6093,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Stepenica 15–30 cm (stuba na stubištu ili tribini); plyo box od 45 cm je previsok",
+   "equipment": "Stepenica 15–30 cm (stuba na stubištu ili tribini); plyo box od 40 cm je previsok",
    "measure": "sets",
    "sets": 3,
    "reps": 10,
@@ -6216,44 +6170,45 @@ window.SEED = {
    "mediaType": null
   },
   "bicikl-intervali": {
-   "name": "Intervali 30/30",
-   "alt": "30/30 interval runs",
+   "name": "Intervali na sobnom biciklu",
+   "alt": "Bike intervals 30/30",
    "cat": "Kondicija",
    "phase": null,
    "cord": "",
    "zones": [
-    "Cijelo tijelo"
+    "Kvadriceps",
+    "Gluteus",
+    "Lisni mišić"
    ],
    "equip": [
-    "Bez opreme"
+    "Sobni bicikl"
    ],
-   "equipment": "Teren ili staza; po želji dva čunja za oznaku udaljenosti",
+   "equipment": "Sobni bicikl (za sada ga nemaš: vježba čeka kupnju)",
    "measure": "time",
+   "sec": 30,
    "sets": 8,
    "reps": 10,
-   "sec": 30,
    "rest": 30,
    "kg": 0,
    "sides": false,
-   "feel": "Ubrzano disanje i rad nogu u brzim dionicama; u pauzi se oporavljaš laganim kasom",
+   "feel": "Jak rad u nogama i ubrzan dah; u odmoru lagano okretanje",
    "steps": [
-    "Zagrij se 8–10 minuta laganim trčanjem i dinamičnim vježbama poput njihanja nogom i skipova.",
-    "Trči 30 s brzo, uz osjećaj napora oko 8 od 10, što je brže od kasa, ali sporije od sprinta.",
-    "Zatim 30 s lagano kasaj ili hodaj, bez potpunog zaustavljanja.",
-    "Ponovi 8 puta i pokušaj u svakoj brzoj dionici pretrčati podjednaku udaljenost.",
-    "Trči uspravno i opušteno, s aktivnim radom ruku i mekim, tihim koracima.",
-    "Završi s 5 minuta laganog kasa i hodanja."
+    "Namjesti sjedalo tako da je koljeno pri najnižem položaju pedale tek blago savijeno.",
+    "Zagrij se 5 minuta laganim okretanjem uz postupno jači otpor.",
+    "Okreći 30 s jako (oko 8–9 od 10 po osjećaju), uz jači otpor i visoku kadencu, s mirnim trupom.",
+    "Zatim 30 s okreći lagano uz mali otpor dok se dah ne smiri.",
+    "Ponovi 8 puta, a na kraju se 3–5 minuta hladi laganim okretanjem."
    ],
    "mistakes": [
-    "Prve dionice su prebrze – trči tempom koji možeš zadržati svih 8 puta.",
-    "Brzu dionicu pretvaraš u sprint – drži napor oko 8 od 10, a ne maksimalno.",
-    "U pauzi potpuno staneš – nastavi lagano kasati ili hodati radi oporavka.",
-    "Udaljenost brzih dionica naglo pada – uspori tempo ili smanji broj ponavljanja."
+    "Prenisko sjedalo pa je koljeno jako savijeno – podigni sjedalo dok koljeno na dnu nije tek blago savijeno.",
+    "Prvi intervali prejako pa zadnji propadnu – drži jednak intenzitet u svih 8 intervala.",
+    "U odmoru potpuno staneš – nastavi lagano okretati da se brže oporaviš.",
+    "Trup i kukovi se ljuljaju – smanji otpor i drži trup mirnim."
    ],
-   "note": "Intervali 30/30 razvijaju sposobnost ponavljanja jakih napora, kao u pritisku i povratku u obranu tijekom utakmice. Koristi ih u predsezoni ili kao dodatni kondicijski rad u sezoni, najviše 1–2 puta tjedno i ne dan prije utakmice. Lakše: 6 ponavljanja ili 20 s brzo i 40 s lagano; teže: 10–12 ponavljanja. Isti protokol možeš odvoziti na sobnom biciklu ako ti je negdje dostupan, što je blaže za zglobove pri povratku nakon ozljede. Bol u kuku ili preponi znači stani.",
+   "note": "Intervali na biciklu razvijaju kondiciju uz manje udaraca nego trčanje, pa su dobri za dane oporavka ili kad koljeno ili kuk ne podnose trčanje. Za sada nemaš bicikl, pa je vježba u knjižnici samo za kasnije i nije ni u jednom protokolu. Lakše: 20 s jako i 40 s lagano; teže: 10 ponavljanja ili 40 s jako. Ako osjetiš bol u kuku ili koljenu, smanji otpor.",
    "source": "https://www.health.harvard.edu/heart-health/interval-training-a-shorter-more-enjoyable-workout",
    "sourceTitle": "Interval training: A shorter, more enjoyable workout? - Harvard Health",
-   "order": 801,
+   "order": 801.5,
    "fav": false,
    "media": null,
    "mediaType": null
@@ -6623,6 +6578,49 @@ window.SEED = {
    "fav": false,
    "media": null,
    "mediaType": null
+  },
+  "intervali-30-30": {
+   "name": "Intervali 30/30",
+   "alt": "30/30 interval runs",
+   "cat": "Kondicija",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Cijelo tijelo"
+   ],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "Teren ili staza; po želji dva čunja za oznaku udaljenosti",
+   "measure": "time",
+   "sets": 8,
+   "reps": 10,
+   "sec": 30,
+   "rest": 30,
+   "kg": 0,
+   "sides": false,
+   "feel": "Ubrzano disanje i rad nogu u brzim dionicama; u pauzi se oporavljaš laganim kasom",
+   "steps": [
+    "Zagrij se 8–10 minuta laganim trčanjem i dinamičnim vježbama poput njihanja nogom i skipova.",
+    "Trči 30 s brzo, uz osjećaj napora oko 8 od 10, što je brže od kasa, ali sporije od sprinta.",
+    "Zatim 30 s lagano kasaj ili hodaj, bez potpunog zaustavljanja.",
+    "Ponovi 8 puta i pokušaj u svakoj brzoj dionici pretrčati podjednaku udaljenost.",
+    "Trči uspravno i opušteno, s aktivnim radom ruku i mekim, tihim koracima.",
+    "Završi s 5 minuta laganog kasa i hodanja."
+   ],
+   "mistakes": [
+    "Prve dionice su prebrze – trči tempom koji možeš zadržati svih 8 puta.",
+    "Brzu dionicu pretvaraš u sprint – drži napor oko 8 od 10, a ne maksimalno.",
+    "U pauzi potpuno staneš – nastavi lagano kasati ili hodati radi oporavka.",
+    "Udaljenost brzih dionica naglo pada – uspori tempo ili smanji broj ponavljanja."
+   ],
+   "note": "Intervali 30/30 razvijaju sposobnost ponavljanja jakih napora, kao u pritisku i povratku u obranu tijekom utakmice. Koristi ih u predsezoni ili kao dodatni kondicijski rad u sezoni, najviše 1–2 puta tjedno i ne dan prije utakmice. Lakše: 6 ponavljanja ili 20 s brzo i 40 s lagano; teže: 10–12 ponavljanja. Isti protokol možeš odvoziti na sobnom biciklu ako ti je negdje dostupan, što je blaže za zglobove pri povratku nakon ozljede. Bol u kuku ili preponi znači stani.",
+   "source": "https://www.health.harvard.edu/heart-health/interval-training-a-shorter-more-enjoyable-workout",
+   "sourceTitle": "Interval training: A shorter, more enjoyable workout? - Harvard Health",
+   "order": 801.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
   }
  },
  "protocols": {
@@ -6633,16 +6631,6 @@ window.SEED = {
    "tag": "Prije treninga",
    "updatedAt": 2,
    "items": [
-    {
-     "exId": "uze-skare",
-     "measure": "time",
-     "sec": 30,
-     "sets": 2,
-     "reps": 10,
-     "rest": 15,
-     "sides": false,
-     "kg": 0
-    },
     {
      "exId": "uze-fleksija",
      "measure": "sets",
@@ -6799,7 +6787,7 @@ window.SEED = {
      "reps": 8,
      "rest": 0,
      "sides": true,
-     "kg": 14,
+     "kg": 0,
      "ss": "a"
     },
     {
@@ -6821,7 +6809,7 @@ window.SEED = {
      "reps": 10,
      "rest": 0,
      "sides": false,
-     "kg": 70,
+     "kg": 0,
      "ss": "b"
     },
     {
@@ -9068,3 +9056,4 @@ window.SEED_PLAN = {
   "note": "Plan prvo daje dane odmora za svježinu, a zatim uvodi trčanja: najprije raste volumen, pa intenzitet. Trening snage koji propiše klub radi se uz ovaj plan. Dani bez oznake nemaju trčanje. Dodirni oznaku za trening."
  }
 };
+window.SEED_RETIRED = {"exercises": ["uze-skare"]};

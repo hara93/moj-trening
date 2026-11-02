@@ -1,5 +1,15 @@
 # Promjene
 
+## 1.2 — 2. 11. 2026
+
+- **Programi:** novi odjeljak u Protokolima. Kupljeni TAE 6-tjedni program (24 treninga, raspored po tjednima, njihove slike i video linkovi) uvozi se iz privatnog paketa i nikad nije u ovom javnom repozitoriju. Program pokazuje odrađene treninge i sljedeći trening.
+- Naslovi dijelova treninga (zagrijavanje, snaga, pliometrija…), triseti i serije s različitim brojem ponavljanja (npr. 6/5/5/4).
+- **Nacrti terena:** natpisi se više ne preklapaju; stoje na tamnoj podlozi uz svoju liniju, a ako nema mjesta, izostave se.
+- Bicikl ostaje u knjižnici za kasnije, bez protokola; trčanje 30/30 je zasebna vježba.
+- Plyo box 40 / 50 / 60 cm u uputama; Renegade row sa šesterokutnim bučicama; Nordic s petama ispod druge prečke ljestava.
+- Protokoli dolaze bez kilograma: početne težine upisuješ sam.
+- „Recipročne škare s užetom” su uklonjene (uže preko kolotura samo klizi, nema opterećenja).
+
 ## 1.1 — 2. 11. 2026
 
 Isti izgled i struktura kao 1.0, uz ove nadogradnje:

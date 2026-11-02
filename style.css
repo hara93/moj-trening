@@ -225,7 +225,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .pitch figcaption{display:flex;flex-direction:column;gap:6px;margin:10px 17px 0;font-size:13px;line-height:18px;color:var(--text-2)}
 .lgrow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--text-body)}
 .lg{display:inline-flex;align-items:center;gap:6px}
-.ptxt{fill:#fff;font-family:var(--font);font-weight:600;paint-order:stroke;stroke:rgba(18,40,24,.85);stroke-width:.45px}
+.ptxt{fill:#fff;font-family:var(--font);font-weight:600}
 .thumb.pthumb{background:#2A6639}
 .thumb.pthumb .pitchsvg{width:100%;height:100%}
 
@@ -246,3 +246,16 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 
 /* dose chips sit outside the gutter: keep them inside the screen */
 .chips.center{justify-content:center;margin-left:0;margin-right:0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* programmes (e.g. a private 6-week plan) */
+.progtop{display:flex;align-items:center;gap:16px;margin:18px 17px 0;padding:14px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border)}
+.progtop div{display:flex;flex-direction:column;gap:4px}
+.progtop b{font-size:20px;font-weight:700}
+.progtop span{font-size:14px;color:var(--text-body)}
+.pgrid{display:grid;gap:6px;margin:16px 0 0;align-items:center}
+.pgrid .pw{font-size:12px;font-weight:600;color:var(--text-2);text-align:center}
+.pcell{height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text-body);font-size:12px;font-weight:600;padding:0 4px;line-height:14px}
+.pcell.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.pcell.next{border:2px solid var(--accent);color:var(--accent-text)}
+.sechead{margin:14px 6px 2px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.list > .sechead:first-child{margin-top:0}
