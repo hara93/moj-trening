@@ -266,9 +266,9 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .stat{border-radius:18px;background:var(--surface);border:1px solid var(--border);padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-size:22px;font-weight:700}
 .stat span{font-size:12px;color:var(--text-2);line-height:16px}
-.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:24px 2px 10px}
-.sec h2{margin:0;font-size:17px;font-weight:600}
-.sec span{font-size:13px;color:var(--text-2);text-align:right}
+.psec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:24px 2px 10px}
+.psec h2{margin:0;font-size:17px;font-weight:600}
+.psec span{font-size:13px;color:var(--text-2);text-align:right}
 .lift{border-radius:20px;background:var(--surface);border:1px solid var(--border);padding:13px 15px;display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
 .lift.go{border-color:var(--accent);background:linear-gradient(180deg,rgba(87,137,232,.14),rgba(87,137,232,.04))}
 .lift.warn{border-color:#8A6A3A;background:linear-gradient(180deg,rgba(255,180,90,.10),rgba(255,180,90,.02))}
@@ -315,3 +315,19 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .mini .sbtn{width:36px;height:36px;border-radius:18px}
 .mini b{color:var(--text);font-size:16px;min-width:22px;text-align:center}
 .chart .delta.same{color:var(--text-2);font-weight:600}
+
+/* dosing */
+.goal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.goal button{border-radius:16px;border:2px solid var(--border);background:transparent;color:var(--text);padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left}
+.goal button.on{border-color:var(--accent);background:rgba(87,137,232,.10)}
+.goal b{font-size:15px;font-weight:600}
+.goal span{font-size:12px;color:var(--text-2);line-height:16px}
+.advice{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(87,214,142,.10);border:1px solid rgba(87,214,142,.30);color:#BFF0D3;font-size:13px;line-height:19px}
+table.kg{width:100%;border-collapse:collapse;font-size:13px}
+table.kg th{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text-2);text-align:right;padding:4px 0 6px}
+table.kg th:first-child,table.kg td:first-child{text-align:left}
+table.kg td{padding:8px 0 8px 8px;border-top:1px solid var(--border);text-align:right;color:var(--text-body);white-space:nowrap;vertical-align:top}
+table.kg td:first-child{padding-left:0;white-space:normal}
+table.kg td b{display:block;color:var(--text);font-weight:600}
+table.kg td span{font-size:11px;color:var(--text-2)}
+table.kg td.on{color:var(--accent-text);font-weight:700}

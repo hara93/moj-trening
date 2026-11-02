@@ -1,5 +1,14 @@
 # Promjene
 
+## 1.4 — 2. 11. 2026
+
+- **Doziranje** (Napredak → Doziranje):
+  - cilj razdoblja: Snaga (4–6 pon., 85–100 %), Hipertrofija (8–12, 70–80 %), Izdržljivost (12–15+, 65–70 %) ili Eksplozivnost (3–5, lakše i brzo);
+  - nogometni tjedan: broj treninga s loptom i dan utakmice daju preporuku koliko treninga snage i kada (teški najkasnije 4 dana prije utakmice, dan prije bez teških nogu);
+  - moje težine: iz odrađenih serija procjenjuje se maksimum i kilogrami za svaki cilj, zaokruženi na šipku (2,5 kg) i tvoje bučice.
+- Protokol snage dobiva prijedlog serija, ponavljanja, odmora i kilograma za odabrani cilj, s pregledom promjena prije potvrde.
+- Treninzi TAE programa mogu jednim dodirom dobiti kilograme iz tvojih težina; ponavljanja i serije ostaju kao u programu.
+
 ## 1.3 — 2. 11. 2026
 
 - **Napredak** je nova, četvrta tipka dolje: treninzi ovaj tjedan, niz tjedana, prijedlozi, krivulje glavnih vježbi, rekordi i kalendar dosljednosti zadnjih 12 tjedana.

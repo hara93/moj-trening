@@ -139,7 +139,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] })); return true; }
@@ -616,6 +616,14 @@ VIEWS.program = function(t){
     '<div style="height:20px"></div></div>' +
     (st.next ? '<div class="footer gut"><button class="btn" data-a="openPr" data-id="'+esc(st.next.pr)+'">Sljedeći trening</button></div>' : '');
 };
+function goalCard(p){
+  const g = S.settings.goal;
+  if (p.program) { const k = kgPlan(p); return k.changes.length && !(S.kgSkip && S.kgSkip[p.id]) ? '<div class="lift go" style="margin:0 17px"><div class="why" style="color:var(--text-body)">Kilogrami za ovaj trening mogu se izračunati iz tvojih težina ('+k.changes.length+' '+plural(k.changes.length, 'vježba', 'vježbe', 'vježbi')+'). Ponavljanja i serije ostaju kao u programu.</div><div class="acts"><button class="bt" data-a="kgSheet" data-id="'+esc(p.id)+'">Predloži kilograme</button><button class="bt ghost" data-a="kgSkip" data-id="'+esc(p.id)+'">Ne</button></div></div>' : ''; }
+  const tag = p.goal && GOALS[p.goal] ? '<div style="display:flex;gap:8px;margin:0 17px;flex-wrap:wrap"><span class="tag">Cilj: '+esc(GOALS[p.goal].name)+'</span><span class="tag">'+esc(GOALS[p.goal].desc.split(' · ').slice(0, 2).join(' · '))+'</span></div>' : '';
+  if (!g || p.goal === g || p.goalSkip === g) return tag;
+  const plan = goalPlan(p, g); if (!plan.changes.length) return tag;
+  return tag + '<div class="lift go" style="margin:0 17px"><div class="why" style="color:var(--text-body)">Cilj razdoblja je „'+esc(GOALS[g].name)+'”. Za '+plan.changes.length+' '+plural(plan.changes.length, 'vježbu', 'vježbe', 'vježbi')+' s opterećenjem postoji prijedlog serija, ponavljanja, odmora i kilograma.</div><div class="acts"><button class="bt" data-a="goalSheet" data-id="'+esc(p.id)+'">Pogledaj i primijeni</button><button class="bt ghost" data-a="goalSkip" data-id="'+esc(p.id)+'">Ne</button></div></div>';
+}
 function featRows(p){
   const eq = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; if (e) exEquip(e).forEach(x => { if (x !== 'Bez opreme') eq[x] = 1; }); });
   const zones = {}; (p.items||[]).forEach(it => { const e = S.ex[it.exId]; (e && e.zones || []).forEach(z => zones[z] = 1); });
@@ -636,6 +644,7 @@ VIEWS.pr = function(t){
       '<h1 style="margin:0 17px;font-size:30px;line-height:36px;font-weight:600;text-wrap:balance">' + esc(p.name) + '</h1>' +
       (p.desc ? '<p style="margin:0 17px;font-size:16px;line-height:24px;color:var(--text-body)">' + esc(p.desc) + '</p>' : '') +
       '<div class="stack" style="gap:16px;margin:4px 17px 0">' + featRows(p) + '</div>' +
+      goalCard(p) +
       (p.program ? '' : daysPicker('prDays', p.id, p.days)) +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2>' + (p.program ? '' : '<button class="txtbtn" data-a="progInfo" style="height:32px;font-size:14px;padding:0">Kako napredujem?</button>') + '</div>' +
       '<div class="list">' + itemRowsHtml(p.items || [], lab) + '</div>' +
@@ -1095,6 +1104,7 @@ const DB_STEPS = [2.5, 5, 7.5, 10, 15, 20];   // your dumbbell pairs
 const LOWER_ZONES = ['Kvadriceps','Gluteus','Gluteus medius','Stražnja loža','Kuk','Aduktori','Lisni mišić'];
 const PROG_CATS = { Snaga:1, Eksplozivnost:1, Trup:1 };
 const PROG_REFS = [
+  { t:'Rønnestad i sur. (2011): u sezoni jedan trening snage tjedno zadržava snagu i sprint', url:'https://pubmed.ncbi.nlm.nih.gov/21873897/' },
   { t:'ACSM (2009): +2–10 % opterećenja kad dva treninga zaredom napraviš 1–2 ponavljanja više', url:'https://doi.org/10.1249/MSS.0b013e3181915670' },
   { t:'Plotkin i sur. (2022): dodavanje ponavljanja jednako je učinkovito kao dodavanje kilograma', url:'https://peerj.com/articles/14142/' }
 ];
@@ -1193,6 +1203,82 @@ function sugCard(x){
   const N = progN(), ok = x.it.ok || 0;
   return '<div class="lift"><div class="top"><b>'+esc(x.e.name)+'</b><span>'+esc(dose(x.it))+'</span></div><div class="pips">'+Array.from({ length: N }, (_, k) => '<i class="pip'+(k < ok ? ' on' : '')+'"></i>').join('')+'<span>'+ok+'/'+N+' · '+esc(x.p.name)+'</span></div></div>';
 }
+/* ---------- dosing: goal of the period, football week, your loads ---------- */
+const GOALS = {
+  snaga:         { name:'Snaga',         reps:[4, 6],   target:5,  sets:4, rest:150, desc:'4–6 pon. · 85–100 % · 3–5 serija · odmor 2–3 min' },
+  hipertrofija:  { name:'Hipertrofija',  reps:[8, 12],  target:10, sets:3, rest:90,  desc:'8–12 pon. · 70–80 % · 3–4 serije · odmor 60–90 s' },
+  izdrzljivost:  { name:'Izdržljivost',  reps:[12, 15], target:12, sets:3, rest:45,  desc:'12–15+ pon. · 65–70 % · 2–3 serije · odmor 30–60 s' },
+  eksplozivnost: { name:'Eksplozivnost', reps:[3, 5],   target:4,  sets:4, rest:150, light:[.3, .6], desc:'3–5 pon. · 30–60 % · maksimalna brzina · puni odmor' }
+};
+const DAYS_IN = ['u ponedjeljak','u utorak','u srijedu','u četvrtak','u petak','u subotu','u nedjelju'];
+const pctFor = r => 1 / (1 + r / 30);               // share of the max you can lift r times (inverse Epley)
+function loaded(e){ const eq = exEquip(e); return ['Šipka','Landmine','Bučice','Girja'].some(t => eq.indexOf(t) !== -1); }
+function roundLoad(e, kg){
+  const eq = exEquip(e);
+  if (eq.indexOf('Bučice') !== -1 && eq.indexOf('Šipka') === -1 && eq.indexOf('Landmine') === -1) { const ok = DB_STEPS.filter(w => w <= kg + .01); return ok.length ? ok[ok.length - 1] : DB_STEPS[0]; }
+  if (eq.indexOf('Girja') !== -1 && eq.indexOf('Šipka') === -1) return 20;
+  return Math.max(0, Math.floor(kg / 2.5) * 2.5);
+}
+// best estimated max from sets you actually did in the last 8 weeks
+function bestE1(exId){
+  let best = 0; const since = Date.now() - 56 * DAY_MS;
+  S.log.forEach(l => { if (l.at < since) return; (l.items || []).forEach(x => {
+    if (x.exId !== exId || !(x.kg > 0) || x.measure === 'time') return;
+    const reps = x.done === false ? (x.lastReps || 0) : (x.reps || 0);
+    if (reps > 0) best = Math.max(best, e1rm(x.kg, reps));
+  }); });
+  return best;
+}
+function goalLoad(e, e1, g, reps){ const G = g ? GOALS[g] : null; return roundLoad(e, G && G.light ? e1 * (G.light[0] + G.light[1]) / 2 : e1 * pctFor(reps || (G ? G.target : 10))); }
+// what a goal would change in a protocol (loaded strength exercises only)
+function goalPlan(p, g){
+  const G = GOALS[g], items = clone(p.items || []), changes = [];
+  items.forEach((it, j) => {
+    const e = S.ex[it.exId];
+    if (!e || it.measure === 'time' || !loaded(e)) return;
+    const before = doseBase(it), e1 = bestE1(e.id);
+    it.reps = G.target; it.r0 = G.reps[0]; it.r1 = G.reps[1]; it.sets = G.sets; delete it.repsList;
+    const linked = j < items.length - 1 && it.ss && items[j + 1].ss === it.ss;
+    it.rest = linked ? 0 : G.rest;
+    if (e1 > 0) it.kg = goalLoad(e, e1, g);
+    it.ok = 0; it.fail = 0; it.snoozeOk = 0;
+    if (doseBase(it) !== before || it.rest !== (p.items[j].rest || 0)) changes.push({ e, from: before, to: doseBase(it), est: !(e1 > 0) });
+  });
+  return { items, changes };
+}
+// programme sessions keep their reps; only the kilograms are filled from your loads
+function kgPlan(p){
+  const items = clone(p.items || []), changes = [];
+  items.forEach(it => { const e = S.ex[it.exId]; if (!e || it.measure === 'time' || !loaded(e)) return; const e1 = bestE1(e.id); if (!(e1 > 0)) return;
+    const reps = Math.max.apply(null, (it.repsList || [it.reps || 10])); const kg = goalLoad(e, e1, null, reps);
+    if (kg !== it.kg) { changes.push({ e, from: doseBase(it), to: doseBase(Object.assign({}, it, { kg })) }); it.kg = kg; } });
+  return { items, changes };
+}
+function weekAdvice(){
+  const b = S.settings.ballN != null ? S.settings.ballN : 3, m = S.settings.matchDay != null ? S.settings.matchDay : -1;
+  const dn = i => DAYS_IN[(i + 7) % 7];
+  if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' snage tjedno, s barem jednim danom između.'; }
+  const n = b >= 4 ? 1 : 2;
+  return 'Preporuka: ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' snage. Teži najkasnije ' + dn(m - 4) + ' (4 dana prije utakmice)' + (n === 2 ? ', lakši s eksplozivnošću ' + dn(m - 2) : '') +
+    '. Dan prije utakmice (' + DAYNAMES[(m + 6) % 7] + ') bez teških nogu, samo aktivacija; dan poslije (' + DAYNAMES[(m + 1) % 7] + ') mobilnost i oporavak. U sezoni je jedan trening snage tjedno dovoljan da zadržiš snagu i brzinu.';
+}
+function dosingHtml(){
+  const g = S.settings.goal || null, b = S.settings.ballN != null ? S.settings.ballN : 3, m = S.settings.matchDay != null ? S.settings.matchDay : -1;
+  const lifts = Object.values(S.ex).filter(e => loaded(e)).map(e => ({ e, v: bestE1(e.id) })).filter(x => x.v > 0).sort((a, b2) => b2.v - a.v).slice(0, 8);
+  const rng = (e, v, k) => { const G = GOALS[k]; const lo = G.light ? goalLoad(e, v, k) : roundLoad(e, v * pctFor(G.reps[1])), hi = G.light ? lo : roundLoad(e, v * pctFor(G.reps[0])); return lo === hi ? String(lo).replace('.', ',') : String(lo).replace('.', ',') + '–' + String(hi).replace('.', ','); };
+  return '<div class="psec"><h2>Cilj ovog razdoblja</h2><span>za vježbe s opterećenjem</span></div><div class="goal">' +
+    Object.keys(GOALS).map(k => '<button class="'+(g === k ? 'on' : '')+'" data-a="setGoal" data-v="'+k+'" aria-pressed="'+(g === k)+'"><b>'+GOALS[k].name+'</b><span>'+esc(GOALS[k].desc)+'</span></button>').join('') + '</div>' +
+    (g ? '<p class="sub" style="margin:10px 2px 0;line-height:19px">Otvori protokol snage: dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”, koji potvrđuješ.</p>' : '') +
+    '<div class="psec"><h2>Nogometni tjedan</h2><span>ovaj tjedan</span></div><div class="chart">' +
+      '<div class="prow" style="border:0;min-height:52px"><span class="k">Treninzi s loptom</span><div class="step"><button class="sbtn" data-a="setBall" data-d="-1" aria-label="Manje">−</button><b>'+b+'</b><button class="sbtn" data-a="setBall" data-d="1" aria-label="Više">+</button></div></div>' +
+      '<span class="label" style="padding:4px 0 8px">Utakmica</span><div class="drow" style="grid-template-columns:1.6fr repeat(7,1fr)"><button class="dchip" data-a="setMatch" data-v="-1" aria-pressed="'+(m < 0)+'">Nema</button>' + DAYS.map((L, i) => '<button class="dchip" data-a="setMatch" data-v="'+i+'" aria-pressed="'+(m === i)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div>' +
+      '<div class="advice">'+esc(weekAdvice())+'</div></div>' +
+    '<div class="psec"><h2>Moje težine</h2><span>kg, iz odrađenih serija</span></div>' +
+    (lifts.length ? '<div class="chart" style="padding-top:8px;padding-bottom:4px;overflow-x:auto"><table class="kg"><tr><th>Vježba</th><th>Snaga</th><th>Hipertr.</th><th>Izdrž.</th></tr>' +
+      lifts.map(x => '<tr><td><b>'+esc(x.e.name)+'</b><span>max ≈ '+esc(fmtKg(Math.round(x.v * 2) / 2))+'</span></td>' + ['snaga','hipertrofija','izdrzljivost'].map(k => '<td class="'+(g === k ? 'on' : '')+'">'+rng(x.e, x.v, k)+'</td>').join('') + '</tr>').join('') + '</table></div>'
+      : '<p class="sub" style="margin:0 2px;line-height:20px">Kad odradiš trening s upisanim kilogramima, ovdje se iz tvojih serija procijeni maksimum i kilogrami za svaki cilj.</p>') +
+    '<p class="sub" style="margin:12px 2px 0;line-height:19px">Odnos ponavljanja i težine kao u TAE tablici i NSCA smjernicama (4–6 pon. ≈ 85–100 %, 6–8 ≈ 80–85 %, 8–10 ≈ 75–80 %, 10–12 ≈ 70–75 %, 12–15 ≈ 65–70 %). Maksimum se procjenjuje iz tvojih serija (Epleyjeva formula), a kilogrami se zaokružuju na ono što možeš staviti: šipka na 2,5 kg, bučice na tvoje parove.</p>';
+}
 VIEWS.progress = function(){
   const plan = planSlots(), ws = weekStart(Date.now()), wk = weekStatus(ws, plan);
   let sk = plan.length ? streakWeeks(plan) : 0;
@@ -1215,16 +1301,19 @@ VIEWS.progress = function(){
   const days = {}; S.log.forEach(l => { const d = new Date(l.at); d.setHours(0,0,0,0); days[d.getTime()] = (days[d.getTime()] || 0) + 1; });
   const start = ws - 11 * WEEK_MS; let heat = '';
   for (let d = 0; d < 7; d++) for (let w = 0; w < 12; w++) { const t = start + w * WEEK_MS + d * DAY_MS; const n = days[t] || 0; heat += '<i class="'+(t > Date.now() ? 'fut' : n >= 2 ? 'l3' : n === 1 ? 'l2' : '')+'"></i>'; }
-  return '<div class="view gut">' + topbar('', '', 'NAPREDAK') +
+  const head = '<div class="view gut">' + topbar('', '', 'NAPREDAK') +
     '<h1 class="h1">Napredak</h1>' +
+    '<div class="seg" style="margin-top:16px"><button class="chip" data-a="progTab" data-v="pregled" aria-pressed="'+(S.progTab !== 'doziranje')+'" style="height:44px">Pregled</button><button class="chip" data-a="progTab" data-v="doziranje" aria-pressed="'+(S.progTab === 'doziranje')+'" style="height:44px">Doziranje</button></div>';
+  if (S.progTab === 'doziranje') return head + dosingHtml() + '<div style="height:20px"></div></div>';
+  return head +
     '<div class="stats"><div class="stat"><b>'+(wk.planned ? wk.done + '/' + wk.planned : thisWeek)+'</b><span>'+(wk.planned ? 'treninga ovaj tjedan po planu' : 'treninga ovaj tjedan')+'</span></div><div class="stat"><b>'+sk+'</b><span>'+plural(sk, 'tjedan', 'tjedna', 'tjedana')+(plan.length ? ' zaredom po planu' : ' zaredom s treningom')+'</span></div><div class="stat"><b>'+S.log.length+'</b><span>treninga ukupno</span></div></div>' +
-    '<div class="sec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
+    '<div class="psec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
     (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 2px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
-    (way.length ? '<div class="sec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
-    (charts ? '<div class="sec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
-    (prs.length ? '<div class="sec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+r.best.x.reps+'</b><br><span>'+esc(new Date(r.best.x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' }))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
-    '<div class="sec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat">'+heat+'</div></div>' +
-    '<div class="sec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
+    (way.length ? '<div class="psec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
+    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
+    (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+r.best.x.reps+'</b><br><span>'+esc(new Date(r.best.x.at).toLocaleDateString('hr-HR', { day:'numeric', month:'numeric' }))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
+    '<div class="psec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat">'+heat+'</div></div>' +
+    '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
     '<div style="height:20px"></div></div>';
 };
 function ringSvg(frac, color){
@@ -1313,6 +1402,12 @@ function sheetHtml(){
       (plan.length ? '<p class="label" style="padding:0 0 6px">Plan</p>' + plan.map(x => '<button class="opt" data-a="'+(x.kind === 'field' ? 'openField' : 'openPr')+'" data-id="'+esc(x.id)+'"><span>'+esc(x.name)+'</span><span class="tag">'+(x.done ? 'odrađeno' : 'čeka')+'</span></button>').join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
       (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+fmt(l.secs || 0)+' min</span></div>').join('') : '') +
       '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu i treningu na terenu (Dani u tjednu).</p>';
+  } else if (s.kind === 'goal' || s.kind === 'kg') {
+    const p = S.pr[s.id], plan = p ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
+    body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(GOALS[S.settings.goal].name) + '” za ' + esc(p.name) : 'Kilogrami za ' + esc(p.name)) + '</h3>' +
+      plan.changes.map(c => '<div class="opt" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 4px"><b style="font-size:15px">'+esc(c.e.name)+'</b><span style="font-size:13px;color:var(--text-2)">'+esc(c.from)+' → <span style="color:var(--accent-text);font-weight:600">'+esc(c.to)+'</span>'+(c.est ? ' · kilograme upiši sam' : '')+'</span></div>').join('') +
+      '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">Sve možeš i dalje ručno promijeniti u uređivanju protokola.</p>' +
+      '<div class="seg"><button class="btn sec" data-a="sheetDone" style="height:48px">Odustani</button><button class="btn" data-a="'+(s.kind === 'goal' ? 'goalApply' : 'kgApply')+'" data-id="'+esc(s.id)+'" style="height:48px;font-size:16px">Primijeni</button></div>';
   } else if (s.kind === 'progInfo') {
     body = '<h3>Kako napredujem?</h3>' +
       '<div class="stack" style="gap:10px;font-size:15px;line-height:22px;color:var(--text-body)">' +
@@ -1444,7 +1539,7 @@ const A = {
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
     const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','ok','fail','prev','snoozeOk'])), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
-    ['program','week','slot','pack'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
+    ['program','week','slot','pack','goal','goalSkip'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     const ok = await save('protocols', dr.id, body); if (!ok) return;
     S.pr[dr.id] = Object.assign({ id: dr.id }, body);
     const id = dr.id; S.draft = null; S.stack.pop();
@@ -1488,6 +1583,18 @@ const A = {
     if (news.length) toast('Novi prijedlog na stranici Napredak: ' + news.join(', '));
   },
   lrep: d => { P.lastReps = P.lastReps || {}; const it = P.items[+d.j] || {}; const cur = P.lastReps[+d.j] != null ? P.lastReps[+d.j] : Math.max(0, (it.reps || 10) - 2); P.lastReps[+d.j] = Math.max(0, Math.min(it.reps || 30, cur + (+d.d))); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  progTab: d => { S.progTab = d.v; render(); },
+  setGoal: d => { S.settings.goal = S.settings.goal === d.v ? null : d.v; lsSet('mt.settings', S.settings); render(); },
+  setBall: d => { const v = (S.settings.ballN != null ? S.settings.ballN : 3) + (+d.d); S.settings.ballN = Math.max(0, Math.min(7, v)); lsSet('mt.settings', S.settings); render(); },
+  setMatch: d => { S.settings.matchDay = +d.v; lsSet('mt.settings', S.settings); render(); },
+  kgSkip: d => { S.kgSkip = S.kgSkip || {}; S.kgSkip[d.id] = 1; render(); },
+  goalSheet: d => { S.sheet = { kind:'goal', id: d.id }; render(); },
+  kgSheet: d => { S.sheet = { kind:'kg', id: d.id }; render(); },
+  goalSkip: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; n.goalSkip = S.settings.goal; S.pr[d.id].goalSkip = n.goalSkip; render(); await save('protocols', d.id, n); },
+  goalApply: async d => { const p = S.pr[d.id]; if (!p || !S.settings.goal) return; const plan = goalPlan(p, S.settings.goal); const n = clone(p); delete n.id; n.items = plan.items; n.goal = S.settings.goal; n.updatedAt = Date.now();
+    S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Protokol je doziran za cilj „' + GOALS[n.goal].name + '”.'); },
+  kgApply: async d => { const p = S.pr[d.id]; if (!p) return; const plan = kgPlan(p); const n = clone(p); delete n.id; n.items = plan.items;
+    S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Kilogrami su upisani.'); },
   setProgN: d => { S.settings.progN = +d.v; lsSet('mt.settings', S.settings); render(); },
   sugUp: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j], e = S.ex[it.exId], nd = nextDose(e, it); if (!nd.item) return;
     n.items[+d.j] = Object.assign(clone(nd.item), { prev: { measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides }, ok: 0, fail: 0, snoozeOk: 0, up: Date.now() });
