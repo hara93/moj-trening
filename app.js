@@ -133,11 +133,11 @@ function thumbHtml(e){
   if (m) return m.type === 'image' || m.poster ? '<img alt="" loading="lazy" src="'+esc(m.type === 'image' ? m.src : m.poster)+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
   return pathIcon(catIcon(e && e.cat), 28);
 }
-function packVideo(e){ return e && ((S.pack && S.pack.videos || {})[e.id] || (e.pack && e.source && /talentaintenough|wistia/.test(e.source) ? e.source : '')) || ''; }
+function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; }
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.2.1';
 const STORE_KEY = 'mt.data.v1';
 function persist(){
   try { localStorage.setItem(STORE_KEY, JSON.stringify({ v:1, exercises:S.ex, protocols:S.pr, field:S.field, programs:S.prog, log:S.log, _deleted:S._deleted||[] })); return true; }
@@ -187,7 +187,8 @@ async function importPack(file){
   if (exN || prN || d.programs) persist();
   const old = (S.pack && S.pack.ids) || [];
   S.pack = { id: packId, title: d.title || 'Paket slika', credit: d.credit || 'Privatni paket slika', at: Date.now(), ids: old.concat(ids.filter(id => old.indexOf(id) === -1)),
-    videos: Object.assign({}, (S.pack && S.pack.videos) || {}, d.videos || {}) };
+    videos: Object.assign({}, (S.pack && S.pack.videos) || {}, d.videos || {}),
+    members: Array.from(new Set(((S.pack && S.pack.members) || []).concat(d.members || []))) };
   lsSet('mt.pack', S.pack);
   return { photos: ids.length, exercises: exN, sessions: prN, programs: Object.keys(d.programs || {}).length };
 }
@@ -416,7 +417,7 @@ function libFiltered(){
     if (c === 'Sve') return true;
     if (c === 'Favoriti') return !!e.fav;
     if (c === 'TRX') return exEquip(e).indexOf('TRX') !== -1;
-    if (c === 'TAE') return !!(e.pack || (S.pack && S.pack.videos && S.pack.videos[e.id]));
+    if (c === 'TAE') return !!(e.pack || (S.pack && (S.pack.members || []).indexOf(e.id) !== -1));
     if (c === 'Rehab kuka') return e.cat === 'Rehab' || !!e.phase;
     if (c === 'Uže i kolotur') return !!e.cord;
     return e.cat === c;
@@ -452,7 +453,7 @@ VIEWS.library = function(){
     '<h2 class="h2">Popis vježbi</h2>') +
     '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'">' +
       '<button class="ib fbtn" data-a="eqSheet" aria-label="Filtriraj po opremi'+((S.lib.eq||[]).length ? ', odabrano ' + S.lib.eq.length : '')+'"'+((S.lib.eq||[]).length ? ' aria-pressed="true"' : '')+'>' + I.filter + ((S.lib.eq||[]).length ? '<span class="cnt">'+S.lib.eq.length+'</span>' : '') + '</button></div>' +
-    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && S.pack.videos ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
+    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && (S.pack.members || []).length ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
     '<div class="list" id="liblist" style="margin-top:14px">' + libListHtml() + '</div>' +
     '<div style="height:20px"></div></div>' +
     (picking ? '<div class="footer gut"><button class="btn" data-a="pickDone"'+(S.pick.ids.length?'':' disabled')+'>Dodaj u protokol ('+S.pick.ids.length+')</button></div>' : '');

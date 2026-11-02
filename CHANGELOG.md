@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.2.1 — 2. 11. 2026
+
+- Čip „TAE” u knjižnici prikazuje sve vježbe iz uvezenog programa. TAE-ovi video linkovi iz PDF-a više ne rade (njihova stranica je ugašena, a videi se puštaju samo kod njih), pa ih aplikacija ne prikazuje; gdje postoji arhivirana TAE stranica s opisom i rasporedom, vježba ima taj link.
+
 ## 1.2 — 2. 11. 2026
 
 - **Programi:** novi odjeljak u Protokolima. Kupljeni TAE 6-tjedni program (24 treninga, raspored po tjednima, njihove slike i video linkovi) uvozi se iz privatnog paketa i nikad nije u ovom javnom repozitoriju. Program pokazuje odrađene treninge i sljedeći trening.
