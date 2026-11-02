@@ -1556,7 +1556,7 @@ window.SEED = {
     "Plyo box",
     "Bučice"
    ],
-   "equipment": "Stabilna plyo kutija (visine koljena ili niža), par bučica",
+   "equipment": "Stuba ili klupa do visine koljena (plyo box od 45 cm samo ako kuk ne štipa), par bučica",
    "measure": "sets",
    "sets": 3,
    "reps": 8,
@@ -1566,12 +1566,12 @@ window.SEED = {
    "sides": true,
    "feel": "Gluteus i kvadriceps noge na kutiji",
    "steps": [
-    "Postavi plyo kutiju na ravan pod, provjeri da ne klizi i odaberi visinu na kojoj ti je bedro radne noge paralelno s podom ili niže.",
-    "Stani ispred kutije s bučicom u svakoj ruci i cijelo stopalo radne noge stavi na kutiju.",
-    "Blago nagni trup naprijed, prebaci težinu na nogu na kutiji i popni se guranjem kroz cijelo stopalo dok ne staneš uspravno.",
+    "Odaberi stabilnu podlogu na kojoj ti je bedro radne noge paralelno s podom ili niže: najniža strana plyo boxa (45 cm) je na toj granici, pa ako kuk štipa, uzmi nižu stubu na stubištu ili tribini.",
+    "Stani ispred podloge s bučicom u svakoj ruci i cijelo stopalo radne noge stavi na nju.",
+    "Blago nagni trup naprijed, prebaci težinu na nogu na podlozi i popni se guranjem kroz cijelo stopalo dok ne staneš uspravno.",
     "Ne odguruj se nogom s poda; ona samo prati pokret i na vrhu staje uz radnu nogu.",
     "Spuštaj se polako, 2–3 sekunde, kontrolirajući pokret radnom nogom, dok slobodna noga ne dotakne pod.",
-    "Radno stopalo ostavi na kutiji, odradi sva ponavljanja i zamijeni nogu."
+    "Radno stopalo ostavi na podlozi, odradi sva ponavljanja i zamijeni nogu."
    ],
    "mistakes": [
     "Odguravanje nogom s poda – diži se samo nogom na kutiji.",
@@ -1580,7 +1580,7 @@ window.SEED = {
     "Padanje pri spuštanju – spuštaj se kontrolirano 2–3 sekunde.",
     "Previsoka kutija pa se leđa zaobljuju ili kuk štipa – odaberi nižu visinu."
    ],
-   "note": "Step-up razvija jednonožnu snagu u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Dobar je u predsezoni i u sezoni, poslije treninga s loptom ili na treningu snage, a teške serije ne dan prije utakmice. Lakša varijanta je niža kutija bez bučica, a težu dobiješ težim bučicama, sporijim spuštanjem ili, ako je kuk bez boli, višom kutijom. Kuk: previsoka kutija traži duboko savijanje kuka, pa biraj visinu bez štipanja u preponi; oštra bol znači stani.",
+   "note": "Step-up razvija jednonožnu snagu u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Dobar je u predsezoni i u sezoni, poslije treninga s loptom ili na treningu snage, a teške serije ne dan prije utakmice. Lakša varijanta je niža stuba bez bučica, a težu dobiješ težim bučicama ili sporijim spuštanjem; strane plyo boxa od 50 i 60 cm previsoke su za tvoj kuk. Kuk: previsoka kutija traži duboko savijanje kuka, pa biraj visinu bez štipanja u preponi; oštra bol znači stani.",
    "source": "https://www.strengthlog.com/step-up/",
    "sourceTitle": "How to Do Step Up: Muscles Worked & Proper Form – StrengthLog",
    "order": 213,
@@ -1692,7 +1692,7 @@ window.SEED = {
     "Švedske ljestve",
     "Strunjača"
    ],
-   "equipment": "Presavijeni tatami pod koljenima, pete ispod najniže prečke švedskih ljestava (na terenu partner drži gležnjeve)",
+   "equipment": "Švedske ljestve (druga prečka odozdo), presavijeni tatami pod koljenima",
    "measure": "sets",
    "sets": 2,
    "reps": 5,
@@ -1702,7 +1702,7 @@ window.SEED = {
    "sides": false,
    "feel": "Stražnja loža cijelom duljinom, najjače dok kočiš spuštanje",
    "steps": [
-    "Klekni na presavijeni tatami leđima prema švedskim ljestvama i zakvači pete ispod najniže prečke, a ako žulja, podmetni ručnik (na terenu ti partner, klečeći iza tebe, čvrsto drži gležnjeve).",
+    "Klekni leđima prema švedskim ljestvama i zakvači pete ispod druge prečke odozdo; budući da je ta prečka malo previsoka, podigni koljena na presavijeni tatami (po potrebi i ploču ispod njega) dok pete ne sjednu točno ispod prečke, a ako žulja, podmetni ručnik.",
     "Uspravi trup tako da su koljena, kukovi i ramena u ravnoj liniji, zategni gluteuse i trbuh, a ruke drži ispred prsa.",
     "Polako se naginji naprijed opružajući koljena i koči stražnjom ložom što dulje možeš, bez savijanja u kukovima.",
     "Kad više ne možeš kočiti, dočekaj se dlanovima na pod kao u skleku, savijenih laktova, i zadrži napetost u stražnjoj loži do kraja.",
@@ -1713,10 +1713,10 @@ window.SEED = {
     "Savijanje u kukovima i guranje stražnjice unatrag – drži ravnu liniju od koljena do ramena.",
     "Propadanje već u prvom dijelu pokreta – koči od samog početka, a raspon skrati dok ne kontroliraš brzinu.",
     "Prevelik volumen na početku – počni s 2 serije po 3–5 ponavljanja i povećavaj postupno.",
-    "Sidrište se pomiče ili žulja – zakvači pete ispod čvrste prečke ljestava (ili neka partner čvrsto drži gležnjeve) i podmetni ručnik.",
-    "Tvrd doček na ispružene ruke – dočekaj se savijenim laktovima kao u skleku."
+    "Tvrd doček na ispružene ruke – dočekaj se savijenim laktovima kao u skleku.",
+    "Pete nisu čvrsto ispod prečke ili podloga pod koljenima klizi – podesi visinu podloge da pete nalegnu na prečku i stavi je na neklizav pod."
    ],
-   "note": "Nordic je najbolje istražena vježba za prevenciju ozljeda stražnje lože u nogometu; u randomiziranom istraživanju na amaterskim nogometašima smanjio je broj tih ozljeda za više od polovice. Uvedi ga postupno u predsezoni (1–2× tjedno, od 2 × 5 prema 3 × 6–8), a u sezoni ga održavaj 1× tjedno s malim volumenom, poslije treninga s loptom i ne dan prije utakmice (idealno ni dva), jer izaziva jaku upalu mišića. Lakša varijanta je mali raspon ili pomoć elastičnog užeta vezanog visoko za ljestve iza tebe i omotanog oko prsa, a teža sporije spuštanje, pauza na pola puta ili zadržavanje napetosti do samog poda. Oštra bol u stražnjoj loži (ne obična upala) znači odmah stani; kukovi su ispruženi, pa vježba ne traži savijanje kuka.",
+   "note": "Nordic je najbolje istražena vježba za prevenciju ozljeda stražnje lože u nogometu; u randomiziranom istraživanju na amaterskim nogometašima smanjio je broj tih ozljeda za više od polovice. Uvedi ga postupno u predsezoni (1–2× tjedno, od 2 × 5 prema 3 × 6–8), a u sezoni ga održavaj 1× tjedno s malim volumenom, poslije treninga s loptom i ne dan prije utakmice (idealno ni dva), jer izaziva jaku upalu mišića. Na terenu ti umjesto ljestava partner, klečeći iza tebe, čvrsto drži gležnjeve. Lakša varijanta je mali raspon ili pomoć elastičnog užeta vezanog visoko za ljestve iza tebe i omotanog oko prsa, a teža sporije spuštanje, pauza na pola puta ili zadržavanje napetosti do samog poda. Oštra bol u stražnjoj loži (ne obična upala) znači odmah stani; kukovi su ispruženi, pa vježba ne traži savijanje kuka.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5716363/",
    "sourceTitle": "Sprint and jump performance in elite male soccer players following a 10-week Nordic Hamstring exercise Protocol: a randomised pilot study - PMC",
    "order": 216,
@@ -2560,7 +2560,7 @@ window.SEED = {
    "equip": [
     "Bučice"
    ],
-   "equipment": "Par bučica koje se ne kotrljaju (najbolje šesterokutnih), tvrd i ravan pod",
+   "equipment": "Par šesterokutnih bučica, tvrd i ravan pod",
    "measure": "sets",
    "sets": 3,
    "reps": 12,
@@ -2570,7 +2570,7 @@ window.SEED = {
    "sides": false,
    "feel": "Srednji dio leđa i stražnje rame radne ruke, trup (osobito kosi trbušni mišići) i rame potporne ruke",
    "steps": [
-    "Postavi dvije bučice koje se ne kotrljaju (najbolje šesterokutne) na pod u širini ramena i uhvati ih tako da su ti šake točno ispod ramena.",
+    "Postavi dvije šesterokutne bučice na pod u širini ramena i uhvati ih tako da su ti šake točno ispod ramena.",
     "Ispruži noge u položaj za sklek, sa stopalima malo šire od kukova i tijelom ravnim od glave do peta.",
     "Zategni trbuh i stražnjicu i snažno pritisni potpornu bučicu u pod.",
     "Povuci jednu bučicu prema rebrima, s laktom uz tijelo, bez okretanja kukova.",
@@ -2582,7 +2582,7 @@ window.SEED = {
     "Bučica tresne o pod – spusti je kontrolirano.",
     "Zbog prevelike težine vučeš trzajem – uzmi lakše bučice i povlači polako."
    ],
-   "note": "Renegade row spaja plank i veslanje, pa trup uči odupirati se rotaciji dok ruka vuče, kao kad zadržavaš poziciju u duelu. U sezoni ga koristi kao dodatak nakon treninga s loptom, a u predsezoni u kružnom treningu. Lakše: šire razmaknuta stopala ili lakše bučice; teže: stopala bliže jedno drugom ili sklek između dva veslanja. Bol u zapešću ili ramenu znači stani, a ako se tvoje bučice kotrljaju ili ljuljaju, ne radi ovu vježbu s njima (ni s girjama od 20 kg), nego odaberi jednoručno veslanje bučicom uz oslonac.",
+   "note": "Renegade row spaja plank i veslanje, pa trup uči odupirati se rotaciji dok ruka vuče, kao kad zadržavaš poziciju u duelu. U sezoni ga koristi kao dodatak nakon treninga s loptom, a u predsezoni u kružnom treningu. Lakše: šire razmaknuta stopala ili lakše bučice; teže: stopala bliže jedno drugom ili sklek između dva veslanja. Tvoje šesterokutne bučice stoje stabilno, ali girje od 20 kg za ovu vježbu nisu prikladne jer se ljuljaju. Bol u zapešću ili ramenu znači stani.",
    "source": "https://www.strengthlog.com/renegade-row/",
    "sourceTitle": "How to Do Renegade Rows: Muscles Worked & Proper Form – StrengthLog",
    "order": 235,
@@ -3498,7 +3498,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Plyo box na neklizavoj podlozi (niža visina)",
+   "equipment": "Plyo box (strane 45, 50 i 60 cm) na neklizavoj podlozi",
    "measure": "sets",
    "sets": 4,
    "reps": 5,
@@ -3522,7 +3522,7 @@ window.SEED = {
     "Skakanje unatrag s kutije – siđi korak po korak da poštediš tetive i zglobove.",
     "Skokovi u nizu bez pauze – resetiraj se između skokova da svaki bude maksimalan."
    ],
-   "note": "Box jump razvija eksplozivnu snagu nogu za start, skok na glavu i duel, a zbog doskoka na povišenje manje opterećuje zglobove od skokova na pod. Kutija neka bude niža od tvog vertikalnog skoka (kreni s 30–50 cm), a vježbu radi odmoran na početku treninga, u predsezoni 1–2 puta tjedno, u sezoni u manjem volumenu i ne dan prije utakmice. Lakša varijanta je squat jump bez kutije ili niža kutija, a teža viša kutija (uz doskok i dalje u polučučanj) ili odraz s jedne noge. Ako osjetiš bol u kuku, koljenu ili tetivama, stani, a zbog kuka izbjegavaj doskok u duboki, bolni čučanj.",
+   "note": "Box jump razvija eksplozivnu snagu nogu za start, skok na glavu i duel, a zbog doskoka na povišenje manje opterećuje zglobove od skokova na pod. Kutija neka bude niža od tvog vertikalnog skoka: kreni sa stranom od 45 cm, a 50 i 60 cm uzmi tek kad i na njima doskačeš u polučučanj, a vježbu radi odmoran na početku treninga, u predsezoni 1–2 puta tjedno, u sezoni u manjem volumenu i ne dan prije utakmice. Lakša varijanta je squat jump bez kutije ili niža kutija, a teža viša kutija (uz doskok i dalje u polučučanj) ili odraz s jedne noge. Ako osjetiš bol u kuku, koljenu ili tetivama, stani, a zbog kuka izbjegavaj doskok u duboki, bolni čučanj.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/115/box-jumps/",
    "sourceTitle": "Butt & Hip Exercises | Box Jumps",
    "video": "https://www.youtube.com/watch?v=DXu-8TAJwi4",
@@ -3693,7 +3693,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Niska plyo kutija (30–40 cm)",
+   "equipment": "Plyo box na najnižoj strani (45 cm)",
    "measure": "sets",
    "sets": 3,
    "reps": 4,
@@ -3703,7 +3703,7 @@ window.SEED = {
    "sides": false,
    "feel": "Listovi, kvadricepsi i gluteusi, uz brz, opružni odraz od poda",
    "steps": [
-    "Stani na rub niske kutije (30–40 cm), sa stopalima u širini kukova i rukama već zamahnutima unatrag.",
+    "Postavi plyo box na najnižu stranu (45 cm) i stani na njegov rub, sa stopalima u širini kukova i rukama već zamahnutima unatrag.",
     "Iskorači s kutije i pusti se da padneš ravno dolje – ne skači s nje prema gore ni naprijed.",
     "Doskoči istodobno na oba stopala, prvo prednjim dijelom stopala, uz blago savijena koljena i kukove.",
     "Odmah se odrazi u maksimalni vertikalni skok, uz snažan zamah rukama i što kraći kontakt s podom.",
@@ -3711,13 +3711,13 @@ window.SEED = {
     "Između ponavljanja odmori 15–20 sekundi kako bi svaki skok bio kvalitetan."
    ],
    "mistakes": [
-    "Previsoka kutija pa pri doskoku propadaš u duboki čučanj – smanji visinu dok kontakt ne bude kratak i čvrst.",
+    "Doskok propada u duboki čučanj – ostani na 45 cm (strane od 50 i 60 cm previsoke su za depth jump) i vrati se na depth drop dok kontakt ne bude kratak i čvrst.",
     "Skok s kutije prema gore ili daleko naprijed – samo iskorači i padni ravno dolje.",
     "Dug kontakt i zastoj u čučnju – zamisli da je pod vruć i odmah se odrazi.",
     "Koljena upadaju prema unutra pri doskoku – drži koljena u liniji sa stopalima.",
     "Doskok na pete s ispruženim koljenima – doskoči prvo prednjim dijelom stopala uz savijena koljena."
    ],
-   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Lakša varijanta je depth drop (silazak s kutije i zadržani doskok bez skoka), a teža viša kutija ili odraz na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
+   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Tvoja najniža visina od 45 cm je ujedno i gornja granica: prva 2–3 tjedna radi depth drop (silazak s kutije i zadržani doskok bez skoka), a tek onda depth jump. Višu kutiju ne trebaš; teža varijanta je odraz naprijed ili na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
    "source": "https://catalystathletics.com/exercise/551/Depth-Jump/",
    "sourceTitle": "Depth Jump - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "video": "https://www.youtube.com/watch?v=GeN0S3XCZnM",
@@ -6002,7 +6002,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Stepenica 15–20 cm (npr. stuba na stubištu ili tribini); plyo box je za početak obično previsok",
+   "equipment": "Stepenica 15–20 cm (stuba na stubištu ili tribini); plyo box od 45 cm je previsok",
    "measure": "sets",
    "sets": 3,
    "reps": 10,
@@ -6139,7 +6139,7 @@ window.SEED = {
    "equip": [
     "Plyo box"
    ],
-   "equipment": "Stepenica 15–30 cm (npr. stuba na stubištu ili tribini) ili niža strana plyo boxa",
+   "equipment": "Stepenica 15–30 cm (stuba na stubištu ili tribini); plyo box od 45 cm je previsok",
    "measure": "sets",
    "sets": 3,
    "reps": 10,

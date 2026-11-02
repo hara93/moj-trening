@@ -466,7 +466,7 @@ VIEWS.ex = function(t){
     mediaHtml(e, e.sides ? 'Lijeva i desna' : '') +
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
-    '<div class="chips" role="group" aria-label="Doziranje" style="justify-content:center;margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
+    '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
     '<div class="cards" aria-label="Upute, greške, detalji i napredak">' +
       '<section class="icard" aria-label="Upute">' +
         (e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(e.feel)+'</p>' : '') +

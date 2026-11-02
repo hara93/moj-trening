@@ -243,3 +243,6 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .plangrid .ph{font-size:12px;font-weight:600;color:var(--text-2);text-align:center}
 .plangrid .pc{height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
 .plangrid .pe{height:36px;border-radius:10px;background:rgba(255,255,255,.025)}
+
+/* dose chips sit outside the gutter: keep them inside the screen */
+.chips.center{justify-content:center;margin-left:0;margin-right:0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
