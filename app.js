@@ -252,6 +252,7 @@ function cleanVal(k, v, depth){
     let a;
     if (k === 'days') a = Array.from(new Set(v.filter(i => Number.isInteger(i) && i >= 0 && i < 7))).sort();
     else if (k === 'repsList') a = v.map(x => cleanVal('reps', x, depth + 1)).filter(x => typeof x === 'number' && x >= 0);   // 0 = a set with no reps (history)
+    else if (k === 'zones' && v.length === 4 && v.every(x => typeof x === 'number' && isFinite(x) && x >= 0)) a = v.slice();   // a field log entry's load: metres per intensity zone
     else if (CLEAN_WORDS[k]) a = v.filter(x => typeof x === 'string' && !((k === 'zones' || k === 'equip') && badKey(x)));
     else a = v.filter(x => isPlainObj(x) && (k !== 'items' || (typeof x.exId === 'string' && !badKey(x.exId))) && (k !== 'sessions' || (typeof x.pr === 'string' && !badKey(x.pr))))
       .map(x => cleanVal(null, x, depth + 1));
@@ -2685,15 +2686,15 @@ const LOAD_RANGES = [['3', '3 mj', 91], ['6', '6 mj', 183], ['sve', 'Sve', 0]];
 // the "Opterećenje" card of one exercise (the exercise page and Glavne vježbe); range: '3' | '6' | 'sve'
 function exLoadCard(e, range, compact){
   const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2]), all = rg[2] ? exLoadSeries(e.id, 0) : sr;
-  const per = compact ? '' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
+  const per = compact ? '<button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button>' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
   const title = compact ? '<b class="t2">'+esc(e.name)+'</b>' : '<span class="t">'+(sr ? LOAD_LABEL[sr.kind] : LOAD_LABEL[all && all.kind] || 'Volumen')+'</span>';
   if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
   const P2 = sr.pts, k = sr.kind, f = v => loadFmt(k, v), n = P2.length, last = P2[n - 1], tr = loadTrend(P2);
   const sub = p => p.xs.length === 1 ? doseBase(p.xs[0]) : p.xs.length + ' × u treningu';
   const pts = P2.map(p => ({ t: p.t, v: p.v, sub: sub(p) }));
   const sum = (compact ? e.name + ': ' : '') + LOAD_LABEL[k] + ', ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' od ' + shortDate(P2[0].t) + ' do ' + shortDate(last.t) + ': od ' + f(P2[0].v) + ' do ' + f(last.v) + (tr ? '. ' + tr.text : '') + '.';
-  return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga') +
-    lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum) +
+  return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga', n === 1 ? 'prvi trening' : '') +
+    (n > 1 ? lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum) : '<p class="none">' + esc(shortDate(last.t) + ' · ' + sub(last) + '. Graf se crta od drugog treninga.') + '</p>') +
     (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
     chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)])) + '</div>';
 }
@@ -2811,7 +2812,7 @@ VIEWS.progress = function(){
     '<div class="psec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
     (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
     (way.length ? '<div class="psec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
-    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' + charts : '') +
+    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
     (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
     '<div class="psec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat" role="img" aria-label="'+heatLabel(heat)+'">'+heat+'</div></div>' +
     '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +

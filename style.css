@@ -397,8 +397,11 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .lc .hd .t2{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .lc .none{margin:8px 0 4px;font-size:14px;line-height:20px;color:var(--text-2)}
 .per{display:flex;gap:2px;background:var(--surface-2);border-radius:10px;padding:3px;flex:none}
-.per button{height:30px;min-width:44px;border:0;border-radius:8px;background:transparent;color:var(--text-2);font-size:12px;font-weight:600;padding:0 8px}
-.per button[aria-pressed="true"]{background:var(--bg);color:var(--text)}
+/* the period chips look 30 px tall but take taps over 44 px (the pill is drawn by ::before) */
+.per button{position:relative;isolation:isolate;height:44px;margin:-7px 0;min-width:44px;border:0;background:transparent;color:var(--text-2);font-size:12px;font-weight:600;padding:0 8px}
+.per button::before{content:"";position:absolute;inset:7px 0;border-radius:8px;z-index:-1}
+.per button[aria-pressed="true"]{color:var(--text)}
+.per button[aria-pressed="true"]::before{background:var(--bg)}
 .hv{display:flex;align-items:baseline;gap:10px;margin-top:8px;flex-wrap:wrap}
 .hv .v{font-size:32px;font-weight:650;letter-spacing:-.5px}
 .hv .vs{font-size:12.5px;color:var(--text-2)}
@@ -435,7 +438,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .lg2 i,.zl i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 .lg2 .k1{background:#1F9B8E} .lg2 .k2{background:#C8761F}
 .ltab{margin-top:8px;font-size:13px;color:var(--text-2)}
-.ltab summary{display:inline-flex;align-items:center;min-height:36px;cursor:pointer;color:var(--accent-text);font-weight:600}
+.ltab summary{display:inline-flex;align-items:center;min-height:44px;cursor:pointer;color:var(--accent-text);font-weight:600}
 .ltab table{width:100%;border-collapse:collapse;margin-top:4px}
 .ltab th,.ltab td{text-align:left;padding:6px 0;border-top:1px solid var(--border);font-weight:500}
 .ltab th{color:var(--text-2);font-size:12px}
@@ -452,7 +455,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .zl b{color:var(--text);font-weight:600;margin-left:auto;white-space:nowrap}
 .lnote{margin:10px 0 2px;font-size:12px;line-height:17px;color:var(--text-2)}
 .tag.hi{background:rgba(255,180,90,.16);color:#FFC27A}
-.footer .flink{display:block;margin:4px auto 0;height:36px;font-size:14px;color:var(--text-2)}
+.footer .flink{display:block;margin:0 auto -6px;height:44px;font-size:14px;color:var(--text-2)}
 .edu{padding:0 6px}
 .edu h1{font-size:27px;line-height:33px;margin:18px 0 14px;font-weight:600;text-wrap:balance}
 .edu h2{font-size:21px;margin:26px 0 10px;font-weight:600}
