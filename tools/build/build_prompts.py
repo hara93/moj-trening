@@ -40,6 +40,7 @@ if covers:
         md += ['### ' + c['card'], '', '- Datoteka: `' + c['file'] + '`', '- Veličina: 1024 × 1536, uspravno', '', '```text', c['prompt'], '```', '']
 for status, title, intro in SECTIONS:
     rows = sorted([(k, e) for k, e in lib.items() if e['img_prompt']['status'] == status], key=key)
+    if not rows: continue   # e.g. no exercise without a picture of his athlete any more
     md += ['## %s (%d)' % (title, len(rows)), '', intro, '']
     cur = None
     for k, e in rows:
