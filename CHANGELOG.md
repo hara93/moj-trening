@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.6.1 — 3. 11. 2026.
+
+- **Dvije utakmice u tjednu:** u prozoru dana (dodir na dan u tjednu) ili u Doziranju možeš označiti dodatnu utakmicu, a stalni dan utakmice možeš za jedan tjedan i ukinuti. Sva upozorenja, najbolji dani i doza za sezonu računaju sa svim utakmicama tog tjedna; u tjednu s dvije utakmice na terenu se predlaže samo lagani trening, a teške noge između utakmica dobivaju upozorenje.
+- **Najveća brzina (km/h)** u Doziranju (zadano 28,8 km/h): po njoj se računaju postoci brzine i sprint na terenu.
+- **Player:** kartica vježbe ima „Upute” i „Zašto”, kao stranica vježbe.
+
 ## 1.6 — 3. 11. 2026.
 
 - **Upute u stilu GOWOD-a:** svaka vježba ima kartice „Upute” (2–4 kratke upute) i „Zašto” (kratko objašnjenje i gdje se osjeća). Česte greške više se ne prikazuju.
