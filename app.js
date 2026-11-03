@@ -1108,15 +1108,16 @@ function doseOptions(e){
   const s = e.sets||3; return [s, s+1, s+2].map(n => ({ label: n + ' × ' + (e.reps||10), it: Object.assign(exItem(e), {sets:n}) }));
 }
 // under the media, like GOWOD: "Upute" (the cues) | "Zašto" (why, how it should feel, the source). Česte greške stay in the data,
-// unshown. The tab you pick stays for every exercise while the app is open (S.exTab).
-function exInfoHtml(e){
+// unshown. The tab you pick stays for every exercise while the app is open (S.exTab), on the exercise page and in the player's
+// card (wrap: the player's card section opening tag).
+function exInfoHtml(e, wrap){
   const z = S.exTab === 'zasto', steps = e.steps || [];
   const tab = (k, t, on) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+on+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
   const body = z
     ? ((e.note ? '<p>'+esc(e.note)+'</p>' : '') + (e.feel ? '<p class="feel"><b>Osjećaj:</b> '+esc(e.feel)+'</p>' : '') +
        (e.source ? '<p class="src"><span class="lb">Izvor</span><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>'
     : steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
-  return '<section class="exinfo gut"><div class="extabs" role="tablist" aria-label="Upute i zašto">' + tab('upute', 'Upute', !z) + tab('zasto', 'Zašto', z) + '</div>' +
+  return (wrap || '<section class="exinfo gut">') + '<div class="extabs" role="tablist" aria-label="Upute i zašto">' + tab('upute', 'Upute', !z) + tab('zasto', 'Zašto', z) + '</div>' +
     '<div class="expanel" id="expanel" role="tabpanel" data-tab="'+(z ? 'zasto' : 'upute')+'" aria-labelledby="extab-'+(z ? 'zasto' : 'upute')+'">' + body + '</div></section>';
 }
 VIEWS.ex = function(t){
@@ -2937,7 +2938,8 @@ VIEWS.play = function(){
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
         '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p></section>'
-    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' + (v.e && v.e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(v.e.feel)+'</p>' : '') + '<span class="lb">Upute</span>' + ((v.e && v.e.steps || []).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') || '<p style="color:var(--text-2)">Bez uputa.</p>') + '</section>';
+    : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the same Upute | Zašto tabs as the exercise page
+    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Upute</span><p style="color:var(--text-2)">Bez uputa.</p></section>';
   return '<div class="view">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
@@ -3132,7 +3134,7 @@ const A = {
   openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
   dose: d => { top().dose = +d.i; render(); },
-  exTab: d => { S.exTab = d.v === 'zasto' ? 'zasto' : 'upute'; render(); },
+  exTab: d => { S.exTab = d.v === 'zasto' ? 'zasto' : 'upute'; const v = app.querySelector('.view'), st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   credit: d => { S.sheet = { kind:'credit', id: d.id }; render(); },
   mediaSwap: d => { S.alt = S.alt || {}; S.alt[d.id] = (S.alt[d.id] || 0) + 1; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },

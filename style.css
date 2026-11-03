@@ -476,3 +476,6 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .madd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .madd .input{height:44px;min-width:0;border-radius:14px;padding:0 12px;background:var(--surface-2)}
 .prow .input.tkm{width:96px;height:44px;flex:none;border-radius:14px;padding:0 12px;text-align:right;background:var(--surface-2)}
+/* 1.6.1: the player's card carries the exercise page's Upute | Zašto tabs */
+.icard.pinfo{gap:0;min-height:0}
+.icard.pinfo .expanel{padding-bottom:0}
