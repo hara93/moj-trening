@@ -2608,7 +2608,7 @@ function blockRep(b, f, mas, notes){
   let d = b.distance_m || (ms || b.mas_pct ? 0 : cueDist(b.cue_hr)), o;
   if (d && !b.distance_m) say(lab + ': ' + String(Math.round(d * 10) / 10).replace('.', ',') + ' m prema opisu.');
   if (maxW || efLo >= 90) {
-    say('Maksimalni sprint kreće iz mjesta: prvih 10 m je ispod brzog trčanja, prvih 20 m ispod sprinta.');
+    say(vx >= LOAD_SPR ? 'Maksimalni sprint kreće iz mjesta: prvih 10 m je ispod brzog trčanja, prvih 20 m ispod sprinta.' : 'Maksimalni sprint kreće iz mjesta: prvih 10 m je ispod brzog trčanja; s najvećom brzinom ispod 25,2 km/h nema metara sprinta.');
     if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * vx * work; say(lab + ': ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od ' + kmhTxt(vk) + ' km/h ≈ ' + Math.round(d) + ' m.'); }
     o = maxRun(d);
   } else {
