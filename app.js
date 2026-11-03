@@ -1120,13 +1120,14 @@ function exInfoHtml(e, wrap){
   const pl = !!wrap, steps = e.steps || [], list = pl ? EX_TABS.slice(0, 2) : EX_TABS;
   let on = exTabOf(S.exTab); if (pl && on === 'opt') on = 'upute';   // the player has no Opterećenje: it shows Upute, S.exTab stays
   const tab = (k, t) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+(k === on)+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
-  const a = (href, t) => '<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(t)+' ↗</a>';
+  const a = (href, t, ti) => '<a href="'+esc(href)+'" target="_blank" rel="noopener"'+(ti ? ' title="'+esc(ti)+'"' : '')+'>'+esc(t)+' ↗</a>';
   const cues = steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
   const zones = Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('');
   let body;
   if (on === 'upute') {
     const eq = e.equipment || exEquip(e).join(', ') || 'Bez opreme';
-    const vids = (e.video ? a(e.video, e.videoTitle || 'Pogledaj demonstraciju') : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
+    // a short link like the mockup; the video's own title (often a long source title) is the tooltip
+    const vids = (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
     body = pl ? cues : '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
   } else if (on === 'cilj' && pl) {
     const box = zones || e.feel ? '<div class="pfeel">' + (zones ? '<div class="tagrow">'+zones+'</div>' : '') + (e.feel ? '<span><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</span>' : '') + '</div>' : '';
