@@ -651,3 +651,5 @@ window.EXMEDIA = {
  }
 };
 window.EXMEDIA_DVIDS = {"en": "The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement.", "hr": "Prikaz vizualnih materijala Ministarstva rata SAD-a ne znači i ne predstavlja njegovu podršku."};
+// home slider covers by card key (portrait 800 x 1200); a card without one keeps its colour and icon.
+window.EXCOVERS = {};

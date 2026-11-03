@@ -1,25 +1,32 @@
 # Builds the exercise media the app ships, from tools/build/media_sources.json (the only file edited by hand):
 #   assets/slike/<id>.webp  two-panel pictures (LEFT start, RIGHT end), 1200 x 800, made with --own from the reviewed 1536 x 1024 JPEGs
 #   assets/thumb/<id>.webp  192 x 192 thumbnails for the 72 px rows: a square of the LEFT panel, or the centre of a licensed poster/photo
-#   media.js, MEDIA-LICENSES.md and, when <W> is given, <W>/media_ids.json (exercises that already have media; build_prompts.py skips them)
+#   assets/covers/<key>.webp  home slider covers (portrait 800 x 1200), made with --covers from the reviewed cover-<key>.jpg (2:3, e.g. 1024 x 1536)
+#   media.js (EXMEDIA, EXCOVERS), MEDIA-LICENSES.md and, when <W> is given, <W>/media_ids.json (exercises that already have media; build_prompts.py skips them)
 # Licensed photos and videos in assets/ex are inputs kept in git. A "recut" recipe says how a shipped file was made from a file in git
 # history (sha256-checked): --recut remakes those files (videos with tools/build/crop_video.swift: crop, trim, H.264, poster; photos with sips).
 # Run --recut only when a recipe changes: the encoder output differs by a few bytes from run to run, so it always shows up in git.
 # Files in assets/ex, assets/slike and assets/thumb that nothing references are deleted, so a rebuild gives the same repo every time.
-# usage: python3 tools/build/build_media.py <repo> [<W>] [--own <folder with <id>.jpg>] [--recut]
+# usage: python3 tools/build/build_media.py <repo> [<W>] [--own <folder with <id>.jpg>] [--covers <folder with cover-<key>.jpg>] [--recut]
 # needs cwebp and dwebp (brew install webp); --recut also needs git, swiftc and sips (macOS)
 import json, sys, os, subprocess, hashlib, struct, tempfile, shutil
 
 args = [a for a in sys.argv[1:]]
-OWN_SRC = None
+OWN_SRC = COVER_SRC = None
 if '--own' in args:
     k = args.index('--own'); OWN_SRC = args[k + 1]; del args[k:k + 2]
+if '--covers' in args:
+    k = args.index('--covers'); COVER_SRC = args[k + 1]; del args[k:k + 2]
 RECUT = '--recut' in args
 if RECUT: args.remove('--recut')
 REPO = args[0]
 W = args[1] if len(args) > 1 else None
 man = json.load(open(os.path.join(REPO, 'tools', 'build', 'media_sources.json'), encoding='utf-8'))
-EX, OWN, THUMB = 'assets/ex', man['own']['dir'], 'assets/thumb'
+EX, OWN, THUMB, COVERS = 'assets/ex', man['own']['dir'], 'assets/thumb', 'assets/covers'
+# the home slider cards (VIEWS.home in app.js): a card without a cover keeps its colour and icon
+COVER_KEYS = {'rehab': 'Rehab kuka', 'teretana': 'Teretana', 'aktivacija': 'Aktivacija', 'kondicija': 'Kondicija', 'knjiznica': 'Knjižnica'}
+covers = man.get('covers') or {}
+if covers: os.makedirs(os.path.join(REPO, COVERS), exist_ok=True)
 for d in (EX, OWN, THUMB): os.makedirs(os.path.join(REPO, d), exist_ok=True)
 P = lambda rel: os.path.join(REPO, rel)
 
@@ -95,6 +102,20 @@ for i, o in own.items():
         webp(src, P(dst), 80, resize=(1200, 800))
     if not os.path.exists(P(dst)): problems.append('missing ' + dst + ' (run with --own <folder>)')
 
+# 1b) slider covers: (re)made only from the reviewed JPEGs, checked against their sha256; the centre 2:3 of the picture, 800 x 1200
+for k, o in covers.items():
+    if k not in COVER_KEYS: problems.append('unknown cover key ' + k + ' (one of ' + ', '.join(COVER_KEYS) + ')'); continue
+    dst = COVERS + '/' + k + '.webp'; keep.add(dst)
+    if COVER_SRC:
+        src = os.path.join(COVER_SRC, 'cover-' + k + '.jpg')
+        if not os.path.exists(src): problems.append('missing source ' + src); continue
+        if hashlib.sha256(open(src, 'rb').read()).hexdigest() != o['sha256']: problems.append('sha256 differs: ' + src); continue
+        w, h = size_of(src)
+        if h <= w or w < 800: problems.append('not a portrait picture at least 800 px wide: ' + src); continue
+        cw, ch = (w, w * 3 // 2) if w * 3 // 2 <= h else (h * 2 // 3, h)
+        webp(src, P(dst), 80, crop=((w - cw) // 2, (h - ch) // 2, cw, ch), resize=(800, 1200))
+    if not os.path.exists(P(dst)): problems.append('missing ' + dst + ' (run with --covers <folder>)')
+
 # 2) licensed media: --recut remakes the files that have a recipe; then every file must be in assets/ex
 def git_blob(spec, sha):
     b = subprocess.run(['git', '-C', REPO, 'show', spec], check=True, capture_output=True).stdout
@@ -129,10 +150,10 @@ for i in list(own) + list(lic):
 if problems:
     print('\n'.join(problems)); sys.exit(1)
 
-# 3) thumbnails, always rebuilt from the shipped files (the priority follows exMedia in app.js: licensed video > own picture > licensed photo)
+# 3) thumbnails, always rebuilt from the shipped files (the priority follows exMedia in app.js: own picture > licensed video > licensed photo)
 for i in sorted(set(own) | set(lic)):
     r = lic.get(i) or {}; dst = THUMB + '/' + i + '.webp'; keep.add(dst)
-    if r.get('video') or (r.get('photo') and i not in own):
+    if i not in own:
         src = P(EX + '/' + (r.get('poster') or r.get('photo'))); w, h = size_of(src); s = min(w, h)
         fx = (r.get('thumb') or {}).get('x', 0.5)
         webp(src, P(dst), 72, crop=(round((w - s) * fx), (h - s) // 2, s, s), resize=(192, 192))
@@ -156,7 +177,9 @@ for i in sorted(set(own) | set(lic)):
 js = ('// Generated by tools/build/build_media.py from tools/build/media_sources.json: do not edit.\n'
       '// video / img: openly licensed demo (credit, lic); pic: two-panel picture made for this app (LEFT start, RIGHT end); thumb: 192 px square.\n'
       'window.EXMEDIA = ' + json.dumps(out, ensure_ascii=False, indent=1) + ';\n'
-      'window.EXMEDIA_DVIDS = ' + json.dumps(man['dvids_note'], ensure_ascii=False) + ';\n')
+      'window.EXMEDIA_DVIDS = ' + json.dumps(man['dvids_note'], ensure_ascii=False) + ';\n'
+      '// home slider covers by card key (portrait 800 x 1200); a card without one keeps its colour and icon.\n'
+      'window.EXCOVERS = ' + json.dumps({k: COVERS + '/' + k + '.webp' for k in sorted(covers) if k in COVER_KEYS}, ensure_ascii=False) + ';\n')
 open(P('media.js'), 'w', encoding='utf-8').write(js)
 
 # 5) MEDIA-LICENSES.md
@@ -178,13 +201,19 @@ for i in sorted(lic, key=by_name):
     files = [r[k] for k in ('video', 'poster', 'photo') if r.get(k)] + ['thumb/' + i + '.webp']
     src = ' · '.join(link(t, u) for t, u in r['source'])
     if r.get('title'): src = '„' + r['title'] + '”, ' + src
-    thumb_note = ' Sličica 192 × 192 izrezana iz ' + ('naslovne slike.' if r.get('video') else 'fotografije.') if (r.get('video') or i not in own) else ''
+    thumb_note = ' Sličica 192 × 192 izrezana iz ' + ('naslovne slike.' if r.get('video') else 'fotografije.') if i not in own else ''
     md.append('| ' + ' | '.join([names[i], ', '.join(files), r['author'], link(r['license'], r['licenseUrl']), src, r['changes'] + thumb_note]) + ' |')
+if covers:
+    md += ['', '## Naslovne slike na početnom zaslonu (' + str(len(covers)) + ')', '',
+           'Uspravne slike kartica na početnom zaslonu u mapi `' + COVERS + '/` (WebP 800 × 1200) generirane su umjetnom inteligencijom prema uputama iz `PROMPTI-ZA-SLIKE.md` (isti sportaš i stil kao kod vježbi) i pregledane prije ugradnje.', '',
+           '| Kartica | Datoteka |', '|---|---|']
+    md += ['| ' + COVER_KEYS[k] + ' | ' + k + '.webp |' for k in COVER_KEYS if k in covers]
 open(P('MEDIA-LICENSES.md'), 'w', encoding='utf-8').write('\n'.join(md) + '\n')
 
 # 6) remove media nothing references, so stale files cannot linger in the repo
 gone = []
-for d in (EX, OWN, THUMB):
+for d in (EX, OWN, THUMB, COVERS):
+    if not os.path.isdir(P(d)): continue
     for f in sorted(os.listdir(P(d))):
         rel = d + '/' + f
         if os.path.isfile(P(rel)) and rel not in keep and not f.startswith('.'):
@@ -196,7 +225,7 @@ if W:
     json.dump(ids, open(tmp, 'w')); os.replace(tmp, os.path.join(W, 'media_ids.json'))
 
 tot = lambda d: sum(os.path.getsize(P(d + '/' + f)) for f in os.listdir(P(d)) if not f.startswith('.'))
-print('media.js: %d exercises (%d own pictures, %d licensed)' % (len(out), len(own), len(lic)))
+print('media.js: %d exercises (%d own pictures, %d licensed), %d slider covers' % (len(out), len(own), len(lic), len(covers)))
 print('bytes: %s %d, %s %d, %s %d' % (OWN, tot(OWN), THUMB, tot(THUMB), EX, tot(EX)))
 if gone: print('removed:', ', '.join(gone))
 if W: print('media_ids.json:', len(out))
