@@ -24,6 +24,7 @@ const I = {
   target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg>',
   bars:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 20V14M8 20V10M13 20V6M18 20V3"/></svg>',
   check:'<svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  ckc:'<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--accent-fill)"/><path d="M7.2 12.4l3.2 3.2 6.4-6.8" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   checkS:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
   gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5l1.6 2.3 2.7-.6.6 2.7 2.3 1.6-1.2 2.5 1.2 2.5-2.3 1.6-.6 2.7-2.7-.6L12 21.5l-1.6-2.3-2.7.6-.6-2.7-2.3-1.6L6 13 4.8 10.5 7.1 8.9l.6-2.7 2.7.6z"/></svg>',
   tabGrid:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="9" height="11.5" rx="2"/><rect x="13" y="2" width="9" height="7" rx="2"/><rect x="2" y="15.5" width="9" height="6.5" rx="2"/><rect x="13" y="11" width="9" height="11" rx="2"/></svg>',
@@ -1069,6 +1070,18 @@ function doseOptions(e){
     return [b, b+15, b+30].map(s => ({ label: (n > 1 ? n + ' × ' : '') + s + ' s', it: Object.assign(exItem(e), {sec:s}) })); }
   const s = e.sets||3; return [s, s+1, s+2].map(n => ({ label: n + ' × ' + (e.reps||10), it: Object.assign(exItem(e), {sets:n}) }));
 }
+// under the media, like GOWOD: "Upute" (the cues) | "Zašto" (why, how it should feel, the source). Česte greške stay in the data,
+// unshown. The tab you pick stays for every exercise while the app is open (S.exTab).
+function exInfoHtml(e){
+  const z = S.exTab === 'zasto', steps = e.steps || [];
+  const tab = (k, t, on) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+on+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
+  const body = z
+    ? ((e.note ? '<p>'+esc(e.note)+'</p>' : '') + (e.feel ? '<p class="feel"><b>Osjećaj:</b> '+esc(e.feel)+'</p>' : '') +
+       (e.source ? '<p class="src"><span class="lb">Izvor</span><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>'
+    : steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
+  return '<section class="exinfo gut"><div class="extabs" role="tablist" aria-label="Upute i zašto">' + tab('upute', 'Upute', !z) + tab('zasto', 'Zašto', z) + '</div>' +
+    '<div class="expanel" id="expanel" role="tabpanel" data-tab="'+(z ? 'zasto' : 'upute')+'" aria-labelledby="extab-'+(z ? 'zasto' : 'upute')+'">' + body + '</div></section>';
+}
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
   if (!e) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ova vježba više ne postoji.</div></div>';
@@ -1079,19 +1092,13 @@ VIEWS.ex = function(t){
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
-    '<div class="cards" aria-label="Upute, greške, detalji i napredak">' +
-      '<section class="icard" aria-label="Upute">' +
-        (e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(e.feel)+'</p>' : '') +
-        '<span class="lb">Upute</span>' + ((e.steps||[]).length ? (e.steps||[]).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') : '<p style="color:var(--text-2)">Dodaj upute u uređivanju.</p>') +
-      '</section>' +
-      ((e.mistakes||[]).length ? '<section class="icard" aria-label="Česte greške"><span class="lb">Česte greške</span>' + e.mistakes.map(s => '<div class="bul warn">'+esc(s)+'</div>').join('') + '</section>' : '') +
+    exInfoHtml(e) +
+    '<div class="cards" aria-label="Detalji i napredak">' +
       '<section class="icard" aria-label="Detalji">' +
         '<span class="lb">Ciljana područja</span><div class="tagrow">' + (Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('') || '<span style="color:var(--text-2)">—</span>') + '</div>' +
         '<span class="lb">Oprema</span><p>' + esc(e.equipment || exEquip(e).join(', ')) + '</p>' +
-        (e.note ? '<span class="lb">Napomena</span><p>'+esc(e.note)+'</p>' : '') +
         (e.video ? '<span class="lb">Video</span><p><a href="'+esc(e.video)+'" target="_blank" rel="noopener">'+esc(e.videoTitle || 'Pogledaj demonstraciju')+' ↗</a></p>' : '') +
         (packVideo(e) ? '<span class="lb">TAE video</span><p><a href="'+esc(packVideo(e))+'" target="_blank" rel="noopener">Pogledaj kod TAE ↗</a></p>' : '') +
-        (e.source ? '<span class="lb">Izvor</span><p><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '') +
       '</section>' +
       progressCard(e) +
     '</div>' +
@@ -1180,9 +1187,8 @@ VIEWS.exEdit = function(t){
         '</div></div>' +
       '<div class="field"><label class="label" for="f-eq">Oprema (opis)</label><input id="f-eq" class="input" data-bind="equipment" value="'+esc(d.equipment)+'" placeholder="npr. Uže Ø6 + kolotur"></div>' +
       '<div class="field"><label class="label" for="f-feel">Osjećaj</label><input id="f-feel" class="input" data-bind="feel" value="'+esc(d.feel)+'" placeholder="Gdje se vježba osjeća"></div>' +
-      '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedan korak)</label><textarea id="f-steps" class="input" rows="5" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
-      '<div class="field"><label class="label" for="f-mis">Česte greške (svaki red jedna)</label><textarea id="f-mis" class="input" rows="3" data-bind="mistakesText">'+esc(d.mistakesText)+'</textarea></div>' +
-      '<div class="field"><label class="label" for="f-note">Napomena</label><textarea id="f-note" class="input" rows="3" data-bind="note">'+esc(d.note)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedna)</label><textarea id="f-steps" class="input" rows="5" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-note">Zašto</label><textarea id="f-note" class="input" rows="3" data-bind="note">'+esc(d.note)+'</textarea></div>' +
       '<div class="field"><label class="label" for="f-video">Link na video demonstraciju (po želji)</label><input id="f-video" class="input" type="url" inputmode="url" data-bind="video" value="'+esc(d.video)+'" placeholder="https://"></div>' +
       (isNew ? '' : '<button class="btn danger" data-a="delEx">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši vježbu') + '</button>') +
     '</div><div style="height:16px"></div></div>' +
@@ -2503,8 +2509,7 @@ VIEWS.play = function(){
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
         '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p></section>'
-    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' + (v.e && v.e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(v.e.feel)+'</p>' : '') + '<span class="lb">Upute</span>' + ((v.e && v.e.steps || []).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') || '<p style="color:var(--text-2)">Bez uputa.</p>') +
-        (v.e && (v.e.mistakes||[]).length ? '<span class="lb">Česte greške</span>' + v.e.mistakes.map(s => '<div class="bul warn">'+esc(s)+'</div>').join('') : '') + '</section>';
+    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' + (v.e && v.e.feel ? '<span class="lb">Osjećaj</span><p>'+esc(v.e.feel)+'</p>' : '') + '<span class="lb">Upute</span>' + ((v.e && v.e.steps || []).map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') || '<p style="color:var(--text-2)">Bez uputa.</p>') + '</section>';
   return '<div class="view">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
@@ -2671,7 +2676,7 @@ function after(t){
 
 /* ---------- actions ---------- */
 function newExDraft(){
-  return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', mistakesText:'', note:'', video:'', media:null, mediaType:null, fav:false };
+  return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
   tab: d => setTab(d.tab),
@@ -2698,12 +2703,13 @@ const A = {
   openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
   dose: d => { top().dose = +d.i; render(); },
+  exTab: d => { S.exTab = d.v === 'zasto' ? 'zasto' : 'upute'; render(); },
   credit: d => { S.sheet = { kind:'credit', id: d.id }; render(); },
   mediaSwap: d => { S.alt = S.alt || {}; S.alt[d.id] = (S.alt[d.id] || 0) + 1; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
   // a new exercise made while picking exercises for a protocol: the protocol being built waits underneath
   newEx: () => { S.below = S.pick && S.draft && top().v === 'library' ? { draft: S.draft, sig: S.draftSig } : null; S.draft = newExDraft(); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
-  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n'), mistakesText: (e.mistakes||[]).join('\n'), equip: exEquip(e).slice(), alt: e.alt || '', video: e.video || '' }); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
+  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n'), equip: exEquip(e).slice(), alt: e.alt || '', video: e.video || '' }); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
   dset: d => { const dr = S.draft; let v = d.v; if (d.k === 'phase') v = +v || null; dr[d.k] = v; if (d.k === 'cat' && v !== 'Rehab' && v !== 'Mobilnost') dr.phase = null; if (d.k === 'cat' && v === 'Rehab' && !dr.phase) dr.phase = 1; if (d.k === 'measure' && v === 'time' && dr.sets > 3) dr.sets = 1; render(); },
   dzone: d => { const z = S.draft.zones = S.draft.zones || []; const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i,1); render(); },
   dflag: d => { S.draft[d.k] = !S.draft[d.k]; render(); },
@@ -2721,7 +2727,7 @@ const A = {
     if (video === null) { toast('Link na video nije spremljen: upiši cijelu adresu (https://…).'); const el = document.getElementById('f-video'); if (el) el.focus(); return; }
     const prev = S.ex[d.id];
     const body = { name, alt: (d.alt||'').trim(), cat:d.cat, phase: (d.cat === 'Rehab' || d.cat === 'Mobilnost') && d.phase ? d.phase : null, cord: d.cord || '', zones: d.zones||[], equip: (d.equip||[]).slice(), measure: d.measure, sec: d.sec, sets: d.sets, reps: d.reps, rest: d.rest, kg: d.kg||0, sides: !!d.sides,
-      equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: lines(d.stepsText), mistakes: lines(d.mistakesText), note: (d.note||'').trim(),
+      equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: lines(d.stepsText), mistakes: (d.mistakes || []).slice(), note: (d.note||'').trim(),
       video, videoTitle: prev && video === (prev.video || '') ? prev.videoTitle : undefined,
       media: d.media || null, mediaType: d.mediaType || null, fav: !!d.fav, order: d.order || 500, source: prev ? prev.source : (d.source || null), sourceTitle: prev ? prev.sourceTitle : (d.sourceTitle || null) };
     // what you did not change stays exactly as stored, so an unchanged exercise (or one that only got your own photo or video,

@@ -371,3 +371,18 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .kgbox .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-2);pointer-events:none}
 .kgin:placeholder-shown + .u{display:none}
 .input.bsec{height:48px;border-radius:16px;background:var(--surface-2)}
+
+/* exercise page: "Upute" | "Zašto" tabs under the media (the cues with a check, or why + how it should feel + source) */
+.exinfo{margin-top:20px}
+.extabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.extabs .chip{height:48px}
+.extabs .chip[aria-selected="true"]{border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
+.expanel{display:flex;flex-direction:column;gap:12px;padding:16px 2px 2px}
+.expanel p{margin:0;font-size:16px;line-height:24px;color:var(--text-body)}
+.expanel .feel b{font-weight:600;color:var(--text)}
+.expanel .src{display:flex;flex-direction:column;gap:2px}
+.expanel .lb{font-size:13px;font-weight:500;color:var(--text-2)}
+.expanel .none{color:var(--text-2)}
+.bul.ck{color:var(--text-body)}
+.bul.ck::before{display:none}
+.bul.ck svg{flex:none;margin-top:1px}
