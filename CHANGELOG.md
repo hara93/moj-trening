@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.6.4 — 3. 11. 2026.
+
+- **Cijeli ekran na iPhoneu:** aplikacija otvorena s početnog zaslona više nema praznu traku ispod donjeg izbornika; izbornik je nisko, kao u iOS aplikacijama.
+- **Početni zaslon bez skrolanja:** slajderi ispunjavaju sav prostor između tjedna i izbornika (na manjem ekranu ili uz obavijest o kopiji ostaju visoki barem 320 px).
+
 ## 1.6.3 — 3. 11. 2026.
 
 - **38 dorađenih slika:** 36 slika iz pregleda (npr. bench press, stražnji čučanj, goblet čučanj, TRX reverse fly, face pull) i obje kopenhaške daske s ispravljenim omjerima nogu. Novi pregled: 151 slika je dobra, za ponoviti je samo bočno hodanje s gumom (uputa u PROMPTI-ZA-SLIKE.md).
