@@ -21,9 +21,21 @@ window.EXMEDIA = {
   "pic": "assets/slike/adductor-squeeze.webp",
   "thumb": "assets/thumb/adductor-squeeze.webp"
  },
+ "adukcija-na-boku": {
+  "pic": "assets/slike/adukcija-na-boku.webp",
+  "thumb": "assets/thumb/adukcija-na-boku.webp"
+ },
+ "arrowhead-agility": {
+  "pic": "assets/slike/arrowhead-agility.webp",
+  "thumb": "assets/thumb/arrowhead-agility.webp"
+ },
  "b-skip": {
   "pic": "assets/slike/b-skip.webp",
   "thumb": "assets/thumb/b-skip.webp"
+ },
+ "back-squat": {
+  "pic": "assets/slike/back-squat.webp",
+  "thumb": "assets/thumb/back-squat.webp"
  },
  "ball-hamstring-curl": {
   "pic": "assets/slike/ball-hamstring-curl.webp",
@@ -44,6 +56,14 @@ window.EXMEDIA = {
  "banded-march": {
   "pic": "assets/slike/banded-march.webp",
   "thumb": "assets/thumb/banded-march.webp"
+ },
+ "bb-row": {
+  "pic": "assets/slike/bb-row.webp",
+  "thumb": "assets/thumb/bb-row.webp"
+ },
+ "bb-squat-jump": {
+  "pic": "assets/slike/bb-squat-jump.webp",
+  "thumb": "assets/thumb/bb-squat-jump.webp"
  },
  "bench-press": {
   "video": "assets/ex/bench-press.mp4",
@@ -66,7 +86,16 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 12 s, bez zvuka, pretvoren u H.264 MP4 (640 × 352). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/bench-press.webp",
   "thumb": "assets/thumb/bench-press.webp"
+ },
+ "bicikl-intervali": {
+  "pic": "assets/slike/bicikl-intervali.webp",
+  "thumb": "assets/thumb/bicikl-intervali.webp"
+ },
+ "bird-dog": {
+  "pic": "assets/slike/bird-dog.webp",
+  "thumb": "assets/thumb/bird-dog.webp"
  },
  "bocni-plank": {
   "pic": "assets/slike/bocni-plank.webp",
@@ -76,9 +105,25 @@ window.EXMEDIA = {
   "pic": "assets/slike/bocni-step-up.webp",
   "thumb": "assets/thumb/bocni-step-up.webp"
  },
+ "bocno-hodanje": {
+  "pic": "assets/slike/bocno-hodanje.webp",
+  "thumb": "assets/thumb/bocno-hodanje.webp"
+ },
  "bocno-podizanje": {
   "pic": "assets/slike/bocno-podizanje.webp",
   "thumb": "assets/thumb/bocno-podizanje.webp"
+ },
+ "box-jump": {
+  "pic": "assets/slike/box-jump.webp",
+  "thumb": "assets/thumb/box-jump.webp"
+ },
+ "broad-jump": {
+  "pic": "assets/slike/broad-jump.webp",
+  "thumb": "assets/thumb/broad-jump.webp"
+ },
+ "bugarski": {
+  "pic": "assets/slike/bugarski.webp",
+  "thumb": "assets/thumb/bugarski.webp"
  },
  "chin-up": {
   "pic": "assets/slike/chin-up.webp",
@@ -113,11 +158,40 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/db-bench-press.webp",
   "thumb": "assets/thumb/db-bench-press.webp"
+ },
+ "db-lateral-lunge": {
+  "pic": "assets/slike/db-lateral-lunge.webp",
+  "thumb": "assets/thumb/db-lateral-lunge.webp"
  },
  "db-overhead-press": {
   "pic": "assets/slike/db-overhead-press.webp",
   "thumb": "assets/thumb/db-overhead-press.webp"
+ },
+ "db-reverse-lunge": {
+  "pic": "assets/slike/db-reverse-lunge.webp",
+  "thumb": "assets/thumb/db-reverse-lunge.webp"
+ },
+ "db-row": {
+  "pic": "assets/slike/db-row.webp",
+  "thumb": "assets/thumb/db-row.webp"
+ },
+ "dead-bug": {
+  "pic": "assets/slike/dead-bug.webp",
+  "thumb": "assets/thumb/dead-bug.webp"
+ },
+ "deadlift": {
+  "pic": "assets/slike/deadlift.webp",
+  "thumb": "assets/thumb/deadlift.webp"
+ },
+ "depth-drop": {
+  "pic": "assets/slike/depth-drop.webp",
+  "thumb": "assets/thumb/depth-drop.webp"
+ },
+ "depth-jump": {
+  "pic": "assets/slike/depth-jump.webp",
+  "thumb": "assets/thumb/depth-jump.webp"
  },
  "face-pull-cord": {
   "pic": "assets/slike/face-pull-cord.webp",
@@ -131,9 +205,21 @@ window.EXMEDIA = {
   "pic": "assets/slike/figure-4.webp",
   "thumb": "assets/thumb/figure-4.webp"
  },
+ "four-cone-drill": {
+  "pic": "assets/slike/four-cone-drill.webp",
+  "thumb": "assets/thumb/four-cone-drill.webp"
+ },
+ "front-squat": {
+  "pic": "assets/slike/front-squat.webp",
+  "thumb": "assets/thumb/front-squat.webp"
+ },
  "goblet-squat": {
   "pic": "assets/slike/goblet-squat.webp",
   "thumb": "assets/thumb/goblet-squat.webp"
+ },
+ "half-kneeling-db-press": {
+  "pic": "assets/slike/half-kneeling-db-press.webp",
+  "thumb": "assets/thumb/half-kneeling-db-press.webp"
  },
  "half-kneeling-landmine-press": {
   "pic": "assets/slike/half-kneeling-landmine-press.webp",
@@ -146,6 +232,10 @@ window.EXMEDIA = {
  "high-knees": {
   "pic": "assets/slike/high-knees.webp",
   "thumb": "assets/thumb/high-knees.webp"
+ },
+ "hip-airplane": {
+  "pic": "assets/slike/hip-airplane.webp",
+  "thumb": "assets/thumb/hip-airplane.webp"
  },
  "hip-thrust": {
   "video": "assets/ex/hip-thrust.mp4",
@@ -168,6 +258,7 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/hip-thrust.webp",
   "thumb": "assets/thumb/hip-thrust.webp"
  },
  "hollow-hold": {
@@ -195,11 +286,16 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/incline-db-press.webp",
   "thumb": "assets/thumb/incline-db-press.webp"
  },
  "intervali-30-30": {
   "pic": "assets/slike/intervali-30-30.webp",
   "thumb": "assets/thumb/intervali-30-30.webp"
+ },
+ "inverted-hamstring": {
+  "pic": "assets/slike/inverted-hamstring.webp",
+  "thumb": "assets/thumb/inverted-hamstring.webp"
  },
  "inverted-row": {
   "pic": "assets/slike/inverted-row.webp",
@@ -231,19 +327,44 @@ window.EXMEDIA = {
    "changes": "DVIDS-ov JPEG širine 1000 piksela ponovno spremljen u kvaliteti 75 % radi bržeg učitavanja; kadar nije mijenjan.",
    "dvids": true
   },
+  "pic": "assets/slike/jednonozni-most.webp",
   "thumb": "assets/thumb/jednonozni-most.webp"
+ },
+ "jednonozni-most-kutija": {
+  "pic": "assets/slike/jednonozni-most-kutija.webp",
+  "thumb": "assets/thumb/jednonozni-most-kutija.webp"
+ },
+ "jednonozni-rdl": {
+  "pic": "assets/slike/jednonozni-rdl.webp",
+  "thumb": "assets/thumb/jednonozni-rdl.webp"
+ },
+ "kb-swing": {
+  "pic": "assets/slike/kb-swing.webp",
+  "thumb": "assets/thumb/kb-swing.webp"
  },
  "klizanje-pete": {
   "pic": "assets/slike/klizanje-pete.webp",
   "thumb": "assets/thumb/klizanje-pete.webp"
  },
+ "knee-control-band": {
+  "pic": "assets/slike/knee-control-band.webp",
+  "thumb": "assets/thumb/knee-control-band.webp"
+ },
  "knee-to-wall": {
   "pic": "assets/slike/knee-to-wall.webp",
   "thumb": "assets/thumb/knee-to-wall.webp"
  },
+ "kopenhagen-duga": {
+  "pic": "assets/slike/kopenhagen-duga.webp",
+  "thumb": "assets/thumb/kopenhagen-duga.webp"
+ },
  "kopenhagen-kratka": {
   "pic": "assets/slike/kopenhagen-kratka.webp",
   "thumb": "assets/thumb/kopenhagen-kratka.webp"
+ },
+ "lagano-trcanje": {
+  "pic": "assets/slike/lagano-trcanje.webp",
+  "thumb": "assets/thumb/lagano-trcanje.webp"
  },
  "landmine-reverse-lunge": {
   "pic": "assets/slike/landmine-reverse-lunge.webp",
@@ -261,9 +382,25 @@ window.EXMEDIA = {
   "pic": "assets/slike/landmine-squat.webp",
   "thumb": "assets/thumb/landmine-squat.webp"
  },
+ "lateral-bound": {
+  "pic": "assets/slike/lateral-bound.webp",
+  "thumb": "assets/thumb/lateral-bound.webp"
+ },
+ "lateral-shuffle": {
+  "pic": "assets/slike/lateral-shuffle.webp",
+  "thumb": "assets/thumb/lateral-shuffle.webp"
+ },
+ "leg-cradle": {
+  "pic": "assets/slike/leg-cradle.webp",
+  "thumb": "assets/thumb/leg-cradle.webp"
+ },
  "leg-swings": {
   "pic": "assets/slike/leg-swings.webp",
   "thumb": "assets/thumb/leg-swings.webp"
+ },
+ "med-ball-broad-jump": {
+  "pic": "assets/slike/med-ball-broad-jump.webp",
+  "thumb": "assets/thumb/med-ball-broad-jump.webp"
  },
  "med-ball-chest-pass": {
   "pic": "assets/slike/med-ball-chest-pass.webp",
@@ -276,6 +413,10 @@ window.EXMEDIA = {
  "med-ball-slam": {
   "pic": "assets/slike/med-ball-slam.webp",
   "thumb": "assets/thumb/med-ball-slam.webp"
+ },
+ "monster-walk": {
+  "pic": "assets/slike/monster-walk.webp",
+  "thumb": "assets/thumb/monster-walk.webp"
  },
  "most": {
   "pic": "assets/slike/most.webp",
@@ -301,6 +442,10 @@ window.EXMEDIA = {
   "pic": "assets/slike/open-book.webp",
   "thumb": "assets/thumb/open-book.webp"
  },
+ "pallof-press": {
+  "pic": "assets/slike/pallof-press.webp",
+  "thumb": "assets/thumb/pallof-press.webp"
+ },
  "plank": {
   "img": "assets/ex/plank.jpg",
   "credit": "Nenad Stojković / Wikimedia Commons · CC BY 2.0",
@@ -318,6 +463,7 @@ window.EXMEDIA = {
    ],
    "changes": "Smanjeno na najviše 1280 piksela i ponovno spremljeno kao JPEG; cijeli kadar zadržan."
   },
+  "pic": "assets/slike/plank.webp",
   "thumb": "assets/thumb/plank.webp"
  },
  "pogo-jumps": {
@@ -327,6 +473,10 @@ window.EXMEDIA = {
  "pro-agility-5-10-5": {
   "pic": "assets/slike/pro-agility-5-10-5.webp",
   "thumb": "assets/thumb/pro-agility-5-10-5.webp"
+ },
+ "progresivna-ubrzanja": {
+  "pic": "assets/slike/progresivna-ubrzanja.webp",
+  "thumb": "assets/thumb/progresivna-ubrzanja.webp"
  },
  "pull-up": {
   "video": "assets/ex/pull-up.mp4",
@@ -349,11 +499,24 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/pull-up.webp",
   "thumb": "assets/thumb/pull-up.webp"
+ },
+ "push-up": {
+  "pic": "assets/slike/push-up.webp",
+  "thumb": "assets/thumb/push-up.webp"
+ },
+ "quad-stretch": {
+  "pic": "assets/slike/quad-stretch.webp",
+  "thumb": "assets/thumb/quad-stretch.webp"
  },
  "ravnoteza-dosezanje": {
   "pic": "assets/slike/ravnoteza-dosezanje.webp",
   "thumb": "assets/thumb/ravnoteza-dosezanje.webp"
+ },
+ "rdl": {
+  "pic": "assets/slike/rdl.webp",
+  "thumb": "assets/thumb/rdl.webp"
  },
  "rdl-bucice": {
   "video": "assets/ex/rdl-bucice.mp4",
@@ -376,7 +539,20 @@ window.EXMEDIA = {
    ],
    "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan."
   },
+  "pic": "assets/slike/rdl-bucice.webp",
   "thumb": "assets/thumb/rdl-bucice.webp"
+ },
+ "renegade-row": {
+  "pic": "assets/slike/renegade-row.webp",
+  "thumb": "assets/thumb/renegade-row.webp"
+ },
+ "shoulder-taps": {
+  "pic": "assets/slike/shoulder-taps.webp",
+  "thumb": "assets/thumb/shoulder-taps.webp"
+ },
+ "side-plank": {
+  "pic": "assets/slike/side-plank.webp",
+  "thumb": "assets/thumb/side-plank.webp"
  },
  "single-arm-db-press": {
   "pic": "assets/slike/single-arm-db-press.webp",
@@ -385,6 +561,10 @@ window.EXMEDIA = {
  "single-leg-calf-raise": {
   "pic": "assets/slike/single-leg-calf-raise.webp",
   "thumb": "assets/thumb/single-leg-calf-raise.webp"
+ },
+ "single-leg-hip-thrust": {
+  "pic": "assets/slike/single-leg-hip-thrust.webp",
+  "thumb": "assets/thumb/single-leg-hip-thrust.webp"
  },
  "single-leg-hop": {
   "pic": "assets/slike/single-leg-hop.webp",
@@ -398,9 +578,25 @@ window.EXMEDIA = {
   "pic": "assets/slike/soleus-raise.webp",
   "thumb": "assets/thumb/soleus-raise.webp"
  },
+ "split-cucanj": {
+  "pic": "assets/slike/split-cucanj.webp",
+  "thumb": "assets/thumb/split-cucanj.webp"
+ },
+ "split-squat-jump": {
+  "pic": "assets/slike/split-squat-jump.webp",
+  "thumb": "assets/thumb/split-squat-jump.webp"
+ },
+ "sprint-backpedal-sprint": {
+  "pic": "assets/slike/sprint-backpedal-sprint.webp",
+  "thumb": "assets/thumb/sprint-backpedal-sprint.webp"
+ },
  "spustanje-stepenica": {
   "pic": "assets/slike/spustanje-stepenica.webp",
   "thumb": "assets/thumb/spustanje-stepenica.webp"
+ },
+ "squat-jump": {
+  "pic": "assets/slike/squat-jump.webp",
+  "thumb": "assets/thumb/squat-jump.webp"
  },
  "step-up": {
   "pic": "assets/slike/step-up.webp",
@@ -453,6 +649,7 @@ window.EXMEDIA = {
    "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3 do 19,42 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-body-saw.webp",
   "thumb": "assets/thumb/trx-body-saw.webp"
  },
  "trx-chest-press": {
@@ -462,6 +659,14 @@ window.EXMEDIA = {
  "trx-fallout": {
   "pic": "assets/slike/trx-fallout.webp",
   "thumb": "assets/thumb/trx-fallout.webp"
+ },
+ "trx-hamstring-curl": {
+  "pic": "assets/slike/trx-hamstring-curl.webp",
+  "thumb": "assets/thumb/trx-hamstring-curl.webp"
+ },
+ "trx-hamstring-runner": {
+  "pic": "assets/slike/trx-hamstring-runner.webp",
+  "thumb": "assets/thumb/trx-hamstring-runner.webp"
  },
  "trx-high-row": {
   "video": "assets/ex/trx-high-row.mp4",
@@ -482,6 +687,7 @@ window.EXMEDIA = {
    "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3,5 do 16,9 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-high-row.webp",
   "thumb": "assets/thumb/trx-high-row.webp"
  },
  "trx-hip-press": {
@@ -503,6 +709,7 @@ window.EXMEDIA = {
    "changes": "Izrezani crni rubovi (kadar 640 × 360), bez naslova; isječak od 3,6 do 16,95 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (640 × 360, oko 600 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-hip-press.webp",
   "thumb": "assets/thumb/trx-hip-press.webp"
  },
  "trx-lateral-lunge": {
@@ -513,6 +720,14 @@ window.EXMEDIA = {
   "pic": "assets/slike/trx-mountain-climber.webp",
   "thumb": "assets/thumb/trx-mountain-climber.webp"
  },
+ "trx-pec-fly": {
+  "pic": "assets/slike/trx-pec-fly.webp",
+  "thumb": "assets/thumb/trx-pec-fly.webp"
+ },
+ "trx-pike": {
+  "pic": "assets/slike/trx-pike.webp",
+  "thumb": "assets/thumb/trx-pike.webp"
+ },
  "trx-plank": {
   "pic": "assets/slike/trx-plank.webp",
   "thumb": "assets/thumb/trx-plank.webp"
@@ -520,6 +735,14 @@ window.EXMEDIA = {
  "trx-power-pull": {
   "pic": "assets/slike/trx-power-pull.webp",
   "thumb": "assets/thumb/trx-power-pull.webp"
+ },
+ "trx-push-up": {
+  "pic": "assets/slike/trx-push-up.webp",
+  "thumb": "assets/thumb/trx-push-up.webp"
+ },
+ "trx-reverse-fly": {
+  "pic": "assets/slike/trx-reverse-fly.webp",
+  "thumb": "assets/thumb/trx-reverse-fly.webp"
  },
  "trx-reverse-lunge": {
   "video": "assets/ex/trx-reverse-lunge.mp4",
@@ -540,6 +763,7 @@ window.EXMEDIA = {
    "changes": "Izrezani crni rubovi (kadar 640 × 360), bez naslova; isječak od 7,8 do 16,2 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (640 × 360, oko 600 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-reverse-lunge.webp",
   "thumb": "assets/thumb/trx-reverse-lunge.webp"
  },
  "trx-row": {
@@ -561,6 +785,7 @@ window.EXMEDIA = {
    "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3,5 do 21,5 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-row.webp",
   "thumb": "assets/thumb/trx-row.webp"
  },
  "trx-side-plank": {
@@ -586,6 +811,7 @@ window.EXMEDIA = {
    "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 4,3 do 14,9 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-single-leg-squat.webp",
   "thumb": "assets/thumb/trx-single-leg-squat.webp"
  },
  "trx-sprinter-start": {
@@ -611,6 +837,7 @@ window.EXMEDIA = {
    "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 1 do 15 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
    "dvids": true
   },
+  "pic": "assets/slike/trx-squat.webp",
   "thumb": "assets/thumb/trx-squat.webp"
  },
  "trx-suspended-lunge": {
@@ -620,6 +847,10 @@ window.EXMEDIA = {
  "trx-y-fly": {
   "pic": "assets/slike/trx-y-fly.webp",
   "thumb": "assets/thumb/trx-y-fly.webp"
+ },
+ "ubrzanje-zaustavljanje": {
+  "pic": "assets/slike/ubrzanje-zaustavljanje.webp",
+  "thumb": "assets/thumb/ubrzanje-zaustavljanje.webp"
  },
  "uze-abdukcija": {
   "pic": "assets/slike/uze-abdukcija.webp",
@@ -648,8 +879,16 @@ window.EXMEDIA = {
  "uze-njihanje": {
   "pic": "assets/slike/uze-njihanje.webp",
   "thumb": "assets/thumb/uze-njihanje.webp"
+ },
+ "worlds-greatest-stretch": {
+  "pic": "assets/slike/worlds-greatest-stretch.webp",
+  "thumb": "assets/thumb/worlds-greatest-stretch.webp"
+ },
+ "zigzag-sprint": {
+  "pic": "assets/slike/zigzag-sprint.webp",
+  "thumb": "assets/thumb/zigzag-sprint.webp"
  }
 };
 window.EXMEDIA_DVIDS = {"en": "The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement.", "hr": "Prikaz vizualnih materijala Ministarstva rata SAD-a ne znači i ne predstavlja njegovu podršku."};
 // home slider covers by card key (portrait 800 x 1200); a card without one keeps its colour and icon.
-window.EXCOVERS = {};
+window.EXCOVERS = {"aktivacija": "assets/covers/aktivacija.webp", "knjiznica": "assets/covers/knjiznica.webp", "kondicija": "assets/covers/kondicija.webp", "rehab": "assets/covers/rehab.webp", "teretana": "assets/covers/teretana.webp"};
