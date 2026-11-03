@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.7 — 3. 11. 2026.
+
+- **Nove naslovne slike** na svih pet kartica početnog zaslona: prave scene (fizio soba, teretana, teren, kućna teretana) s bojom svake kartice; naslov i podnaslov ostaju kao prije.
+
 ## 1.6.6 — 3. 11. 2026.
 
 - **Zupčanik za postavke:** pravilan zupčanik s osam jednakih zubaca (na početnom zaslonu i u playeru) umjesto nepravilne zvijezde.
