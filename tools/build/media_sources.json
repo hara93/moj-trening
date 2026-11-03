@@ -2,65 +2,125 @@
  "_about": "Jedini izvor za slike i snimke vježbi u aplikaciji. tools/build/build_media.py iz ove datoteke radi media.js, MEDIA-LICENSES.md, sličice i popis vježbi sa slikom za build_prompts.py. Ručno se mijenja samo ova datoteka. Naslovne slike slajdera na početnom zaslonu su u \"covers\" (ključ kartice → sha256 izvorne JPEG slike cover-<ključ>.jpg, uspravno 1024 × 1536); build_media.py --covers <mapa> od njih radi assets/covers/<ključ>.webp.",
  "own": {
   "dir": "assets/slike",
-  "made": "2. 11. 2026.",
+  "made": "3. 11. 2026.",
   "note": "Dvodijelne slike (lijevo početni, desno završni položaj), generirane umjetnom inteligencijom prema uputama iz PROMPTI-ZA-SLIKE.md i pregledane radi tehnike i položaja glave. sha256 je otisak izvorne JPEG slike 1536 × 1024 iz koje je napravljena WebP slika.",
   "images": {
    "90-90": {
-    "sha256": "ab6683b3af70a623efc56151fd7c0f940d51ca24d410ca82f0cf33c1c984530d"
+    "sha256": "8f3f0c32f091505c4809e2c3d80d182398a081b160c2298c5a081aae8bb17c64"
    },
    "a-skip": {
-    "sha256": "742ab5b685ac8a84219cb55d465d531a7fc7250b6f2837ff59d732b2d38af721"
+    "sha256": "7d4a65aeeb6ff5889d4940ef95a7ec9bcfeb180d91171d2eb376d452e16e9628"
    },
    "ab-wheel-rollout": {
     "sha256": "232cd2a41e176a87cbb3be944958c421f916cb5811f3d8252d85f218fcb7dea1"
    },
    "abdukcija-stojeci": {
-    "sha256": "be0190f30e4b5267b230e196d648df60853c5434853f5b52a98f4b5eb867888c"
+    "sha256": "f16984d40ff1d3410e28573c747274d2752e757244602dbe0253514bd9604870"
    },
    "adductor-squeeze": {
-    "sha256": "8630e9b9f26aed33d54b49f2083f4ffa1b51f3b05dc4a991ce4635ffe79dec92"
+    "sha256": "3cd83aea3258b70c4b06b545bff558d9286250adc2467b1fe8d56a727162638f"
+   },
+   "adukcija-na-boku": {
+    "sha256": "b4e460b35dba867fb972ee5ede13262843e01b35dbb9c2e40ad830b18e763dab"
+   },
+   "arrowhead-agility": {
+    "sha256": "5ae3abc97be4b8227e35dc14291f435b4cf93c2fbf1e0c29c0f0e14aec0b8c1b"
    },
    "b-skip": {
-    "sha256": "7777714c708928395e8c09bc788ddcf940266853a41a7379ab5e6be13d4a4142"
+    "sha256": "b9245de716dd1b5a31bdf6d423c4000b9d0988812e398385c98596b04d18ba88"
+   },
+   "back-squat": {
+    "sha256": "090867c74754156253e1fd008aecd033bb64cd6539ed368ec43e216efb90418f"
    },
    "ball-hamstring-curl": {
-    "sha256": "7cdeed42dd234e4b89e9d18604663934bab43a8892e0ec484e8a7b6a830ee686"
+    "sha256": "03b920409c30cc199316f9ea654ce987f63348da7c28383447b9bd4f15de34b4"
    },
    "ball-rollout": {
     "sha256": "e863432a359a8659c006e56601202260087cab9bf75998e1171b12dc680ca2e4"
    },
    "band-pull-apart": {
-    "sha256": "b494b2a330e71d529f18840407d6cdda7dd3d0c1911ba7fd3e768986d065ed0c"
+    "sha256": "c74abe809dc7d87e19909e3ff52eeeb0877efe3656c89bb59f39b52692f8f242"
    },
    "banded-glute-bridge": {
-    "sha256": "469a95c775e36164d0f939c601b1d77894eadd13b9512eaa6f9a259d775ca0ef"
+    "sha256": "3e4e8e6be88f10f27796442cb38043d551c4ee3f1ee460bb5ce86582e8a39f89"
    },
    "banded-march": {
-    "sha256": "00938907f4601b677eeff2f9485aee0dcd7e12214fb5ffbb3de3d71478dc447b"
+    "sha256": "0a0f35f640444e30666320840b76952468534adcd09e27767a8bd19532a89057"
+   },
+   "bb-row": {
+    "sha256": "da586ebe23a4f0717343df2c9f4966ad88413493cba350f99ea3913eaf0dd786"
+   },
+   "bb-squat-jump": {
+    "sha256": "0f6fd80323013cc63d2ca325aeacf66b5a86450aecd848aa3ae99bd19a85a884"
+   },
+   "bench-press": {
+    "sha256": "c2512398c50f1cf8d8ca821de548c08ed1620b7f70224312c9655c3fbd6e54a1"
+   },
+   "bicikl-intervali": {
+    "sha256": "a4eff33e218a21c6460152ecf245302b87abb48e63bf7c548aa08d17e7f2f4b3"
+   },
+   "bird-dog": {
+    "sha256": "c7f8b266188179fdc328eefcc4bc8960855990378035253a1b74ce12b7bc8f9a"
    },
    "bocni-plank": {
-    "sha256": "b65ba248ddd58bcdbe4fd26ff19166b40b6dbd8c333cef65f16c3024e9adcd12"
+    "sha256": "e165a45e66cbd8c208aef073ffc082f0d64c6ebb445ed8cd85481addb675291e"
    },
    "bocni-step-up": {
-    "sha256": "437f162cb3bf2c1f2024677865114b9ffdb621578062eedf06347fa73640b879"
+    "sha256": "94eb70e090476ccb469f30047d583c709d54ce456a9c6661aa5e8101311edcb6"
+   },
+   "bocno-hodanje": {
+    "sha256": "63493792f5f1ee800ebe9d908a6be1bd8055d3d93de8476ecf6980308f3e922a"
    },
    "bocno-podizanje": {
-    "sha256": "7ccce165ec7b8f3893a7eabf0c007d92218323bbb7cb88b60ce9845d582bc176"
+    "sha256": "8996dcb58fbbe467976a486b210d3546dedc56043ec14ef2938afc1602309e94"
+   },
+   "box-jump": {
+    "sha256": "9c509ad0693ce5737512f50baf7c5b1bc7da773ab99a32f0132b4bae35dbadac"
+   },
+   "broad-jump": {
+    "sha256": "d04034c4f57349ddcbba2f22dc04195b1285a1a06b85ae9b3ef800778f024c98"
+   },
+   "bugarski": {
+    "sha256": "f76b254ad8397b62cb05082657df1d3b6e895de0cd68d5d4578ed035446c3606"
    },
    "chin-up": {
-    "sha256": "b52eb0f911f637c752e0a769d7a3f0dd011cab8133102c822e290a31d3844688"
+    "sha256": "86904454230e571aae9661a8870d5aa43ffe1dc76fd214f617bdde4b027695a0"
    },
    "cord-chop": {
-    "sha256": "740fc4fbb507705fc7513135f3495d0b2fbf8cf0d95de0ea6e40a4370266b3e6"
+    "sha256": "9a44e4267b73d957e4c36417eafc883c033669817ecde917d9988fdff27f75c0"
    },
    "cord-lift": {
-    "sha256": "4edc6cb0688b0a67e3f86a0ea7a7217515ef884e355366cf3a155e59b1d515d6"
+    "sha256": "21744b1072b2ff746e3d286b31c1072206d5addc01088767be3207f20dfe3586"
+   },
+   "db-bench-press": {
+    "sha256": "9777a560d84c3cd3fc4734f7437d689d327eef45e183358860b5051eead35651"
+   },
+   "db-lateral-lunge": {
+    "sha256": "c70fc0538bda264810ce0e1e9a0e6e897dc7a94727db6b750f7d094952982c6d"
    },
    "db-overhead-press": {
-    "sha256": "b7e8bcc111593aadf149aba6630c590aec71115f23627447a552f40ba4fd32e3"
+    "sha256": "0785b938e3e0eae3a2f9b17d24647bf0c209877fcdc8ea31dba2acc340344813"
+   },
+   "db-reverse-lunge": {
+    "sha256": "c6a6a5b604fdd884e82a15ef8104ead0053dd5e547cd6e485d03bdd28f493dc3"
+   },
+   "db-row": {
+    "sha256": "0b04ff6e0e4a4947c195912a1e6a95be0a90e9fd1f703622ff0a91ed3e799f8d"
+   },
+   "dead-bug": {
+    "sha256": "69ace574dd7f8b11f89a3a58539ccbd7e976ae03d00ddd547166db075d8d5886"
+   },
+   "deadlift": {
+    "sha256": "6092fbd34585dd6b95323b07a24506c22933c2d05015d7cfabc9b4d641c5a905"
+   },
+   "depth-drop": {
+    "sha256": "595f8d465245a1f75c7456db3c7f3a11f09339842fbe370908d95fe2d7a6009d"
+   },
+   "depth-jump": {
+    "sha256": "5870c2eb3733e704e8e3148ac630eddf31591b629c1805950974785555da2747"
    },
    "face-pull-cord": {
-    "sha256": "83e94aa31a4a083d8f007d5fc01a82346b6a7cfa57daec783ede978b96681427"
+    "sha256": "e305e45fde1e728b60108134b15f36f8dffbd63d9fdd1a26369ab9de0cf5b263"
    },
    "farmers-walk": {
     "sha256": "59a1cfb692c81d3c4d2ca2307e2b69ccaa05fd38836878c48a3dfaec8648164d"
@@ -68,69 +128,125 @@
    "figure-4": {
     "sha256": "750d6c3925c40b8e585aa6b3a7925e16eced424e0a6b990a2408cacd368a7421"
    },
+   "four-cone-drill": {
+    "sha256": "dd7cbbb16d4ff5dbefe9936bfdc0e6c307cca4b6fcb41b67f5693d2baf7489d5"
+   },
+   "front-squat": {
+    "sha256": "118ebd71aaa0fb5d7ff021d716bb17c36d5b1678b228ddc8b17d73a77cafc9ab"
+   },
    "goblet-squat": {
-    "sha256": "06c786bafb7cc191b628a60df5ea40ca8f127b179b8e51fea34658b2314c69e2"
+    "sha256": "02e3e9f7f4c5bf431786e351cb7303157212f119cfcfad1ad707c536f46ce1e2"
+   },
+   "half-kneeling-db-press": {
+    "sha256": "06e0dc9a32b18d08dff1b2cea166262cf3722286233df5cb7379226368e0a206"
    },
    "half-kneeling-landmine-press": {
     "sha256": "abfaa619628181931b6f94e31a9f6a7a4cab04d32848e2728d42455e9f645f56"
    },
    "hanging-knee-raise": {
-    "sha256": "2df9591b3370cdc446115a5cebf5ca7de6b06a94ae9fea4b9f4b2f5029acca30"
+    "sha256": "4283457f78a638aa9cacd84384b9adfe12f6dada79cc3c2efb30d02e53fa5294"
    },
    "high-knees": {
-    "sha256": "eb1d5b71c0ab9cc9ff5b5af35ebad3116337ae5c16b3a7131e816752333c9548"
+    "sha256": "5f767bfba79e006bc14bd2d708ff928ad17a94d57c6bd26902945d769c8dc66f"
+   },
+   "hip-airplane": {
+    "sha256": "4eaecf8c0d3c3ec7f0d80ef68c4ab91bf028e8e723aa98ac04847b2cc60cde4d"
+   },
+   "hip-thrust": {
+    "sha256": "58b356d341521e40285788565dc465770e71aa9d89eaab0315486482dd0d4d77"
    },
    "hollow-hold": {
-    "sha256": "d64b60e7d43ff5c4bada971c8fe98126dbb242fd4b1a6f127f0e25461b06979d"
+    "sha256": "05502ca88841251ec9e5c244ec6c816e680e934bb49c57b18b7aa2317035a046"
+   },
+   "incline-db-press": {
+    "sha256": "4e047ffdffd0a5425aaa1e0513920bf8ebd3d2e6560754458719d344f41cfd8c"
    },
    "intervali-30-30": {
-    "sha256": "0c7adfd653ecf4c3435567bf6e5a29c7954bf341ae3024e2f1ba1f5bc6b354cb",
-    "iz": "bicikl-intervali.jpg (paket od 2. 11. 2026.): prikazuje trčanje 30/30, pa pripada vježbi intervali-30-30"
+    "sha256": "4890ce7534a4c310c87bf905bc8f0af690d62db9186f596a7b455908472dd28a"
+   },
+   "inverted-hamstring": {
+    "sha256": "b4d1e4f8f0b0240a007467601e4792676f4332031a4842330bb7536666501738"
    },
    "inverted-row": {
-    "sha256": "1ea5f99d04ad2020dd95ab46c7c570fcc2789ff502b67f43ae1c14f3c2f5564f"
+    "sha256": "8777d9e83840a4fdf080f519ef9cb9a2d8fdbd363aa57094674b64e194996293"
    },
    "iso-abdukcija": {
-    "sha256": "b9c90bc42f22cdd7a51db911a225a261e7b61f36e749f81e305185d6677a863f"
+    "sha256": "f20ee51d0969cba4a213aadfa74c7ff70d366b6237f06ae1f769bcb3d1e75b1b"
    },
    "istezanje-pregibaca": {
     "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c"
    },
+   "jednonozni-most-kutija": {
+    "sha256": "da0c69a0f965a605cedc2681ac4f371a0740092d487b0495b87b7e97dca8442a"
+   },
+   "jednonozni-most": {
+    "sha256": "e71e7a9fc40b77aee9fa389a46b3aaeca4f95d56de90e9ae9a6bd12cbd2fbed1"
+   },
+   "jednonozni-rdl": {
+    "sha256": "db603c4de15517bc50536955db51f79bc5a7e7a32b7b3fee1a1f5725688e4555"
+   },
+   "kb-swing": {
+    "sha256": "bb8a6fc181dd001ba1e23cac00407f8e13b94044601e826821c8be46a3fd7080"
+   },
    "klizanje-pete": {
     "sha256": "37a916841d3e60eb2f1ecbe1902a92a6b9d0b72e42aa859f59b33fd8cacb5f5e"
+   },
+   "knee-control-band": {
+    "sha256": "feb03b2a652e823f7504f79e723fcaf64c045b8ef657722db86c83d144ed17ed"
    },
    "knee-to-wall": {
     "sha256": "e63eb1bfefe909c283ba4e20920644743c5ee92856dfc1767fee8db864cdaf15"
    },
+   "kopenhagen-duga": {
+    "sha256": "eae1a4f1b7805c989c30113896d2f989dff991b9247260fce74d9b4279e75bbd"
+   },
    "kopenhagen-kratka": {
-    "sha256": "c8a9c2acc0978dd6e2aceb1a6a284051f64a88408af18f0d28b103d05bf4c85f"
+    "sha256": "9763d08d08d86a189f7417f5edeff17fc8fd1258195b02f8c0823ec24974e1f8"
+   },
+   "lagano-trcanje": {
+    "sha256": "0da9873c320ff3e35014f8cf86bb29db25f3b36e2bedccc4b0151659b4467519"
    },
    "landmine-reverse-lunge": {
-    "sha256": "ce1a731976d9b64817a129f1db09b168270ddda64c7463208332d8f700297f2f"
+    "sha256": "a7b3c3623af20a5fe07d8aa2974424cdec0e0ba10d4524c53a112ae89db95524"
    },
    "landmine-rotation": {
-    "sha256": "2741efc9d87a8f31fb252287cd8eb1ac5a809ca019b222e37631f10efba7e68b"
+    "sha256": "291ca3cdd4e6a1b4f5a3e9962304b9c4907f04b9e51f6e6e648d08374fa811e8"
    },
    "landmine-row": {
-    "sha256": "445497d50691692b75e1ec0c49d5073190e0c065fa52c56559f1c41ad854c2b7"
+    "sha256": "98c161621dff1ea3c219f0a813fc474001de133fd2dafed5c7c488153e93b2fb"
    },
    "landmine-squat": {
-    "sha256": "52db719074433ce51ff32b21be878f4ec101d882f4be0fa3a8f714a7a1f8b94c"
+    "sha256": "444ad33027514dc3f4d5d78c900ca44415499db2892325e6ca67f03ce0c916d5"
+   },
+   "lateral-bound": {
+    "sha256": "640245ab251beda59dd9492adfaf2d8a7aef6914b72d682eb87176f36852b39d"
+   },
+   "lateral-shuffle": {
+    "sha256": "a615574a46ee9468cef0f93c24661ee25e281994d6e608556db9b0e21397872a"
+   },
+   "leg-cradle": {
+    "sha256": "8fbeb2b4af699c8bcb51345c2049c621c4b28f6dcd53d83df491646d53ceea85"
    },
    "leg-swings": {
-    "sha256": "861be65cf6c27e807aed80b1d711a7c128b752aecf1c5d3a6b1aae63f46dd568"
+    "sha256": "5935e88fc47f60c63dce8438616dcb2ed698127557048affaa71f75650bb2bf7"
+   },
+   "med-ball-broad-jump": {
+    "sha256": "cce975a55b819bc4fc3bfaac34ac6f602b9d3222b93dc9e4c4f5df4a90dd2c09"
    },
    "med-ball-chest-pass": {
     "sha256": "6364bb5c3cd53aa2a8119cc8b5ce835760c2e95d1004cbc33e13720f341bb83a"
    },
    "med-ball-rotational-throw": {
-    "sha256": "c27c9eccf0f0cefa46fac22b06ae6a4171cb4385d90e4458887941c04d27517f"
+    "sha256": "5a4bba3d0f9944dc44ccad0e4d2bf921252fb60fbab651d23d8f4a782038a860"
    },
    "med-ball-slam": {
-    "sha256": "59b8fd552a6b9070a86c33a8c79e2f2164e9b1a365356ab9568cfba78aeec686"
+    "sha256": "0965a5899da81dda444d6ded20a9cfa30d00e31706269956583614531f6a3700"
+   },
+   "monster-walk": {
+    "sha256": "8dc4ad945d05377cc59209155745ee73da029360d11a7d8736c8eb93a66421cb"
    },
    "most": {
-    "sha256": "51db4bfc5133db112f725884e3c157a722992c69b89f65a716576da9d51d9d44"
+    "sha256": "173f06074c3e794362f4a94dc9a4b6e2462368eb751832ae91d7337a60392bee"
    },
    "mountain-climbers": {
     "sha256": "074e949168c61bee623beb80b9aacdb0fa73cab8e49f546212c048a858ba1a28"
@@ -145,34 +261,82 @@
     "sha256": "767309bbf5ba0a27b85cfa1d901c43b509bd6706db40da42d80aea0a6a6a6caf"
    },
    "open-book": {
-    "sha256": "bee1c9fc713213fd93d3b55e628b1256447cdbb75d62d4ad63a01566ee79ba1d"
+    "sha256": "f0341cba5b6ecc06d3c3ab729064100f10ad252e4b33d92416beda3cfa8d016e"
+   },
+   "pallof-press": {
+    "sha256": "57532ccac2f58621dd080e1ccf2a1cc86148137741b0379355ecc34e77734b54"
+   },
+   "plank": {
+    "sha256": "11a17230b86bc9fb4a74be5b768dff016f823fd4d7d30615915eb66bf12f2b06"
    },
    "pogo-jumps": {
-    "sha256": "810a55ae4761c7f93f4882b4150561b1814bdca6c9c08df844621068dda7ae0f"
+    "sha256": "9afcbe92d85f74bae8750955341cfe23f27163fcb13e298d6bb4dd63c52baf66"
    },
    "pro-agility-5-10-5": {
-    "sha256": "6e23869c23965a8b410a664edf602d5125d7c6778ae7a52becfc8f2567d3f2da"
+    "sha256": "16cfde91896353f95b1bde7772b566a9f7dda59d1fedd3afbff099764ae61642"
+   },
+   "progresivna-ubrzanja": {
+    "sha256": "91dc5cde64a517fd4de7cbd9e009ee0ac11c1f7ffcc91ad3c559db11f3f9245a"
+   },
+   "pull-up": {
+    "sha256": "c9ad3519e937bfc029df003f9c0f983b89a44e0effd2b26c12f0d713a380dce1"
+   },
+   "push-up": {
+    "sha256": "df62d383e98fde6ff81a1d23459c07988d50ce50801fdebe4ad015aefbd1f4d0"
+   },
+   "quad-stretch": {
+    "sha256": "e5d92168983c1ab94827a9b04d727eb29cf3740d651d5ea8e3d31cc39496418c"
    },
    "ravnoteza-dosezanje": {
-    "sha256": "39a71bef02433c0a9441aed82c145d911ac5f3b23ff1950afc952c43706ccc45"
+    "sha256": "1adb8875879e36ccedd4cfe795db1402a1a674c9863d94a1c7bfe9d03d6cf7f5"
+   },
+   "rdl-bucice": {
+    "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7"
+   },
+   "rdl": {
+    "sha256": "7f1509845914f36bb72e5cb22cc94aa897340d0c33a73afd5e068fb2d7afd8c9"
+   },
+   "renegade-row": {
+    "sha256": "f80c38dafb7c263aa1090f7eb000ac4c977ddd957eeb91d83d5b72481d55b6c8"
+   },
+   "shoulder-taps": {
+    "sha256": "5f957483640c4e8162d7f2d93cfed91744a3a46a60df72ba82f667febee217e7"
+   },
+   "side-plank": {
+    "sha256": "3fb866c06d8d7c101dc33e35db12ba43968794f6114a8e59b0892bf85ce6d9e9"
    },
    "single-arm-db-press": {
-    "sha256": "b117c3714d52bc5997bacd1c5ebef03bfa506d66ba48175e53fdebec79655059"
+    "sha256": "1ea203a0fab714e9f8760a35396117b7b4b9780e1294b79681083c98c35f7ef8"
    },
    "single-leg-calf-raise": {
     "sha256": "508e34b7c1861382063685e96ded6b1d9d3a68909d3d7b36c681d382e89b63c6"
+   },
+   "single-leg-hip-thrust": {
+    "sha256": "673def3623d7e55090a50c911aac6bf4261f1c5353f0382f7407eec1f913bbb6"
    },
    "single-leg-hop": {
     "sha256": "de2d33db8b251835ca3cd6dcd36201eaed0b8e6dffa5667bec08c2d27e932937"
    },
    "skoljka": {
-    "sha256": "6ca81e78de7041f39aeee9d185099cc1e38b8762200f8494033e0483744a6ec4"
+    "sha256": "d47907e7e664c581a191b2eddc9af089484d97c3ee7f46be29365ddf6ac0f483"
    },
    "soleus-raise": {
     "sha256": "21e3d2d13fa9336f79fa4238ba5cc47f157842fb519c3e08d26dbe77aa12a40e"
    },
+   "split-cucanj": {
+    "sha256": "3a542a29a4dde539f5ffce5a2e8df0517e5e5abf9a96355fa36c45cae6c2200d"
+   },
+   "split-squat-jump": {
+    "sha256": "dacda004760a2eef170ee4c2da3f5c0adbe6c7f3dbf942f3d406617943253c80"
+   },
+   "sprint-backpedal-sprint": {
+    "sha256": "aadd8061b53157c81e5972b6874e91b3c5b21e5925ed182b74d75180a8644037"
+   },
    "spustanje-stepenica": {
-    "sha256": "f1d903a84dd4e468b13c192fd0b1c631bb581f73a68bda2cd89b429221d45745"
+    "sha256": "74d5fa17d97674f43ff708e73ab2c3f8dc413d76a485cd4adf39c45a48318909"
+   },
+   "squat-jump": {
+    "sha256": "acf2418e3dfc159d819548a46d5241b21cd8324199bac2b21a603a1bbebad381"
    },
    "step-up": {
     "sha256": "a712ce34484d7daaebc24074038538d6ac2e5f458ecd62a4c705c0665627b36e"
@@ -184,74 +348,138 @@
     "sha256": "a5445ddae1bcbbb86d97a086aa2315b27ab8a21b935bfe74df8c5cfad10645dc"
    },
    "suitcase-carry": {
-    "sha256": "7483919b74efdfbfdbad8fc1a6b706e16edf3e7e2d095cf2cb522517abb4fff9"
+    "sha256": "875ffd1a3afa1e6bd379e4b7a217f420e9f659ec65926adfe1aa9efa6e47cec7"
    },
    "t-test": {
-    "sha256": "e5c1d6b8d248486ddde0ad72c50873732a3c33dbcb631232b1f5367d30769cca"
+    "sha256": "e2338591b7abdb336907cfe2e57cc3585e5157434dd08f2f2b12dd9d74149343"
    },
    "tibialis-raise": {
     "sha256": "1604154a26023ae0a3f4e8c64290a66c333acf9be2d9f63afdcd7cf779d1ba05"
    },
    "trap-bar": {
-    "sha256": "b6c68e9ae932b1796eb86f69c9ee386303aaaaa6f43d526f20c686c3148e484f"
+    "sha256": "ab33b38e72b591f8758090d5ba69aa5973386803a8499ae5bacaf434fb2ae358"
    },
    "trx-atomic-push-up": {
     "sha256": "a6da8556230eb1cd03439ad47a12e616d1733934e347e67e1c52d33eff9ab898"
    },
+   "trx-body-saw": {
+    "sha256": "6e3e3365c1c7afcd79303d0b97736e37be00134e8c94e2b9971d64574e298998"
+   },
    "trx-chest-press": {
-    "sha256": "0e2538183e97a83bf13323a4c7fa1104f451e49af74039f57b0ec69672255187"
+    "sha256": "661d84ef830758a4f9aaf79741c0d8794175e2cb30f5015f33487e4fff515383"
    },
    "trx-fallout": {
-    "sha256": "e8f69337efe7f46c3ef961396f680abc8dc4f0d70196d5cfd7e2830bdb2b3d95"
+    "sha256": "9a68d7ab72b2d8ea627baf7b7e2c92ef4f2d2ec1eb36d20192713b9a0439fb5c"
+   },
+   "trx-hamstring-curl": {
+    "sha256": "3aee4f1c8732acdff6549df4ad83ce534800162ab1cf0277dc1738828606a009"
+   },
+   "trx-hamstring-runner": {
+    "sha256": "503dd2fc2757d81c6de6e0324f49e86a11e12ada49425e17cc90a610a45a6959"
+   },
+   "trx-high-row": {
+    "sha256": "82d4e155362e887a302ea7c5fe7febfcf8526d5f54706dfad5b6d6f335584ce3"
+   },
+   "trx-hip-press": {
+    "sha256": "806675e34d3cbb4a2508292a2b7cb1536384f315df450c7746a22e02dcc3d1bf"
    },
    "trx-lateral-lunge": {
-    "sha256": "20638760d8c3e7c4be7e611af42ddfc90eb5fea97b1b39db5eaf6ee37c079e18"
+    "sha256": "15934af1ba6bcba520589457789c2c190bb8d2d0d3a12ed5de63c91a23dc359e"
    },
    "trx-mountain-climber": {
     "sha256": "55d95e335e57aaddf69fc21cf7819c7a5666a130408d3cac7de15993e03f9929"
    },
+   "trx-pec-fly": {
+    "sha256": "1da8149e0136eb16c1f5f2bfec55a489365bf1a02fa659c8ae0ed20fb34f1f97"
+   },
+   "trx-pike": {
+    "sha256": "e04d9767122cae46c1cd054aebe4dad1ab2a7b620e0dbb783a3acc5cd5d9aa00"
+   },
    "trx-plank": {
-    "sha256": "dde373e24ec90791c7c06ab8c0b7110ba30cfc1d9f9c80cb9170c0994856e262"
+    "sha256": "d28f0be1bfb674f1cbbddf95900c0d33d4f70023ff3231e5e87d8c2d01b2bf74"
    },
    "trx-power-pull": {
-    "sha256": "7545c66bc8d1267650cca0b949a5eb638f82a6a5dc5dc3b5257c3dc54eb45a7f"
+    "sha256": "8cc40030e1fef379627072b4ee74939ea9faf14951b0fbc720e11bc1122d8bf7"
+   },
+   "trx-push-up": {
+    "sha256": "bcad2af674a350861f1f0fa88e7e1269b16de848d507337eb2d8ee31bd55bd2f"
+   },
+   "trx-reverse-fly": {
+    "sha256": "e34133b9665975e2a1e3af840ae5db20ad1fcac4d85ef3f8d100085e0cd18b0a"
+   },
+   "trx-reverse-lunge": {
+    "sha256": "381bd8853044b521ecdd525148b5f52173e3789a756aba7e9f1263047740a1eb"
+   },
+   "trx-row": {
+    "sha256": "300d8293648d3d05e21b566414030ac1c7917355c5c9f3e3fc95662a52c5a727"
    },
    "trx-side-plank": {
-    "sha256": "15577716957080ad88c27b1c6e1af0304977a892104089dbf35456d98c0b8149"
+    "sha256": "86cf87eb8da6a89fcba5b5dc5694be8880374b52c90a51529b1dd9cc676422a3"
+   },
+   "trx-single-leg-squat": {
+    "sha256": "5062669816e31d0f3cfc7ae4e0af43185a80a36bb8652e7986d384d28e7e7c30"
    },
    "trx-sprinter-start": {
-    "sha256": "3ac0104db2d97e2c2ee1c73647bcd89585b392cc7de9c0e62a8d1e2d996d4c98"
+    "sha256": "8b7bb861538fe86a137fdf6f23ebe1120a6e60d44cfa29c1c21f9315128fcf2e"
+   },
+   "trx-squat": {
+    "sha256": "347b23e9fd88aa3962f67512c4c29cd322950426a464bb45aad564c410cc91fe"
    },
    "trx-suspended-lunge": {
-    "sha256": "229be9fc2e811def6a2a5b6049d55914a805240c7d754caac9f40e105706aff9"
+    "sha256": "6992dd7f079173d8711fa03744036fc3b6a44f4d92cb28595d9b9170b85b5d92"
    },
    "trx-y-fly": {
-    "sha256": "6cc611fd6214896bfbf82f808f17d8ed033251873a4a7918471ff41e13d868a3"
+    "sha256": "7de8341e65b1c34c5df8366215eac7a98f3b624e051ccbb0bcd2c495c13ada8e"
+   },
+   "ubrzanje-zaustavljanje": {
+    "sha256": "4cfc7487d4188d1417dc3c5adaa04d7c0b15e3dbf0304ff6a209195efc4eeda5"
    },
    "uze-abdukcija": {
-    "sha256": "081ca605d60181ae822cc462a615a01ed3823bcf7d5969f8f0b33dc381777936"
+    "sha256": "4a796139ca55ff844085bcbf4073e482c4185d1965411c85fd7db701e0bdc0e9"
    },
    "uze-addukcija": {
-    "sha256": "b0e08dae8bbf1ae8a4549b1e66ae756964ed2ad15a9e5ee647429ca043cf52a2"
+    "sha256": "fc2ecc56afa7b426f8237c42cfe57e537d3df0b96694060c4d52971e28e81511"
    },
    "uze-ekstenzija": {
-    "sha256": "16e8e76e777584e7441ff7b7147bd342f0dd028ea2065757477d4cbfa1a5b572"
+    "sha256": "90af214db8deb1215efeda41e31f29e29e4536cf9fc7fa1deb96902ed99843c3"
    },
    "uze-fleksija": {
-    "sha256": "5dd77a1931e5e7f58aedd8d8091cc37431786d17e184c3d80b448499ffafb7ed"
+    "sha256": "64f1448c095b06ae580d61cf60045aa47494713b2546e83c322f0229198bd49f"
    },
    "uze-koljeno": {
-    "sha256": "8beef7be4d948b7b575946b44312addd015f8532c259fb8949cad4764a73a41b"
+    "sha256": "a16a24a3ddf733a2f482009bb6e3d538a041f28f2a6ec51fd2d2d577c19bd339"
    },
    "uze-kruzenje": {
-    "sha256": "0d0b6d15f2f1b1d9033ae1a4850de9572b3c19f6e12fcbaf2b0c7d200350756f"
+    "sha256": "ed93659e3d3da7498ecddfa69881bf9651993d2159349ff4295decdeaa43887d"
    },
    "uze-njihanje": {
-    "sha256": "47e35a6c8757d3109eae1930c3aa218e23ea335f5030a092eab173d8569abe01"
+    "sha256": "7ab693a98c588da5b24186d0bdcf796110105152fd12d5f6f9b967b0644724cf"
+   },
+   "worlds-greatest-stretch": {
+    "sha256": "3656b092d456c7615fa54600e25ee56e74b9c18c85df496b2d60fb802af25185"
+   },
+   "zigzag-sprint": {
+    "sha256": "ba4445221518c5fde8cb9335fdfaeef26dd3f95d80e883d8346577b8a3b73ff1"
    }
   }
  },
- "covers": {},
+ "covers": {
+  "aktivacija": {
+   "sha256": "b2b7c826aa9248aa5de7226906b8459833004d66de5a3a0de845507fd37322ff"
+  },
+  "knjiznica": {
+   "sha256": "1a2ef899296abc3ab487b0f69f29d29a7a00dd86ee32c394eefb64c259271670"
+  },
+  "kondicija": {
+   "sha256": "5479f6fea67bf044bfa2fbe1466940831b7700227c4115f324d4f77a7dc50cf3"
+  },
+  "rehab": {
+   "sha256": "a37baba41d44e98dbd55817a5bab18fae3cab282f77f411c3a6a81d71e12b955"
+  },
+  "teretana": {
+   "sha256": "35e26de9bf1825f54467df7f7a7404239c821a4403328d1d909f3aa874b745cf"
+  }
+ },
  "removed": {
   "trx-push-up": "DVIDS video 694423 pokazuje glavu spuštenu ispod prsa i laktove široko u stranu, a upute traže suprotno.",
   "dead-bug": "DVIDS fotografija 1942620 je grupni snimak samo početnog položaja; osoba desno podiže glavu i ramena, što aplikacija navodi kao grešku.",
