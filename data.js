@@ -941,7 +941,7 @@ window.SEED = {
     "Zabacuješ trup na vrhu – završi pokret stiskom stražnjice.",
     "Koljena upadaju prema unutra – guraj ih u smjeru prstiju."
    ],
-   "note": "Mrtvo dizanje s trap šipkom razvija snagu cijelog donjeg dijela tijela, a donja leđa opterećuje manje od klasičnog mrtvog dizanja, pa je omiljeno kod nogometaša. Dok nemaš trap šipku, umjesto njega radi deadlift sa šipkom. U sezoni ga radi najkasnije 4 dana prije utakmice.",
+   "note": "Mrtvo dizanje s trap šipkom razvija snagu cijelog donjeg dijela tijela, a donja leđa opterećuje manje od klasičnog mrtvog dizanja, pa je omiljeno kod nogometaša. U sezoni ga radi najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/trap-bar-deadlift-with-low-handles/",
    "sourceTitle": "How to Do Trap Bar Deadlift With Low Handles: Muscles Worked & Proper Form – StrengthLog",
    "order": 207.5,
@@ -1472,7 +1472,7 @@ window.SEED = {
     "Padanje pri spuštanju – spuštaj se kontrolirano 2–3 sekunde.",
     "Previsoka kutija pa se leđa zaobljuju ili kuk štipa – odaberi nižu visinu."
    ],
-   "note": "Step-up razvija snagu jedne noge u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Koristi najnižu stranu kutije od 40 cm, jer više strane traže preduboko savijanje kuka.",
+   "note": "Step-up razvija snagu jedne noge u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Koristi najnižu stranu kutije od 40 cm, jer više strane traže preduboko savijanje kuka. Teške serije radi najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/step-up/",
    "sourceTitle": "How to Do Step Up: Muscles Worked & Proper Form – StrengthLog",
    "order": 213,
@@ -1516,7 +1516,7 @@ window.SEED = {
     "Pete se odižu – stani malo dalje od sidrišta i drži težinu na cijelom stopalu.",
     "Leđa se izvijaju pri ustajanju – učvrsti trup i završi uspravno, bez guranja kukova naprijed."
    ],
-   "note": "Landmine squat je stabilan čučanj koji malo opterećuje leđa i ne traži veliku mobilnost, a nagib šipke pomaže ti zadržati uspravan trup. Zato je koristan u sezoni, na laganijim danima i kad se vraćaš nakon problema s kukom ili leđima.",
+   "note": "Landmine squat je stabilan čučanj koji malo opterećuje leđa i ne traži veliku mobilnost, a nagib šipke pomaže ti zadržati uspravan trup. Koristan je u sezoni i pri povratku nakon problema s kukom ili leđima. Teške serije radi najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/landmine-squat/",
    "sourceTitle": "How to Do Landmine Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 214,
@@ -4488,7 +4488,7 @@ window.SEED = {
    "sides": true,
    "feel": "Kosi trbušni mišići, ramena i stražnjica",
    "steps": [
-    "Uže zaveži za dno kaveza u visini gležnja, ne kroz kolotur.",
+    "Zaveži elastično uže za dno kaveza, u visini gležnja, ne kroz kolotur.",
     "Klekni u poluklek, koljeno bliže sidru na podu, a ručku drži uz taj kuk.",
     "Gurni ručku dijagonalno gore iznad suprotnog ramena, pa se polako vrati.",
     "Trup ostaje uspravan i okrenut naprijed, bez naginjanja unatrag."
@@ -4747,7 +4747,7 @@ window.SEED = {
    "sides": true,
    "feel": "Prednji kuk, unutarnje bedro, gornja leđa",
    "steps": [
-    "Iz dugog iskoraka spusti suprotni dlan na pod, uz unutarnju stranu prednjeg stopala.",
+    "Iz dugog iskoraka lijevom nogom spusti desni dlan na pod, uz lijevo stopalo.",
     "Lakat na strani prednje noge spusti prema njezinu stopalu, bez štipanja u preponi.",
     "Tu ruku podigni prema stropu i okreni prsa, a pogled prati šaku.",
     "Stražnja noga ostaje ispružena, a stražnjica stražnje noge stisnuta."
@@ -4914,7 +4914,7 @@ window.SEED = {
    "rest": 20,
    "kg": 0,
    "sides": true,
-   "feel": "Donji dio lista i iznad pete",
+   "feel": "Donji dio lista (soleus)",
    "steps": [
     "Prednje stopalo postavi nekoliko centimetara od zida, prsti ravno prema zidu.",
     "Savij prednje koljeno i guraj ga prema zidu, a peta ostaje na podu.",
@@ -5255,7 +5255,7 @@ window.SEED = {
     "Stani bočno uz zid, blizu njega, s težinom na vanjskoj nozi.",
     "Savij nogu bližu zidu i podigni petu prema stražnjici, natkoljenice paralelne.",
     "Vanjskom stranom natkoljenice pritisni zid s oko 50–70 % snage i zadrži.",
-    "Diši mirno; zdjelica ostaje vodoravna, a stajno koljeno blago savijeno."
+    "Zdjelica ostaje vodoravna, a stajno koljeno blago savijeno; izmjenjuj strane."
    ],
    "mistakes": [
     "Trup se naginje prema zidu ili od njega – drži ramena iznad kukova.",
@@ -5870,7 +5870,7 @@ window.SEED = {
     "Zdjelica pada na strani slobodne noge – zategni bok stajne noge i smanji visinu.",
     "Prebrzo se spuštaš – kontroliraj spuštanje 2–3 s."
    ],
-   "note": "Bočni step-up jača kuk i koljeno na jednoj nozi, a tu snagu prenosiš na doskoke, zaustavljanja i promjene smjera. Počni na niskoj stubi od 15–30 cm, a kad postane lako, prijeđi na kutiju od 40 cm.",
+   "note": "Bočni step-up jača kuk i koljeno na jednoj nozi, a tu snagu prenosiš na doskoke, zaustavljanja i promjene smjera. Počni na niskoj stubi od 15–30 cm, a kad postane lako, prijeđi na plyo box, na strani od 40 cm.",
    "source": "https://www.massgeneralbrigham.org/content/dam/unified-xwalk/pdf/patient-education/english/mass-general-hip-exercises.pdf",
    "sourceTitle": "Hip Exercises – Mass General Brigham (PDF)",
    "order": 715,
@@ -5956,7 +5956,7 @@ window.SEED = {
     "U odmoru potpuno staneš – nastavi lagano okretati da se brže oporaviš.",
     "Trup i kukovi se ljuljaju – smanji otpor i drži trup mirnim."
    ],
-   "note": "Intervali na biciklu razvijaju kondiciju uz manje udaraca nego trčanje, pa su dobra zamjena kad koljeno ili kuk ne podnose trčanje. I dalje su to naporni intervali: najviše 1–2 puta tjedno i ne dan prije utakmice.",
+   "note": "Intervali na biciklu razvijaju kondiciju uz manje udaraca nego trčanje, pa su dobra zamjena kad koljeno ili kuk ne podnose trčanje. To su naporni intervali, a ne lagani dan oporavka: najviše 1–2 puta tjedno i ne dan prije utakmice.",
    "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
    "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
