@@ -2450,7 +2450,7 @@ function dosingHtml(){
       matchDatesHtml() +
       '<div class="advice">'+esc(weekAdvice())+'</div></div>' +
     '<div class="psec"><h2>Teren</h2><span>za treninge na terenu</span></div><div class="chart">' +
-      '<div class="prow" style="border:0;min-height:52px"><label class="k" for="topkmh">Najveća brzina (km/h)</label><input id="topkmh" class="input tkm" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="' + kmhTxt(topKmh()) + '" placeholder="28,8"></div>' +
+      '<div class="prow" style="border:0;min-height:52px"><label class="k" for="topkmh" style="display:flex;align-items:center;min-height:44px">Najveća brzina (km/h)</label><input id="topkmh" class="input tkm" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="' + kmhTxt(topKmh()) + '" placeholder="28,8"></div>' +
       '<p class="sub" style="margin:4px 0 0;font-size:13px;line-height:19px">Postotak brzine u treninzima na terenu (npr. 90&nbsp;% brzine) računa se od nje. Zadano 28,8&nbsp;km/h (8&nbsp;m/s); upiši svoju najveću brzinu iz STATSportsa, od 20 do 40&nbsp;km/h.</p></div>' +
     '<div class="psec"><h2>Moje težine</h2><span>kg, iz serija zadnjih 8 tjedana</span></div>' +
     (lifts.length ? '<div class="chart" style="padding-top:8px;padding-bottom:4px;overflow-x:auto"><table class="kg"><tr><th>Vježba</th>' + ['Snaga', 'Hipertr.', 'Izdrž.', 'Ekspl.'].map(t => '<th style="padding-left:8px">' + t + '</th>').join('') + '</tr>' +
@@ -3004,7 +3004,7 @@ function sheetHtml(){
       (plan.length ? '<p class="label" style="padding:0 0 6px">Plan</p>' + plan.map(x => '<button class="opt" '+slotOpen(x)+'><span>'+esc(x.name)+'</span><span class="tag">'+(x.done ? 'odrađeno' : i < today ? 'propušteno' : 'čeka')+'</span></button>').join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
       (i >= today ? matchBox(plan.filter(x => !x.done).map(x => matchNote(x, i)).find(Boolean), i, '12px 0 0') : '') +
       (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+fmtDur(l.secs)+'</span></div>').join('') : '') +
-      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu). Stalni dan utakmice biraš u Napretku (Doziranje), a ovdje označiš i dodatnu utakmicu.</p>';
+      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu), a stalni dan utakmice u Napretku (Doziranje). Ovdje označiš i dodatnu utakmicu.</p>';
   } else if (s.kind === 'goal' || s.kind === 'kg') {
     const p = S.pr[s.id], G = GOALS[S.settings.goal], plan = p && (s.kind === 'kg' || G) ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
     body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(G ? G.name : '') + '” za ' + esc(p ? p.name : '') : 'Kilogrami za ' + esc(p ? p.name : '')) + '</h3>' +
