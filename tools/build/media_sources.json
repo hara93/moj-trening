@@ -1,5 +1,5 @@
 {
- "_about": "Jedini izvor za slike i snimke vježbi u aplikaciji. tools/build/build_media.py iz ove datoteke radi media.js, MEDIA-LICENSES.md, sličice i popis vježbi sa slikom za build_prompts.py. Ručno se mijenja samo ova datoteka.",
+ "_about": "Jedini izvor za slike i snimke vježbi u aplikaciji. tools/build/build_media.py iz ove datoteke radi media.js, MEDIA-LICENSES.md, sličice i popis vježbi sa slikom za build_prompts.py. Ručno se mijenja samo ova datoteka. Naslovne slike slajdera na početnom zaslonu su u \"covers\" (ključ kartice → sha256 izvorne JPEG slike cover-<ključ>.jpg, uspravno 1024 × 1536); build_media.py --covers <mapa> od njih radi assets/covers/<ključ>.webp.",
  "own": {
   "dir": "assets/slike",
   "made": "2. 11. 2026.",
@@ -251,6 +251,7 @@
    }
   }
  },
+ "covers": {},
  "removed": {
   "trx-push-up": "DVIDS video 694423 pokazuje glavu spuštenu ispod prsa i laktove široko u stranu, a upute traže suprotno.",
   "dead-bug": "DVIDS fotografija 1942620 je grupni snimak samo početnog položaja; osoba desno podiže glavu i ramena, što aplikacija navodi kao grešku.",

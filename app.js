@@ -898,19 +898,21 @@ VIEWS.home = function(){
   // (a programme finished this week keeps the days it filled in the plan, but has nothing left to open: it does not count here)
   const gym = planSlots().some(s => (s.kind === 'program' && !!S.prog[s.id] && !!progStatus(S.prog[s.id]).next) || (s.kind === 'protocol' && !!S.pr[s.id] && gymSession(S.pr[s.id]))) ? false : nextGym();
   const cards = [
-    { t:'Rehab kuka', s: rehab ? 'Moj protokol · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
-    gym === false ? null : { t:'Teretana', s: gym ? 'Sljedeći: ' + gym.name : 'Treninzi snage', bg:'#38425A', ic:I.dumb, a: gym ? {a:'openPr', id: gym.id} : {a:'tab', tab:'protocols'} },
-    { t:'Aktivacija', s:'Uže i kolotur · prije treninga', bg:'#3A3F47', ic:I.rope, a: akt ? {a:'openPr', id: akt.id} : {a:'libCat', cat:'Uže i kolotur'} },
-    { t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
-    { t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }
+    { k:'rehab', t:'Rehab kuka', s: rehab ? 'Moj protokol · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
+    gym === false ? null : { k:'teretana', t:'Teretana', s: gym ? 'Sljedeći: ' + gym.name : 'Treninzi snage', bg:'#38425A', ic:I.dumb, a: gym ? {a:'openPr', id: gym.id} : {a:'tab', tab:'protocols'} },
+    { k:'aktivacija', t:'Aktivacija', s:'Uže i kolotur · prije treninga', bg:'#3A3F47', ic:I.rope, a: akt ? {a:'openPr', id: akt.id} : {a:'libCat', cat:'Uže i kolotur'} },
+    { k:'kondicija', t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
+    { k:'knjiznica', t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }
   ].filter(Boolean);
   const attrs = o => Object.keys(o).map(k => (k==='a' ? 'data-a' : 'data-'+k) + '="' + esc(o[k]) + '"').join(' ');
+  // a card's cover picture (media.js EXCOVERS, portrait) fills the whole card under the same scrim; without one: colour and icon
+  const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" src="' + esc(covers[c.k]) + '">' : '';
   return '<div class="view" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
     topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
     '<h1 class="greet">Bok, Tomislav</h1>' +
     weekHtml() + dataHint() +
     '<div class="carousel" id="car" aria-label="Kategorije treninga">' +
-      cards.map(c => '<button class="hcard" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span><span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
+      cards.map(c => '<button class="hcard' + (cover(c) ? ' cv' : '') + '" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span>' + cover(c) + '<span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
     '</div>' +
     '<div class="dots" id="dots" role="group" aria-label="Odaberi karticu">' + cards.map((c,i) => '<button class="dot" data-a="dot" data-i="'+i+'" aria-label="'+esc(c.t)+'"'+(i===0?' aria-current="true"':'')+'><i></i></button>').join('') + '</div>' +
     (last ? '<p class="sub" style="text-align:center;margin:8px 0 0">Zadnji trening: ' + esc(last.name) + ' · ' + esc(shortDate(last.at)) + '</p>' : '') +

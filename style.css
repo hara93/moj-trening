@@ -386,3 +386,6 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .bul.ck{color:var(--text-body)}
 .bul.ck::before{display:none}
 .bul.ck svg{flex:none;margin-top:1px}
+/* home slider: a card's cover picture fills the card (the icon stays under it, for a picture that cannot load) */
+.hcard .cov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.hcard.cv .tt{text-shadow:0 1px 10px rgba(25,29,37,.55)}
