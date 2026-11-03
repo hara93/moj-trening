@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.6.9 — 3. 11. 2026.
+
+- **Cijeli ekran na iPhoneu (pravi popravak):** iOS aplikaciji na početnom zaslonu javlja visinu bez statusne trake, pa je sve završavalo 59 pt iznad dna. Aplikacija sada uzima stvarnu visinu ekrana.
+- **Donje tipke što niže:** donji izbornik, kontrole na stranici vježbe i u playeru te „Krenimo!” sjede odmah iznad crte za povratak na početni zaslon.
+
 ## 1.6.8 — 3. 11. 2026.
 
 - **Naslov na karticama početnog zaslona** spušten je niže, na prazni dio naslovne slike.
