@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.6.2 — 3. 11. 2026.
+
+- **Stranica vježbe u tri kartice: Upute | Cilj | Opterećenje.** Upute imaju opremu na vrhu, upute i link na video. Cilj („Zašto” se sada zove Cilj) ima opis, ciljana područja i osjećaj te izvor. Opterećenje ima zadnji trening, graf i zadnje treninge. Ispod kartica više se ništa ne ponavlja, a pri promjeni kartice stranica ne skače.
+- **Player:** kartica vježbe ima Upute | Cilj, a Cilj je kratak (ciljana područja, osjećaj i jedna rečenica).
+- **Nove slike:** svih 152 vježbi prikazuje istog sportaša (135 novih, 22 zadržane), prije preuzetog videa; video i slike iz paketa i dalje su na gumbu za zamjenu. Početni zaslon ima naslovne slike na svih pet kartica.
+- **PROMPTI-ZA-SLIKE.md:** nakon pregleda svih novih slika 36 ih je za ponoviti (uz svaku piše što ne valja i ispravljena uputa), 116 je dobrih.
+- **Bez signala:** prvo pokretanje nakon ažuriranja ne čeka slike koje još nisu spremljene; kartica bez slike ostaje u svojoj boji.
+
 ## 1.6.1 — 3. 11. 2026.
 
 - **Dvije utakmice u tjednu:** u prozoru dana (dodir na dan u tjednu) ili u Doziranju možeš označiti dodatnu utakmicu, a stalni dan utakmice možeš za jedan tjedan i ukinuti. Sva upozorenja, najbolji dani i doza za sezonu računaju sa svim utakmicama tog tjedna; u tjednu s dvije utakmice na terenu se predlaže samo lagani trening, a teške noge između utakmica dobivaju upozorenje.
