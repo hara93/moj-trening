@@ -131,17 +131,22 @@ function doseBase(it){
 function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0 }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
 function exMeta(e){ return (e.zones && e.zones.length ? e.zones.slice(0,2).map(exZoneLabel).join(' • ') : e.cat) ; }
+// Sources hidden for now (Tomislav asked on 4 Nov 2026): with false the app shows no source, author or licence anywhere (the
+// "Izvor" lines of exercises and field sessions, the programme's "Izvori", the credit chip and its "Izvor i licenca" sheet, the
+// pack's name on its photos), no licensed demo video or photo and no outside video link ("Pogledaj demonstraciju", "Pogledaj kod
+// TAE"). The data, the licensed files and MEDIA-LICENSES.md stay as they are: true brings all of it back.
+const SHOW_SOURCES = false;
 // what an exercise can show, best first: your own video or photo, the two-panel picture made for the app (media.js "pic": LEFT
 // start, RIGHT end; the same athlete everywhere), a licensed demo video (one tap away with the swap button), a photo from the private
-// pack, a licensed photo. The swap button steps through them (S.alt).
+// pack, a licensed photo. The swap button steps through them (S.alt). Licensed media only with SHOW_SOURCES.
 function mediaList(e){
   if (!e) return [];
   const out = [], m = (window.EXMEDIA || {})[e.id] || {}, lic = { credit: m.credit, url: m.url, lic: m.lic, cid: e.id };
   if (e.media && MEDIA[e.media]) out.push({ type: e.mediaType === 'image' ? 'image' : 'video', src: MEDIA[e.media], own: true });
   if (m.pic) out.push({ type: 'image', src: m.pic, thumb: m.thumb, two: true });
-  if (m.video) out.push(Object.assign({ type: 'video', src: m.video, poster: m.img, thumb: m.thumb }, lic));
-  if (MEDIA['pack:' + e.id]) out.push({ type: 'image', src: MEDIA['pack:' + e.id], credit: (S.pack && S.pack.credit) || 'Privatni paket slika', pack: true });
-  if (m.img && !m.video) out.push(Object.assign({ type: 'image', src: m.img, thumb: m.thumb }, lic));
+  if (SHOW_SOURCES && m.video) out.push(Object.assign({ type: 'video', src: m.video, poster: m.img, thumb: m.thumb }, lic));
+  if (MEDIA['pack:' + e.id]) out.push({ type: 'image', src: MEDIA['pack:' + e.id], credit: SHOW_SOURCES ? (S.pack && S.pack.credit) || 'Privatni paket slika' : '', pack: true });
+  if (SHOW_SOURCES && m.img && !m.video) out.push(Object.assign({ type: 'image', src: m.img, thumb: m.thumb }, lic));
   return out;
 }
 // first = true: always the best one (thumbnails, protocol header); otherwise the one picked with the swap button
@@ -1061,7 +1066,7 @@ const stillMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-m
 function videoTag(m){ return '<video src="'+esc(m.src)+'"'+(m.poster ? ' poster="'+esc(m.poster)+'"' : '')+(stillMotion() ? ' controls preload="metadata"' : ' autoplay loop')+' muted playsinline></video>'; }
 // licensed media: the chip opens "Izvor i licenca" (author, licence, source, changes); the private pack only names itself
 function creditHtml(m){
-  if (!m || !m.credit) return '';
+  if (!SHOW_SOURCES || !m || !m.credit) return '';
   return m.lic ? '<button class="credit" data-a="credit" data-id="'+esc(m.cid)+'" aria-label="Izvor i licenca: '+esc(m.credit)+'">'+esc(m.credit)+'</button>' : '<span class="credit">'+esc(m.credit)+'</span>';
 }
 function swapHtml(e, m){
@@ -1087,7 +1092,7 @@ function heroHtml(p, fm){
 }
 // "Izvor i licenca" sheet for one licensed demo; the full list is MEDIA-LICENSES.md in the repository
 function creditSheet(s){
-  const L = ((window.EXMEDIA || {})[s.id] || {}).lic; if (!L) return '';
+  const L = SHOW_SOURCES && ((window.EXMEDIA || {})[s.id] || {}).lic; if (!L) return '';
   const a = (t, u) => '<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(t)+'</a>';
   const row = (k, v) => '<span class="lb">'+k+'</span><p>'+v+'</p>';
   const dv = window.EXMEDIA_DVIDS;
@@ -1109,8 +1114,8 @@ function doseOptions(e){
     return [b, b+15, b+30].map(s => ({ label: (n > 1 ? n + ' × ' : '') + s + ' s', it: Object.assign(exItem(e), {sec:s}) })); }
   const s = e.sets||3; return [s, s+1, s+2].map(n => ({ label: n + ' × ' + (e.reps||10), it: Object.assign(exItem(e), {sets:n}) }));
 }
-// under the media, like GOWOD: "Upute" (equipment, the cues, the video links) | "Cilj" (why, the target areas, how it should feel,
-// the source) | "Opterećenje" (the load card and the last sessions). Česte greške stay in the data, unshown. The tab you pick stays
+// under the media, like GOWOD: "Upute" (equipment, the cues, the video links*) | "Cilj" (why, the target areas, how it should feel,
+// the source*) | "Opterećenje" (the load card and the last sessions); * only with SHOW_SOURCES. Česte greške stay in the data, unshown. The tab you pick stays
 // for every exercise while the app is open (S.exTab: 'upute' | 'cilj' | 'opt'; 1.6.1's 'zasto' reads as 'cilj'). The player's card
 // (wrap: its section opening tag) has only Upute | Cilj, shorter: the cues; the areas, Osjećaj and the first sentence of the why.
 const EX_TABS = [['upute', 'Upute'], ['cilj', 'Cilj'], ['opt', 'Opterećenje']];
@@ -1128,7 +1133,7 @@ function exInfoHtml(e, wrap){
   if (on === 'upute') {
     const eq = e.equipment || exEquip(e).join(', ') || 'Bez opreme';
     // a short link like the mockup; the video's own title (often a long source title) is the tooltip
-    const vids = (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
+    const vids = !SHOW_SOURCES ? '' : (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
     body = pl ? cues : '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
   } else if (on === 'cilj' && pl) {
     const box = zones || e.feel ? '<div class="pfeel">' + (zones ? '<div class="tagrow">'+zones+'</div>' : '') + (e.feel ? '<span><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</span>' : '') + '</div>' : '';
@@ -1136,7 +1141,7 @@ function exInfoHtml(e, wrap){
   } else if (on === 'cilj') {
     const facts = (zones ? '<div><dt>Ciljana područja</dt><dd><div class="tagrow">'+zones+'</div></dd></div>' : '') + (e.feel ? '<div><dt>Osjećaj</dt><dd>'+esc(e.feel)+'</dd></div>' : '');
     body = ((e.note ? '<p>'+esc(e.note)+'</p>' : '') + (facts ? '<dl class="exfacts">'+facts+'</dl>' : '') +
-      (e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>';
+      (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>';
   } else body = exOptHtml(e);
   return (wrap || '<section class="exinfo gut">') + '<div class="extabs n'+list.length+'" role="tablist" aria-label="O vježbi">' + list.map(x => tab(x[0], x[1])).join('') + '</div>' +
     '<div class="expanel'+(on === 'opt' ? ' opt' : '')+'" id="expanel" role="tabpanel" data-tab="'+on+'" aria-labelledby="extab-'+on+'">' + body + '</div></section>';
@@ -1365,7 +1370,7 @@ VIEWS.program = function(t){
     progTestsHtml(g) +
     ((g.notes || []).length ? '<h2 class="h2">Kako ga raditi</h2><div class="stack" style="gap:8px;margin:12px 17px 0">' + g.notes.map(n => '<div class="bul">'+esc(n)+'</div>').join('') + '</div>' : '') +
     '<div style="margin:18px 0 0">' + daysPicker('progDays', g.id, g.days) + '<p class="sub" style="margin-right:17px;line-height:19px">Na svaki odabrani dan tjedni plan ti nudi sljedeći trening programa.</p></div>' +   // week plan (K5)
-    (g.credit ? '<p class="sub" style="margin-top:16px">' + esc(g.credit) + '</p>' : '') +
+    (SHOW_SOURCES && g.credit ? '<p class="sub" style="margin-top:16px">' + esc(g.credit) + '</p>' : '') +
     (st.next && st.done ? '<div style="margin:14px 7px 0"><button class="txtbtn" data-a="progRestartAsk" data-id="'+esc(g.id)+'" style="font-size:15px">Kreni ispočetka</button></div>' : '') +
     '<div style="height:20px"></div></div>' +
     (st.next ? '<div class="footer gut"><button class="btn" data-a="openPr" data-id="'+esc(st.next.pr)+'">Sljedeći trening</button></div>'
@@ -1823,7 +1828,7 @@ VIEWS.field = function(t){
     '<h2 class="h2">Blokovi</h2>' +
     '<div class="list" style="margin-top:14px">' + (f.blocks||[]).map((b,i) => '<div class="blk"><span class="no">'+(i+1)+'</span><span class="bt"><b>'+esc(b.label_hr)+'</b><span>'+esc(blockLine(b, f))+'</span>'+(b.cue_hr?'<span style="color:var(--text-2)">'+esc(b.cue_hr)+'</span>':'')+'</span></div>').join('') + '</div>' +
     (f.cooldown_hr ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Hlađenje: '+esc(f.cooldown_hr)+'</p>' : '') +
-    '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: ' + (f.source_url ? '<a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a>' : esc(f.source_title || 'STATSports')) + (spec ? ' · nacrt je vlastiti prikaz prema izvoru' : '') + '</p>' +
+    (SHOW_SOURCES ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: ' + (f.source_url ? '<a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a>' : esc(f.source_title || 'STATSports')) + (spec ? ' · nacrt je vlastiti prikaz prema izvoru' : '') + '</p>' : '') +
     '<div style="height:20px"></div></div>' +
     fieldStartHtml(f, ld);
 };
@@ -2960,7 +2965,7 @@ VIEWS.play = function(){
     ? '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' +
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
-        '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p></section>'
+        (SHOW_SOURCES ? '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p>' : '') + '</section>'
     : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the exercise page's Upute | Cilj tabs, shorter (no Opterećenje)
     : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Upute</span><p style="color:var(--text-2)">Bez uputa.</p></section>';
   return '<div class="view">' +
@@ -3045,7 +3050,7 @@ function sheetHtml(){
       '<div class="bul">TRX i vlastita težina: +1 ponavljanje do gornje granice, zatim teža varijanta. Vježbe na vrijeme: +5 s do 60 s (izdržaji u rehabu od 2. faze do 30 s), zatim teža varijanta.</div>' +
       '<div class="bul">Skokovi i bacanja: ne dodaju se ni ponavljanja ni kilogrami; kad sve odradiš, dobiješ prijedlog za težu varijantu ili višu kutiju.</div>' +
       '<p style="margin:0">Gornja granica je vrh raspona cilja iz Doziranja, a bez cilja početni broj ponavljanja + 4 (najviše 20). Ako ti je zadnja serija bila na samoj granici, prijedlog odgodi („Još ne”). ACSM preporučuje povećanje opterećenja od 2–10 %, manje za male mišićne skupine. Treninzi iz programa (npr. TAE) se samo bilježe, jer njihove doze određuju tjedni programa.</p>' +
-      '<p style="margin:0;font-size:13px;line-height:19px;color:var(--text-2)">Izvori: ' + PROG_REFS.map(r => '<a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.t)+'</a>').join(' · ') + '</p></div>').replace(/(\d) (?=kg\b|s\b|%|puta\b)/g, '$1&nbsp;');   // a number stays on the line of its unit
+      (SHOW_SOURCES ? '<p style="margin:0;font-size:13px;line-height:19px;color:var(--text-2)">Izvori: ' + PROG_REFS.map(r => '<a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.t)+'</a>').join(' · ') + '</p>' : '') + '</div>').replace(/(\d) (?=kg\b|s\b|%|puta\b)/g, '$1&nbsp;');   // a number stays on the line of its unit
   } else if (s.kind === 'data') {
     const pk = S.pack, nPh = pk ? (pk.ids || []).length : 0, last = lsGet('mt.lastBackupAt', 0), undoAt = lsGet('mt.beforeImportAt', 0), bad = lsGet('mt.badStore', null);
     const small = t => '<span style="display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--text-2)">' + esc(t) + '</span>';
@@ -3165,7 +3170,7 @@ const A = {
     const want = Math.max(0, Math.round(t2.getBoundingClientRect().top - v2.getBoundingClientRect().top + v2.scrollTop - (y < 0 ? 12 : y))), short = want - (v2.scrollHeight - v2.clientHeight);
     if (short > 0) pn.style.minHeight = (parseFloat(getComputedStyle(pn).height) + short) + 'px';
     v2.scrollTop = want; },
-  credit: d => { S.sheet = { kind:'credit', id: d.id }; render(); },
+  credit: d => { if (!SHOW_SOURCES) return; S.sheet = { kind:'credit', id: d.id }; render(); },
   mediaSwap: d => { S.alt = S.alt || {}; S.alt[d.id] = (S.alt[d.id] || 0) + 1; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
   // a new exercise made while picking exercises for a protocol: the protocol being built waits underneath
