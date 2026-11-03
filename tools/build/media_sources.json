@@ -465,19 +465,19 @@
  },
  "covers": {
   "aktivacija": {
-   "sha256": "b2b7c826aa9248aa5de7226906b8459833004d66de5a3a0de845507fd37322ff"
+   "sha256": "f92aaf1206b99876634bfb8f4a670d26b2a6e595c1dd09da24bdb641480538bc"
   },
   "knjiznica": {
-   "sha256": "1a2ef899296abc3ab487b0f69f29d29a7a00dd86ee32c394eefb64c259271670"
+   "sha256": "da6f9468a7cdff4a17aecb0d7a3c423eaa558247145aaa64c49ccc993bab7bcd"
   },
   "kondicija": {
-   "sha256": "5479f6fea67bf044bfa2fbe1466940831b7700227c4115f324d4f77a7dc50cf3"
+   "sha256": "026d3cbe74fdff4305344defcb9b6357a61670056eb6d3160544725ebf6bb14f"
   },
   "rehab": {
-   "sha256": "a37baba41d44e98dbd55817a5bab18fae3cab282f77f411c3a6a81d71e12b955"
+   "sha256": "67f43896f27aaf74ce17cf8986e1d8855d0435e0a3122212ddd82e5d7b39d1e7"
   },
   "teretana": {
-   "sha256": "35e26de9bf1825f54467df7f7a7404239c821a4403328d1d909f3aa874b745cf"
+   "sha256": "f92368b1a34067e43323b08db8e95edc0f3fc1ac80e374a5c7d7fcf4a14418f3"
   }
  },
  "removed": {
