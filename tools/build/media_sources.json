@@ -6,7 +6,7 @@
   "note": "Dvodijelne slike (lijevo početni, desno završni položaj), generirane umjetnom inteligencijom prema uputama iz PROMPTI-ZA-SLIKE.md i pregledane radi tehnike i položaja glave. sha256 je otisak izvorne JPEG slike 1536 × 1024 iz koje je napravljena WebP slika.",
   "images": {
    "90-90": {
-    "sha256": "8f3f0c32f091505c4809e2c3d80d182398a081b160c2298c5a081aae8bb17c64"
+    "sha256": "3415374950b5c4dd19c5f705d9afa52ae069666c4f2ea27c6b25ccaee5a6c3a1"
    },
    "a-skip": {
     "sha256": "7d4a65aeeb6ff5889d4940ef95a7ec9bcfeb180d91171d2eb376d452e16e9628"
@@ -15,7 +15,7 @@
     "sha256": "232cd2a41e176a87cbb3be944958c421f916cb5811f3d8252d85f218fcb7dea1"
    },
    "abdukcija-stojeci": {
-    "sha256": "f16984d40ff1d3410e28573c747274d2752e757244602dbe0253514bd9604870"
+    "sha256": "1b349764e04296750d64fec4ed8643ecce2404cb46a095f5c8a56eea3f9fa1f7"
    },
    "adductor-squeeze": {
     "sha256": "3cd83aea3258b70c4b06b545bff558d9286250adc2467b1fe8d56a727162638f"
@@ -30,10 +30,10 @@
     "sha256": "b9245de716dd1b5a31bdf6d423c4000b9d0988812e398385c98596b04d18ba88"
    },
    "back-squat": {
-    "sha256": "090867c74754156253e1fd008aecd033bb64cd6539ed368ec43e216efb90418f"
+    "sha256": "f31817fd08eabe83d9299de802165e0830bd3f6c91bd736b1f0773d3b4900aa7"
    },
    "ball-hamstring-curl": {
-    "sha256": "03b920409c30cc199316f9ea654ce987f63348da7c28383447b9bd4f15de34b4"
+    "sha256": "f1f61a79615c2bc8366a6412fa3d485b0e7f60664bf40e03cdb3215ff1f77149"
    },
    "ball-rollout": {
     "sha256": "e863432a359a8659c006e56601202260087cab9bf75998e1171b12dc680ca2e4"
@@ -54,7 +54,7 @@
     "sha256": "0f6fd80323013cc63d2ca325aeacf66b5a86450aecd848aa3ae99bd19a85a884"
    },
    "bench-press": {
-    "sha256": "c2512398c50f1cf8d8ca821de548c08ed1620b7f70224312c9655c3fbd6e54a1"
+    "sha256": "0b4fb462d51bb09ef139c140e2e0dff7bd92366830ba082b471bbc24cc695551"
    },
    "bicikl-intervali": {
     "sha256": "a4eff33e218a21c6460152ecf245302b87abb48e63bf7c548aa08d17e7f2f4b3"
@@ -66,10 +66,10 @@
     "sha256": "e165a45e66cbd8c208aef073ffc082f0d64c6ebb445ed8cd85481addb675291e"
    },
    "bocni-step-up": {
-    "sha256": "94eb70e090476ccb469f30047d583c709d54ce456a9c6661aa5e8101311edcb6"
+    "sha256": "572f031a630340c542dfbfc3068f0e81cbc3cb4dd6f4f48d43dca3a74b324f10"
    },
    "bocno-hodanje": {
-    "sha256": "63493792f5f1ee800ebe9d908a6be1bd8055d3d93de8476ecf6980308f3e922a"
+    "sha256": "129c702b21ca18cc175d09c607b6d7ee74532b149f1844cd90a49bf408079351"
    },
    "bocno-podizanje": {
     "sha256": "8996dcb58fbbe467976a486b210d3546dedc56043ec14ef2938afc1602309e94"
@@ -96,10 +96,10 @@
     "sha256": "9777a560d84c3cd3fc4734f7437d689d327eef45e183358860b5051eead35651"
    },
    "db-lateral-lunge": {
-    "sha256": "c70fc0538bda264810ce0e1e9a0e6e897dc7a94727db6b750f7d094952982c6d"
+    "sha256": "c0740cda95465049d60c7dee136e51a49542d7d647efbd9281f946f0f384c27c"
    },
    "db-overhead-press": {
-    "sha256": "0785b938e3e0eae3a2f9b17d24647bf0c209877fcdc8ea31dba2acc340344813"
+    "sha256": "619adf882bd21b52bf1cb753505edc7b793ad8b6e9fff9523139b26c1d48c81b"
    },
    "db-reverse-lunge": {
     "sha256": "c6a6a5b604fdd884e82a15ef8104ead0053dd5e547cd6e485d03bdd28f493dc3"
@@ -120,7 +120,7 @@
     "sha256": "5870c2eb3733e704e8e3148ac630eddf31591b629c1805950974785555da2747"
    },
    "face-pull-cord": {
-    "sha256": "e305e45fde1e728b60108134b15f36f8dffbd63d9fdd1a26369ab9de0cf5b263"
+    "sha256": "a780be4fbd277df866cbbd8f4b32fc98cb480b2ca39d254955d6251fb5fd5c34"
    },
    "farmers-walk": {
     "sha256": "59a1cfb692c81d3c4d2ca2307e2b69ccaa05fd38836878c48a3dfaec8648164d"
@@ -129,13 +129,13 @@
     "sha256": "750d6c3925c40b8e585aa6b3a7925e16eced424e0a6b990a2408cacd368a7421"
    },
    "four-cone-drill": {
-    "sha256": "dd7cbbb16d4ff5dbefe9936bfdc0e6c307cca4b6fcb41b67f5693d2baf7489d5"
+    "sha256": "da0b15f34b8313ac6fdd5045773d990d1fdee2157b97659501ea51b3a8999477"
    },
    "front-squat": {
     "sha256": "118ebd71aaa0fb5d7ff021d716bb17c36d5b1678b228ddc8b17d73a77cafc9ab"
    },
    "goblet-squat": {
-    "sha256": "02e3e9f7f4c5bf431786e351cb7303157212f119cfcfad1ad707c536f46ce1e2"
+    "sha256": "3326897dd94a5a1fdf70a8caff3d1a6f0ed3e5b578fa8685973329d3aa121b0f"
    },
    "half-kneeling-db-press": {
     "sha256": "06e0dc9a32b18d08dff1b2cea166262cf3722286233df5cb7379226368e0a206"
@@ -156,7 +156,7 @@
     "sha256": "58b356d341521e40285788565dc465770e71aa9d89eaab0315486482dd0d4d77"
    },
    "hollow-hold": {
-    "sha256": "05502ca88841251ec9e5c244ec6c816e680e934bb49c57b18b7aa2317035a046"
+    "sha256": "752b1ef34134688408bd4284e8f3849237de32ddb82469e3bf60ce58a21de096"
    },
    "incline-db-press": {
     "sha256": "4e047ffdffd0a5425aaa1e0513920bf8ebd3d2e6560754458719d344f41cfd8c"
@@ -165,13 +165,13 @@
     "sha256": "4890ce7534a4c310c87bf905bc8f0af690d62db9186f596a7b455908472dd28a"
    },
    "inverted-hamstring": {
-    "sha256": "b4d1e4f8f0b0240a007467601e4792676f4332031a4842330bb7536666501738"
+    "sha256": "044836dfc21668a10fff113044459b9004d000fba3453c0cf3775d074f5dfaea"
    },
    "inverted-row": {
     "sha256": "8777d9e83840a4fdf080f519ef9cb9a2d8fdbd363aa57094674b64e194996293"
    },
    "iso-abdukcija": {
-    "sha256": "f20ee51d0969cba4a213aadfa74c7ff70d366b6237f06ae1f769bcb3d1e75b1b"
+    "sha256": "7f446b05758641b5ac10a4b09b1f9e13d988fbd0a32be77529cd90968e06eb0f"
    },
    "istezanje-pregibaca": {
     "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c"
@@ -183,7 +183,7 @@
     "sha256": "e71e7a9fc40b77aee9fa389a46b3aaeca4f95d56de90e9ae9a6bd12cbd2fbed1"
    },
    "jednonozni-rdl": {
-    "sha256": "db603c4de15517bc50536955db51f79bc5a7e7a32b7b3fee1a1f5725688e4555"
+    "sha256": "ad9b7893b453d272c794935dad1c1245e3c515c62417ea8b7ce7337b344b597c"
    },
    "kb-swing": {
     "sha256": "bb8a6fc181dd001ba1e23cac00407f8e13b94044601e826821c8be46a3fd7080"
@@ -198,19 +198,19 @@
     "sha256": "e63eb1bfefe909c283ba4e20920644743c5ee92856dfc1767fee8db864cdaf15"
    },
    "kopenhagen-duga": {
-    "sha256": "eae1a4f1b7805c989c30113896d2f989dff991b9247260fce74d9b4279e75bbd"
+    "sha256": "cc068f8723c5eb48d37238883c3a71ec0fb981885a8887cb5daab2e43de4fa03"
    },
    "kopenhagen-kratka": {
-    "sha256": "9763d08d08d86a189f7417f5edeff17fc8fd1258195b02f8c0823ec24974e1f8"
+    "sha256": "f4fbbe049ec0fe02d69f4530f009ed222edc236a885fc693b1300411fddc5822"
    },
    "lagano-trcanje": {
     "sha256": "0da9873c320ff3e35014f8cf86bb29db25f3b36e2bedccc4b0151659b4467519"
    },
    "landmine-reverse-lunge": {
-    "sha256": "a7b3c3623af20a5fe07d8aa2974424cdec0e0ba10d4524c53a112ae89db95524"
+    "sha256": "d6e99b07edb27fa42eb5580a588a2fd55ee52c618304482424c8954202922bbf"
    },
    "landmine-rotation": {
-    "sha256": "291ca3cdd4e6a1b4f5a3e9962304b9c4907f04b9e51f6e6e648d08374fa811e8"
+    "sha256": "424aa657594b9eae72cca721bf5b762d82f96b32a5023715d102c8fa3e71ae3d"
    },
    "landmine-row": {
     "sha256": "98c161621dff1ea3c219f0a813fc474001de133fd2dafed5c7c488153e93b2fb"
@@ -219,13 +219,13 @@
     "sha256": "444ad33027514dc3f4d5d78c900ca44415499db2892325e6ca67f03ce0c916d5"
    },
    "lateral-bound": {
-    "sha256": "640245ab251beda59dd9492adfaf2d8a7aef6914b72d682eb87176f36852b39d"
+    "sha256": "e9c3f391c74c538de0e270d42d0b003b0d08c7417be2a9d33f475d71943bea2d"
    },
    "lateral-shuffle": {
-    "sha256": "a615574a46ee9468cef0f93c24661ee25e281994d6e608556db9b0e21397872a"
+    "sha256": "c27ba706f5bb69cbb31562d2ee3d5be34a992272ec62a2fd13aa928d8f386e50"
    },
    "leg-cradle": {
-    "sha256": "8fbeb2b4af699c8bcb51345c2049c621c4b28f6dcd53d83df491646d53ceea85"
+    "sha256": "2c9329bf2323010fb936bf804857023ecbef4d8c56efe59ca6615487a29e7d04"
    },
    "leg-swings": {
     "sha256": "5935e88fc47f60c63dce8438616dcb2ed698127557048affaa71f75650bb2bf7"
@@ -261,10 +261,10 @@
     "sha256": "767309bbf5ba0a27b85cfa1d901c43b509bd6706db40da42d80aea0a6a6a6caf"
    },
    "open-book": {
-    "sha256": "f0341cba5b6ecc06d3c3ab729064100f10ad252e4b33d92416beda3cfa8d016e"
+    "sha256": "d7ac40fd7e1fa2230ab9fb8101bcd2bb93418890c0b693cc24bf90cfdf3676cb"
    },
    "pallof-press": {
-    "sha256": "57532ccac2f58621dd080e1ccf2a1cc86148137741b0379355ecc34e77734b54"
+    "sha256": "7208f3c8b7ffdf9dd448b79e4a9eda031c90acd43842f21cb11283962af06f03"
    },
    "plank": {
     "sha256": "11a17230b86bc9fb4a74be5b768dff016f823fd4d7d30615915eb66bf12f2b06"
@@ -273,7 +273,7 @@
     "sha256": "9afcbe92d85f74bae8750955341cfe23f27163fcb13e298d6bb4dd63c52baf66"
    },
    "pro-agility-5-10-5": {
-    "sha256": "16cfde91896353f95b1bde7772b566a9f7dda59d1fedd3afbff099764ae61642"
+    "sha256": "9603aba08e13ab9586e2b3f70a471833abe73576a020df56d515de9d4823cb6e"
    },
    "progresivna-ubrzanja": {
     "sha256": "91dc5cde64a517fd4de7cbd9e009ee0ac11c1f7ffcc91ad3c559db11f3f9245a"
@@ -288,7 +288,7 @@
     "sha256": "e5d92168983c1ab94827a9b04d727eb29cf3740d651d5ea8e3d31cc39496418c"
    },
    "ravnoteza-dosezanje": {
-    "sha256": "1adb8875879e36ccedd4cfe795db1402a1a674c9863d94a1c7bfe9d03d6cf7f5"
+    "sha256": "71e90a95e98dcef437e43cfe0ffe57cb4e94a6b98565005dc4cc159148d8676c"
    },
    "rdl-bucice": {
     "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7"
@@ -333,7 +333,7 @@
     "sha256": "aadd8061b53157c81e5972b6874e91b3c5b21e5925ed182b74d75180a8644037"
    },
    "spustanje-stepenica": {
-    "sha256": "74d5fa17d97674f43ff708e73ab2c3f8dc413d76a485cd4adf39c45a48318909"
+    "sha256": "2b85b706316c4214b7621bafad96f2f142643694deea97ee6c6e83e7848090b6"
    },
    "squat-jump": {
     "sha256": "acf2418e3dfc159d819548a46d5241b21cd8324199bac2b21a603a1bbebad381"
@@ -351,7 +351,7 @@
     "sha256": "875ffd1a3afa1e6bd379e4b7a217f420e9f659ec65926adfe1aa9efa6e47cec7"
    },
    "t-test": {
-    "sha256": "e2338591b7abdb336907cfe2e57cc3585e5157434dd08f2f2b12dd9d74149343"
+    "sha256": "2b5ec9d3c632f7ed9d9f0f8bda291571bb854763b53b97b27e6a27d19a329f74"
    },
    "tibialis-raise": {
     "sha256": "1604154a26023ae0a3f4e8c64290a66c333acf9be2d9f63afdcd7cf779d1ba05"
@@ -384,7 +384,7 @@
     "sha256": "806675e34d3cbb4a2508292a2b7cb1536384f315df450c7746a22e02dcc3d1bf"
    },
    "trx-lateral-lunge": {
-    "sha256": "15934af1ba6bcba520589457789c2c190bb8d2d0d3a12ed5de63c91a23dc359e"
+    "sha256": "23e436b0f40e9e43a27d3362b722d6c8fdf990f3dfa9b528d427ebef51c469de"
    },
    "trx-mountain-climber": {
     "sha256": "55d95e335e57aaddf69fc21cf7819c7a5666a130408d3cac7de15993e03f9929"
@@ -399,13 +399,13 @@
     "sha256": "d28f0be1bfb674f1cbbddf95900c0d33d4f70023ff3231e5e87d8c2d01b2bf74"
    },
    "trx-power-pull": {
-    "sha256": "8cc40030e1fef379627072b4ee74939ea9faf14951b0fbc720e11bc1122d8bf7"
+    "sha256": "84d2c2f36bac9c58c7c038b6ae777fa9b94dc88dd3ca92add260de87ceff5ae9"
    },
    "trx-push-up": {
     "sha256": "bcad2af674a350861f1f0fa88e7e1269b16de848d507337eb2d8ee31bd55bd2f"
    },
    "trx-reverse-fly": {
-    "sha256": "e34133b9665975e2a1e3af840ae5db20ad1fcac4d85ef3f8d100085e0cd18b0a"
+    "sha256": "be4d9e1ad1b2605f9cb62349dd92d80fcd657a56f0b581a7e536f00c66328fd0"
    },
    "trx-reverse-lunge": {
     "sha256": "381bd8853044b521ecdd525148b5f52173e3789a756aba7e9f1263047740a1eb"
@@ -414,13 +414,13 @@
     "sha256": "300d8293648d3d05e21b566414030ac1c7917355c5c9f3e3fc95662a52c5a727"
    },
    "trx-side-plank": {
-    "sha256": "86cf87eb8da6a89fcba5b5dc5694be8880374b52c90a51529b1dd9cc676422a3"
+    "sha256": "e2d816591a1d394ef9ad1b18691222815e89e00e710a052e9701a7070193cf1e"
    },
    "trx-single-leg-squat": {
     "sha256": "5062669816e31d0f3cfc7ae4e0af43185a80a36bb8652e7986d384d28e7e7c30"
    },
    "trx-sprinter-start": {
-    "sha256": "8b7bb861538fe86a137fdf6f23ebe1120a6e60d44cfa29c1c21f9315128fcf2e"
+    "sha256": "dfbe5add26d9b9af27525c2ebcc5a86f88a0626967b69898f36a96872d2ab3be"
    },
    "trx-squat": {
     "sha256": "347b23e9fd88aa3962f67512c4c29cd322950426a464bb45aad564c410cc91fe"
@@ -444,22 +444,22 @@
     "sha256": "90af214db8deb1215efeda41e31f29e29e4536cf9fc7fa1deb96902ed99843c3"
    },
    "uze-fleksija": {
-    "sha256": "64f1448c095b06ae580d61cf60045aa47494713b2546e83c322f0229198bd49f"
+    "sha256": "eeb499d9d480b5d27d357ef5da057378dabef48ffcc724c009908df99abce279"
    },
    "uze-koljeno": {
     "sha256": "a16a24a3ddf733a2f482009bb6e3d538a041f28f2a6ec51fd2d2d577c19bd339"
    },
    "uze-kruzenje": {
-    "sha256": "ed93659e3d3da7498ecddfa69881bf9651993d2159349ff4295decdeaa43887d"
+    "sha256": "f247d64e83048a315e965e92ea2d153d5cd86bdcb3e625d0a50b136f4be5c7c5"
    },
    "uze-njihanje": {
-    "sha256": "7ab693a98c588da5b24186d0bdcf796110105152fd12d5f6f9b967b0644724cf"
+    "sha256": "0ebced5140b38cfd67a5b84848fd199b933b1cc558a3b4c0e5fba159005eec8e"
    },
    "worlds-greatest-stretch": {
     "sha256": "3656b092d456c7615fa54600e25ee56e74b9c18c85df496b2d60fb802af25185"
    },
    "zigzag-sprint": {
-    "sha256": "ba4445221518c5fde8cb9335fdfaeef26dd3f95d80e883d8346577b8a3b73ff1"
+    "sha256": "3849fe26c1bc5d4d23b9f3eb68728163db0406f842ee30b77cc7903b6c7209ef"
    }
   }
  },
