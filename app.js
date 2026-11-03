@@ -3526,8 +3526,8 @@ app.addEventListener('change', async ev => {
   }
   if (t.id === 'topkmh') {
     const v = +String(t.value).trim().replace(',', '.');
-    if (!(t.value.trim() && isFinite(v) && v >= 20 && v <= 40)) { t.value = kmhTxt(topKmh()); toast('Upiši najveću brzinu od 20 do 40 km/h.', true); return; }
-    S.settings.topKmh = Math.round(v * 10) / 10; lsSet('mt.settings', S.settings); render(); toast('Najveća brzina: ' + kmhTxt(S.settings.topKmh) + ' km/h.'); return;
+    if (!(t.value.trim() && isFinite(v) && v >= 20 && v <= 40)) { t.value = kmhTxt(topKmh()); toast('Upiši najveću brzinu od 20 do 40\u00a0km/h.', true); return; }
+    S.settings.topKmh = Math.round(v * 10) / 10; lsSet('mt.settings', S.settings); render(); toast('Najveća brzina: ' + kmhTxt(S.settings.topKmh) + '\u00a0km/h.'); return;
   }
   if (t.id === 'packFile' && t.files && t.files[0]) {
     if (S.sheet) { S.sheet._busy = true; render(); }
