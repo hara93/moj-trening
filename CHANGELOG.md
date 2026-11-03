@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.3 — 3. 11. 2026.
+
+- **38 dorađenih slika:** 36 slika iz pregleda (npr. bench press, stražnji čučanj, goblet čučanj, TRX reverse fly, face pull) i obje kopenhaške daske s ispravljenim omjerima nogu. Novi pregled: 151 slika je dobra, za ponoviti je samo bočno hodanje s gumom (uputa u PROMPTI-ZA-SLIKE.md).
+
 ## 1.6.2 — 3. 11. 2026.
 
 - **Stranica vježbe u tri kartice: Upute | Cilj | Opterećenje.** Upute imaju opremu na vrhu, upute i link na video. Cilj („Zašto” se sada zove Cilj) ima opis, ciljana područja i osjećaj te izvor. Opterećenje ima zadnji trening, graf i zadnje treninge. Ispod kartica više se ništa ne ponavlja, a pri promjeni kartice stranica ne skače.
