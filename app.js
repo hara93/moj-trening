@@ -957,8 +957,9 @@ VIEWS.home = function(){
     { k:'knjiznica', t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }
   ].filter(Boolean);
   const attrs = o => Object.keys(o).map(k => (k==='a' ? 'data-a' : 'data-'+k) + '="' + esc(o[k]) + '"').join(' ');
-  // a card's cover picture (media.js EXCOVERS, portrait) fills the whole card under the same scrim; without one: colour and icon
-  const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" src="' + esc(covers[c.k]) + '">' : '';
+  // a card's cover picture (media.js EXCOVERS, portrait) fills the whole card under the same scrim; without one, or when it cannot
+  // load (offline before it was ever shown): colour and icon
+  const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" onerror="this.remove()" src="' + esc(covers[c.k]) + '">' : '';
   return '<div class="view" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
     topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
     '<h1 class="greet">Bok, Tomislav</h1>' +

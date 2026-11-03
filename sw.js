@@ -31,7 +31,12 @@ self.addEventListener('fetch', e => {
   if (req.headers.has('range') || req.destination === 'video') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    if (req.mode !== 'navigate' && e.clientId && fromCache.has(e.clientId)) { e.respondWith(saved(req).then(r => r || fresh(e, req))); return; }
+    // a file the saved copy does not have yet (e.g. a picture never shown before): the network, but not longer than WAIT, and a
+    // failure is just a missing file (a card keeps its colour), never an error thrown at the page or a start that never settles
+    if (req.mode !== 'navigate' && e.clientId && fromCache.has(e.clientId)) { e.respondWith(saved(req).then(r => r || new Promise(resolve => {
+      const none = () => resolve(new Response('', { status: 504, statusText: 'Offline' })), timer = setTimeout(none, WAIT);
+      fresh(e, req).then(x => { clearTimeout(timer); resolve(x); }, () => { clearTimeout(timer); none(); });
+    }))); return; }
     // network first so a new release shows on the next start; the saved copy when the network fails or is too slow
     const net = fresh(e, req); e.waitUntil(net.then(() => {}, () => {}));
     e.respondWith(new Promise(resolve => {
