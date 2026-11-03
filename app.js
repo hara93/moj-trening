@@ -3155,9 +3155,14 @@ const A = {
   openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
   dose: d => { top().dose = +d.i; render(); },
-  // the page keeps its place; when the new tab is shorter and the page shrank under the tab row, it scrolls back to the tab row
-  exTab: d => { S.exTab = exTabOf(d.v); const v = app.querySelector('.view'), st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (!v2) return; v2.scrollTop = st;
-    const tl = v2.querySelector('.extabs'), dy = tl ? tl.getBoundingClientRect().top - v2.getBoundingClientRect().top : 0; if (dy < 0) v2.scrollTop = Math.max(0, v2.scrollTop + dy - 12); },
+  // the tab row stays where it was on the screen (a row above the top comes back to 12 px under it): a shorter tab gets a panel
+  // tall enough for that, so the page never bottoms out and drops the row under the finger; the next render lets it go
+  exTab: d => { S.exTab = exTabOf(d.v); const v = app.querySelector('.view'), tl = v && v.querySelector('.extabs');
+    const y = tl ? tl.getBoundingClientRect().top - v.getBoundingClientRect().top : 0; render();
+    const v2 = app.querySelector('.view'), t2 = v2 && v2.querySelector('.extabs'), pn = v2 && v2.querySelector('#expanel'); if (!tl || !t2 || !pn) return;
+    const want = Math.max(0, Math.round(t2.getBoundingClientRect().top - v2.getBoundingClientRect().top + v2.scrollTop - (y < 0 ? 12 : y))), short = want - (v2.scrollHeight - v2.clientHeight);
+    if (short > 0) pn.style.minHeight = (parseFloat(getComputedStyle(pn).height) + short) + 'px';
+    v2.scrollTop = want; },
   credit: d => { S.sheet = { kind:'credit', id: d.id }; render(); },
   mediaSwap: d => { S.alt = S.alt || {}; S.alt[d.id] = (S.alt[d.id] || 0) + 1; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
