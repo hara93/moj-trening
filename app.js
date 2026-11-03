@@ -857,7 +857,8 @@ const daysList = (l, w) => l.map(i => DAYS_IN[i]).join(', ').replace(/, (?=[^,]*
 function lightField(){
   return Object.values(S.field).map(f => ({ f, a: fieldLoad(f) })).filter(x => x.a.li === 0 && x.a.type !== 'test').sort((a, b) => a.a.m - b.a.m)[0] || null;
 }
-const TWO_FIELD = 'Ovaj tjedan imaš dvije utakmice: na terenu samo lagani trening (intenzitet nizak)';
+const TWO_FIELD = 'Ovaj tjedan imaš dvije utakmice, pa na terenu samo lagani trening (intenzitet nizak).';
+const nMatches = n => (n === 2 ? 'dvije' : n === 3 ? 'tri' : n) + ' utakmice';
 // a field session of intensity li on day i of the week ws: never the day before a match; umjeren and harder at the latest 3 days
 // before it and not the day after; in a week with two matches only nizak. '' when it fits.
 function fieldMatchNote(li, i, ws){
@@ -865,7 +866,7 @@ function fieldMatchNote(li, i, ws){
   if (g.next < 0 && g.prev < 0) return '';
   if (g.next === 0) return li ? 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.' : '';
   if (g.next === 1) return 'Sutra je utakmica: danas bez sprintova i intervala, samo aktivacija.';
-  if (li && weekMatches(ws).length >= 2) { const l = lightField(); return TWO_FIELD + ': ' + (l ? 'umjesto ovoga odradi „' + l.f.name_hr + '”.' : 'ovaj preskoči.'); }
+  if (li && weekMatches(ws).length >= 2) { const l = lightField(); return TWO_FIELD + (l ? ' Umjesto ovoga odradi „' + l.f.name_hr + '”.' : ' Ovaj preskoči.'); }
   if (g.next === 2 && li) return 'Utakmica je za 2 dana: ovaj trening ' + (li >= 2 ? 'najkasnije 3 dana prije utakmice, najbolje 4.' : 'najkasnije 3 dana prije utakmice ili 2 dana nakon nje.');
   if (g.prev === 1 && li) return 'Jučer je bila utakmica: danas oporavak, ovaj trening najranije 2 dana nakon utakmice.';
   return '';
@@ -2414,7 +2415,7 @@ const matchDay = () => { const v = S.settings.matchDay; return v != null && v !=
 function weekAdvice(){
   const b = ballN(), m = matchDay(), wm = weekMatches(weekStart(Date.now()));
   const dn = i => DAYS_IN[(i + 7) % 7];
-  const tw = wm.length >= 2 ? ' Ovaj tjedan imaš ' + wm.length + ' utakmice (' + daysList(wm) + '): između njih bez teških nogu, a na terenu samo lagani trening.'
+  const tw = wm.length >= 2 ? ' Ovaj tjedan imaš ' + nMatches(wm.length) + ' (' + daysList(wm) + '): između njih bez teških nogu, a na terenu samo lagani trening.'
     : wm.length && wm[0] !== m ? ' Ovaj tjedan imaš utakmicu ' + dn(wm[0]) + ': teške noge najkasnije 4 dana prije nje, dan prije samo aktivacija.' : '';
   if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani tjedno' + (n > 1 ? ', s barem jednim danom između.' : '.') + tw; }
   const n = b >= 4 ? 1 : 2;
@@ -2813,12 +2814,12 @@ function fieldLoadHtml(f, a){
   // this week, by all its matches: the days from today on where the session fits (fieldMatchNote says nothing)
   const lf = wm.length >= 2 && a.li ? lightField() : null;
   const days = [0, 1, 2, 3, 4, 5, 6].filter(i => i >= today && wm.indexOf(i) === -1 && !fieldMatchNote(a.li, i, ws));
-  const week = wm.length >= 2 ? ' Ovaj tjedan imaš ' + wm.length + ' utakmice (' + daysList(wm) + '): na terenu samo lagani trening (intenzitet nizak), bez teških nogu između utakmica. ' +
-      (a.li ? 'Ovaj trening preskoči' + (lf ? ', umjesto njega odradi „' + lf.f.name_hr + '”.' : '.') : days.length ? 'Ovaj može ' + daysList(days, ' ili ') + '.' : 'Ovaj tjedan za njega više nema dobrog dana.')
+  const week = wm.length >= 2 ? ' Ovaj tjedan imaš ' + nMatches(wm.length) + ' (' + daysList(wm) + '): na terenu samo lagani trening (intenzitet nizak), bez teških nogu između utakmica. ' +
+      (a.li ? 'Ovaj trening preskoči' + (lf ? ', umjesto njega odradi „' + lf.f.name_hr + '”.' : '.') : days.length ? 'Ovaj trening može ' + daysList(days, ' ili ') + '.' : 'Ovaj tjedan za njega više nema dobrog dana.')
     : wm.length ? ' Ovaj tjedan (utakmica ' + daysList(wm) + '): ' + (days.length ? 'može ' + daysList(days, ' ili ') + '.' : 'za ovaj trening više nema dobrog dana.')
     : ' U tjednu s dvije utakmice ' + (a.li ? 'ga preskoči.' : 'može samo ovakav lagani trening.');
   const why = loadFmt('m', s.m) + ' umjesto ' + loadFmt('m', a.m) + ', brzo trčanje ' + loadFmt('m', s.hsr) + '. ' + best + ' Nikad dan prije utakmice. Najviše jedan dodatni trening na terenu tjedno.' + week +
-    (fieldSeason(a) ? (md >= 0 ? ' Dan utakmice je postavljen u Doziranju' : ' Ovaj tjedan imaš utakmicu') + ', pa Kreni pokreće dozu za sezonu.' : ' Kad u Doziranju postaviš dan utakmice ili označiš utakmicu u tjednu, Kreni pokreće dozu za sezonu.');
+    (fieldSeason(a) ? (md >= 0 ? ' Dan utakmice je postavljen u Doziranju' : ' Utakmica je označena u tjednu') + ', pa Kreni pokreće dozu za sezonu.' : ' Kad u Doziranju postaviš dan utakmice ili označiš utakmicu u tjednu, Kreni pokreće dozu za sezonu.');
   return h + '<div class="psec"><h2>U sezoni</h2><span>'+(wm.length ? (wm.length > 1 ? 'utakmice ' : 'utakmica ') + esc(daysList(wm)) : md >= 0 ? 'ovaj tjedan bez utakmice' : 'bez dana utakmice')+'</span></div>' +
     '<div class="lift'+(fieldSeason(a) ? ' go' : '')+'"><div class="top"><b>Doza za sezonu: '+esc(s.doseText)+'</b><span>≈ '+pc+' %</span></div><div class="why">'+esc(why)+'</div></div>';
 }
