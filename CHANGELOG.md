@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.8 — 3. 11. 2026.
+
+- **Naslov na karticama početnog zaslona** spušten je niže, na prazni dio naslovne slike.
+
 ## 1.6.7 — 3. 11. 2026.
 
 - **Nove naslovne slike** na svih pet kartica početnog zaslona: prave scene (fizio soba, teretana, teren, kućna teretana) s bojom svake kartice; naslov i podnaslov ostaju kao prije.
