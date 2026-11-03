@@ -2533,22 +2533,25 @@ function blockRep(b, f, mas, notes){
   const est = (FIELD_EST[f && f.id] || []).find(x => x.re.test(b.label_hr || ''));
   if (est) { say(est.note); const o = est.cyc ? cycLoad(est.cyc, b.work_s || 0, mas) : legLoad(est.legs, mas); o.t = b.work_s || o.t; return o; }
   const tx = b.intensity_hr || '', work = b.work_s || 0, num = s => +String(s).replace(',', '.');
+  const lab = '„' + (b.label_hr || '').replace(/^(?:S\d+(?:\/\d+)?|Krug \d+\/\d+|Runda \d+)\s*·\s*(?:P?\d+\/\d+\s*·\s*)?/, '') + '”';   // one note for the same block in every set
   const ms = /(\d+(?:,\d+)?)(?:\s*[–-]\s*(\d+(?:,\d+)?))?\s*m\/s/.exec(tx), ef = /(\d+)(?:\s*[–-]\s*(\d+))?\s*%\s*(?:brzine|napora)/.exec(tx);
   const efLo = ef ? +ef[1] : 0, efHi = ef ? +(ef[2] || ef[1]) : 0;
   const maxW = !/tempo/i.test(tx) && /maksimal|sprint|≥\s*9[5-9]|punom snagom/i.test(tx);
   let d = b.distance_m || (ms || b.mas_pct ? 0 : cueDist(b.cue_hr)), o;
+  if (d && !b.distance_m) say(lab + ': ' + String(Math.round(d * 10) / 10).replace('.', ',') + ' m prema opisu.');
   if (maxW || efLo >= 90) {
-    if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * LOAD_VMAX * work; say('„' + (b.label_hr || '') + '”: ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od 8 m/s ≈ ' + Math.round(d) + ' m.'); }
+    say('Maksimalni sprint kreće iz mjesta: prvih 10 m je ispod brzog trčanja, prvih 20 m ispod sprinta.');
+    if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * LOAD_VMAX * work; say(lab + ': ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od 8 m/s ≈ ' + Math.round(d) + ' m.'); }
     o = maxRun(d);
   } else {
     let lo = 0, hi = 0;
     if (ms) { lo = num(ms[1]); hi = num(ms[2] || ms[1]); }
     else if (b.mas_pct) lo = hi = mas * b.mas_pct / 100;
-    else if (ef) { lo = efLo / 100 * LOAD_VMAX; hi = efHi / 100 * LOAD_VMAX; }
+    else if (ef) { lo = efLo / 100 * LOAD_VMAX; hi = efHi / 100 * LOAD_VMAX; say(lab + ': ' + efLo + (efHi !== efLo ? '–' + efHi : '') + ' % od 8 m/s (pretpostavljena najveća brzina).'); }
     else if (d && work) lo = hi = d / work;
     else if (/maksimaln\w* tempo/i.test(tx)) { lo = hi = mas; say('MAS test: 5 min tvojim MAS-om.'); }
     else if (/\bhod/i.test(tx)) lo = hi = 1.5; else if (/jog|lagan/i.test(tx)) lo = hi = .6 * mas; else if (/tempo/i.test(tx)) lo = hi = mas;
-    if (!hi) { say('„' + (b.label_hr || '') + '”: nema udaljenosti ni brzine, nije uračunato.'); return zeroLoad(); }
+    if (!hi) { say(lab + ': nema udaljenosti ni brzine, nije uračunato.'); return zeroLoad(); }
     if (!d) d = (lo + hi) / 2 * work;
     o = runSeg(d, lo, hi, mas);
   }
@@ -2571,7 +2574,7 @@ function fieldDose(f){
   c.blocks = bl.map(b => { const x = Object.assign({}, b); if ((x.sets || 1) > 1) x.sets = twoThirds(x.sets); else if ((x.reps || 1) > 1) x.reps = twoThirds(x.reps); return x; });
   const sets = bl.filter(b => (b.sets || 1) > 1), all = l => l.reduce((a, b) => a + (b.sets || 1) * (b.reps || 1), 0), N = all(bl);
   c.doseText = sets.length === bl.length && sets.every(b => b.sets === sets[0].sets) ? twoThirds(sets[0].sets) + ' od ' + sets[0].sets + ' ' + (sets[0].sets >= 5 ? 'serija' : 'serije')
-    : all(c.blocks) + ' od ' + N + ' ' + plural(N, 'ponavljanja', 'ponavljanja', 'ponavljanja');
+    : N > 1 ? all(c.blocks) + ' od ' + N + ' ' + plural(N, 'ponavljanja', 'ponavljanja', 'ponavljanja') : 'cijeli trening';
   return c;
 }
 // a whole session (dose 'season' = the season dose): metres, fast running, sprint, work minutes, metres per zone and the tags
