@@ -1,5 +1,15 @@
 # Promjene
 
+## 1.6 — 3. 11. 2026.
+
+- **Upute u stilu GOWOD-a:** svaka vježba ima kartice „Upute” (2–4 kratke upute) i „Zašto” (kratko objašnjenje i gdje se osjeća). Česte greške više se ne prikazuju.
+- **Opterećenje:** svaka vježba ima graf volumena (serije × ponavljanja × kg, ili ponavljanja i vrijeme) s oznakom raste/stoji/pada i objašnjenjem „Kako se računa?”. Napredak ima tjedno opterećenje za snagu i za teren (metri i brzo trčanje).
+- **Teren u sezoni:** svaki trening na terenu pokazuje intenzitet, metre, brzo trčanje i trajanje te najbolje dane prije utakmice. Kad je postavljen dan utakmice, „Kreni” pokreće dozu za sezonu (oko dvije trećine), a „Puna doza” cijeli trening.
+- **Vlastite vježbe** računaju se isto kao ostale; vlastite vježbe trčanja mogu imati udaljenost i intenzitet.
+- **Slike:** tvoje slike imaju prednost pred snimkama s interneta; slajderi na početnoj mogu dobiti naslovne slike. PROMPTI-ZA-SLIKE.md je novi popis za sve vježbe (57 za ponoviti, 71 novih, 24 dobrih) i 5 naslovnih slika.
+- **Nordic** opisuje podstavljeni držač za gležnjeve.
+- Privatni TAE paket ima kraće tekstove: nakon nadogradnje ga ponovno uvezi u Mojim podacima.
+
 ## 1.5 — 3. 11. 2026.
 
 Provjera cijele aplikacije: popravljeni su gotovo svi nalazi revizije (280; četiri čekaju tvoju odluku) i završnog pregleda (41).
