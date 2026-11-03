@@ -19,10 +19,10 @@ a{color:var(--accent-text);text-decoration:none}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 
 /* the app is pinned to the screen's four edges, not sized: an iPhone home-screen app (standalone, black-translucent status bar)
-   can resolve height:100% / 100vh (and even fixed bottom:0) to the screen minus the status bar, which left an empty band under
-   the tab bar: index.html measures the real screen height into --app-h. The bottom controls sit as low as the home indicator
+   can resolve height:100% / 100vh to the screen minus the status bar (with a black-translucent status bar it even leaves the
+   bottom 59 pt unpainted, so index.html uses the opaque "black" status bar). The bottom controls sit as low as the home indicator
    allows: 20 pt above the screen edge on a Face ID iPhone (its 34 pt safe area minus 14), clear of the indicator line. */
-#app{position:fixed;top:0;bottom:0;left:0;right:0;height:var(--app-h, auto);max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);box-sizing:border-box;padding-top:env(safe-area-inset-top, 0px);padding-bottom:max(0px, calc(env(safe-area-inset-bottom, 0px) - 14px))}
+#app{position:fixed;top:0;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);box-sizing:border-box;padding-top:env(safe-area-inset-top, 0px);padding-bottom:max(0px, calc(env(safe-area-inset-bottom, 0px) - 14px))}
 .view{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .gut{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
 .stack{display:flex;flex-direction:column}

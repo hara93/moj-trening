@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.6.10 — 3. 11. 2026.
+
+- **Donja traka na iPhoneu, pravi uzrok:** s prozirnom statusnom trakom („black-translucent”) noviji iOS aplikaciju na početnom zaslonu pomakne gore i donjih 59 pt ostavi praznima; tu aplikacija ne može ništa nacrtati. Statusna traka je sada tamna i neprozirna („black”), pa aplikacija ide do dna ekrana. iOS to čita pri dodavanju na početni zaslon: ikonu treba ukloniti i ponovno dodati (prije toga izvezi sigurnosnu kopiju).
+- Vraćeno mjerenje visine iz 1.6.9: na staroj ikoni je gurnulo donji izbornik ispod vidljivog dijela.
+
 ## 1.6.9 — 3. 11. 2026.
 
 - **Cijeli ekran na iPhoneu (pravi popravak):** iOS aplikaciji na početnom zaslonu javlja visinu bez statusne trake, pa je sve završavalo 59 pt iznad dna. Aplikacija sada uzima stvarnu visinu ekrana.
