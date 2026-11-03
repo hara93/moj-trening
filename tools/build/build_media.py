@@ -129,10 +129,10 @@ for i in list(own) + list(lic):
 if problems:
     print('\n'.join(problems)); sys.exit(1)
 
-# 3) thumbnails, always rebuilt from the shipped files (the priority follows exMedia in app.js: licensed video > own picture > licensed photo)
+# 3) thumbnails, always rebuilt from the shipped files (the priority follows exMedia in app.js: own picture > licensed video > licensed photo)
 for i in sorted(set(own) | set(lic)):
     r = lic.get(i) or {}; dst = THUMB + '/' + i + '.webp'; keep.add(dst)
-    if r.get('video') or (r.get('photo') and i not in own):
+    if i not in own:
         src = P(EX + '/' + (r.get('poster') or r.get('photo'))); w, h = size_of(src); s = min(w, h)
         fx = (r.get('thumb') or {}).get('x', 0.5)
         webp(src, P(dst), 72, crop=(round((w - s) * fx), (h - s) // 2, s, s), resize=(192, 192))
@@ -178,7 +178,7 @@ for i in sorted(lic, key=by_name):
     files = [r[k] for k in ('video', 'poster', 'photo') if r.get(k)] + ['thumb/' + i + '.webp']
     src = ' · '.join(link(t, u) for t, u in r['source'])
     if r.get('title'): src = '„' + r['title'] + '”, ' + src
-    thumb_note = ' Sličica 192 × 192 izrezana iz ' + ('naslovne slike.' if r.get('video') else 'fotografije.') if (r.get('video') or i not in own) else ''
+    thumb_note = ' Sličica 192 × 192 izrezana iz ' + ('naslovne slike.' if r.get('video') else 'fotografije.') if i not in own else ''
     md.append('| ' + ' | '.join([names[i], ', '.join(files), r['author'], link(r['license'], r['licenseUrl']), src, r['changes'] + thumb_note]) + ' |')
 open(P('MEDIA-LICENSES.md'), 'w', encoding='utf-8').write('\n'.join(md) + '\n')
 

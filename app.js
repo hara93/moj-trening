@@ -131,14 +131,15 @@ function doseBase(it){
 function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0 }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
 function exMeta(e){ return (e.zones && e.zones.length ? e.zones.slice(0,2).map(exZoneLabel).join(' • ') : e.cat) ; }
-// what an exercise can show, best first: your own video or photo, a licensed demo video, the two-panel picture made for the app
-// (media.js "pic": LEFT start, RIGHT end), a photo from the private pack, a licensed photo. The swap button steps through them (S.alt).
+// what an exercise can show, best first: your own video or photo, the two-panel picture made for the app (media.js "pic": LEFT
+// start, RIGHT end; the same athlete everywhere), a licensed demo video (one tap away with the swap button), a photo from the private
+// pack, a licensed photo. The swap button steps through them (S.alt).
 function mediaList(e){
   if (!e) return [];
   const out = [], m = (window.EXMEDIA || {})[e.id] || {}, lic = { credit: m.credit, url: m.url, lic: m.lic, cid: e.id };
   if (e.media && MEDIA[e.media]) out.push({ type: e.mediaType === 'image' ? 'image' : 'video', src: MEDIA[e.media], own: true });
-  if (m.video) out.push(Object.assign({ type: 'video', src: m.video, poster: m.img, thumb: m.thumb }, lic));
   if (m.pic) out.push({ type: 'image', src: m.pic, thumb: m.thumb, two: true });
+  if (m.video) out.push(Object.assign({ type: 'video', src: m.video, poster: m.img, thumb: m.thumb }, lic));
   if (MEDIA['pack:' + e.id]) out.push({ type: 'image', src: MEDIA['pack:' + e.id], credit: (S.pack && S.pack.credit) || 'Privatni paket slika', pack: true });
   if (m.img && !m.video) out.push(Object.assign({ type: 'image', src: m.img, thumb: m.thumb }, lic));
   return out;
