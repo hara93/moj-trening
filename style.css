@@ -232,7 +232,6 @@ label:has(+ .vsr:focus-visible),div:has(> #mfile:focus-visible) label[for="mfile
 .bul.warn::after{content:"";position:absolute;left:3px;top:9px;width:10px;height:2px;border-radius:1px;background:var(--danger);box-shadow:0 0 0 0 transparent}
 .hrow{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2);min-height:26px}
 .hrow b{font-weight:600;color:var(--text);flex:1}
-.spark{width:100%;height:64px;margin:4px 0 6px}
 
 /* weekly plan days */
 .days{display:flex;flex-direction:column;gap:10px}
@@ -389,3 +388,84 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 /* home slider: a card's cover picture fills the card (the icon stays under it, for a picture that cannot load) */
 .hcard .cov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .hcard.cv .tt{text-shadow:0 1px 10px rgba(25,29,37,.55)}
+
+/* ---------- training load (Opterećenje): load cards, line and weekly charts, field distribution, the education page ---------- */
+.txtbtn.lnk{height:44px;margin:-12px 0;padding:0 2px;font-size:14px;white-space:nowrap;flex:none}
+.lc{border-radius:22px;background:var(--surface);border:1px solid var(--border);padding:16px 16px 12px;margin:0 0 12px;min-width:0}
+.lc .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:30px}
+.lc .hd .t{font-size:13px;color:var(--text-2);font-weight:500}
+.lc .hd .t2{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lc .none{margin:8px 0 4px;font-size:14px;line-height:20px;color:var(--text-2)}
+.per{display:flex;gap:2px;background:var(--surface-2);border-radius:10px;padding:3px;flex:none}
+.per button{height:30px;min-width:44px;border:0;border-radius:8px;background:transparent;color:var(--text-2);font-size:12px;font-weight:600;padding:0 8px}
+.per button[aria-pressed="true"]{background:var(--bg);color:var(--text)}
+.hv{display:flex;align-items:baseline;gap:10px;margin-top:8px;flex-wrap:wrap}
+.hv .v{font-size:32px;font-weight:650;letter-spacing:-.5px}
+.hv .vs{font-size:12.5px;color:var(--text-2)}
+.pill{display:inline-flex;align-items:center;font-size:12.5px;font-weight:700;padding:3px 8px;border-radius:8px}
+.pill.up{background:rgba(87,208,142,.13);color:var(--success)}
+.pill.dn{background:rgba(255,194,122,.12);color:#FFC27A}
+.pill.eq{background:var(--surface-2);color:var(--text-2)}
+.ins{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-body);margin-top:6px}
+.ins i{flex:none;width:22px;height:22px;border-radius:7px;font-style:normal;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.ins.up i{background:rgba(87,208,142,.13);color:var(--success)}
+.ins.dn i,.ins.eq i{background:rgba(255,194,122,.12);color:#FFC27A}
+.lch{display:block;width:100%;height:auto;margin-top:6px;overflow:visible;-webkit-tap-highlight-color:transparent}
+.lch .gr{stroke:#323947;stroke-width:1}
+.lch .tk{fill:var(--text-2);font-size:11px;font-family:var(--font)}
+.lch .al{paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.lch .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lch .ar{fill:var(--accent);fill-opacity:.16;stroke:none}
+.lch .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.lch .xh{stroke:#5C6472;stroke-width:1}
+.lch .tb{fill:var(--thumb)}
+.lch .tv{fill:var(--text);font-size:13px;font-weight:700;font-family:var(--font)}
+.lch .ts{fill:var(--text-2);font-size:10.5px;font-family:var(--font)}
+.lch .tipg{display:none}
+.lch .tipg.on{display:inline}
+.lch .hit{fill:transparent;cursor:pointer}
+.lch .hl{fill:var(--text);fill-opacity:.07}
+.lch .avg{stroke:#5C6472;stroke-width:1}
+.lch .bs{fill:#3A5A9E}
+.lch .bs.cur{fill:var(--accent)}
+.lch .bt1{fill:#1F9B8E}
+.lch .bt2{fill:#C8761F}
+.lg2{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-top:8px}
+.lg2 span{display:inline-flex;align-items:center;gap:6px}
+.lg2 i,.zl i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.lg2 .k1{background:#1F9B8E} .lg2 .k2{background:#C8761F}
+.ltab{margin-top:8px;font-size:13px;color:var(--text-2)}
+.ltab summary{display:inline-flex;align-items:center;min-height:36px;cursor:pointer;color:var(--accent-text);font-weight:600}
+.ltab table{width:100%;border-collapse:collapse;margin-top:4px}
+.ltab th,.ltab td{text-align:left;padding:6px 0;border-top:1px solid var(--border);font-weight:500}
+.ltab th{color:var(--text-2);font-size:12px}
+.ltab td{color:var(--text-body)}
+.ltab td + td,.ltab th + th{text-align:right;font-variant-numeric:tabular-nums;padding-left:10px}
+.lc.hist{padding-top:4px;padding-bottom:4px}
+.lc.hist .hrow{padding:9px 0;border-top:1px solid var(--border)}
+.lc.hist .hrow:first-child{border-top:0}
+.zb{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;margin:10px 0 10px;background:var(--surface-2)}
+.zb i{display:block;min-width:2px}
+.z1{background:#7A5322} .z2{background:#A8692A} .z3{background:#D38A3A} .z4{background:#F2B064}
+.zl{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:12.5px;color:var(--text-2)}
+.zl span{display:flex;align-items:center;gap:7px;min-width:0}
+.zl b{color:var(--text);font-weight:600;margin-left:auto;white-space:nowrap}
+.lnote{margin:10px 0 2px;font-size:12px;line-height:17px;color:var(--text-2)}
+.tag.hi{background:rgba(255,180,90,.16);color:#FFC27A}
+.footer .flink{display:block;margin:4px auto 0;height:36px;font-size:14px;color:var(--text-2)}
+.edu{padding:0 6px}
+.edu h1{font-size:27px;line-height:33px;margin:18px 0 14px;font-weight:600;text-wrap:balance}
+.edu h2{font-size:21px;margin:26px 0 10px;font-weight:600}
+.edu p,.edu li{font-size:16px;line-height:24px;color:var(--text-2)}
+.edu p{margin:0 0 12px}
+.edu ul{padding-left:20px;margin:0 0 12px}
+.edu li{margin:4px 0}
+.edu b{color:var(--text-body)}
+.edu .icons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 12px}
+.edu figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.edu figure svg{width:120px;height:80px}
+.edu figcaption{font-size:13px;line-height:18px;color:var(--text-2);text-align:center}
+.edu .i1{fill:none;stroke:#2F6B4C;stroke-width:3}
+.edu .i2{fill:none;stroke:var(--success);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.edu .i3{fill:none;stroke:#5C4A2E;stroke-width:3}
+.edu .i4{fill:none;stroke:#F5A623;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}

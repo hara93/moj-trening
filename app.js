@@ -828,14 +828,20 @@ function streakWeeks(plan){
 // 2 days before a lighter session with explosive work, the day before only activation
 const heavyLegs = p => (p.items || []).some(it => { const e = S.ex[it.exId]; return !!e && (it.exId === 'nordic-curl' || (e.cat === 'Snaga' && loaded(e) && LOWER_ZONES.indexOf((e.zones || [])[0]) !== -1)); });
 const gymLike = p => p.tag === 'Teretana' || (p.items || []).some(it => { const e = S.ex[it.exId]; return !!e && e.cat === 'Snaga' && loaded(e); });
-// hard running at the pitch: sprints, near-maximal speed, speed endurance or MAS intervals (not an easy or tempo run)
-const hardRun = f => /interval|sprint|brzin/i.test(f.name_hr || '') || (f.blocks || []).some(b => (b.mas_pct || 0) >= 90 || /sprint|maks|brzinsk|ubrzan|interval|HSR|visok|\b(9\d|1\d\d) ?%/i.test(b.intensity_hr || ''));
 // the warning for a planned session on day i (0 = Monday), '' when it fits the match week
 function matchNote(s, i){
-  if (s.kind === 'field') {   // the match day and the day before: no sprints or intervals, as for heavy legs at the gym
-    const f = matchDay() < 0 ? null : S.field[s.id], d = (matchDay() - i + 7) % 7;
-    if (!f || !hardRun(f)) return '';
-    return d === 0 ? 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.' : d === 1 ? 'Sutra je utakmica: danas bez sprintova i intervala, samo aktivacija.' : '';
+  if (s.kind === 'field') {   // by the session's intensity (fieldLoad): never the day before the match; umjeren and harder at the
+    // latest 3 days before it and not the day after; at most one extra field session a week
+    const m = matchDay(), f = m < 0 ? null : S.field[s.id], d = (m - i + 7) % 7;
+    if (!f) return '';
+    const li = fieldInt(f);
+    if (d === 0) return li ? 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.' : '';
+    if (d === 1) return 'Sutra je utakmica: danas bez sprintova i intervala, samo aktivacija.';
+    if (d === 2 && li) return 'Utakmica je za 2 dana: ovaj trening ' + (li >= 2 ? 'najkasnije 3 dana prije utakmice, najbolje 4.' : 'najkasnije 3 dana prije utakmice ili 2 dana nakon nje.');
+    if (d === 6 && li) return 'Jučer je bila utakmica: danas oporavak, ovaj trening najranije 2 dana nakon utakmice.';
+    const fs = planSlots().filter(x => x.kind === 'field');
+    if (fs.length > 1 && fs[0].day !== i) return 'U sezoni najviše jedan dodatni trening na terenu tjedno: ovaj preskoči ili ga zamijeni lakšim.';
+    return '';
   }
   const m = matchDay(), p = m < 0 ? null : s.kind === 'protocol' ? S.pr[s.id] : s.kind === 'program' ? S.pr[s.pr] : null;
   if (!p) return '';
@@ -1048,24 +1054,6 @@ function historyOf(exId){
   S.log.forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId && !it.skipped) out.push(Object.assign({ at: l.at }, it)); }));
   return out; // newest first, like the log (skipped exercises left out)
 }
-function sparkSvg(vals){
-  if (vals.length < 2) return '';
-  const w = 300, h = 64, lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = hi - lo || 1;
-  const pts = vals.map((v, i) => [ (i / (vals.length - 1)) * (w - 12) + 6, h - 8 - ((v - lo) / span) * (h - 20) ]);
-  return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Napredak kroz zadnje treninge"><polyline points="'+pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + pts.map((p, i) => '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(i === pts.length - 1 ? 4 : 2.5)+'" fill="'+(i === pts.length - 1 ? 'var(--accent)' : 'var(--text-2)')+'"/>').join('') + '</svg>';
-}
-function progressCard(e){
-  const h = historyOf(e.id);
-  if (!h.length) return '<section class="icard" aria-label="Napredak"><span class="lb">Napredak</span><p style="color:var(--text-2)">Kad odradiš ovu vježbu u protokolu, ovdje se vidi kako rastu kilogrami, ponavljanja ili vrijeme.</p></section>';
-  const sr = liftSeries(h.slice().reverse(), 8), last = sr.pts, useKg = sr.unit === ' kg';   // no 0 kg sessions (K5)
-  const vals = last.map(sr.val);
-  const unit = last[0].measure === 'time' ? 'trajanje (s)' : useKg ? 'težina (kg)' : 'ukupno ponavljanja';
-  return '<section class="icard" aria-label="Napredak"><span class="lb">Napredak · ' + unit + '</span>' + sparkSvg(vals) +
-    h.slice(0, 4).map(x => {
-      // how it went, under the dose (a narrow phone keeps the dose on one line): a failed set and the reps of the last set, sets done
-      const tags = (x.done === false ? '<span class="tag">nije išlo' + (x.lastReps != null ? ' · zadnja serija ' + esc(x.lastReps) + ' pon.' : '') + '</span>' : '') + (x.setsDone != null ? '<span class="tag">' + esc(x.setsDone + ' od ' + (x.sets || 1) + ' ' + plural(x.sets || 1, 'serije', 'serije', 'serija')) + '</span>' : '');
-      return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(dose(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</section>';
-}
 // the chips under the name: more sets, or longer holds; intervals (4 or more timed sets, e.g. 30/30) keep their work
 // time and add sets, so "8 × 30 s" never turns into 8 × 60 s
 function doseOptions(e){
@@ -1097,14 +1085,15 @@ VIEWS.ex = function(t){
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
     exInfoHtml(e) +
-    '<div class="cards" aria-label="Detalji i napredak">' +
+    // Opterećenje: the volume of this exercise over time, then the last sessions (the old sparkline card is gone)
+    '<div class="gut"><div class="psec"><h2>Opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' + exLoadCard(e, S.loadRange) + exHistHtml(e) + '</div>' +
+    '<div class="cards" aria-label="Detalji">' +
       '<section class="icard" aria-label="Detalji">' +
         '<span class="lb">Ciljana područja</span><div class="tagrow">' + (Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('') || '<span style="color:var(--text-2)">—</span>') + '</div>' +
         '<span class="lb">Oprema</span><p>' + esc(e.equipment || exEquip(e).join(', ')) + '</p>' +
         (e.video ? '<span class="lb">Video</span><p><a href="'+esc(e.video)+'" target="_blank" rel="noopener">'+esc(e.videoTitle || 'Pogledaj demonstraciju')+' ↗</a></p>' : '') +
         (packVideo(e) ? '<span class="lb">TAE video</span><p><a href="'+esc(packVideo(e))+'" target="_blank" rel="noopener">Pogledaj kod TAE ↗</a></p>' : '') +
       '</section>' +
-      progressCard(e) +
     '</div>' +
     '<div style="height:8px"></div></div>' +
     '<div class="ctrl gut">' +
@@ -1181,14 +1170,18 @@ VIEWS.exEdit = function(t){
       '<div class="field"><span class="label">Kategorija</span><div class="chips wrap">' + CATS.map(c => '<button class="chip" data-a="dset" data-k="cat" data-v="'+c+'" aria-pressed="'+(d.cat===c)+'">'+c+'</button>').join('') + '</div></div>' +
       (d.cat === 'Rehab' || d.cat === 'Mobilnost' ? '<div class="field"><span class="label">Faza rehabilitacije</span><div class="chips wrap">' + [0,1,2,3].map(p => '<button class="chip" data-a="dset" data-k="phase" data-v="'+p+'" aria-pressed="'+((d.phase||0)===p)+'">'+(p?'Faza '+p:'Bez faze')+'</button>').join('') + '</div></div>' : '') +
       '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6'],['Ø8','Ø8'],['Ø6/Ø8','Ø6 ili Ø8'],['Ø10','Ø10'],['Ø12','Ø12'],['Ø16','Ø16']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
-      '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div></div>' +
+      '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div><p class="lnote" style="margin:10px 2px 0">Kilogrami se upisuju za šipku, landmine, bučice ili girju; bez njih vježba se broji u ponavljanjima ili vremenu.</p></div>' +
       '<div class="field"><span class="label">Ciljana područja</span><div class="chips wrap">' + ZONES.map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+((d.zones||[]).indexOf(z)!==-1)+'">'+esc(exZoneLabel(z))+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Na ponavljanja</button></div>' +
         '<div class="panel">' +
           (d.measure === 'time' ? stepper('Trajanje','sec',d.sec, d.sec+' s') + stepper('Serije','sets',d.sets, d.sets) + stepper('Odmor','rest',d.rest, d.rest+' s') : stepper('Serije','sets',d.sets, d.sets) + stepper('Ponavljanja','reps',d.reps, d.reps) + stepper('Odmor','rest',d.rest, d.rest+' s') + stepper('Težina','kg',d.kg, '', { hint: KG_HINT[kk], aria: kgAria, box: kgBox('data-dkg="1"', d.kg, kgAria + ' u kg') })) +
           '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="dflag" data-k="sides" aria-checked="'+(!!d.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>' +
-        '</div></div>' +
+        '</div><p class="lnote" style="margin:10px 2px 0">' + esc(editLoadText(d)) + '</p></div>' +
+      // an own running drill: its metres count in the field load and the weekly field chart
+      (d.cat === 'Kondicija' && !seedEx(d.id) && !d.pack ? '<div class="field"><label class="label" for="f-runm">Udaljenost po ponavljanju (m)</label><input id="f-runm" class="input" type="text" inputmode="decimal" autocomplete="off" data-bind="runMText" value="'+esc(d.runMText || '')+'" placeholder="npr. 30 (po želji)">' +
+        '<span class="label" style="display:block;margin-top:14px">Intenzitet</span><div class="chips wrap">' + RUN_INT.map(z => '<button class="chip" data-a="dset" data-k="runInt" data-v="'+z+'" aria-pressed="'+((d.runInt || 'umjereno') === z)+'">'+z[0].toUpperCase() + z.slice(1)+'</button>').join('') + '</div>' +
+        '<p class="lnote" style="margin:10px 2px 0">Metri se zbrajaju u opterećenje na terenu; visoko i sprint računaju se kao brzo trčanje.</p></div>' : '') +
       '<div class="field"><label class="label" for="f-eq">Oprema (opis)</label><input id="f-eq" class="input" data-bind="equipment" value="'+esc(d.equipment)+'" placeholder="npr. Uže Ø6 + kolotur"></div>' +
       '<div class="field"><label class="label" for="f-feel">Osjećaj</label><input id="f-feel" class="input" data-bind="feel" value="'+esc(d.feel)+'" placeholder="Gdje se vježba osjeća"></div>' +
       '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedna)</label><textarea id="f-steps" class="input" rows="5" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
@@ -1743,10 +1736,11 @@ VIEWS.field = function(t){
   // the pitch warm-up (mini band and running drills); the cord activation needs the pulley in the gym
   const akt = S.pr['aktivacija-teren'];
   if (!f) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj trening više ne postoji.</div></div>';
-  const spec = fieldSpec(f), mas = f.id === 'mas-test-5-min' || (f.blocks || []).some(b => b.mas_pct);
+  const spec = fieldSpec(f), mas = f.id === 'mas-test-5-min' || (f.blocks || []).some(b => b.mas_pct), ld = fieldLoad(f);
   return '<div class="view gut">' + topbar(backBtn()) +
     '<h1 class="h1">' + esc(f.name_hr) + '</h1>' +
-    '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap"><span class="tag">'+esc(f.goal_hr)+'</span><span class="tag">'+esc(fieldMin(f))+' min</span>' + (f.week ? '<span class="tag">'+esc(f.week)+'. tjedan'+(f.dayHr ? ' · ' + esc(f.dayHr) : '')+'</span>' : '') + '</div>' +
+    '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap">' + fieldTagsHtml(ld) + '<span class="tag">'+esc(f.goal_hr)+'</span>' + (f.week ? '<span class="tag">'+esc(f.week)+'. tjedan'+(f.dayHr ? ' · ' + esc(f.dayHr) : '')+'</span>' : '') + '</div>' +
+    fieldLoadHtml(f, ld) +
     (spec ? '<figure class="pitch">' + pitchSvg(spec) + '<figcaption><div class="lgrow">' + pitchLegend(spec) + '</div>' + (spec.caption ? '<span>' + esc(spec.caption) + '</span>' : '') + '</figcaption></figure>' : '') +
     (f.summary_hr ? '<p style="margin:16px 17px 0;font-size:16px;line-height:24px;color:var(--text-body)">'+esc(f.summary_hr)+'</p>' : '') +
     (f.when_hr ? '<p class="sub" style="margin-top:10px">U predsezonskom planu: '+esc(f.when_hr)+'</p>' : '') +
@@ -1763,7 +1757,7 @@ VIEWS.field = function(t){
     (f.cooldown_hr ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Hlađenje: '+esc(f.cooldown_hr)+'</p>' : '') +
     '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: ' + (f.source_url ? '<a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a>' : esc(f.source_title || 'STATSports')) + (spec ? ' · nacrt je vlastiti prikaz prema izvoru' : '') + '</p>' +
     '<div style="height:20px"></div></div>' +
-    '<div class="footer gut"><button class="btn" data-a="startField" data-id="'+esc(f.id)+'">Krenimo!</button></div>';
+    fieldStartHtml(f, ld);
 };
 
 /* ---------- player ---------- */
@@ -2051,7 +2045,7 @@ function curView(){
 const PLAY_KEY = 'mt.play';
 function savePlay(){
   if (!P) return;
-  lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
+  lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
     answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, at: Date.now() });
 }
@@ -2074,8 +2068,8 @@ function restorePlay(s){
   if (s.mode === 'field' ? !f : !(s.items || []).length) return false;
   audioMode(true); ensureAudio();
   const now = Date.now(), away = s.done ? 0 : Math.max(0, now - (s.at || now));   // time away is not training time
-  P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined,
-    steps: f ? stepsFromField(f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
+  P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined, dose: f && s.dose === 'season' ? 'season' : f ? 'full' : undefined,
+    steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
   if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
   S.stack.push({ v:'play' }); S.sheet = null;
   if (!P.done) {   // back at the same step; a timed one waits, paused, with the time that was left
@@ -2121,6 +2115,7 @@ function logSession(){
     if (a === false && it.measure !== 'time') x.lastReps = lastRepsOf(j);
     return x;
   });
+  if (P.mode === 'field' && P.f) entry.load = fieldDoneLoad();   // what was run: metres, fast running, sprint, zones, the dose
   const news = applyProgress();
   S.log.unshift(entry); const test = masFromPlay(); if (test) S.log.splice(1, 0, test); const cut = trimLog();
   const saved = persist(); if (saved) clearPlay();   // a refused save keeps the snapshot: the next start offers the session again
@@ -2418,6 +2413,362 @@ function liftReps(x){
   const list = Array.isArray(x.repsList) ? x.repsList.map(Number).filter(v => v > 0) : [];
   return x.done === false ? (x.lastReps || 0) : list.length ? Math.max.apply(null, list) : (x.reps || 0);
 }
+/* ---------- training load ("Opterećenje"): strength volume, field metres, the season dose ---------- */
+// Strength, per logged item, from what was really done (repsDone: sets done, per-set reps, the failed last set; skipped = 0):
+// with kilograms the volume load = reps × kg (kg as entered: a dumbbell exercise counts one dumbbell, "po bučici"); without
+// kilograms the reps; timed work the seconds held. "Po strani" counts both sides. An own running drill (Kondicija with a
+// distance per rep) also gives metres in its intensity zone, so it counts in the field load.
+const LOAD_MAS = 4.5, LOAD_HSR = 5.5, LOAD_SPR = 7, LOAD_VMAX = 8;
+const RUN_INT = ['lagano', 'umjereno', 'visoko', 'sprint'], ZONE_NAMES = ['Lagano', 'Umjereno', 'Visoko', 'Sprint'];
+const INT4 = ['nizak', 'umjeren', 'visok', 'maksimalan'];
+const runDrill = e => !!e && e.cat === 'Kondicija' && +e.runM > 0;
+const seedEx = id => !!(window.SEED && SEED.exercises && SEED.exercises[id]);
+// the editor says how the exercise's load will be counted (from its equipment and its measure)
+function editLoadText(d){
+  if (d.measure === 'time') return 'Opterećenje: ukupno vrijeme' + (d.sides ? ' (obje strane)' : '') + '.';
+  const k = kgKind(d);
+  return k ? 'Opterećenje: volumen tereta, ponavljanja × kg' + (k === 'db' ? ' jedne bučice' : '') + (d.sides ? ', obje strane' : '') + '.' : 'Opterećenje: ukupna ponavljanja' + (d.sides ? ' (obje strane)' : '') + '.';
+}
+const zeroLoad = () => ({ m: 0, hsr: 0, spr: 0, z: [0, 0, 0, 0], t: 0 });
+function addLoad(a, b, k){ k = k == null ? 1 : k; a.m += b.m * k; a.hsr += b.hsr * k; a.spr += b.spr * k; a.t += (b.t || 0) * k; for (let i = 0; i < 4; i++) a.z[i] += b.z[i] * k; return a; }
+function itemLoad(x){
+  const o = { kg: 0, reps: 0, secs: 0, m: 0, hsr: 0, spr: 0, z: [0, 0, 0, 0] };
+  if (!x || x.skipped) return o;
+  const sd = x.sides ? 2 : 1, n = x.setsDone != null ? x.setsDone : (x.sets || 1), e = S.ex[x.exId];
+  if (x.measure === 'time') o.secs = n * (x.sec || 0) * sd;
+  else { o.reps = repsDone(x) * sd; if (x.kg > 0) o.kg = o.reps * x.kg; }
+  if (runDrill(e)) {
+    const zi = Math.max(0, RUN_INT.indexOf(e.runInt));
+    o.m = (x.measure === 'time' ? n : repsDone(x)) * sd * e.runM; o.z[zi] = o.m;
+    if (zi >= 2) o.hsr = o.m; if (zi === 3) o.spr = o.m;   // visoko and sprint count as fast running (brzo trčanje)
+  }
+  return o;
+}
+// one exercise over time (oldest first), one point per session: the volume load when sessions in the range had kilograms (the
+// 0 kg ones are left out of that chart), otherwise reps or seconds; metres for an own running drill
+function exLoadSeries(exId, days){
+  const e = S.ex[exId], from = days ? calDay(Date.now(), -days) : 0;
+  const h = historyOf(exId).filter(x => x.at >= from).reverse();
+  if (!h.length) return null;
+  const time = h[h.length - 1].measure === 'time';
+  let pts = h.filter(x => (x.measure === 'time') === time);
+  const kind = runDrill(e) ? 'm' : time ? 'secs' : pts.some(x => x.kg > 0) ? 'kg' : 'reps';
+  if (kind === 'kg') pts = pts.filter(x => x.kg > 0);
+  const out = [];
+  pts.forEach(x => { const v = itemLoad(x)[kind], last = out[out.length - 1];
+    if (last && last.t === x.at) { last.v += v; last.xs.push(x); } else out.push({ t: x.at, v, xs: [x] }); });
+  return { kind, pts: out };
+}
+const thou = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const dec1 = v => String(Math.round(v * 10) / 10).replace('.', ',');
+function loadFmt(kind, v){
+  if (kind === 'kg') return thou(v) + ' kg';
+  if (kind === 'vl') return v >= 1000 ? dec1(v / 1000) + ' t' : thou(v) + ' kg';   // a week of lifting: tonnes from 1 t
+  if (kind === 'm') return v >= 1000 ? dec1(v / 1000) + ' km' : thou(v) + ' m';
+  if (kind === 'secs') { v = Math.round(v); return v < 120 ? v + ' s' : Math.floor(v / 60) + ' min' + (v % 60 ? ' ' + (v % 60) + ' s' : ''); }
+  return thou(v) + ' ' + plural(Math.round(v), 'ponavljanje', 'ponavljanja', 'ponavljanja');
+}
+// the line under a chart: the direction of the last sessions (a change within 1 % is "the same")
+function loadTrend(pts){
+  const n = pts.length; if (n < 2) return null;
+  const d = (a, b) => b.v > a.v * 1.01 ? 1 : b.v < a.v * .99 ? -1 : 0, dir = d(pts[n - 2], pts[n - 1]);
+  let k = 1; while (n - 2 - k >= 0 && d(pts[n - 2 - k], pts[n - 1 - k]) === dir) k++;
+  const tr = (k > 1 ? ' ' + k + ' ' + plural(k, 'trening', 'treninga', 'treninga') + ' zaredom' : ' od prošlog treninga');
+  if (dir > 0) return { dir, k, text: 'Raste' + tr };
+  if (dir < 0) return { dir, k, text: 'Pada' + tr };
+  const wk = (pts[n - 1].t - pts[n - 1 - k].t) / WEEK_MS;
+  return { dir, k, text: wk >= 2 ? 'Stoji više od 2 tjedna: vrijeme je za promjenu' : k > 1 ? 'Stoji ' + k + ' ' + plural(k, 'trening', 'treninga', 'treninga') : 'Isto kao prošli trening' };
+}
+
+/* Field sessions: metres per rep of a block from its distance, its speed or the session text, with your MAS (the last MAS test;
+   4,5 m/s while there is none, and the page says so). Brzo trčanje ≥ 5,5 m/s (19,8 km/h), sprint ≥ 7 m/s (25,2 km/h); zones:
+   lagano < 70 % MAS, umjereno 70–90 %, visoko 90 % MAS – 7 m/s, sprint ≥ 7 m/s. A speed range spreads its metres evenly over the
+   range. A maximal run (sprint, maksimalno, ≥ 95 % or ≥ 90 % effort) starts from a standstill: its first 10 m stay below
+   5,5 m/s and its first 20 m below 7 m/s. % of speed or effort is taken of 8 m/s (an assumed top speed). Walking rests are not
+   counted; recovery runs given as % MAS are. Blocks with neither a distance nor one speed use the estimates in FIELD_EST. */
+const loadMas = () => masNow() || LOAD_MAS;
+// m metres at a steady speed anywhere in [lo, hi] m/s
+function runSeg(m, lo, hi, mas){
+  hi = hi == null ? lo : hi;
+  const up = x => hi > lo ? Math.min(1, Math.max(0, (hi - x) / (hi - lo))) : lo >= x ? 1 : 0;
+  const b1 = .7 * mas, b2 = Math.min(.9 * mas, LOAD_SPR), sp = up(LOAD_SPR);
+  return { m, hsr: m * up(LOAD_HSR), spr: m * sp, z: [m * (1 - up(b1)), m * (up(b1) - up(b2)), m * (up(b2) - sp), m * sp], t: m / ((lo + hi) / 2 || 1) };
+}
+// a maximal run of m metres from a standstill (roll: out of a jog, 5 m sooner)
+function maxRun(m, roll){
+  const h = Math.max(0, m - (roll ? 5 : 10)), s = Math.max(0, m - (roll ? 15 : 20));
+  return { m, hsr: h, spr: s, z: [0, 0, m - s, s], t: 1 + m / 7 };
+}
+// legs: [metres, how]: max = maximal from a standstill, acc = maximal out of a jog, hod 1,5 m/s, jog 60 % MAS, tempo 100 % MAS,
+// cod = change of direction (3,5 m/s), drib = dribbling (3 m/s), back = backwards (2 m/s)
+function legLoad(parts, mas){
+  const o = zeroLoad(), V = { hod: 1.5, jog: .6 * mas, tempo: mas, cod: 3.5, drib: 3, back: 2 };
+  parts.forEach(p => addLoad(o, p[1] === 'max' ? maxRun(p[0]) : p[1] === 'acc' ? maxRun(p[0], true) : runSeg(p[0], V[p[1]], null, mas)));
+  return o;
+}
+// a continuous block: the cycle repeats for the block's work time
+const cycLoad = (parts, secs, mas) => { const c = legLoad(parts, mas); return addLoad(zeroLoad(), c, c.t ? secs / c.t : 0); };
+// shipped blocks that give neither a distance nor one speed: the estimate and the sentence the session page lists
+const FIELD_EST = {
+  'ss-pre-1b': [{ re: /./, cyc: [[52.5, 'jog'], [36, 'tempo'], [16.5, 'hod']], note: 'Run 1B: na svakoj duljini terena 52,5 m joga (60 % MAS), 36 m tempa (100 % MAS) i 16,5 m hoda, ponavlja se cijeli blok od 5 min.' }],
+  'ss-pre-3a': [{ re: /./, legs: [[31, 'cod'], [20, 'drib'], [20, 'acc'], [60, 'jog'], [20, 'hod']], note: 'Run 3A: krug od 151 m = shuttle 31 m, dribling 20 m, sprint 20 m iz joga, jog 60 m i hod 20 m.' }],
+  'ss-pre-3b': [{ re: /./, cyc: [[35, 'jog'], [17.5, 'acc'], [16.5, 'hod']], note: 'Run 3B: prijelaz od 68 m = jog 35 m, maksimalno ubrzanje 17,5 m iz joga i hod 16,5 m, ponavlja se 4 min.' }],
+  'ss-pre-3d': [{ re: /./, cyc: [[35, 'jog'], [17.5, 'acc'], [16.5, 'hod'], [35, 'jog'], [32, 'cod'], [16.5, 'hod']], note: 'Run 3D: gore kao 3B; dolje jog 35 m, shuttle 32 m (čunjevi na 6,4 m) i hod 16,5 m, ponavlja se 4 min.' }],
+  'mendo-solo-ubrzanje': [
+    { re: /promjenom smjera/i, legs: [[27, 'max'], [27, 'max']], note: 'Sprint s promjenom smjera: 2 × 27 m, svaki kreće iz okreta.' },
+    { re: /shuttle/i, legs: [[60, 'cod'], [16.5, 'max']], note: 'Shuttle s loptom: 60 m između čunjeva (5, 10 i 15 m) i sprint od 16,5 m.' },
+    { re: /kočenje/i, legs: [[18, 'max'], [18, 'cod'], [18, 'cod'], [36, 'max']], note: 'Sprint i kočenje: oko 90 m (sprint 18 m, kočenje i krug 36 m, sprint natrag 36 m).' },
+    { re: /unatrag/i, legs: [[16.5, 'max'], [6, 'back'], [20, 'max']], note: 'Sprint, unatrag, ubrzanje: 16,5 m sprinta, 6 m unatrag i 20 m ubrzanja.' },
+    { re: /cik-cak/i, legs: [[30, 'cod']], note: 'Cik-cak: 6 čunjeva na 5 m, oko 30 m bez brzog trčanja.' }]
+};
+// a distance in the block's text: "3 duljine od 72 m", "(oko 83 m)"
+function cueDist(c){
+  c = c || ''; let m = /(\d+)\s+duljin\w*\s+od\s+(\d+(?:,\d+)?)\s*m\b/.exec(c);
+  if (m) return +m[1] * +m[2].replace(',', '.');
+  m = /\((?:oko |otprilike )?(\d+(?:,\d+)?)\s*m\)/.exec(c); return m ? +m[1].replace(',', '.') : 0;
+}
+// one rep of a block (its recovery run apart); notes collects what had to be assumed
+function blockRep(b, f, mas, notes){
+  const say = s => { if (notes && notes.indexOf(s) === -1) notes.push(s); };
+  const est = (FIELD_EST[f && f.id] || []).find(x => x.re.test(b.label_hr || ''));
+  if (est) { say(est.note); const o = est.cyc ? cycLoad(est.cyc, b.work_s || 0, mas) : legLoad(est.legs, mas); o.t = b.work_s || o.t; return o; }
+  const tx = b.intensity_hr || '', work = b.work_s || 0, num = s => +String(s).replace(',', '.');
+  const ms = /(\d+(?:,\d+)?)(?:\s*[–-]\s*(\d+(?:,\d+)?))?\s*m\/s/.exec(tx), ef = /(\d+)(?:\s*[–-]\s*(\d+))?\s*%\s*(?:brzine|napora)/.exec(tx);
+  const efLo = ef ? +ef[1] : 0, efHi = ef ? +(ef[2] || ef[1]) : 0;
+  const maxW = !/tempo/i.test(tx) && /maksimal|sprint|≥\s*9[5-9]|punom snagom/i.test(tx);
+  let d = b.distance_m || (ms || b.mas_pct ? 0 : cueDist(b.cue_hr)), o;
+  if (maxW || efLo >= 90) {
+    if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * LOAD_VMAX * work; say('„' + (b.label_hr || '') + '”: ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od 8 m/s ≈ ' + Math.round(d) + ' m.'); }
+    o = maxRun(d);
+  } else {
+    let lo = 0, hi = 0;
+    if (ms) { lo = num(ms[1]); hi = num(ms[2] || ms[1]); }
+    else if (b.mas_pct) lo = hi = mas * b.mas_pct / 100;
+    else if (ef) { lo = efLo / 100 * LOAD_VMAX; hi = efHi / 100 * LOAD_VMAX; }
+    else if (d && work) lo = hi = d / work;
+    else if (/maksimaln\w* tempo/i.test(tx)) { lo = hi = mas; say('MAS test: 5 min tvojim MAS-om.'); }
+    else if (/\bhod/i.test(tx)) lo = hi = 1.5; else if (/jog|lagan/i.test(tx)) lo = hi = .6 * mas; else if (/tempo/i.test(tx)) lo = hi = mas;
+    if (!hi) { say('„' + (b.label_hr || '') + '”: nema udaljenosti ni brzine, nije uračunato.'); return zeroLoad(); }
+    if (!d) d = (lo + hi) / 2 * work;
+    o = runSeg(d, lo, hi, mas);
+  }
+  o.t = work;
+  return o;
+}
+const recRun = (b, mas) => { const v = mas * b.rest_mas_pct / 100, o = runSeg(v * b.rest_s, v, null, mas); o.t = 0; return o; };
+// the season dose: about 2/3 of the sets (rounded down, at least 1), with a single set 2/3 of the reps. Sets written out as
+// blocks ("S1 ·", "Krug 2/6", "Runda 1") keep the first 2/3 of them.
+const doseGroup = b => { const m = /^(?:S|Krug |Runda )(\d+)/.exec(b.label_hr || ''); return m ? +m[1] : 0; };
+const twoThirds = n => Math.max(1, Math.floor(n * 2 / 3 + 1e-9));
+function fieldDose(f){
+  const bl = f.blocks || [], K = bl.length ? Math.max.apply(null, bl.map(doseGroup)) : 0, c = Object.assign({}, f);
+  if (K >= 2 && bl.every(doseGroup)) {
+    const keep = twoThirds(K), w = /^Krug/.test(bl[0].label_hr) ? ['kruga', 'krugova'] : /^Runda/.test(bl[0].label_hr) ? ['runde', 'runda'] : ['serije', 'serija'];
+    c.blocks = bl.filter(b => doseGroup(b) <= keep).map(b => Object.assign({}, b));
+    c.doseText = keep + ' od ' + K + ' ' + (K >= 5 ? w[1] : w[0]);
+    return c;
+  }
+  c.blocks = bl.map(b => { const x = Object.assign({}, b); if ((x.sets || 1) > 1) x.sets = twoThirds(x.sets); else if ((x.reps || 1) > 1) x.reps = twoThirds(x.reps); return x; });
+  const sets = bl.filter(b => (b.sets || 1) > 1), all = l => l.reduce((a, b) => a + (b.sets || 1) * (b.reps || 1), 0), N = all(bl);
+  c.doseText = sets.length === bl.length && sets.every(b => b.sets === sets[0].sets) ? twoThirds(sets[0].sets) + ' od ' + sets[0].sets + ' ' + (sets[0].sets >= 5 ? 'serija' : 'serije')
+    : all(c.blocks) + ' od ' + N + ' ' + plural(N, 'ponavljanja', 'ponavljanja', 'ponavljanja');
+  return c;
+}
+// a whole session (dose 'season' = the season dose): metres, fast running, sprint, work minutes, metres per zone and the tags
+function fieldLoad(f, dose, mas){
+  mas = mas || loadMas();
+  const g = dose === 'season' ? fieldDose(f) : f, o = zeroLoad(), notes = [];
+  let reps = 0, maxM = 0, codM = 0;
+  (g.blocks || []).forEach(b => {
+    const n = (b.sets || 1) * (b.reps || 1), r = blockRep(b, f, mas, notes);
+    addLoad(o, r, n); reps += n;
+    if (/sprint|maksimal|≥\s*9[5-9]|9\d\s*%\s*napora|100\s*%\s*napora|reakcij/i.test((b.intensity_hr || '') + ' ' + (b.label_hr || '')) && !/tempo|interval/i.test(b.intensity_hr || '')) maxM += r.m * n;
+    if (/slalom|cik-cak|kočenj|promjen\w* smjer|unatrag|shuttle sprint/i.test(b.label_hr || '')) codM += r.m * n;
+    if (b.rest_mas_pct && b.rest_s) addLoad(o, recRun(b, mas), n);
+  });
+  const m = o.m || 1, bout = reps ? o.t / reps : 0;
+  const type = /test/i.test(f.name_hr || '') ? 'test' : codM >= .4 * m ? 'agilnost' : bout <= 12 && maxM >= .4 * m ? 'brzina' : bout >= 120 && o.hsr < .05 * m ? 'aerobno' : 'intervali';
+  let li = o.spr >= .25 * m ? 3 : o.hsr >= .25 * m || o.spr >= .1 * m ? 2 : o.hsr >= .05 * m || o.z[2] + o.z[3] >= .5 * m ? 1 : 0;
+  if (type === 'test') li = Math.max(li, 2);
+  return { m: Math.round(o.m), hsr: Math.round(o.hsr), spr: Math.round(o.spr), min: Math.round(o.t / 6) / 10, zones: o.z.map(Math.round), type, int: INT4[li], li,
+    vol: o.m < 1500 ? 'nizak' : o.m <= 3000 ? 'srednji' : 'visok', notes, mas, def: !masNow(), doseText: g.doseText || '' };
+}
+const fieldInt = f => f ? fieldLoad(f).li : 0;
+// what a field session in the history did: its stored load, else (an entry from before 1.6) the full session with today's MAS
+function fieldLogLoad(l){
+  if (l.load && typeof l.load.m === 'number') return l.load;
+  const f = S.field[l.refId]; return f ? fieldLoad(f) : null;
+}
+// the work done in the player: every work step that was done, with its recovery run
+function fieldDoneLoad(){
+  const f = P.f, mas = loadMas(), o = zeroLoad();
+  P.steps.forEach((st, i) => { if (st.kind !== 'work' || !P.doneSteps[i] || !st.b) return; addLoad(o, blockRep(st.b, f, mas)); if (st.b.rest_mas_pct && st.b.rest_s) addLoad(o, recRun(st.b, mas)); });
+  return { m: Math.round(o.m), hsr: Math.round(o.hsr), spr: Math.round(o.spr), min: Math.round(o.t / 6) / 10, zones: o.z.map(Math.round), dose: P.dose === 'season' ? 'season' : 'full', mas: Math.round(mas * 100) / 100 };
+}
+// calendar weeks (a clock change never moves a session to another week), oldest first: trainings only (nTrainings' rule)
+function weekLoads(n){
+  const ws = weekStart(Date.now()), out = [];
+  for (let k = n - 1; k >= 0; k--) { const a = calDay(ws, -7 * k); out.push({ ws: a, we: calDay(a, 7), vl: 0, m: 0, hsr: 0 }); }
+  S.log.forEach(l => {
+    if (!isTraining(l)) return; const w = out.find(o => l.at >= o.ws && l.at < o.we); if (!w) return;
+    if (l.kind === 'field') { const fl = fieldLogLoad(l); if (fl) { w.m += fl.m; w.hsr += fl.hsr; } }
+    (l.items || []).forEach(x => { const il = itemLoad(x); w.vl += il.kg; w.m += il.m; w.hsr += il.hsr; });
+  });
+  out.forEach(w => { w.ost = Math.max(0, w.m - w.hsr); });
+  return out;
+}
+
+/* ---------- load charts: one line over time, weekly columns (marks per the approved design) ---------- */
+// A tap on a column shows that point (crosshair, ringed dot, value first); it never gates: the summary (aria-label) and the
+// "Tablica" view under every chart hold the same values. Colours live in style.css (.lch …), text uses the text tokens.
+function niceStep(r){ const p = Math.pow(10, Math.floor(Math.log10(r || 1))), f = (r || 1) / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+const dm = t => { const d = new Date(t); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+const tipW = (a, b) => Math.max(a.length * 7.6, b.length * 5.9) + 20;
+function tipBox(x, y0, val, sub, maxX){
+  const w = tipW(val, sub), bx = Math.max(0, Math.min(maxX - w, x - w / 2));
+  return '<rect class="tb" x="'+bx.toFixed(1)+'" y="'+y0+'" width="'+w.toFixed(1)+'" height="38" rx="9"/><text class="tv" x="'+(bx + 10).toFixed(1)+'" y="'+(y0 + 17)+'">'+esc(val)+'</text><text class="ts" x="'+(bx + 10).toFixed(1)+'" y="'+(y0 + 31)+'">'+esc(sub)+'</text>';
+}
+function chartTable(head, rows){
+  return '<details class="ltab"><summary>Tablica</summary><table><tr><th>'+esc(head[0])+'</th><th>'+esc(head[1])+'</th></tr>' + rows.map(r => '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('') + '</table></details>';
+}
+// pts: [{ t, v, sub }] oldest first; fmtV formats a value
+function lineChart(id, pts, fmtV, label){
+  const W = 326, R = 288, T = 26, B = 110, n = pts.length;
+  const vs = pts.map(p => p.v), mx = Math.max.apply(null, vs), mn = Math.min.apply(null, vs);
+  const st = niceStep((mx - mn) / 3 || mx / 2 || 1); let lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st;
+  if (hi === lo) { lo = Math.max(0, lo - st); hi += st; }
+  const t0 = pts[0].t, t1 = pts[n - 1].t, X = t => t1 > t0 ? 6 + (t - t0) / (t1 - t0) * (R - 12) : R / 2, Y = v => B - (v - lo) / (hi - lo) * (B - T);
+  const xy = pts.map(p => [X(p.t), Y(p.v)]), line = xy.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ');
+  let g = '';
+  for (let v = lo, k = 0; v <= hi + st / 1e6 && k < 8; v += st, k++) { const y = Y(v).toFixed(1); g += '<line class="gr" x1="0" y1="'+y+'" x2="'+R+'" y2="'+y+'"/><text class="tk" x="'+W+'" y="'+(+y + 4)+'" text-anchor="end">'+esc(thou(v))+'</text>'; }
+  const dates = '<text class="tk" x="0" y="'+(B + 18)+'">'+dm(t0)+'</text>' + (n > 1 ? '<text class="tk" x="'+R+'" y="'+(B + 18)+'" text-anchor="end">'+dm(t1)+'</text>' : '') +
+    (n > 2 && X(pts[n >> 1].t) > 70 && X(pts[n >> 1].t) < R - 70 ? '<text class="tk" x="'+X(pts[n >> 1].t).toFixed(1)+'" y="'+(B + 18)+'" text-anchor="middle">'+dm(pts[n >> 1].t)+'</text>' : '');
+  const last = xy[n - 1], dot = (q, c) => '<circle class="'+c+'" cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="5"/>';
+  const hits = xy.map((q, i) => { const a = i ? (xy[i - 1][0] + q[0]) / 2 : 0, b = i < n - 1 ? (q[0] + xy[i + 1][0]) / 2 : W;
+    return '<rect class="hit" data-a="ltip" data-i="'+i+'" x="'+a.toFixed(1)+'" y="0" width="'+Math.max(1, b - a).toFixed(1)+'" height="'+(B + 22)+'"/>'; }).join('');
+  const tips = xy.map((q, i) => '<g class="tipg" data-i="'+i+'"><line class="xh" x1="'+q[0].toFixed(1)+'" y1="'+(T - 6)+'" x2="'+q[0].toFixed(1)+'" y2="'+B+'"/>' + dot(q, 'dot') + tipBox(q[0], 0, fmtV(pts[i].v), dm(pts[i].t) + (pts[i].sub ? ' · ' + pts[i].sub : ''), R) + '</g>').join('');
+  return '<svg class="lch" id="'+esc(id)+'" viewBox="0 0 '+W+' '+(B + 24)+'" role="img" aria-label="'+esc(label)+'">' + g + dates +
+    (n > 1 ? '<path class="ar" d="'+line+' L'+last[0].toFixed(1)+','+B+' L'+xy[0][0].toFixed(1)+','+B+' Z"/><path class="ln" d="'+line+'"/>' : '') + dot(last, 'dot') + tips + hits + '</svg>';
+}
+// weeks: oldest first; segs: [{ k, cls }] bottom first; avg: the line (0 = none)
+function weekBars(id, weeks, segs, fmtV, avg, label, tipSub){
+  const W = 300, B = 116, T = 26, n = weeks.length, slot = W / n, bw = 20;
+  const tot = w => segs.reduce((a, s) => a + (w[s.k] || 0), 0), mx = Math.max.apply(null, [avg || 0].concat(weeks.map(tot))) || 1, H = v => v / mx * (B - T);
+  let body = '<line class="gr" x1="0" y1="'+B+'" x2="'+W+'" y2="'+B+'"/>', tips = '', hits = '';
+  weeks.forEach((w, i) => {
+    const x = i * slot + (slot - bw) / 2, cur = i === n - 1; let y0 = B, top = B;
+    const live = segs.filter(s => H(w[s.k] || 0) >= .5);
+    live.forEach((s, j) => {
+      let h = H(w[s.k]); if (j) { y0 -= 2; h = Math.max(.5, h - 2); }
+      const y = y0 - h, r = j === live.length - 1 ? Math.min(4, h) : 0;
+      body += '<path class="'+s.cls+(cur ? ' cur' : '')+'" d="M'+x.toFixed(1)+','+y0.toFixed(1)+' L'+x.toFixed(1)+','+(y + r).toFixed(1)+(r ? ' Q'+x.toFixed(1)+','+y.toFixed(1)+' '+(x + r).toFixed(1)+','+y.toFixed(1)+' L'+(x + bw - r).toFixed(1)+','+y.toFixed(1)+' Q'+(x + bw).toFixed(1)+','+y.toFixed(1)+' '+(x + bw).toFixed(1)+','+(y + r).toFixed(1) : ' L'+(x + bw).toFixed(1)+','+y.toFixed(1))+' L'+(x + bw).toFixed(1)+','+y0.toFixed(1)+' Z"/>';
+      y0 = y; top = y;
+    });
+    if (cur) body += '<text class="tv" x="'+(x + bw / 2).toFixed(1)+'" y="'+(top - 7).toFixed(1)+'" text-anchor="middle">'+esc(fmtV(tot(w)))+'</text>';
+    body += '<text class="tk" x="'+(x + bw / 2).toFixed(1)+'" y="'+(B + 16)+'" text-anchor="middle">'+(cur ? 'ovaj' : 'T-' + (n - 1 - i))+'</text>';
+    tips += '<g class="tipg" data-i="'+i+'"><rect class="hl" x="'+(x - 3).toFixed(1)+'" y="'+(T - 4)+'" width="'+(bw + 6)+'" height="'+(B - T + 4)+'" rx="5"/>' + tipBox(x + bw / 2, 0, fmtV(tot(w)), tipSub(w), W) + '</g>';
+    hits += '<rect class="hit" data-a="ltip" data-i="'+i+'" x="'+(i * slot).toFixed(1)+'" y="0" width="'+slot.toFixed(1)+'" height="'+(B + 20)+'"/>';
+  });
+  if (avg > 0) { const y = B - H(avg); body += '<line class="avg" x1="0" y1="'+y.toFixed(1)+'" x2="'+W+'" y2="'+y.toFixed(1)+'"/><text class="tk al" x="2" y="'+(y < T + 6 ? y + 13 : y - 5).toFixed(1)+'">prosjek '+esc(fmtV(avg))+'</text>'; }
+  return '<svg class="lch bars" id="'+esc(id)+'" viewBox="0 0 '+W+' '+(B + 22)+'" role="img" aria-label="'+esc(label)+'">' + body + tips + hits + '</svg>';
+}
+// the headline of a load card: value, a pill with the change, what it is compared with
+function loadHead(txt, v, prev, vs){
+  const p = prev > 0 && v > 0 ? Math.round((v - prev) / prev * 100) : null;
+  return '<div class="hv"><span class="v">'+esc(txt)+'</span>' + (p == null ? '' : '<span class="pill '+(p > 0 ? 'up' : p < 0 ? 'dn' : 'eq')+'">'+(p > 0 ? '▲ ' : p < 0 ? '▼ ' : '')+Math.abs(p)+' %</span><span class="vs">'+esc(vs)+'</span>') + '</div>';
+}
+const LOAD_LABEL = { kg: 'Volumen tereta', reps: 'Ukupno ponavljanja', secs: 'Ukupno vrijeme', m: 'Metri' };
+const LOAD_RANGES = [['3', '3 mj', 91], ['6', '6 mj', 183], ['sve', 'Sve', 0]];
+// the "Opterećenje" card of one exercise (the exercise page and Glavne vježbe); range: '3' | '6' | 'sve'
+function exLoadCard(e, range, compact){
+  const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2]), all = rg[2] ? exLoadSeries(e.id, 0) : sr;
+  const per = compact ? '' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
+  const title = compact ? '<b class="t2">'+esc(e.name)+'</b>' : '<span class="t">'+(sr ? LOAD_LABEL[sr.kind] : LOAD_LABEL[all && all.kind] || 'Volumen')+'</span>';
+  if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
+  const P2 = sr.pts, k = sr.kind, f = v => loadFmt(k, v), n = P2.length, last = P2[n - 1], tr = loadTrend(P2);
+  const sub = p => p.xs.length === 1 ? doseBase(p.xs[0]) : p.xs.length + ' × u treningu';
+  const pts = P2.map(p => ({ t: p.t, v: p.v, sub: sub(p) }));
+  const sum = (compact ? e.name + ': ' : '') + LOAD_LABEL[k] + ', ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' od ' + shortDate(P2[0].t) + ' do ' + shortDate(last.t) + ': od ' + f(P2[0].v) + ' do ' + f(last.v) + (tr ? '. ' + tr.text : '') + '.';
+  return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga') +
+    lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum) +
+    (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
+    chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)])) + '</div>';
+}
+// the history list under the chart: the last sessions, how they went
+function exHistHtml(e){
+  const h = historyOf(e.id); if (!h.length) return '';
+  return '<div class="psec"><h2>Povijest</h2><span>zadnji treninzi</span></div><div class="lc hist">' + h.slice(0, 6).map(x => {
+    const tags = (x.done === false ? '<span class="tag">nije išlo' + (x.lastReps != null ? ' · zadnja serija ' + esc(x.lastReps) + ' pon.' : '') + '</span>' : '') + (x.setsDone != null ? '<span class="tag">' + esc(x.setsDone + ' od ' + (x.sets || 1) + ' ' + plural(x.sets || 1, 'serije', 'serije', 'serija')) + '</span>' : '');
+    return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(dose(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
+}
+// Napredak → "Tjedno opterećenje": strength volume load and field metres per calendar week, the last 8 weeks
+function weekLoadHtml(){
+  const W = weekLoads(8), cur = W[7], prev4 = W.slice(3, 7), avg = k => prev4.reduce((a, w) => a + w[k], 0) / 4;
+  const anyVl = W.some(w => w.vl > 0), anyM = W.some(w => w.m > 0);
+  const head = '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
+  if (!anyVl && !anyM) return head + '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad odradiš treninge s kilogramima ili trčanje na terenu, ovdje vidiš koliko si napravio svaki tjedan u zadnjih 8 tjedana.</p>';
+  const range = w => shortDate(w.ws) + ' – ' + shortDate(calDay(w.we, -1));
+  const pct = (v, a) => a > 0 ? ' (' + (v >= a ? '+' : '−') + Math.abs(Math.round((v - a) / a * 100)) + ' % od prosjeka)' : '';
+  let out = head;
+  if (anyVl) { const a = avg('vl'), f = v => loadFmt('vl', v);
+    out += '<div class="lc"><div class="hd"><span class="t">Snaga · volumen tereta</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.vl), cur.vl, a, 'od prosjeka 4 tjedna') +
+      weekBars('wk-vl', W, [{ k: 'vl', cls: 'bs' }], f, a, 'Volumen tereta po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.vl) + pct(cur.vl, a) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w)) +
+      chartTable(['Tjedan', 'Volumen tereta'], W.slice().reverse().map(w => [range(w), f(w.vl)])) + '</div>'; }
+  if (anyM) { const a = avg('m'), f = v => loadFmt('m', v);
+    out += '<div class="lc"><div class="hd"><span class="t">Teren · metri</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.m), cur.m, a, 'od prosjeka 4 tjedna') +
+      weekBars('wk-m', W, [{ k: 'ost', cls: 'bt1' }, { k: 'hsr', cls: 'bt2' }], f, a, 'Metri na terenu po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.m) + pct(cur.m, a) + ', od toga brzo trčanje ' + f(cur.hsr) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w) + ' · brzo ' + f(w.hsr)) +
+      '<div class="lg2"><span><i class="k1"></i>Ostali metri</span><span><i class="k2"></i>Brzo trčanje</span></div>' +
+      chartTable(['Tjedan', 'Metri (brzo trčanje)'], W.slice().reverse().map(w => [range(w), f(w.m) + ' (' + f(w.hsr) + ')'])) + '</div>'; }
+  return out;
+}
+// the field page: tags, three tiles, the intensity distribution with its assumptions, "U sezoni" (the dose and the best days)
+const FIELD_TYPE = { aerobno: 'Aerobno', intervali: 'Intervali', brzina: 'Brzina', agilnost: 'Agilnost', test: 'Test' };
+const fieldSeason = a => a.type !== 'test' && matchDay() >= 0;
+function fieldTagsHtml(a){
+  return '<span class="tag'+(a.li >= 2 ? ' hi' : '')+'">Intenzitet: '+a.int+'</span><span class="tag">Volumen: '+a.vol+'</span><span class="tag">'+FIELD_TYPE[a.type]+'</span>';
+}
+function fieldLoadHtml(f, a){
+  const ZC = ['z1', 'z2', 'z3', 'z4'], md = matchDay();
+  const zs = a.zones.map((m, i) => ZONE_NAMES[i] + ' ' + loadFmt('m', m)).join(', ');
+  let h = '<div class="stats"><div class="stat"><b>'+loadFmt('m', a.m)+'</b><span>ukupno</span></div><div class="stat"><b>'+loadFmt('m', a.hsr)+'</b><span>brzo trčanje</span></div><div class="stat"><b>'+esc(fieldMin(f))+' min</b><span>trajanje</span></div></div>' +
+    '<div class="lc" style="margin-top:12px"><div class="hd"><span class="t">Raspodjela intenziteta · metri</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' +
+    '<div class="zb" role="img" aria-label="'+esc('Metri po zonama: ' + zs + (a.spr ? '; sprint ' + loadFmt('m', a.spr) : '') + '.')+'">' + a.zones.map((m, i) => m >= 1 ? '<i class="'+ZC[i]+'" style="flex:'+m+'"></i>' : '').join('') + '</div>' +
+    '<div class="zl">' + a.zones.map((m, i) => '<span><i class="'+ZC[i]+'"></i>'+ZONE_NAMES[i]+'<b>'+loadFmt('m', m)+'</b></span>').join('') + '</div>' +
+    '<p class="lnote">MAS '+masTxt(a.mas)+' m/s'+(a.def ? ' (zadano dok ne upišeš MAS test)' : ' (tvoj zadnji MAS test)')+'. Brzo trčanje od 19,8 km/h, sprint od 25,2 km/h' + (a.spr ? ' (ovdje ' + loadFmt('m', a.spr) + ')' : '') + '. Rad bez odmora: ' + dec1(a.min) + ' min.' + (a.notes.length ? ' Procjena: ' + esc(a.notes.join(' ')) : '') + '</p></div>';
+  if (a.type === 'test') return h;
+  const s = fieldLoad(f, 'season'), pc = Math.round(s.m / (a.m || 1) * 100);
+  const best = a.li >= 2 ? 'Najbolje 4 dana prije utakmice (MD-4), najkasnije 3 dana prije (MD-3).'
+    : a.li === 1 ? 'Najbolje 4 ili 3 dana prije utakmice (MD-4, MD-3) ili 2 dana nakon nje.'
+    : 'Može 4, 3 ili 2 dana prije utakmice (MD-4 do MD-2) ili 2 dana nakon nje.';
+  const why = loadFmt('m', s.m) + ' umjesto ' + loadFmt('m', a.m) + ', brzo trčanje ' + loadFmt('m', s.hsr) + '. ' + best + ' Nikad dan prije utakmice. Najviše jedan dodatni trening na terenu tjedno.' + (a.li ? ' U tjednu s dvije utakmice ga preskoči.' : ' U tjednu s dvije utakmice može samo ovakav lagani trening.') +
+    (fieldSeason(a) ? ' Dan utakmice je postavljen u Doziranju, pa Kreni pokreće dozu za sezonu.' : ' Kad u Doziranju postaviš dan utakmice, Kreni pokreće dozu za sezonu.');
+  return h + '<div class="psec"><h2>U sezoni</h2><span>'+(md >= 0 ? 'utakmica ' + esc(DAYS_IN[md]) : 'bez dana utakmice')+'</span></div>' +
+    '<div class="lift'+(fieldSeason(a) ? ' go' : '')+'"><div class="top"><b>Doza za sezonu: '+esc(s.doseText)+'</b><span>≈ '+pc+' %</span></div><div class="why">'+esc(why)+'</div></div>';
+}
+// the start: "Kreni" runs the season dose when a match day is set (else the full one); the link under it runs the other
+function fieldStartHtml(f, a){
+  const sz = fieldSeason(a);
+  return '<div class="footer gut"><button class="btn" data-a="startField" data-id="'+esc(f.id)+'" data-dose="'+(sz ? 'season' : 'full')+'">Kreni</button>' +
+    (a.type === 'test' ? '' : '<button class="txtbtn flink" data-a="startField" data-id="'+esc(f.id)+'" data-dose="'+(sz ? 'full' : 'season')+'">'+(sz ? 'Puna doza' : 'Doza za sezonu')+'</button>') + '</div>';
+}
+// "Kako se računa?" — the education page (a full page with ✕)
+VIEWS.loadInfo = function(){
+  const up = '<svg viewBox="0 0 120 80" aria-hidden="true"><polyline class="i1" points="12,62 57,39 102,14"/><circle class="i1" cx="12" cy="62" r="9"/><circle class="i1" cx="57" cy="39" r="9"/><circle class="i1" cx="102" cy="14" r="9"/><path class="i2" d="M30 76 L104 40 M90 38 L106 39 L100 54"/></svg>';
+  const flat = '<svg viewBox="0 0 120 80" aria-hidden="true"><line class="i3" x1="22" y1="30" x2="98" y2="30"/><circle class="i3" cx="18" cy="30" r="9"/><circle class="i3" cx="60" cy="30" r="9"/><circle class="i3" cx="102" cy="30" r="9"/><path class="i4" d="M26 56 L100 56 M90 46 L101 56 L90 66"/></svg>';
+  return '<div class="view gut">' + topbar('<button class="ib" data-a="back" aria-label="Zatvori">' + I.close + '</button>', '', 'OPTEREĆENJE') +
+    '<div class="edu"><h1>Napredak vježbe: volumen i volumen tereta</h1>' +
+    '<p>Volumen pokazuje koliko si ukupno odradio. Računa se iz onoga što si stvarno napravio, prema vrsti vježbe:</p>' +
+    '<ul><li><b>S kilogramima:</b> volumen tereta = ponavljanja × kg, zbrojeno po serijama.</li><li><b>Bez tereta:</b> ukupna ponavljanja, a kod vježbi na vrijeme ukupno vrijeme.</li><li><b>Trčanje:</b> ukupni metri, od toga brzo trčanje (od 19,8 km/h) i sprint (od 25,2 km/h).</li></ul>' +
+    '<h2>Zašto je važno?</h2><p>Snaga i kondicija rastu kad tijelu postupno daješ malo više posla. Volumen to pokazuje jednim brojem: vidiš rasteš li, stojiš li na mjestu ili si tjedan prije utakmice napravio previše.</p>' +
+    '<h2>Kako se računa?</h2><p>Npr. 4 serije × 5 ponavljanja × 80 kg = 1.600 kg. Kod bučica se računa jedna bučica, kao što upisuješ kilograme. Vježba „po strani” broji obje strane. Djelomične serije računaju se kako si ih odradio, preskočene ne.</p>' +
+    '<p>Graf vježbe prikazuje volumen tereta kad u razdoblju ima treninga s kilogramima (treninzi bez kilograma tada se ne crtaju), inače ponavljanja ili vrijeme. Tjedno opterećenje u Napretku zbraja treninge u kalendarskom tjednu, od ponedjeljka do nedjelje, i uspoređuje ih s prosjekom prethodna 4 tjedna. Vježba isprobana iz knjižnice ulazi u svoj graf, ali ne i u tjedni zbroj.</p>' +
+    '<h2>Trčanje na terenu</h2><p>Metri se računaju iz blokova treninga i tvog MAS-a (zadnji MAS test; dok ga nemaš, 4,5 m/s). Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Gdje trening ne navodi udaljenost ili brzinu, na njegovoj stranici piše procjena.</p>' +
+    '<p>Intenzitet treninga ovisi o udjelu brzog trčanja i sprinta, a volumen o metrima: nizak do 1,5 km, srednji do 3 km, visok iznad toga.</p>' +
+    '<h2>U sezoni</h2><p>Kad u Doziranju postaviš dan utakmice, Kreni pokreće dozu za sezonu: oko 2/3 serija (s jednom serijom 2/3 ponavljanja). Uz treninge s loptom najviše jedan dodatni trening na terenu tjedno: intenzivan najbolje 4 dana prije utakmice, nikad dan prije.</p>' +
+    '<h2>Na što paziti?</h2><div class="icons"><figure>' + up + '<figcaption>Raste: napredak</figcaption></figure><figure>' + flat + '<figcaption>Ravno 2–3 tjedna: vrijeme za promjenu</figcaption></figure></div>' +
+    '<p>Linija koja raste znači napredak. Ravna linija dulje od 2–3 tjedna znači da je vrijeme za promjenu: koje ponavljanje, kilogram ili serija više. Lakši tjedan prije utakmice je u redu, kao i pad u tjednu s dvije utakmice.</p></div>' +
+    '<div style="height:24px"></div></div>';
+};
 VIEWS.progress = function(){
   const plan = planSlots(), ws = weekStart(Date.now()), wplan = weekPlan(ws, plan), wk = weekStatus(ws, wplan);
   if (S.dbState === 'ready') notePlan(ws, wplan);
@@ -2437,11 +2788,7 @@ VIEWS.progress = function(){
     const r = time && !moved ? 0 : sr.loaded && !time ? 2 : sr.loaded || e.cat === 'Snaga' || e.cat === 'Trup' ? 1 : 0;
     if (r) { series[id] = sr; rank[id] = r; } });
   const lifts = Object.keys(series).sort((a, b) => rank[b] - rank[a] || hist[b].length - hist[a].length || hist[b][hist[b].length - 1].at - hist[a][hist[a].length - 1].at).slice(0, 4);
-  const charts = lifts.map(id => {
-    const sr = series[id], h = sr.pts, val = sr.val;
-    const a = val(h[0]), b = val(h[h.length - 1]), d = Math.round((b - a) * 10) / 10;
-    return '<div class="chart"><div class="top"><b>'+esc(S.ex[id].name)+'</b><span class="delta'+(d < 0 ? ' neg' : d === 0 ? ' same' : '')+'">'+(d === 0 ? 'bez promjene' : (d > 0 ? '+' : '')+String(d).replace('.', ',')+sr.unit)+'</span></div><div class="sub2">'+esc(doseBase(h[0]))+' → '+esc(doseBase(h[h.length - 1]))+'</div>'+sparkSvg(h.map(val))+'</div>';
-  }).join('');
+  const charts = lifts.map(id => exLoadCard(S.ex[id], 'sve', true)).join('');   // the same load card as the exercise page
   // records: a best estimated max that beat an earlier best, set in the last 30 days (your first weight is not a record);
   // reps of a set count up to 10 like in Doziranje; no timed carries, jumps or throws
   const prs = Object.keys(hist).filter(id => S.ex[id] && S.ex[id].cat !== 'Eksplozivnost').map(id => { let best = null, beaten = false;
@@ -2457,10 +2804,11 @@ VIEWS.progress = function(){
   if (S.progTab === 'doziranje') return head + dosingHtml() + '<div style="height:20px"></div></div>';
   return head +
     '<div class="stats"><div class="stat"><b>'+(wk.planned ? wk.done + '/' + wk.planned : thisWeek)+'</b><span>'+(wk.planned ? 'treninga ovaj tjedan po planu' : plural(thisWeek, 'trening', 'treninga', 'treninga') + ' ovaj tjedan')+'</span></div><div class="stat"><b>'+sk+'</b><span>'+plural(sk, 'tjedan', 'tjedna', 'tjedana')+(plan.length ? ' zaredom po planu' : ' zaredom s treningom')+'</span></div><div class="stat"><b>'+total+'</b><span>'+plural(total, 'trening', 'treninga', 'treninga')+' ukupno</span></div></div>' +
+    weekLoadHtml() +
     '<div class="psec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
     (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
     (way.length ? '<div class="psec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
-    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
+    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' + charts : '') +
     (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
     '<div class="psec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat" role="img" aria-label="'+heatLabel(heat)+'">'+heat+'</div></div>' +
     '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
@@ -2713,7 +3061,7 @@ const A = {
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },
   // a new exercise made while picking exercises for a protocol: the protocol being built waits underneath
   newEx: () => { S.below = S.pick && S.draft && top().v === 'library' ? { draft: S.draft, sig: S.draftSig } : null; S.draft = newExDraft(); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
-  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n'), equip: exEquip(e).slice(), alt: e.alt || '', video: e.video || '' }); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
+  editEx: d => { const e = S.ex[d.id]; if (!e) return; S.draft = Object.assign(newExDraft(), clone(e), { stepsText: (e.steps||[]).join('\n'), equip: exEquip(e).slice(), alt: e.alt || '', video: e.video || '', runMText: e.runM > 0 ? String(e.runM).replace('.', ',') : '' }); S.draftSig = draftSig(S.draft); go({ v:'exEdit', id: S.draft.id }); },
   dset: d => { const dr = S.draft; let v = d.v; if (d.k === 'phase') v = +v || null; dr[d.k] = v; if (d.k === 'cat' && v !== 'Rehab' && v !== 'Mobilnost') dr.phase = null; if (d.k === 'cat' && v === 'Rehab' && !dr.phase) dr.phase = 1; if (d.k === 'measure' && v === 'time' && dr.sets > 3) dr.sets = 1; render(); },
   dzone: d => { const z = S.draft.zones = S.draft.zones || []; const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i,1); render(); },
   dflag: d => { S.draft[d.k] = !S.draft[d.k]; render(); },
@@ -2734,6 +3082,11 @@ const A = {
       equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: lines(d.stepsText), mistakes: (d.mistakes || []).slice(), note: (d.note||'').trim(),
       video, videoTitle: prev && video === (prev.video || '') ? prev.videoTitle : undefined,
       media: d.media || null, mediaType: d.mediaType || null, fav: !!d.fav, order: d.order || 500, source: prev ? prev.source : (d.source || null), sourceTitle: prev ? prev.sourceTitle : (d.sourceTitle || null) };
+    // an own running drill (Kondicija): metres per rep and the intensity; an empty distance removes both
+    if (d.cat === 'Kondicija' && !seedEx(d.id) && !d.pack) { const rm = Math.round(+String(d.runMText || '').replace(',', '.') * 10) / 10;
+      if (rm > 0 && rm <= 5000) { body.runM = rm; body.runInt = RUN_INT.indexOf(d.runInt) !== -1 ? d.runInt : 'umjereno'; }
+      else if ((d.runMText || '').trim()) { toast('Udaljenost upiši u metrima, npr. 30.', true); const el = document.getElementById('f-runm'); if (el) el.focus(); return; }
+      else { body.runM = null; body.runInt = null; } }
     // what you did not change stays exactly as stored, so an unchanged exercise (or one that only got your own photo or video,
     // which the fingerprint skips) still receives the app's improved instructions
     if (prev) {
@@ -2852,7 +3205,9 @@ const A = {
   },
   startPr: d => { const p = S.pr[d.id]; if (!p || !(p.items||[]).length) return; startPlayer({ mode:'ex', title: p.name, items: p.items, steps: stepsFromItems(p.items), ref: { kind:'protocol', id: p.id } }); },
   playEx: d => { const e = S.ex[d.id]; if (!e) return; const o = doseOptions(e)[top().dose || 0]; const items = [o ? o.it : exItem(e)]; startPlayer({ mode:'ex', title: e.name, items, steps: stepsFromItems(items), ref: { kind:'exercise', id: e.id } }); },
-  startField: d => { const f = S.field[d.id]; if (!f) return; startPlayer({ mode:'field', title: f.name_hr, f, steps: stepsFromField(f), ref: { kind:'field', id: f.id } }); },
+  // dose 'season': about 2/3 of the sets (fieldDose), the steps built the same way
+  startField: d => { const f = S.field[d.id]; if (!f) return; const sz = d.dose === 'season' && fieldLoad(f).type !== 'test';
+    startPlayer({ mode:'field', title: f.name_hr, f, dose: sz ? 'season' : 'full', steps: stepsFromField(sz ? fieldDose(f) : f), ref: { kind:'field', id: f.id } }); },
   ring: () => tapRing(),
   jump: d => jump(+d.d),
   jumpTo: d => { S.sheet = null; ensureAudio(); enterStep(landAt(+d.k)); P.paused = false; render(); },
@@ -2982,6 +3337,11 @@ const A = {
     if (P.answers[j] === false && P.lastReps[j] == null) P.lastReps[j] = lrDefault(j);
     savePlay(); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progInfo: () => { S.sheet = { kind:'progInfo' }; render(); },
+  loadInfo: () => go({ v:'loadInfo' }),
+  loadRange: d => { S.loadRange = d.v; render(); },   // the period of the exercise chart stays while the app is open
+  // a tap on a chart column shows that point; a second tap on it hides it (only the drawn chart changes, nothing is stored)
+  ltip: (d, el) => { const svg = el.closest('svg'); if (!svg) return; const g = svg.querySelector('.tipg[data-i="'+d.i+'"]'), on = g && g.classList.contains('on');
+    svg.querySelectorAll('.tipg.on').forEach(x => x.classList.remove('on')); if (g && !on) g.classList.add('on'); },
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
   eqSheet: () => { S.sheet = { kind:'eq' }; render(); },
