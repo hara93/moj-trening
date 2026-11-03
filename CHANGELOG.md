@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.5 — 3. 11. 2026.
+
+- **Bočno hodanje s gumom:** nova slika (stajno stopalo ostaje na mjestu, glava uspravnija). Svih 152 slika vježbi sada je pregledano i dobro.
+
 ## 1.6.4 — 3. 11. 2026.
 
 - **Cijeli ekran na iPhoneu:** aplikacija otvorena s početnog zaslona više nema praznu traku ispod donjeg izbornika; izbornik je nisko, kao u iOS aplikacijama.
