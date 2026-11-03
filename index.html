@@ -16,6 +16,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" crossorigin>
 <link rel="stylesheet" href="style.css">
+<script>
+// iPhone home-screen app (black-translucent status bar): iOS can report the viewport without the status bar, so the app stopped
+// 59 pt above the screen bottom (100%, 100vh and position:fixed bottom:0 all used that short height). Here the app takes the
+// real screen height instead; in Safari or wherever the two agree nothing changes.
+(function(){
+  var d = document.documentElement;
+  function fit(){
+    var h = window.innerHeight, sa = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (sa && /iP(hone|od)/.test(navigator.userAgent)) {
+      var s = window.innerWidth > window.innerHeight ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+      if (s > h && s - h < 120) h = s;
+    }
+    d.style.setProperty('--app-h', h + 'px');
+  }
+  fit(); addEventListener('resize', fit); addEventListener('orientationchange', function(){ setTimeout(fit, 300); });
+})();
+</script>
 </head>
 <body>
 <div id="app"></div>
