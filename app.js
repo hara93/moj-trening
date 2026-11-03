@@ -303,6 +303,7 @@ function cleanSettings(s){
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
+  if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
 const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10 };
@@ -2446,6 +2447,9 @@ function dosingHtml(){
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px"><span class="label" style="padding:0">Utakmica</span><button class="chip" data-a="setMatch" data-v="-1" aria-pressed="'+(m < 0)+'">Nema utakmice</button></div><div class="drow" role="group" aria-label="Dan utakmice">' + DAYS.map((L, i) => '<button class="dchip" data-a="setMatch" data-v="'+i+'" aria-pressed="'+(m === i)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div>' +
       matchDatesHtml() +
       '<div class="advice">'+esc(weekAdvice())+'</div></div>' +
+    '<div class="psec"><h2>Teren</h2><span>za treninge na terenu</span></div><div class="chart">' +
+      '<div class="prow" style="border:0;min-height:52px"><label class="k" for="topkmh">Najveća brzina (km/h)</label><input id="topkmh" class="input tkm" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="' + kmhTxt(topKmh()) + '" placeholder="28,8"></div>' +
+      '<p class="sub" style="margin:4px 0 0;font-size:13px;line-height:19px">Postotak brzine u treninzima na terenu (npr. 90&nbsp;% brzine) računa se od nje. Zadano 28,8&nbsp;km/h (8&nbsp;m/s); upiši svoju najveću brzinu iz STATSportsa, od 20 do 40&nbsp;km/h.</p></div>' +
     '<div class="psec"><h2>Moje težine</h2><span>kg, iz serija zadnjih 8 tjedana</span></div>' +
     (lifts.length ? '<div class="chart" style="padding-top:8px;padding-bottom:4px;overflow-x:auto"><table class="kg"><tr><th>Vježba</th>' + ['Snaga', 'Hipertr.', 'Izdrž.', 'Ekspl.'].map(t => '<th style="padding-left:8px">' + t + '</th>').join('') + '</tr>' +
       lifts.map(x => '<tr><td><b>'+esc(x.e.name)+'</b><span>max ≈ '+esc(fmtKg(Math.round(x.v * 2) / 2))+(loadKind(x.e) === 'db' ? ' po bučici' : '')+'</span></td>' + Object.keys(GOALS).map(k => '<td class="'+(g === k ? 'on' : '')+'">'+rng(x.e, x.v, k)+'</td>').join('') + '</tr>').join('') + '</table></div>'
@@ -2476,7 +2480,10 @@ function liftReps(x){
 // with kilograms the volume load = reps × kg (kg as entered: a dumbbell exercise counts one dumbbell, "po bučici"); without
 // kilograms the reps; timed work the seconds held. "Po strani" counts both sides. An own running drill (Kondicija with a
 // distance per rep) also gives metres in its intensity zone, so it counts in the field load.
-const LOAD_MAS = 4.5, LOAD_HSR = 5.5, LOAD_SPR = 7, LOAD_VMAX = 8;
+const LOAD_MAS = 4.5, LOAD_HSR = 5.5, LOAD_SPR = 7, TOP_KMH = 28.8;
+// your top speed (Doziranje → Najveća brzina, km/h; 28,8 km/h = 8 m/s while none is set): "% brzine / % napora" is taken of it
+const topKmh = () => { const v = S.settings.topKmh; return typeof v === 'number' && v >= 20 && v <= 40 ? v : TOP_KMH; };
+const kmhTxt = v => String(Math.round(v * 10) / 10).replace('.', ',');
 const RUN_INT = ['lagano', 'umjereno', 'visoko', 'sprint'], ZONE_NAMES = ['Lagano', 'Umjereno', 'Visoko', 'Sprint'];
 const INT4 = ['nizak', 'umjeren', 'visok', 'maksimalan'];
 const runDrill = e => !!e && e.cat === 'Kondicija' && +e.runM > 0;
@@ -2542,7 +2549,8 @@ function loadTrend(pts){
    4,5 m/s while there is none, and the page says so). Brzo trčanje ≥ 5,5 m/s (19,8 km/h), sprint ≥ 7 m/s (25,2 km/h); zones:
    lagano < 70 % MAS, umjereno 70–90 %, visoko 90 % MAS – 7 m/s, sprint ≥ 7 m/s. A speed range spreads its metres evenly over the
    range. A maximal run (sprint, maksimalno, ≥ 95 % or ≥ 90 % effort) starts from a standstill: its first 10 m stay below
-   5,5 m/s and its first 20 m below 7 m/s. % of speed or effort is taken of 8 m/s (an assumed top speed). Walking rests are not
+   5,5 m/s and its first 20 m below 7 m/s (with a top speed under 25,2 km/h it never reaches sprint). % of speed or effort is
+   taken of your top speed (Doziranje, 28,8 km/h = 8 m/s while none is set). Walking rests are not
    counted; recovery runs given as % MAS are. Blocks with neither a distance nor one speed use the estimates in FIELD_EST. */
 const loadMas = () => masNow() || LOAD_MAS;
 // m metres at a steady speed anywhere in [lo, hi] m/s
@@ -2554,7 +2562,7 @@ function runSeg(m, lo, hi, mas){
 }
 // a maximal run of m metres from a standstill (roll: out of a jog, 5 m sooner)
 function maxRun(m, roll){
-  const h = Math.max(0, m - (roll ? 5 : 10)), s = Math.max(0, m - (roll ? 15 : 20));
+  const h = Math.max(0, m - (roll ? 5 : 10)), s = topKmh() / 3.6 >= LOAD_SPR ? Math.max(0, m - (roll ? 15 : 20)) : 0;
   return { m, hsr: h, spr: s, z: [0, 0, m - s, s], t: 1 + m / 7 };
 }
 // legs: [metres, how]: max = maximal from a standstill, acc = maximal out of a jog, hod 1,5 m/s, jog 60 % MAS, tempo 100 % MAS,
@@ -2590,7 +2598,7 @@ function blockRep(b, f, mas, notes){
   const say = s => { if (notes && notes.indexOf(s) === -1) notes.push(s); };
   const est = (FIELD_EST[f && f.id] || []).find(x => x.re.test(b.label_hr || ''));
   if (est) { say(est.note); const o = est.cyc ? cycLoad(est.cyc, b.work_s || 0, mas) : legLoad(est.legs, mas); o.t = b.work_s || o.t; return o; }
-  const tx = b.intensity_hr || '', work = b.work_s || 0, num = s => +String(s).replace(',', '.');
+  const tx = b.intensity_hr || '', work = b.work_s || 0, num = s => +String(s).replace(',', '.'), vk = topKmh(), vx = vk / 3.6;
   const lab = '„' + (b.label_hr || '').replace(/^(?:S\d+(?:\/\d+)?|Krug \d+\/\d+|Runda \d+)\s*·\s*(?:P?\d+\/\d+\s*·\s*)?/, '') + '”';   // one note for the same block in every set
   const ms = /(\d+(?:,\d+)?)(?:\s*[–-]\s*(\d+(?:,\d+)?))?\s*m\/s/.exec(tx), ef = /(\d+)(?:\s*[–-]\s*(\d+))?\s*%\s*(?:brzine|napora)/.exec(tx);
   const efLo = ef ? +ef[1] : 0, efHi = ef ? +(ef[2] || ef[1]) : 0;
@@ -2599,13 +2607,13 @@ function blockRep(b, f, mas, notes){
   if (d && !b.distance_m) say(lab + ': ' + String(Math.round(d * 10) / 10).replace('.', ',') + ' m prema opisu.');
   if (maxW || efLo >= 90) {
     say('Maksimalni sprint kreće iz mjesta: prvih 10 m je ispod brzog trčanja, prvih 20 m ispod sprinta.');
-    if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * LOAD_VMAX * work; say(lab + ': ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od 8 m/s ≈ ' + Math.round(d) + ' m.'); }
+    if (!d) { d = (ef ? (efLo + efHi) / 200 : 1) * vx * work; say(lab + ': ' + work + ' s na ' + (ef ? efLo + ' %' : 'maksimalnoj brzini') + ' od ' + kmhTxt(vk) + ' km/h ≈ ' + Math.round(d) + ' m.'); }
     o = maxRun(d);
   } else {
     let lo = 0, hi = 0;
     if (ms) { lo = num(ms[1]); hi = num(ms[2] || ms[1]); }
     else if (b.mas_pct) lo = hi = mas * b.mas_pct / 100;
-    else if (ef) { lo = efLo / 100 * LOAD_VMAX; hi = efHi / 100 * LOAD_VMAX; say(lab + ': ' + efLo + (efHi !== efLo ? '–' + efHi : '') + ' % od 8 m/s (pretpostavljena najveća brzina).'); }
+    else if (ef) { lo = efLo / 100 * vx; hi = efHi / 100 * vx; say(lab + ': ' + efLo + (efHi !== efLo ? '–' + efHi : '') + ' % od ' + kmhTxt(vk) + ' km/h (najveća brzina).'); }
     else if (d && work) lo = hi = d / work;
     else if (/maksimaln\w* tempo/i.test(tx)) { lo = hi = mas; say('MAS test: 5 min tvojim MAS-om.'); }
     else if (/\bhod/i.test(tx)) lo = hi = 1.5; else if (/jog|lagan/i.test(tx)) lo = hi = .6 * mas; else if (/tempo/i.test(tx)) lo = hi = mas;
@@ -2795,7 +2803,7 @@ function fieldLoadHtml(f, a){
     '<div class="lc" style="margin-top:12px"><div class="hd"><span class="t">Raspodjela intenziteta · metri</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' +
     '<div class="zb" role="img" aria-label="'+esc('Metri po zonama: ' + zs + (a.spr ? '; sprint ' + loadFmt('m', a.spr) : '') + '.')+'">' + a.zones.map((m, i) => m >= 1 ? '<i class="'+ZC[i]+'" style="flex:'+m+'"></i>' : '').join('') + '</div>' +
     '<div class="zl">' + a.zones.map((m, i) => '<span><i class="'+ZC[i]+'"></i>'+ZONE_NAMES[i]+'<b>'+loadFmt('m', m)+'</b></span>').join('') + '</div>' +
-    '<p class="lnote">MAS '+masTxt(a.mas)+' m/s'+(a.def ? ' (zadano dok ne upišeš MAS test)' : ' (tvoj zadnji MAS test)')+'. Brzo trčanje od 19,8 km/h, sprint od 25,2 km/h' + (a.spr ? ' (ovdje ' + loadFmt('m', a.spr) + ')' : '') + '. Rad bez odmora: ' + dec1(a.min) + ' min.' + (a.notes.length ? ' Procjena: ' + esc(a.notes.join(' ')) : '') + '</p></div>';
+    '<p class="lnote">MAS '+masTxt(a.mas)+' m/s'+(a.def ? ' (zadano dok ne upišeš MAS test)' : ' (tvoj zadnji MAS test)')+'. Najveća brzina ' + kmhTxt(topKmh()) + ' km/h' + (typeof S.settings.topKmh === 'number' && topKmh() === S.settings.topKmh ? ' (tvoja, iz Doziranja)' : ' (zadano, promijeni u Doziranju)') + '. Brzo trčanje od 19,8 km/h, sprint od 25,2 km/h' + (a.spr ? ' (ovdje ' + loadFmt('m', a.spr) + ')' : '') + '. Rad bez odmora: ' + dec1(a.min) + ' min.' + (a.notes.length ? ' Procjena: ' + esc(a.notes.join(' ')) : '') + '</p></div>';
   if (a.type === 'test') return h;
   const s = fieldLoad(f, 'season'), pc = Math.round(s.m / (a.m || 1) * 100);
   const best = a.li >= 2 ? 'Najbolje 4 dana prije utakmice (MD-4), najkasnije 3 dana prije (MD-3).'
@@ -2830,7 +2838,7 @@ VIEWS.loadInfo = function(){
     '<h2>Zašto je važno?</h2><p>Snaga i kondicija rastu kad tijelu postupno daješ malo više posla. Volumen to pokazuje jednim brojem: vidiš rasteš li, stojiš li na mjestu ili si tjedan prije utakmice napravio previše.</p>' +
     '<h2>Kako se računa?</h2><p>Npr. 4 serije × 5 ponavljanja × 80 kg = 1.600 kg. Kod bučica se računa jedna bučica, kao što upisuješ kilograme. Vježba „po strani” broji obje strane. Djelomične serije računaju se kako si ih odradio, preskočene ne.</p>' +
     '<p>Graf vježbe prikazuje volumen tereta kad u razdoblju ima treninga s kilogramima (treninzi bez kilograma tada se ne crtaju), inače ponavljanja ili vrijeme. Tjedno opterećenje u Napretku zbraja treninge u kalendarskom tjednu, od ponedjeljka do nedjelje, i uspoređuje ih s prosjekom prethodna 4 tjedna. Vježba isprobana iz knjižnice ulazi u svoj graf, ali ne i u tjedni zbroj.</p>' +
-    '<h2>Trčanje na terenu</h2><p>Metri se računaju iz blokova treninga i tvog MAS-a (zadnji MAS test; dok ga nemaš, 4,5 m/s). Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Gdje trening ne navodi udaljenost ili brzinu, na njegovoj stranici piše procjena.</p>' +
+    '<h2>Trčanje na terenu</h2><p>Metri se računaju iz blokova treninga i tvog MAS-a (zadnji MAS test; dok ga nemaš, 4,5 m/s). Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Postotak brzine ili napora računa se od tvoje najveće brzine iz Doziranja (zadano 28,8 km/h). Gdje trening ne navodi udaljenost ili brzinu, na njegovoj stranici piše procjena.</p>' +
     '<p>Intenzitet treninga ovisi o udjelu brzog trčanja i sprinta, a volumen o metrima: nizak do 1,5 km, srednji do 3 km, visok iznad toga.</p>' +
     '<h2>U sezoni</h2><p>Kad u Doziranju postaviš dan utakmice (ili u tjednu označiš utakmicu), Kreni pokreće dozu za sezonu: oko 2/3 serija (s jednom serijom 2/3 ponavljanja). Uz treninge s loptom najviše jedan dodatni trening na terenu tjedno: intenzivan najbolje 4 dana prije utakmice, nikad dan prije. U tjednu s dvije utakmice samo lagani trening na terenu i bez teških nogu između utakmica.</p>' +
     '<h2>Na što paziti?</h2><div class="icons"><figure>' + up + '<figcaption>Raste: napredak</figcaption></figure><figure>' + flat + '<figcaption>Ravno 2–3 tjedna: vrijeme za promjenu</figcaption></figure></div>' +
@@ -3498,7 +3506,7 @@ app.addEventListener('input', ev => {
     const h = document.getElementById('sec-' + t.dataset.from); if (h && val) h.textContent = val;
   }
 });
-app.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.dataset && (t.dataset.ikg != null || t.dataset.dkg != null || t.dataset.isec != null)) { ev.preventDefault(); t.blur(); } });
+app.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.dataset && (t.id === 'topkmh' || t.dataset.ikg != null || t.dataset.dkg != null || t.dataset.isec != null)) { ev.preventDefault(); t.blur(); } });
 app.addEventListener('focusin', ev => { const t = ev.target; if (t.classList && t.classList.contains('kgin')) setTimeout(() => { try { t.select(); } catch(e){} }, 0); });
 app.addEventListener('change', async ev => {
   actionSeq++;
@@ -3512,6 +3520,11 @@ app.addEventListener('change', async ev => {
     if (why) { toast(why, true); return; }
     cleanFixes = 0; S.sheet = { kind:'restore', d: cleanData(d) }; clearToast(); render();
     return;
+  }
+  if (t.id === 'topkmh') {
+    const v = +String(t.value).trim().replace(',', '.');
+    if (!(t.value.trim() && isFinite(v) && v >= 20 && v <= 40)) { t.value = kmhTxt(topKmh()); toast('Upiši najveću brzinu od 20 do 40 km/h.', true); return; }
+    S.settings.topKmh = Math.round(v * 10) / 10; lsSet('mt.settings', S.settings); render(); toast('Najveća brzina: ' + kmhTxt(S.settings.topKmh) + ' km/h.'); return;
   }
   if (t.id === 'packFile' && t.files && t.files[0]) {
     if (S.sheet) { S.sheet._busy = true; render(); }
