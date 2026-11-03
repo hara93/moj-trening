@@ -472,3 +472,6 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .edu .i2{fill:none;stroke:var(--success);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .edu .i3{fill:none;stroke:#5C4A2E;stroke-width:3}
 .edu .i4{fill:none;stroke:#F5A623;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+/* 1.6.1: Doziranje, a match on a date (date picker + Dodaj) */
+.madd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.madd .input{height:44px;min-width:0;border-radius:14px;padding:0 12px;background:var(--surface-2)}

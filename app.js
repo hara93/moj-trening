@@ -829,39 +829,82 @@ function streakWeeks(plan){
 // 2 days before a lighter session with explosive work, the day before only activation
 const heavyLegs = p => (p.items || []).some(it => { const e = S.ex[it.exId]; return !!e && (it.exId === 'nordic-curl' || (e.cat === 'Snaga' && loaded(e) && LOWER_ZONES.indexOf((e.zones || [])[0]) !== -1)); });
 const gymLike = p => p.tag === 'Teretana' || (p.items || []).some(it => { const e = S.ex[it.exId]; return !!e && e.cat === 'Snaga' && loaded(e); });
-// the warning for a planned session on day i (0 = Monday), '' when it fits the match week
+// matches: the standing match day (Doziranje) every week, plus dates marked in the day sheet or in Doziranje. settings.matchDates
+// is a flat map 'YYYY-MM-DD' → 1 (a match that day) or 0 (no match on the standing day that week); it goes into backups.
+const dateKey = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const matchDates = () => isPlainObj(S.settings.matchDates) ? S.settings.matchDates : {};
+const matchOn = t => { const v = matchDates()[dateKey(t)]; return v === 1 ? true : v === 0 ? false : dayIdx(t) === matchDay(); };
+function setMatchDate(t, on){
+  const m = Object.assign({}, matchDates()), k = dateKey(t), old = dateKey(calDay(Date.now(), -56));
+  if (on === (dayIdx(t) === matchDay())) delete m[k]; else m[k] = on ? 1 : 0;
+  Object.keys(m).forEach(x => { if (x < old) delete m[x]; });
+  S.settings.matchDates = m; lsSet('mt.settings', S.settings);
+}
+// the days (0 = Monday) of the week that starts at ws with a match
+const weekMatches = ws => [0, 1, 2, 3, 4, 5, 6].filter(i => matchOn(calDay(ws, i)));
+// from day i of the week ws: days to the next match (0 = that day) and since the last one, looking a week each way; -1 = none
+function matchGap(ws, i){
+  const t = calDay(ws, i); let next = -1, prev = -1;
+  for (let k = 0; k <= 7 && next < 0; k++) if (matchOn(calDay(t, k))) next = k;
+  for (let k = 1; k <= 7 && prev < 0; k++) if (matchOn(calDay(t, -k))) prev = k;
+  return { next, prev };
+}
+// in season: a standing match day, or a match this week (then Kreni on a field session starts the season dose)
+const inSeason = () => matchDay() >= 0 || weekMatches(weekStart(Date.now())).length > 0;
+const daysList = (l, w) => l.map(i => DAYS_IN[i]).join(', ').replace(/, (?=[^,]*$)/, w || ' i ');
+// the lightest field session for a week with two matches: intensity nizak, the fewest metres
+function lightField(){
+  return Object.values(S.field).map(f => ({ f, a: fieldLoad(f) })).filter(x => x.a.li === 0 && x.a.type !== 'test').sort((a, b) => a.a.m - b.a.m)[0] || null;
+}
+const TWO_FIELD = 'Ovaj tjedan imaš dvije utakmice: na terenu samo lagani trening (intenzitet nizak)';
+// a field session of intensity li on day i of the week ws: never the day before a match; umjeren and harder at the latest 3 days
+// before it and not the day after; in a week with two matches only nizak. '' when it fits.
+function fieldMatchNote(li, i, ws){
+  const g = matchGap(ws, i);
+  if (g.next < 0 && g.prev < 0) return '';
+  if (g.next === 0) return li ? 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.' : '';
+  if (g.next === 1) return 'Sutra je utakmica: danas bez sprintova i intervala, samo aktivacija.';
+  if (li && weekMatches(ws).length >= 2) { const l = lightField(); return TWO_FIELD + ': ' + (l ? 'umjesto ovoga odradi „' + l.f.name_hr + '”.' : 'ovaj preskoči.'); }
+  if (g.next === 2 && li) return 'Utakmica je za 2 dana: ovaj trening ' + (li >= 2 ? 'najkasnije 3 dana prije utakmice, najbolje 4.' : 'najkasnije 3 dana prije utakmice ili 2 dana nakon nje.');
+  if (g.prev === 1 && li) return 'Jučer je bila utakmica: danas oporavak, ovaj trening najranije 2 dana nakon utakmice.';
+  return '';
+}
+// the warning for a planned session on day i (0 = Monday) of this week, '' when it fits the match week (all its matches)
 function matchNote(s, i){
-  if (s.kind === 'field') {   // by the session's intensity (fieldLoad): never the day before the match; umjeren and harder at the
-    // latest 3 days before it and not the day after; at most one extra field session a week
-    const m = matchDay(), f = m < 0 ? null : S.field[s.id], d = (m - i + 7) % 7;
+  const ws = weekStart(Date.now()), g = matchGap(ws, i);
+  if (g.next < 0 && g.prev < 0) return '';
+  if (s.kind === 'field') {   // by the session's intensity (fieldLoad); at most one extra field session a week
+    const f = S.field[s.id];
     if (!f) return '';
-    const li = fieldInt(f);
-    if (d === 0) return li ? 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.' : '';
-    if (d === 1) return 'Sutra je utakmica: danas bez sprintova i intervala, samo aktivacija.';
-    if (d === 2 && li) return 'Utakmica je za 2 dana: ovaj trening ' + (li >= 2 ? 'najkasnije 3 dana prije utakmice, najbolje 4.' : 'najkasnije 3 dana prije utakmice ili 2 dana nakon nje.');
-    if (d === 6 && li) return 'Jučer je bila utakmica: danas oporavak, ovaj trening najranije 2 dana nakon utakmice.';
+    const n = fieldMatchNote(fieldInt(f), i, ws);
+    if (n || g.next === 0) return n;
     const fs = planSlots().filter(x => x.kind === 'field');
     if (fs.length > 1 && fs[0].day !== i) return 'U sezoni najviše jedan dodatni trening na terenu tjedno: ovaj preskoči ili ga zamijeni lakšim.';
     return '';
   }
-  const m = matchDay(), p = m < 0 ? null : s.kind === 'protocol' ? S.pr[s.id] : s.kind === 'program' ? S.pr[s.pr] : null;
+  const p = s.kind === 'protocol' ? S.pr[s.id] : s.kind === 'program' ? S.pr[s.pr] : null;
   if (!p) return '';
-  const d = (m - i + 7) % 7, heavy = heavyLegs(p);
+  const d = g.next, heavy = heavyLegs(p), wm = weekMatches(ws);
   if (d === 0 && (heavy || gymLike(p))) return 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.';
   if (d === 1 && (heavy || gymLike(p))) return 'Sutra je utakmica: danas bez teških nogu, samo aktivacija.';
+  if (heavy && wm.some(x => x < i) && wm.some(x => x > i)) return 'Između dviju utakmica bez teških nogu: danas lakši trening s eksplozivnošću ili mobilnost.';
   if (d === 2 && heavy) return 'Utakmica je za 2 dana: danas bez teških nogu, lakši trening s eksplozivnošću.';
   if (d === 3 && heavy) return 'Utakmica je za 3 dana: teški trening nogu najkasnije 4 dana prije utakmice.';
   return '';
 }
-// a warning box on the home screen and in the day sheet; the day before the match it offers your activation instead
+// a warning box on the home screen and in the day sheet; the day before a match it offers your activation instead, in a
+// week with two matches the lightest field session
 function matchBox(note, i, mg){
   if (!note) return '';
-  const akt = (matchDay() - i + 7) % 7 === 1 && Object.values(S.pr).find(p => p.home === 'aktivacija');
-  return '<div class="lift warn" style="margin:' + (mg || '0') + '"><div class="why" style="color:var(--text-body)">' + esc(note) + '</div>' + (akt ? '<div class="acts" style="grid-template-columns:1fr"><button class="bt ghost" data-a="openPr" data-id="' + esc(akt.id) + '">' + esc(akt.name) + ' · ' + protoMin(akt) + ' min</button></div>' : '') + '</div>';
+  const akt = matchGap(weekStart(Date.now()), i).next === 1 && Object.values(S.pr).find(p => p.home === 'aktivacija');
+  const lf = !akt && note.indexOf(TWO_FIELD) === 0 && lightField();
+  const bt = akt ? '<button class="bt ghost" data-a="openPr" data-id="' + esc(akt.id) + '">' + esc(akt.name) + ' · ' + protoMin(akt) + ' min</button>'
+    : lf ? '<button class="bt ghost" data-a="openField" data-id="' + esc(lf.f.id) + '">' + esc(lf.f.name_hr) + ' · ' + esc(fieldMin(lf.f)) + ' min</button>' : '';
+  return '<div class="lift warn" style="margin:' + (mg || '0') + '"><div class="why" style="color:var(--text-body)">' + esc(note) + '</div>' + (bt ? '<div class="acts" style="grid-template-columns:1fr">' + bt + '</div>' : '') + '</div>';
 }
 function weekHtml(){
   if (S.dbState !== 'ready') return '';
-  const now = Date.now(), ws = weekStart(now), today = dayIdx(now), m = matchDay();
+  const now = Date.now(), ws = weekStart(now), today = dayIdx(now), wm = weekMatches(ws);
   const cur = planSlots(), plan = weekPlan(ws, cur); notePlan(ws, plan);
   const st = weekStatus(ws, plan);
   const trainedDays = {}; st.log.forEach(l => trainedDays[dayIdx(l.at)] = 1);
@@ -870,9 +913,9 @@ function weekHtml(){
     const plan = st.slots.filter(s => s.day === i);
     const missed = i < today && plan.some(s => !s.done);
     const cls = trainedDays[i] ? 'done' : missed ? 'miss' : plan.length ? 'plan' : '';
-    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : '') + (i === m ? ', utakmica' : '');
-    // the match day carries a small dot under its date (flex:none: the done screen's .done{flex:1} must not stretch the circles)
-    return '<button class="wd" data-a="daySheet" data-i="'+i+'"' + (i === today ? ' aria-current="date"' : '') + ' aria-label="'+esc(label)+'"><span class="l">'+L+'</span><span class="c '+cls+'" style="flex:none">'+d.getDate()+'</span>' + (i === m ? '<i style="display:block;width:6px;height:6px;margin-top:-2px;border-radius:3px;background:#FFC861"></i>' : '') + '</button>';
+    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : '') + (wm.indexOf(i) !== -1 ? ', utakmica' : '');
+    // a match day (the standing one or a marked date) carries a small dot under its date (flex:none: the done screen's .done{flex:1} must not stretch the circles)
+    return '<button class="wd" data-a="daySheet" data-i="'+i+'"' + (i === today ? ' aria-current="date"' : '') + ' aria-label="'+esc(label)+'"><span class="l">'+L+'</span><span class="c '+cls+'" style="flex:none">'+d.getDate()+'</span>' + (wm.indexOf(i) !== -1 ? '<i style="display:block;width:6px;height:6px;margin-top:-2px;border-radius:3px;background:#FFC861"></i>' : '') + '</button>';
   }).join('') + '</div>';
   const todo = st.slots.filter(s => s.day === today && !s.done);
   const missed = st.slots.filter(s => s.day < today && !s.done);
@@ -2367,12 +2410,25 @@ const kgSig = k => k.changes.map(c => c.e.id + ':' + c.to).join('|');
 const ballN = () => { const v = S.settings.ballN; return v != null && v !== '' && isFinite(v) ? Math.max(0, Math.min(7, Math.round(+v))) : 3; };
 const matchDay = () => { const v = S.settings.matchDay; return v != null && v !== '' && isFinite(v) && +v >= 0 && +v <= 6 ? Math.round(+v) : -1; };
 function weekAdvice(){
-  const b = ballN(), m = matchDay();
+  const b = ballN(), m = matchDay(), wm = weekMatches(weekStart(Date.now()));
   const dn = i => DAYS_IN[(i + 7) % 7];
-  if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani tjedno' + (n > 1 ? ', s barem jednim danom između.' : '.'); }
+  const tw = wm.length >= 2 ? ' Ovaj tjedan imaš ' + wm.length + ' utakmice (' + daysList(wm) + '): između njih bez teških nogu, a na terenu samo lagani trening.'
+    : wm.length && wm[0] !== m ? ' Ovaj tjedan imaš utakmicu ' + dn(wm[0]) + ': teške noge najkasnije 4 dana prije nje, dan prije samo aktivacija.' : '';
+  if (m < 0) { const n = b <= 2 ? 3 : b <= 4 ? 2 : 1; return 'Bez utakmice (pripreme ili pauza): ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani tjedno' + (n > 1 ? ', s barem jednim danom između.' : '.') + tw; }
   const n = b >= 4 ? 1 : 2;
   return 'Preporuka: ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' u teretani. ' + (n === 2 ? 'Teži najkasnije ' + dn(m - 4) + ' (4 dana prije utakmice), lakši s eksplozivnošću ' + dn(m - 2) : 'Odradi ga najkasnije ' + dn(m - 4) + ' (4 dana prije utakmice)') +
-    '. Dan prije utakmice (' + DAYNAMES[(m + 6) % 7] + ') bez teških nogu, samo aktivacija; dan poslije (' + DAYNAMES[(m + 1) % 7] + ') mobilnost i oporavak. U sezoni je jedan trening u teretani tjedno dovoljan da zadržiš snagu i brzinu.';
+    '. Dan prije utakmice (' + DAYNAMES[(m + 6) % 7] + ') bez teških nogu, samo aktivacija; dan poslije (' + DAYNAMES[(m + 1) % 7] + ') mobilnost i oporavak. U sezoni je jedan trening u teretani tjedno dovoljan da zadržiš snagu i brzinu.' + tw;
+}
+// Doziranje: dates marked as a match (or a standing match day without one) from today on, and a new date
+function matchDatesHtml(){
+  const md = matchDates(), today = dateKey(Date.now());
+  const ks = Object.keys(md).filter(k => k >= today && /^\d{4}-\d\d-\d\d$/.test(k)).sort();
+  const when = k => { const t = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10)).getTime(); return DAYNAMES[dayIdx(t)].slice(0, 3) + ' ' + shortDate(t); };
+  return '<span class="label" style="display:block;padding:12px 0 8px">Dodatne utakmice</span>' +
+    (ks.length ? '<div class="chips wrap" style="margin-bottom:10px">' + ks.map(k => { const tx = (md[k] === 1 ? 'Utakmica ' : 'Bez utakmice ') + when(k);
+      return '<button class="chip" data-a="matchDel" data-k="' + esc(k) + '" aria-label="' + esc('Ukloni: ' + tx) + '">' + esc(tx) + ' ✕</button>'; }).join('') + '</div>' : '') +
+    '<div class="madd"><input id="matchadd" class="input" type="date" min="' + today + '" aria-label="Datum dodatne utakmice"><button class="chip" data-a="matchAdd">Dodaj</button></div>' +
+    '<p class="sub" style="margin:8px 2px 0;font-size:13px;line-height:19px">Utakmicu u ovom tjednu označiš i dodirom na dan na početnom zaslonu.</p>';
 }
 function dosingHtml(){
   const g = GOALS[S.settings.goal] ? S.settings.goal : null, b = ballN(), m = matchDay(), pk = plateKg();
@@ -2388,6 +2444,7 @@ function dosingHtml(){
       '<div class="prow" style="border:0;min-height:52px"><span class="k">Treninzi s loptom</span><div class="step"><button class="sbtn" data-a="setBall" data-d="-1" aria-label="Treninzi s loptom: smanji">−</button><b>'+b+'</b><button class="sbtn" data-a="setBall" data-d="1" aria-label="Treninzi s loptom: povećaj">+</button></div></div>' +
       // "Nema utakmice" sits beside the label, so the seven day buttons share the whole row (44 px tall, about 40 px wide)
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px"><span class="label" style="padding:0">Utakmica</span><button class="chip" data-a="setMatch" data-v="-1" aria-pressed="'+(m < 0)+'">Nema utakmice</button></div><div class="drow" role="group" aria-label="Dan utakmice">' + DAYS.map((L, i) => '<button class="dchip" data-a="setMatch" data-v="'+i+'" aria-pressed="'+(m === i)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div>' +
+      matchDatesHtml() +
       '<div class="advice">'+esc(weekAdvice())+'</div></div>' +
     '<div class="psec"><h2>Moje težine</h2><span>kg, iz serija zadnjih 8 tjedana</span></div>' +
     (lifts.length ? '<div class="chart" style="padding-top:8px;padding-bottom:4px;overflow-x:auto"><table class="kg"><tr><th>Vježba</th>' + ['Snaga', 'Hipertr.', 'Izdrž.', 'Ekspl.'].map(t => '<th style="padding-left:8px">' + t + '</th>').join('') + '</tr>' +
@@ -2727,12 +2784,12 @@ function weekLoadHtml(){
 }
 // the field page: tags, three tiles, the intensity distribution with its assumptions, "U sezoni" (the dose and the best days)
 const FIELD_TYPE = { aerobno: 'Aerobno', intervali: 'Intervali', brzina: 'Brzina', agilnost: 'Agilnost', test: 'Test' };
-const fieldSeason = a => a.type !== 'test' && matchDay() >= 0;
+const fieldSeason = a => a.type !== 'test' && inSeason();
 function fieldTagsHtml(a){
   return '<span class="tag'+(a.li >= 2 ? ' hi' : '')+'">Intenzitet: '+a.int+'</span><span class="tag">Volumen: '+a.vol+'</span><span class="tag">'+FIELD_TYPE[a.type]+'</span>';
 }
 function fieldLoadHtml(f, a){
-  const ZC = ['z1', 'z2', 'z3', 'z4'], md = matchDay();
+  const ZC = ['z1', 'z2', 'z3', 'z4'], md = matchDay(), ws = weekStart(Date.now()), wm = weekMatches(ws), today = dayIdx(Date.now());
   const zs = a.zones.map((m, i) => ZONE_NAMES[i] + ' ' + loadFmt('m', m)).join(', ');
   let h = '<div class="stats"><div class="stat"><b>'+loadFmt('m', a.m)+'</b><span>ukupno</span></div><div class="stat"><b>'+loadFmt('m', a.hsr)+'</b><span>brzo trčanje</span></div><div class="stat"><b>'+esc(fieldMin(f))+' min</b><span>trajanje</span></div></div>' +
     '<div class="lc" style="margin-top:12px"><div class="hd"><span class="t">Raspodjela intenziteta · metri</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' +
@@ -2744,9 +2801,16 @@ function fieldLoadHtml(f, a){
   const best = a.li >= 2 ? 'Najbolje 4 dana prije utakmice (MD-4), najkasnije 3 dana prije (MD-3).'
     : a.li === 1 ? 'Najbolje 4 ili 3 dana prije utakmice (MD-4, MD-3) ili 2 dana nakon nje.'
     : 'Može 4, 3 ili 2 dana prije utakmice (MD-4 do MD-2) ili 2 dana nakon nje.';
-  const why = loadFmt('m', s.m) + ' umjesto ' + loadFmt('m', a.m) + ', brzo trčanje ' + loadFmt('m', s.hsr) + '. ' + best + ' Nikad dan prije utakmice. Najviše jedan dodatni trening na terenu tjedno.' + (a.li ? ' U tjednu s dvije utakmice ga preskoči.' : ' U tjednu s dvije utakmice može samo ovakav lagani trening.') +
-    (fieldSeason(a) ? ' Dan utakmice je postavljen u Doziranju, pa Kreni pokreće dozu za sezonu.' : ' Kad u Doziranju postaviš dan utakmice, Kreni pokreće dozu za sezonu.');
-  return h + '<div class="psec"><h2>U sezoni</h2><span>'+(md >= 0 ? 'utakmica ' + esc(DAYS_IN[md]) : 'bez dana utakmice')+'</span></div>' +
+  // this week, by all its matches: the days from today on where the session fits (fieldMatchNote says nothing)
+  const lf = wm.length >= 2 && a.li ? lightField() : null;
+  const days = [0, 1, 2, 3, 4, 5, 6].filter(i => i >= today && wm.indexOf(i) === -1 && !fieldMatchNote(a.li, i, ws));
+  const week = wm.length >= 2 ? ' Ovaj tjedan imaš ' + wm.length + ' utakmice (' + daysList(wm) + '): na terenu samo lagani trening (intenzitet nizak), bez teških nogu između utakmica. ' +
+      (a.li ? 'Ovaj trening preskoči' + (lf ? ', umjesto njega odradi „' + lf.f.name_hr + '”.' : '.') : days.length ? 'Ovaj može ' + daysList(days, ' ili ') + '.' : 'Ovaj tjedan za njega više nema dobrog dana.')
+    : wm.length ? ' Ovaj tjedan (utakmica ' + daysList(wm) + '): ' + (days.length ? 'može ' + daysList(days, ' ili ') + '.' : 'za ovaj trening više nema dobrog dana.')
+    : ' U tjednu s dvije utakmice ' + (a.li ? 'ga preskoči.' : 'može samo ovakav lagani trening.');
+  const why = loadFmt('m', s.m) + ' umjesto ' + loadFmt('m', a.m) + ', brzo trčanje ' + loadFmt('m', s.hsr) + '. ' + best + ' Nikad dan prije utakmice. Najviše jedan dodatni trening na terenu tjedno.' + week +
+    (fieldSeason(a) ? (md >= 0 ? ' Dan utakmice je postavljen u Doziranju' : ' Ovaj tjedan imaš utakmicu') + ', pa Kreni pokreće dozu za sezonu.' : ' Kad u Doziranju postaviš dan utakmice ili označiš utakmicu u tjednu, Kreni pokreće dozu za sezonu.');
+  return h + '<div class="psec"><h2>U sezoni</h2><span>'+(wm.length ? (wm.length > 1 ? 'utakmice ' : 'utakmica ') + esc(daysList(wm)) : md >= 0 ? 'ovaj tjedan bez utakmice' : 'bez dana utakmice')+'</span></div>' +
     '<div class="lift'+(fieldSeason(a) ? ' go' : '')+'"><div class="top"><b>Doza za sezonu: '+esc(s.doseText)+'</b><span>≈ '+pc+' %</span></div><div class="why">'+esc(why)+'</div></div>';
 }
 // the start: "Kreni" runs the season dose when a match day is set (else the full one); the link under it runs the other
@@ -2768,7 +2832,7 @@ VIEWS.loadInfo = function(){
     '<p>Graf vježbe prikazuje volumen tereta kad u razdoblju ima treninga s kilogramima (treninzi bez kilograma tada se ne crtaju), inače ponavljanja ili vrijeme. Tjedno opterećenje u Napretku zbraja treninge u kalendarskom tjednu, od ponedjeljka do nedjelje, i uspoređuje ih s prosjekom prethodna 4 tjedna. Vježba isprobana iz knjižnice ulazi u svoj graf, ali ne i u tjedni zbroj.</p>' +
     '<h2>Trčanje na terenu</h2><p>Metri se računaju iz blokova treninga i tvog MAS-a (zadnji MAS test; dok ga nemaš, 4,5 m/s). Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Gdje trening ne navodi udaljenost ili brzinu, na njegovoj stranici piše procjena.</p>' +
     '<p>Intenzitet treninga ovisi o udjelu brzog trčanja i sprinta, a volumen o metrima: nizak do 1,5 km, srednji do 3 km, visok iznad toga.</p>' +
-    '<h2>U sezoni</h2><p>Kad u Doziranju postaviš dan utakmice, Kreni pokreće dozu za sezonu: oko 2/3 serija (s jednom serijom 2/3 ponavljanja). Uz treninge s loptom najviše jedan dodatni trening na terenu tjedno: intenzivan najbolje 4 dana prije utakmice, nikad dan prije.</p>' +
+    '<h2>U sezoni</h2><p>Kad u Doziranju postaviš dan utakmice (ili u tjednu označiš utakmicu), Kreni pokreće dozu za sezonu: oko 2/3 serija (s jednom serijom 2/3 ponavljanja). Uz treninge s loptom najviše jedan dodatni trening na terenu tjedno: intenzivan najbolje 4 dana prije utakmice, nikad dan prije. U tjednu s dvije utakmice samo lagani trening na terenu i bez teških nogu između utakmica.</p>' +
     '<h2>Na što paziti?</h2><div class="icons"><figure>' + up + '<figcaption>Raste: napredak</figcaption></figure><figure>' + flat + '<figcaption>Ravno 2–3 tjedna: vrijeme za promjenu</figcaption></figure></div>' +
     '<p>Linija koja raste znači napredak. Ravna linija dulje od 2–3 tjedna znači da je vrijeme za promjenu: koje ponavljanje, kilogram ili serija više. Lakši tjedan prije utakmice je u redu, kao i pad u tjednu s dvije utakmice.</p></div>' +
     '<div style="height:24px"></div></div>';
@@ -2923,12 +2987,13 @@ function sheetHtml(){
   } else if (s.kind === 'day') {
     const ws = weekStart(Date.now()), st = weekStatus(ws, weekPlan(ws)), i = s.i, today = dayIdx(Date.now()), m = matchDay();
     const plan = st.slots.filter(x => x.day === i), done = st.log.filter(l => dayIdx(l.at) === i);
-    const d = new Date(calDay(ws, i));
-    body = '<h3>' + esc(DAYNAMES[i].charAt(0).toUpperCase() + DAYNAMES[i].slice(1)) + ', ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.' + (i === m ? ' · utakmica' : '') + '</h3>' +
+    const d = new Date(calDay(ws, i)), mt = matchOn(d.getTime());
+    body = '<h3>' + esc(DAYNAMES[i].charAt(0).toUpperCase() + DAYNAMES[i].slice(1)) + ', ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.' + (mt ? ' · utakmica' : '') + '</h3>' +
+      '<div class="prow" style="min-height:56px;margin-bottom:8px;border-bottom:1px solid var(--border)"><span class="k">Utakmica' + (i === m ? '<small>Stalni dan utakmice iz Doziranja</small>' : '') + '</span><button class="switch" role="switch" data-a="toggleMatch" data-i="' + i + '" aria-checked="' + mt + '" aria-label="Utakmica"></button></div>' +
       (plan.length ? '<p class="label" style="padding:0 0 6px">Plan</p>' + plan.map(x => '<button class="opt" '+slotOpen(x)+'><span>'+esc(x.name)+'</span><span class="tag">'+(x.done ? 'odrađeno' : i < today ? 'propušteno' : 'čeka')+'</span></button>').join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
       (i >= today ? matchBox(plan.filter(x => !x.done).map(x => matchNote(x, i)).find(Boolean), i, '12px 0 0') : '') +
       (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+fmtDur(l.secs)+'</span></div>').join('') : '') +
-      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu)' + (m >= 0 ? ', a dan utakmice u Napretku (Doziranje)' : '') + '.</p>';
+      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu). Stalni dan utakmice biraš u Napretku (Doziranje), a ovdje označiš i dodatnu utakmicu.</p>';
   } else if (s.kind === 'goal' || s.kind === 'kg') {
     const p = S.pr[s.id], G = GOALS[S.settings.goal], plan = p && (s.kind === 'kg' || G) ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
     body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(G ? G.name : '') + '” za ' + esc(p ? p.name : '') : 'Kilogrami za ' + esc(p ? p.name : '')) + '</h3>' +
@@ -3314,6 +3379,13 @@ const A = {
   setGoal: d => { S.settings.goal = S.settings.goal === d.v ? null : d.v; lsSet('mt.settings', S.settings); render(); },
   setBall: d => { const v = ballN() + (+d.d); S.settings.ballN = Math.max(0, Math.min(7, v)); lsSet('mt.settings', S.settings); render(); },
   setMatch: d => { S.settings.matchDay = +d.v; lsSet('mt.settings', S.settings); render(); },
+  toggleMatch: d => { const t = calDay(weekStart(Date.now()), +d.i); setMatchDate(t, !matchOn(t)); render(); },
+  matchAdd: () => { const el = document.getElementById('matchadd'), v = el && /^(\d{4})-(\d\d)-(\d\d)$/.exec(el.value || '');
+    if (!v) { toast('Odaberi datum utakmice.'); return; }
+    const t = new Date(+v[1], +v[2] - 1, +v[3]).getTime();
+    if (t < calDay(Date.now())) { toast('Odaberi današnji ili neki kasniji datum.'); return; }
+    setMatchDate(t, true); render(); toast('Utakmica ' + DAYS_IN[dayIdx(t)] + ', ' + shortDate(t) + ' je dodana.'); },
+  matchDel: d => { const m = Object.assign({}, matchDates()); delete m[d.k]; S.settings.matchDates = m; lsSet('mt.settings', S.settings); render(); },
   kgSkip: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; n.kgSkip = kgSig(kgPlan(p)); S.pr[d.id].kgSkip = n.kgSkip; render(); await save('protocols', d.id, n); },
   goalSheet: d => { S.sheet = { kind:'goal', id: d.id }; render(); },
   kgSheet: d => { S.sheet = { kind:'kg', id: d.id }; render(); },
