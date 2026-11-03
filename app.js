@@ -478,16 +478,17 @@ function mergeSeed(seed){
     if (c === 'protocols') { next.items = carryItems(fresh, local, touched); if (local.goal != null) next.goal = local.goal; }
     if (mtCanon(next) !== mtCanon(local)) { map[id] = next; changed = true; }
   }));
-  // new names for shipped items: applied even if you changed the item, never if you gave it your own name
+  // new names for shipped items: applied even if you changed the item, never if you gave it your own name. Old values compare by
+  // value, so a list (e.g. an exercise's old steps) is renamed too.
   // A new description may describe the new order and members of the exercise list, so a protocol whose exercises you
   // changed keeps its description, unless its list is the new one or the shipped list never changed.
   const renamed = window.SEED_RENAMED || {}, layouts = (window.SEED_LAYOUT || {}).protocols || {};
-  const listFp = p => mtStructHash({ items: (p && p.items) || [] });
+  const listFp = p => mtStructHash({ items: (p && p.items) || [] }), sameVal = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
   const descFits = (id, local, fresh) => { const f = listFp(fresh); return listFp(local) === f || ((layouts[id] || []).length > 0 && layouts[id].every(h => h === f)); };
   ['exercises','protocols','field'].forEach(c => Object.keys(renamed[c] || {}).forEach(id => {
     const map = collMap(c), local = map[id], fresh = (seed[c] || {})[id];
     if (!local || !fresh) return;
-    Object.keys(renamed[c][id]).forEach(k => { if ((renamed[c][id][k] || []).indexOf(local[k]) !== -1 && fresh[k] !== undefined && local[k] !== fresh[k] && (c !== 'protocols' || k !== 'desc' || descFits(id, local, fresh))) { local[k] = fresh[k]; changed = true; } });
+    Object.keys(renamed[c][id]).forEach(k => { if ((renamed[c][id][k] || []).some(v => sameVal(v, local[k])) && fresh[k] !== undefined && !sameVal(local[k], fresh[k]) && (c !== 'protocols' || k !== 'desc' || descFits(id, local, fresh))) { local[k] = fresh[k] && typeof fresh[k] === 'object' ? clone(fresh[k]) : fresh[k]; changed = true; } });
     // finished sessions keep the name they had: rename those that carry an old shipped name
     if (c === 'protocols' && renamed[c][id].name && local.name === fresh.name) S.log.forEach(l => { if (l.refId === id && renamed[c][id].name.indexOf(l.name) !== -1) { l.name = fresh.name; changed = true; } });
   }));
