@@ -16,7 +16,7 @@ window.SEED = {
    "equip": [
     "Švedske ljestve"
    ],
-   "equipment": "Švedske ljestve, kavez ili zid za oslonac",
+   "equipment": "Švedske ljestve, kavez ili zid za oslonac; na terenu stativa gola ili ograda",
    "measure": "sets",
    "sets": 2,
    "reps": 10,
@@ -26,10 +26,10 @@ window.SEED = {
    "sides": true,
    "feel": "Dinamično istezanje prednje i stražnje strane kuka te aduktora",
    "steps": [
-    "Stani bočno uz švedske ljestve i jednom se rukom lagano drži za prečku.",
+    "Stani bočno uz oslonac (švedske ljestve, a na terenu stativu gola ili ogradu) i jednom se rukom lagano drži.",
     "Stani uspravno na unutarnjoj nozi, s blago savijenim koljenom i zategnutim trupom.",
     "Opušteno i ritmično njiši vanjsku nogu naprijed i natrag, 10 puta.",
-    "Okreni se licem prema ljestvama, drži se objema rukama i istu nogu njiši u stranu i preko tijela, 10 puta.",
+    "Okreni se licem prema osloncu, drži se objema rukama i istu nogu njiši u stranu i preko tijela, 10 puta.",
     "Raspon povećavaj postupno, od malog prema većem, bez trzaja na krajevima.",
     "Ponovi oba smjera drugom nogom."
    ],
@@ -218,7 +218,7 @@ window.SEED = {
     "Trup se naginje u stranu – zdjelica i ramena ostaju mirni.",
     "Spuštaš se dublje od plitkog čučnja – zadrži istu, plitku visinu."
    ],
-   "note": "Upadanje koljena prema unutra pri doskoku i promjeni smjera povezano je s ozljedama koljena, uključujući prednju ukriženu svezu; ovdje te guma namjerno vuče u taj položaj, a ti učiš aktivno vratiti koljeno iznad stopala. Radi je u zagrijavanju prije treninga s loptom, kao u TAE programu (2 serije po 8 na svaku stranu). Lakše: samo guma iznad koljena i manji pokret; teže: isti pokret na jednoj nozi. Koristi laganu gumu, jer preteška guma može pojačati upadanje koljena umjesto da ga ispravi, a dokazi o učinku guma na kontrolu koljena još su ograničeni. Bol u koljenu ili kuku znači stani.",
+   "note": "Upadanje koljena prema unutra pri doskoku i promjeni smjera povezano je s ozljedama koljena, uključujući prednju ukriženu svezu; ovdje te guma namjerno vuče u taj položaj, a ti učiš aktivno vratiti koljeno iznad stopala. Radi je u zagrijavanju prije treninga s loptom, 2 serije po 8 na svaku stranu. Lakše: samo guma iznad koljena i manji pokret; teže: isti pokret na jednoj nozi. Koristi laganu gumu, jer preteška guma može pojačati upadanje koljena umjesto da ga ispravi, a dokazi o učinku guma na kontrolu koljena još su ograničeni. Bol u koljenu ili kuku znači stani.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10547095/",
    "sourceTitle": "The Use of Elastic Resistance Bands to Reduce Dynamic Knee Valgus in Squat-Based Movements: A Narrative Review – PMC",
    "order": 105,
@@ -769,7 +769,7 @@ window.SEED = {
    "alt": "Razvlačenje elastike ispred prsa",
    "cat": "Aktivacija",
    "phase": null,
-   "cord": "",
+   "cord": "Ø6/Ø8",
    "zones": [
     "Ramena",
     "Leđa"
@@ -960,7 +960,7 @@ window.SEED = {
    "equip": [
     "Šipka"
    ],
-   "equipment": "Trap (heksagonalna) šipka – više je nemaš; zamjena u tvojoj teretani je deadlift sa šipkom",
+   "equipment": "Trap (heksagonalna) šipka s bumper pločama; bez nje istu ulogu ima deadlift sa šipkom",
    "measure": "sets",
    "sets": 4,
    "reps": 6,
@@ -983,10 +983,10 @@ window.SEED = {
     "Zabacuješ trup na vrhu – završi pokret stiskom stražnjice.",
     "Koljena upadaju prema unutra – guraj ih u smjeru prstiju."
    ],
-   "note": "Trap bar mrtvo dizanje razvija snagu cijelog donjeg dijela tijela uz manje opterećenje donjih leđa nego klasično mrtvo dizanje, pa je popularno kod nogometaša. U predsezoni se koristi kao glavna vježba snage (3–5 serija po 3–6 ponavljanja), a u sezoni s manje serija i ne dan prije utakmice. Trap šipku više nemaš, pa u svojoj teretani radi deadlift sa šipkom, s istim brojem serija i ponavljanja, ali u početku s manjom težinom dok ne uvježbaš tehniku. Lakše: deadlift s girjom od 20 kg između stopala ili rumunjsko mrtvo dizanje s bučicama; teže: veće opterećenje. Ako osjetiš bol u donjim leđima ili štipanje u preponi na dnu, smanji težinu i dubinu.",
+   "note": "Trap bar mrtvo dizanje razvija snagu cijelog donjeg dijela tijela uz manje opterećenje donjih leđa nego klasično mrtvo dizanje, pa je popularno kod nogometaša. U predsezoni se koristi kao glavna vježba snage (3–5 serija po 3–6 ponavljanja), a u sezoni s manje serija, najkasnije 4 dana prije utakmice. Bez trap šipke radi deadlift sa šipkom, s istim brojem serija i ponavljanja, ali u početku s manjom težinom dok ne uvježbaš tehniku. Lakše: deadlift s girjom od 20 kg između stopala ili rumunjsko mrtvo dizanje s bučicama; teže: veće opterećenje. Ako osjetiš bol u donjim leđima ili štipanje u preponi na dnu, smanji težinu i dubinu.",
    "source": "https://www.strengthlog.com/trap-bar-deadlift-with-low-handles/",
    "sourceTitle": "How to Do Trap Bar Deadlift With Low Handles: Muscles Worked & Proper Form – StrengthLog",
-   "order": 201,
+   "order": 207.5,
    "fav": false,
    "media": null,
    "mediaType": null
@@ -1028,7 +1028,7 @@ window.SEED = {
     "Odguruješ se stražnjom nogom – sav rad radi prednja noga.",
     "Zdjelica se okreće ili se leđa izvijaju – zategni trbuh i stražnjicu stražnje noge."
    ],
-   "note": "Bugarski čučanj gradi snagu i stabilnost jedne noge, što izravno koristiš u sprintu, skoku i duelu, uz manje opterećenje leđa nego kod teškog stražnjeg čučnja. U predsezoni radi teže serije od 6–8 ponavljanja, a u sezoni manje serija i ne teško dan-dva prije utakmice, jer izaziva upalu mišića. Lakše: bez bučica ili s jednom bučicom na prsima; teže: teže bučice ili sporo spuštanje 3–4 s. Ako osjetiš štipanje u preponi ili bolno istezanje prednje strane kuka stražnje noge, smanji dubinu ili malo skrati raskorak, jer bol znači stani.",
+   "note": "Bugarski čučanj gradi snagu i stabilnost jedne noge, što izravno koristiš u sprintu, skoku i duelu, uz manje opterećenje leđa nego kod teškog stražnjeg čučnja. U predsezoni radi teže serije od 6–8 ponavljanja, a u sezoni manje serija, s teškim serijama najkasnije 4 dana prije utakmice, jer izaziva upalu mišića. Lakše: bez bučica ili s jednom bučicom na prsima; teže: teže bučice ili sporo spuštanje 3–4 s. Ako osjetiš štipanje u preponi ili bolno istezanje prednje strane kuka stražnje noge, smanji dubinu ili malo skrati raskorak, jer bol znači stani.",
    "source": "https://www.strengthlog.com/bulgarian-split-squat/",
    "sourceTitle": "How to Do Bulgarian Split Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 202,
@@ -1073,7 +1073,7 @@ window.SEED = {
     "Koljena upadaju prema unutra – guraj ih lagano van.",
     "Klupa klizi – nasloni je na kavez ili zid prije serije."
    ],
-   "note": "Hip thrust najizravnije jača stražnjicu u ispruženom kuku, a jaka ekstenzija kuka važna je za ubrzanje i sprint. Koristi ga kao glavnu ili pomoćnu vježbu snage u predsezoni (3–4 serije po 6–10) i za održavanje u sezoni (2–3 serije), ali ne dan prije utakmice. Lakše: glute bridge na podu ili lakša šipka; teže: jednonožni hip thrust ili pauza 2 s u gornjem položaju. Kuku odgovara jer ne traži duboko savijanje, a ako osjetiš bol u preponi ili donjim leđima, smanji opterećenje i raspon.",
+   "note": "Hip thrust najizravnije jača stražnjicu u ispruženom kuku, a jaka ekstenzija kuka važna je za ubrzanje i sprint. Koristi ga kao glavnu ili pomoćnu vježbu snage u predsezoni (3–4 serije po 6–10) i za održavanje u sezoni (2–3 serije), s teškim serijama najkasnije 4 dana prije utakmice. Lakše: glute bridge na podu ili lakša šipka; teže: jednonožni hip thrust ili pauza 2 s u gornjem položaju. Kuku odgovara jer ne traži duboko savijanje, a ako osjetiš bol u preponi ili donjim leđima, smanji opterećenje i raspon.",
    "source": "https://www.strengthlog.com/hip-thrust/",
    "sourceTitle": "How to Do Hip Thrusts: Muscles Worked & Proper Form – StrengthLog",
    "order": 203,
@@ -1121,7 +1121,7 @@ window.SEED = {
     "Kukovi se pri ustajanju dižu brže od prsa – guraj leđima u šipku i diži prsa i kukove zajedno.",
     "Čučanj bez sigurnosnih nosača – kad treniraš sam, nosače uvijek namjesti prije prve serije."
    ],
-   "note": "Temeljna vježba za snagu nogu koja se prenosi na sprint, skok i duele. U predsezoni je radi 1–2× tjedno, a u sezoni 1× tjedno s manje serija, nakon treninga s loptom ili kao zaseban trening, i nikad dan prije utakmice. Lakša varijanta je goblet squat ili čučanj do klupe, a teža pauza od 2 s u dnu ili veći teret uz manje ponavljanja. Kuk: ostani u bezbolnoj dubini i ne forsiraj duboki čučanj ako te štipa u preponi; oštra bol znači stani.",
+   "note": "Temeljna vježba za snagu nogu koja se prenosi na sprint, skok i duele. U predsezoni je radi 1–2× tjedno, a u sezoni 1× tjedno s manje serija, nakon treninga s loptom ili kao zaseban trening, najkasnije 4 dana prije utakmice. Lakša varijanta je goblet squat ili čučanj do klupe, a teža pauza od 2 s u dnu ili veći teret uz manje ponavljanja. Kuk: ostani u bezbolnoj dubini i ne forsiraj duboki čučanj ako te štipa u preponi; oštra bol znači stani.",
    "source": "https://www.strengthlog.com/squat/",
    "sourceTitle": "How to Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 204,
@@ -1169,7 +1169,7 @@ window.SEED = {
     "Koljena upadaju prema unutra – guraj ih u smjeru prstiju.",
     "Pete se odižu – drži težinu na cijelom stopalu i po potrebi postavi stopala malo šire."
    ],
-   "note": "Prednji čučanj više opterećuje kvadricepse, a manje donji dio leđa, i traži uspravan trup, pa dobro gradi snagu za ubrzanje i skokove. Koristi ga u predsezoni kao glavnu vježbu ili umjesto stražnjeg čučnja, a u sezoni 1× tjedno s manje serija, nakon treninga s loptom i nikad dan prije utakmice. Lakša varijanta je goblet squat ili landmine squat, a teža pauza u dnu ili sporije spuštanje od 3–4 s. Kuk: ostani u bezbolnoj dubini; štipanje u preponi ili oštra bol znači stani.",
+   "note": "Prednji čučanj više opterećuje kvadricepse, a manje donji dio leđa, i traži uspravan trup, pa dobro gradi snagu za ubrzanje i skokove. Koristi ga u predsezoni kao glavnu vježbu ili umjesto stražnjeg čučnja, a u sezoni 1× tjedno s manje serija, nakon treninga s loptom i najkasnije 4 dana prije utakmice. Lakša varijanta je goblet squat ili landmine squat, a teža pauza u dnu ili sporije spuštanje od 3–4 s. Kuk: ostani u bezbolnoj dubini; štipanje u preponi ili oštra bol znači stani.",
    "source": "https://www.strengthlog.com/front-squat/",
    "sourceTitle": "How to Do Front Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 205,
@@ -1249,7 +1249,7 @@ window.SEED = {
    "feel": "Gluteusi, stražnja loža i leđa",
    "steps": [
     "Stani tako da je šipka iznad sredine stopala, stopala u širini kukova, s prstima blago prema van.",
-    "Pregni se u kukovima i uhvati šipku nadhvatom tik izvan nogu, a zatim savij koljena dok potkoljenice ne dotaknu šipku, s ramenima malo ispred nje.",
+    "Pregni se u kukovima i uhvati šipku nathvatom tik izvan nogu, a zatim savij koljena dok potkoljenice ne dotaknu šipku, s ramenima malo ispred nje.",
     "Izravnaj leđa, duboko udahni u trbuh, učvrsti trup i povuci šipku taman toliko da se zategne, bez trzaja.",
     "Guraj nogama u pod i podiži šipku uz noge, tako da se kukovi i ramena dižu zajedno, dok ne staneš uspravno.",
     "Na vrhu stisni gluteuse, bez zabacivanja trupa unatrag, i izdahni.",
@@ -1262,7 +1262,7 @@ window.SEED = {
     "Trzanje šipke s poda – prije podizanja zategni šipku i tek onda guraj nogama u pod.",
     "Zabacivanje trupa na vrhu – završi uspravno, samo stiskom gluteusa."
    ],
-   "note": "Deadlift razvija snagu cijelog stražnjeg lanca, što pomaže u sprintu, skoku i duelima. Najviše mu je mjesto u predsezoni (1–2× tjedno), a u sezoni 1× tjedno s malo serija, kao zaseban trening ili nakon treninga s loptom, i nikad dan prije utakmice. Lakša varijanta je dizanje sa sigurnosnih nosača u kavezu postavljenih tik ispod koljena (rack pull) ili RDL s bučicama, a teža veći teret uz istu tehniku ili pauza kad šipka prođe koljena. Kuk: ako te početni položaj štipa u preponi, povisi početni položaj šipke (sigurnosni nosači ili nekoliko ploča podmetnutih pod bumper ploče); oštra bol znači stani.",
+   "note": "Deadlift razvija snagu cijelog stražnjeg lanca, što pomaže u sprintu, skoku i duelima. Najviše mu je mjesto u predsezoni (1–2× tjedno), a u sezoni 1× tjedno s malo serija, kao zaseban trening ili nakon treninga s loptom, najkasnije 4 dana prije utakmice. Lakša varijanta je dizanje sa sigurnosnih nosača u kavezu postavljenih tik ispod koljena (rack pull) ili RDL s bučicama, a teža veći teret uz istu tehniku ili pauza kad šipka prođe koljena. Kuk: ako te početni položaj štipa u preponi, povisi početni položaj šipke (sigurnosni nosači ili nekoliko ploča podmetnutih pod bumper ploče); oštra bol znači stani.",
    "source": "https://www.strengthlog.com/deadlift/",
    "sourceTitle": "How to Deadlift: Muscles Worked & Proper Form – StrengthLog",
    "order": 207,
@@ -1295,7 +1295,7 @@ window.SEED = {
    "sides": false,
    "feel": "Stražnja loža i gluteusi",
    "steps": [
-    "Namjesti J-kuke u visini sredine bedra, uhvati šipku nadhvatom malo šire od nogu, skini je i odmakni se korak unatrag (ili je podigni s poda kao u deadliftu).",
+    "Namjesti J-kuke u visini sredine bedra, uhvati šipku nathvatom malo šire od nogu, skini je i odmakni se korak unatrag (ili je podigni s poda kao u deadliftu).",
     "Stani uspravno, stopala u širini kukova, udahni, učvrsti trup i blago savij koljena; taj kut koljena zadrži do kraja serije.",
     "Guraj kukove unatrag i spuštaj šipku uz bedra 2–3 sekunde, s ravnim leđima i šipkom tik uz noge.",
     "Zaustavi se kad osjetiš jako istezanje stražnje lože ili kad bi se leđa počela zaobljavati – obično malo ispod koljena ili do sredine potkoljenice.",
@@ -1307,7 +1307,7 @@ window.SEED = {
     "Šipka se odmiče od nogu – vodi je tik uz bedra i koljena.",
     "Zabacivanje unatrag na vrhu – završi uspravno, stiskom gluteusa."
    ],
-   "note": "RDL jača stražnju ložu i gluteuse u izduženom položaju, što stražnju ložu čini otpornijom na velika opterećenja pri sprintu. Radi ga u predsezoni i u sezoni 1–2× tjedno, nakon treninga s loptom, a teže serije ne dan prije utakmice jer ostavljaju upalu mišića. Lakša varijanta je RDL s bučicama ili manji raspon (do koljena), a teža sporije spuštanje od 4 s ili veći teret. Kuk: pretklon radi samo u bezbolnom rasponu; štipanje u preponi ili oštra bol znači stani.",
+   "note": "RDL jača stražnju ložu i gluteuse u izduženom položaju, što stražnju ložu čini otpornijom na velika opterećenja pri sprintu. Radi ga u predsezoni i u sezoni 1–2× tjedno, nakon treninga s loptom, a teže serije najkasnije 4 dana prije utakmice jer ostavljaju upalu mišića. Lakša varijanta je RDL s bučicama ili manji raspon (do koljena), a teža sporije spuštanje od 4 s ili veći teret. Kuk: pretklon radi samo u bezbolnom rasponu; štipanje u preponi ili oštra bol znači stani.",
    "source": "https://www.strengthlog.com/romanian-deadlift/",
    "sourceTitle": "How to Do Romanian Deadlift: Muscles Worked & Proper Form – StrengthLog",
    "order": 208,
@@ -1351,7 +1351,7 @@ window.SEED = {
     "Pokret prelazi u čučanj – drži koljena blago savijena i guraj kukove unatrag.",
     "Glava se zabacuje prema gore – pogled drži na podu ispred sebe."
    ],
-   "note": "Pomoćna vježba za stražnju ložu kad nemaš vremena za postavljanje šipke, za laganije dane u sezoni ili kao uvod u RDL sa šipkom. S bučicama do 20 kg najbolje radi 8–12 ponavljanja sa sporim spuštanjem, nakon treninga s loptom, a teške serije ne dan prije utakmice. Lakša varijanta je manji raspon (do koljena), a teža spuštanje od 4 s, pauza od 2 s u dnu ili jednonožni RDL. Kuk: radi samo u bezbolnom pretklonu; oštra bol znači stani.",
+   "note": "Pomoćna vježba za stražnju ložu kad nemaš vremena za postavljanje šipke, za laganije dane u sezoni ili kao uvod u RDL sa šipkom. S bučicama do 20 kg najbolje radi 8–12 ponavljanja sa sporim spuštanjem, nakon treninga s loptom, a teške serije najkasnije 4 dana prije utakmice. Lakša varijanta je manji raspon (do koljena), a teža spuštanje od 4 s, pauza od 2 s u dnu ili jednonožni RDL. Kuk: radi samo u bezbolnom pretklonu; oštra bol znači stani.",
    "source": "https://www.strengthlog.com/dumbbell-romanian-deadlift/",
    "sourceTitle": "How to Do Dumbbell Romanian Deadlift: Muscles Worked & Proper Form – StrengthLog",
    "order": 209,
@@ -1442,7 +1442,7 @@ window.SEED = {
     "Povratak guraš stražnjom nogom – vodi ga prednja noga.",
     "Trup se ruši naprijed ili zabacuje – drži prsa gore."
    ],
-   "note": "Iskorak unatrag gradi jednonožnu snagu i kontrolu koljena, a koljeno obično opterećuje manje od iskoraka naprijed, pa dobro paše i u sezoni. Radi ga u treningu snage 1–2× tjedno, nakon treninga s loptom, a teške serije ne dan prije utakmice. Lakša varijanta je bez bučica ili uz pridržavanje za stup kaveza, a težu dobiješ težim bučicama, pauzom od 2 s u dnu ili prednjom nogom na niskoj ploči za veći raspon. Kuk: ako te u dnu štipa u preponi prednje noge, skrati korak i dubinu; oštra bol znači stani.",
+   "note": "Iskorak unatrag gradi jednonožnu snagu i kontrolu koljena, a koljeno obično opterećuje manje od iskoraka naprijed, pa dobro paše i u sezoni. Radi ga u treningu snage 1–2× tjedno, nakon treninga s loptom, a teške serije najkasnije 4 dana prije utakmice. Lakša varijanta je bez bučica ili uz pridržavanje za stup kaveza, a težu dobiješ težim bučicama, pauzom od 2 s u dnu ili prednjom nogom na niskoj ploči za veći raspon. Kuk: ako te u dnu štipa u preponi prednje noge, skrati korak i dubinu; oštra bol znači stani.",
    "source": "https://www.strengthlog.com/reverse-dumbbell-lunge/",
    "sourceTitle": "How to Do Reverse Dumbbell Lunge: Muscles Worked & Proper Form – StrengthLog",
    "order": 211,
@@ -1534,7 +1534,7 @@ window.SEED = {
     "Padanje pri spuštanju – spuštaj se kontrolirano 2–3 sekunde.",
     "Previsoka kutija pa se leđa zaobljuju ili kuk štipa – odaberi nižu visinu."
    ],
-   "note": "Step-up razvija jednonožnu snagu u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Dobar je u predsezoni i u sezoni, poslije treninga s loptom ili na treningu snage, a teške serije ne dan prije utakmice. Lakša varijanta je niža stuba bez bučica, a težu dobiješ težim bučicama ili sporijim spuštanjem; strane plyo boxa od 50 i 60 cm previsoke su za tvoj kuk. Kuk: previsoka kutija traži duboko savijanje kuka, pa biraj visinu bez štipanja u preponi; oštra bol znači stani.",
+   "note": "Step-up razvija jednonožnu snagu u položaju sličnom trčanju i odrazu, uz malo opterećenje leđa. Dobar je u predsezoni i u sezoni, poslije treninga s loptom ili na treningu snage, a teške serije najkasnije 4 dana prije utakmice. Lakša varijanta je niža stuba bez bučica, a težu dobiješ težim bučicama ili sporijim spuštanjem; strane plyo boxa od 50 i 60 cm previsoke su za tvoj kuk. Kuk: previsoka kutija traži duboko savijanje kuka, pa biraj visinu bez štipanja u preponi; oštra bol znači stani.",
    "source": "https://www.strengthlog.com/step-up/",
    "sourceTitle": "How to Do Step Up: Muscles Worked & Proper Form – StrengthLog",
    "order": 213,
@@ -1579,7 +1579,7 @@ window.SEED = {
     "Pete se odižu – stani malo dalje od sidrišta i drži težinu na cijelom stopalu.",
     "Leđa se izvijaju pri ustajanju – učvrsti trup i završi uspravno, bez guranja kukova naprijed."
    ],
-   "note": "Landmine squat je stabilan čučanj koji malo opterećuje leđa i ne traži veliku mobilnost, a nagib šipke ti pomaže zadržati uspravan trup. Koristan je u sezoni, na laganijim danima, kad se vraćaš nakon problema s kukom ili leđima, ili kao zamjena za stražnji čučanj, nakon treninga s loptom i ne dan prije utakmice. Lakša varijanta je goblet squat, a teža više ploča ili pauza od 2 s u dnu; u dnevnik upisuj ploče na slobodnom kraju, jer stvarni otpor ovisi o kutu šipke. Kuk: spuštaj se samo do bezbolne dubine; štipanje u preponi ili oštra bol znači stani.",
+   "note": "Landmine squat je stabilan čučanj koji malo opterećuje leđa i ne traži veliku mobilnost, a nagib šipke ti pomaže zadržati uspravan trup. Koristan je u sezoni, na laganijim danima, kad se vraćaš nakon problema s kukom ili leđima, ili kao zamjena za stražnji čučanj, nakon treninga s loptom, a teže serije najkasnije 4 dana prije utakmice. Lakša varijanta je goblet squat, a teža više ploča ili pauza od 2 s u dnu; u dnevnik upisuj ploče na slobodnom kraju, jer stvarni otpor ovisi o kutu šipke. Kuk: spuštaj se samo do bezbolne dubine; štipanje u preponi ili oštra bol znači stani.",
    "source": "https://www.strengthlog.com/landmine-squat/",
    "sourceTitle": "How to Do Landmine Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 214,
@@ -1625,7 +1625,7 @@ window.SEED = {
     "Šipka i laktovi se odmiču od tijela – drži ih uz prsa da trup ostane čvrst.",
     "Prekratak korak pa se peta prednje noge odiže – zakorači dalje i drži cijelo stopalo na podu."
    ],
-   "note": "Landmine drži teret ispred tijela i vodi ga po stabilnom luku, pa iskorak unatrag možeš opteretiti više nego s bučicama, uz dobru kontrolu koljena i trupa – korisno za jednonožnu snagu u sprintu i duelima. Radi ga u predsezoni i u sezoni nakon treninga s loptom, a teške serije ne dan prije utakmice. Lakša varijanta je iskorak unatrag bez tereta ili s bučicama, a teža više ploča, pauza u dnu ili prednja noga na niskoj ploči za veći raspon. Kuk: spuštaj se samo u bezbolnom rasponu; ako te u dnu štipa u preponi prednje noge, skrati korak i dubinu, a kod oštre boli stani.",
+   "note": "Landmine drži teret ispred tijela i vodi ga po stabilnom luku, pa iskorak unatrag možeš opteretiti više nego s bučicama, uz dobru kontrolu koljena i trupa – korisno za jednonožnu snagu u sprintu i duelima. Radi ga u predsezoni i u sezoni nakon treninga s loptom, a teške serije najkasnije 4 dana prije utakmice. Lakša varijanta je iskorak unatrag bez tereta ili s bučicama, a teža više ploča, pauza u dnu ili prednja noga na niskoj ploči za veći raspon. Kuk: spuštaj se samo u bezbolnom rasponu; ako te u dnu štipa u preponi prednje noge, skrati korak i dubinu, a kod oštre boli stani.",
    "source": "https://us.humankinetics.com/blogs/excerpt/top-loaded-reverse-lunge-with-variations",
    "sourceTitle": "Top-Loaded Reverse Lunge With Variations – Human Kinetics",
    "order": 215,
@@ -1670,9 +1670,9 @@ window.SEED = {
     "Tvrd doček na ispružene ruke – dočekaj se savijenim laktovima kao u skleku.",
     "Pete nisu čvrsto ispod prečke ili podloga pod koljenima klizi – podesi visinu podloge da pete nalegnu na prečku i stavi je na neklizav pod."
    ],
-   "note": "Nordic je najbolje istražena vježba za prevenciju ozljeda stražnje lože u nogometu; u randomiziranom istraživanju na amaterskim nogometašima smanjio je broj tih ozljeda za više od polovice. Uvedi ga postupno u predsezoni (1–2× tjedno, od 2 × 5 prema 3 × 6–8), a u sezoni ga održavaj 1× tjedno s malim volumenom, poslije treninga s loptom i ne dan prije utakmice (idealno ni dva), jer izaziva jaku upalu mišića. Na terenu ti umjesto ljestava partner, klečeći iza tebe, čvrsto drži gležnjeve. Lakša varijanta je mali raspon ili pomoć elastičnog užeta vezanog visoko za ljestve iza tebe i omotanog oko prsa, a teža sporije spuštanje, pauza na pola puta ili zadržavanje napetosti do samog poda. Oštra bol u stražnjoj loži (ne obična upala) znači odmah stani; kukovi su ispruženi, pa vježba ne traži savijanje kuka.",
-   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5716363/",
-   "sourceTitle": "Sprint and jump performance in elite male soccer players following a 10-week Nordic Hamstring exercise Protocol: a randomised pilot study - PMC",
+   "note": "Nordic je najbolje istražena vježba za prevenciju ozljeda stražnje lože u nogometu; u randomiziranom istraživanju na amaterskim nogometašima smanjio je broj tih ozljeda za više od polovice. Uvedi ga postupno u predsezoni (1–2× tjedno, od 2 × 5 prema 3 × 6–8), a u sezoni ga održavaj 1× tjedno s malim volumenom, poslije treninga s loptom i najkasnije 4 dana prije utakmice, jer izaziva jaku upalu mišića. Treniraš sam, pa Nordic radi u teretani uz ljestve; na terenu pete zakvači samo ispod nečega što je čvrsto učvršćeno za tlo, a prijenosni gol to nije. Lakša varijanta je mali raspon ili pomoć elastičnog užeta vezanog visoko za ljestve iza tebe i omotanog oko prsa, a teža sporije spuštanje, pauza na pola puta ili zadržavanje napetosti do samog poda. Oštra bol u stražnjoj loži (ne obična upala) znači odmah stani; kukovi su ispruženi, pa vježba ne traži savijanje kuka.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/25794868/",
+   "sourceTitle": "The preventive effect of the nordic hamstring exercise on hamstring injuries in amateur soccer players: a randomized controlled trial - PubMed",
    "order": 216,
    "fav": false,
    "media": null,
@@ -1715,7 +1715,7 @@ window.SEED = {
     "Lopta bježi u stranu – drži pete na sredini lopte i pritisni dlanove u pod (za veću stabilnost malo raširi ruke).",
     "Pretjerano izvijanje donjeg dijela leđa – zategni trbuh i lagano podvuci zdjelicu."
    ],
-   "note": "Jača stražnju ložu kroz savijanje koljena uz ispružene kukove, a nestabilna lopta tjera trup da drži zdjelicu, pa je dobar korak prije zahtjevnijih ekscentričnih vježbi poput Nordica. Možeš ga raditi u predsezoni i u sezoni, poslije treninga s loptom ili na laganijem danu, ali ne do otkaza dan prije utakmice. Lakša varijanta je držanje mosta na lopti ili privlačenje s manjim rasponom, a teža jednonožni pregib (druga noga u zraku) ili sporo vraćanje od 4 s. Grč ili oštra bol u stražnjoj loži znači stani; kuk se ovdje ne savija duboko.",
+   "note": "Jača stražnju ložu kroz savijanje koljena uz ispružene kukove, a nestabilna lopta tjera trup da drži zdjelicu, pa je dobar korak prije zahtjevnijih ekscentričnih vježbi poput Nordica. Možeš ga raditi u predsezoni i u sezoni, poslije treninga s loptom ili na laganijem danu, a serije do otkaza najkasnije 4 dana prije utakmice. Lakša varijanta je držanje mosta na lopti ili privlačenje s manjim rasponom, a teža jednonožni pregib (druga noga u zraku) ili sporo vraćanje od 4 s. Grč ili oštra bol u stražnjoj loži znači stani; kuk se ovdje ne savija duboko.",
    "source": "https://www.strengthlog.com/leg-curl-on-ball/",
    "sourceTitle": "How to Do Leg Curl on Ball: Muscles Worked & Proper Form – StrengthLog",
    "order": 217,
@@ -2327,7 +2327,6 @@ window.SEED = {
     "Core"
    ],
    "equip": [
-    "Šipka",
     "Kavez"
    ],
    "equipment": "Šipka na J-kukama kaveza, otprilike u visini kukova",
@@ -3007,7 +3006,7 @@ window.SEED = {
     "Grč u loži – smanji opseg ili broj ponavljanja i provjeri jesi li zagrijan.",
     "Glava se podiže s poda – glava i ramena ostaju na podu."
    ],
-   "note": "Pregib jača stražnju ložu kroz savijanje koljena uz ispružen kuk i dobra je dopuna nordijskom pregibu i RDL-u, glavnim vježbama za zaštitu lože od istegnuća u sprintu. Radi ga u predsezoni i sezoni kao dodatnu vježbu poslije treninga s loptom ili u treningu snage, ali ne dan prije utakmice ako radiš sporo spuštanje do umora. Lakše: manji opseg ili TRX hip press; teže: kukovi viši, tijelo dalje od sidrišta ili jednonožni pregib. Ako se javi oštra bol ili grč u loži, stani.",
+   "note": "Pregib jača stražnju ložu kroz savijanje koljena uz ispružen kuk i dobra je dopuna nordijskom pregibu i RDL-u, glavnim vježbama za zaštitu lože od istegnuća u sprintu. Radi ga u predsezoni i sezoni kao dodatnu vježbu poslije treninga s loptom ili u treningu snage, a serije sa sporim spuštanjem do umora najkasnije 4 dana prije utakmice. Lakše: manji opseg ili TRX hip press; teže: kukovi viši, tijelo dalje od sidrišta ili jednonožni pregib. Ako se javi oštra bol ili grč u loži, stani.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/86/trx-reg-hamstrings-curl/",
    "sourceTitle": "Butt & Hip Exercises | TRX ® Hamstrings Curl",
    "video": "https://www.youtube.com/watch?v=RkEHyudfkyM",
@@ -3104,7 +3103,7 @@ window.SEED = {
     "Prebrzo spuštanje u dno – spuštaj se 2–3 sekunde i stani prije gubitka kontrole.",
     "Kuk stajne noge bježi u stranu – drži zdjelicu ravno i stisni stražnjicu."
    ],
-   "note": "Jednonožni čučanj gradi snagu i kontrolu koljena na jednoj nozi, kao pri doskoku, promjeni smjera i udarcu s potporne noge. Radi ga u predsezoni i sezoni u treningu snage, a ne dan prije utakmice ako ideš duboko i sporo do umora. Lakše: plići raspon i više pomoći ruku ili TRX čučanj; teže: dublje uz minimalnu pomoć traka, sporo spuštanje od 3 s ili pauza na dnu. Kuk: dubinu odredi prema kuku stajne noge, bez bolnog dubokog savijanja, a ako zaboli, stani.",
+   "note": "Jednonožni čučanj gradi snagu i kontrolu koljena na jednoj nozi, kao pri doskoku, promjeni smjera i udarcu s potporne noge. Radi ga u predsezoni i sezoni u treningu snage, a duboke i spore serije do umora najkasnije 4 dana prije utakmice. Lakše: plići raspon i više pomoći ruku ili TRX čučanj; teže: dublje uz minimalnu pomoć traka, sporo spuštanje od 3 s ili pauza na dnu. Kuk: dubinu odredi prema kuku stajne noge, bez bolnog dubokog savijanja, a ako zaboli, stani.",
    "source": "https://www.trxtraining.com/blogs/news/trx-exercises",
    "sourceTitle": "20 TRX Exercises to Do With a Suspension Trainer + Workouts",
    "order": 247,
@@ -3151,7 +3150,7 @@ window.SEED = {
     "Stražnja noga vuče pokret pa se omča njiše – radi prednjom nogom, a stražnja samo klizi.",
     "Zdjelica se okreće – oba kuka drže smjer naprijed uz zategnut trbuh."
    ],
-   "note": "TRX iskorak opterećuje prednju nogu slično bugarskom čučnju, a nestabilna stražnja noga traži kontrolu kuka i trupa važnu za sprint i promjenu smjera. Radi ga u predsezoni i sezoni u treningu snage, odmoran, i ne dan prije utakmice ako ideš do umora. Lakše: manji raspon i stajanje bliže sidrištu; teže: veći raspon, sporo spuštanje od 3 s, bučice u rukama ili eksplozivno ustajanje. Kuk: bez bolnog dubokog savijanja prednjeg kuka i bez forsiranja istezanja stražnjeg, a ako zaboli, stani.",
+   "note": "TRX iskorak opterećuje prednju nogu slično bugarskom čučnju, a nestabilna stražnja noga traži kontrolu kuka i trupa važnu za sprint i promjenu smjera. Radi ga u predsezoni i sezoni u treningu snage, odmoran, a serije do umora najkasnije 4 dana prije utakmice. Lakše: manji raspon i stajanje bliže sidrištu; teže: veći raspon, sporo spuštanje od 3 s, bučice u rukama ili eksplozivno ustajanje. Kuk: bez bolnog dubokog savijanja prednjeg kuka i bez forsiranja istezanja stražnjeg, a ako zaboli, stani.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/93/trx-reg-suspended-lunge/",
    "sourceTitle": "Ab Exercises | TRX ® Suspended Lunge",
    "order": 248,
@@ -3244,7 +3243,7 @@ window.SEED = {
     "Prebrz ritam uz njihanje traka – kreni polako i ubrzaj tek uz čistu tehniku.",
     "Grč u loži – smanji broj ponavljanja i provjeri jesi li zagrijan."
    ],
-   "note": "Naizmjenični pregib trenira stražnju ložu i gluteus u ritmu sličnom trčanju uz stabilnu zdjelicu; u TAE programu se zove TRX Runners. Radi ga u predsezoni i sezoni poslije treninga s loptom ili u bloku za trup, a ponavljanja broji ukupno (16 znači 8 po nozi). Lakše: TRX hamstring curl s obje noge ili TRX hip press; teže: kukovi viši, tijelo dalje od sidrišta ili sporije ispružanje. Ako se javi oštra bol ili grč u loži, stani.",
+   "note": "Naizmjenični pregib trenira stražnju ložu i gluteus u ritmu sličnom trčanju uz stabilnu zdjelicu. Radi ga u predsezoni i sezoni poslije treninga s loptom ili u bloku za trup, a ponavljanja broji ukupno (16 znači 8 po nozi). Lakše: TRX hamstring curl s obje noge ili TRX hip press; teže: kukovi viši, tijelo dalje od sidrišta ili sporije ispružanje. Ako se javi oštra bol ili grč u loži, stani.",
    "source": "https://www.trxtraining.com/blogs/news/for-the-love-of-the-run-week-three-lower-body-and-core-strength-for-runners",
    "sourceTitle": "For the Love of the Run Week Three: Lower-Body and Core Strength for Runners",
    "order": 250,
@@ -3665,13 +3664,13 @@ window.SEED = {
     "Između ponavljanja odmori 15–20 sekundi kako bi svaki skok bio kvalitetan."
    ],
    "mistakes": [
-    "Doskok propada u duboki čučanj – ostani na 40 cm (strane od 50 i 60 cm previsoke su za depth jump) i vrati se na depth drop dok kontakt ne bude kratak i čvrst.",
+    "Doskok propada u duboki čučanj – ostani na 40 cm i vrati se na depth drop dok kontakt ne bude kratak i čvrst.",
     "Skok s kutije prema gore ili daleko naprijed – samo iskorači i padni ravno dolje.",
     "Dug kontakt i zastoj u čučnju – zamisli da je pod vruć i odmah se odrazi.",
     "Koljena upadaju prema unutra pri doskoku – drži koljena u liniji sa stopalima.",
     "Doskok na pete s ispruženim koljenima – doskoči prvo prednjim dijelom stopala uz savijena koljena."
    ],
-   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Najniža strana od 40 cm prava je visina za ovu vježbu: prva 2–3 tjedna radi depth drop (silazak s kutije i zadržani doskok bez skoka), a tek onda depth jump. Strane od 50 i 60 cm ne trebaš; teža varijanta je odraz naprijed ili na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
+   "note": "Depth jump trenira reaktivnu snagu, odnosno brzo pretvaranje kočenja u odraz, što trebaš u promjeni smjera i skoku na glavu nakon zaleta. To je napredna pliometrija: radi je tek kad dobro savladaš box jump i doskoke, odmoran, u predsezoni ili na početku tjedna u sezoni, nikad dan prije utakmice. Za tebe je najniža strana od 40 cm dovoljna: prva 2–3 tjedna radi depth drop (silazak s kutije i zadržani doskok bez skoka), a tek onda depth jump. Iskusni sportaši postupno idu i na 50–60 cm, ali samo dok je kontakt i dalje kratak; zbog kuka ti to ne treba, a teža varijanta je odraz naprijed ili na drugu kutiju. Ako osjetiš bol u koljenu, Ahilovoj tetivi ili kuku, odmah stani, a doskok drži plitkim, bez dubokog savijanja kuka.",
    "source": "https://catalystathletics.com/exercise/551/Depth-Jump/",
    "sourceTitle": "Depth Jump - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "video": "https://www.youtube.com/watch?v=GeN0S3XCZnM",
@@ -3766,15 +3765,15 @@ window.SEED = {
     "Doskok s ispruženim koljenima – doskoči meko u polučučanj."
    ],
    "note": "Medicinka uz prsa dodaje malo opterećenja i traži jači trup, pa vježba prenosi snagu kukova u horizontalni odraz kao na startu sprinta. Radi je odmoran na početku treninga u predsezoni, a u sezoni u manjem volumenu i ne dan prije utakmice. Lakša varijanta je obični broad jump, a teža nešto teža lopta ili dva uzastopna skoka. Ako osjetiš bol u kuku, preponi ili leđima, stani i ne doskači u duboki čučanj.",
-   "source": "",
-   "sourceTitle": "",
+   "source": "https://www.topendsports.com/testing/tests/longjump.htm",
+   "sourceTitle": "Standing Long Jump Test (Broad Jump) - Calculator, Norms & Standards",
    "order": 411,
    "fav": false,
    "media": null,
    "mediaType": null
   },
   "kb-swing": {
-   "name": "KB swing",
+   "name": "Kettlebell swing",
    "alt": "Zamah girjom (ruski swing)",
    "cat": "Eksplozivnost",
    "phase": null,
@@ -3798,7 +3797,7 @@ window.SEED = {
    "sides": false,
    "feel": "Gluteusi i stražnja loža, a leđa samo stabiliziraju",
    "steps": [
-    "Postavi girju oko 30 cm ispred stopala, stani u širini ramena i uhvati ručku objema rukama nadhvatom.",
+    "Postavi girju oko 30 cm ispred stopala, stani u širini ramena i uhvati ručku objema rukama nathvatom.",
     "Gurni kukove unatrag s ravnim leđima, nagni girju prema sebi i uz udah je zabaci visoko između nogu.",
     "Eksplozivno ispruži kukove naprijed i stisni gluteuse uz kratak izdah, dok su ruke opuštene poput užeta.",
     "Pusti da girja doleti do visine prsa, a tijelo na vrhu neka bude u ravnoj liniji, bez izvijanja unatrag.",
@@ -3812,7 +3811,7 @@ window.SEED = {
     "Izvijanje unatrag na vrhu – završi uspravno, sa stisnutim gluteusima i zategnutim trupom.",
     "Zamah iznad visine prsa – ruski swing završava u visini prsa."
    ],
-   "note": "KB swing razvija snažno i brzo opružanje kukova, istu kvalitetu koja pokreće sprint i skok, uz malo udaraca u zglobove. Radi ga u bloku snage ili eksplozivnosti, u predsezoni i sezoni, a s girjom od 20 kg naglasak drži na brzini svakog ponavljanja, ne na umoru. Lakša varijanta je mrtvo dizanje girje za učenje pregiba, a teža jednoručni swing ili dulja serija kao kratak kondicijski interval. Ako osjetiš bol u križima ili kuku, stani, a pregib radi samo u bezbolnom opsegu.",
+   "note": "Kettlebell swing razvija snažno i brzo opružanje kukova, istu kvalitetu koja pokreće sprint i skok, uz malo udaraca u zglobove. Radi ga u bloku snage ili eksplozivnosti, u predsezoni i sezoni, a s girjom od 20 kg naglasak drži na brzini svakog ponavljanja, ne na umoru. Lakša varijanta je mrtvo dizanje girje za učenje pregiba, a teža jednoručni swing ili dulja serija kao kratak kondicijski interval. Ako osjetiš bol u križima ili kuku, stani, a pregib radi samo u bezbolnom opsegu.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/391/swing/",
    "sourceTitle": "Full Body/Integrated Exercises | Swing",
    "order": 412,
@@ -4662,11 +4661,10 @@ window.SEED = {
    ],
    "equip": [
     "Elastično uže",
-    "Kolotur",
     "Kavez",
     "Strunjača"
    ],
-   "equipment": "Elastično uže na niskom sidru (kolotur ili dno kaveza), strunjača pod koljeno",
+   "equipment": "Elastično uže zavezano nisko za kavez (u visini gležnja), strunjača pod koljeno",
    "measure": "sets",
    "sets": 3,
    "reps": 8,
@@ -4676,7 +4674,7 @@ window.SEED = {
    "sides": true,
    "feel": "Kosi trbušni mišići, ramena i stražnjica stražnje noge",
    "steps": [
-    "Pričvrsti elastično uže nisko, na kolotur ili dno kaveza, i postavi se bočno uz njega u poluklek: koljeno bliže sidru na strunjači, stopalo dalje od sidra ispred.",
+    "Zaveži elastično uže čvrsto za donju prečku ili stup kaveza, u visini gležnja (ne provlači ga kroz kolotur, jer kroz njega samo klizi), i postavi se bočno uz njega u poluklek: koljeno bliže sidru na strunjači, stopalo dalje od sidra ispred.",
     "Objema rukama uhvati ručku (ili kraj užeta) nisko pokraj kuka na strani sidra, uspravi trup i zategni trbuh.",
     "Povuci ruke dijagonalno prema gore do prsa, a zatim ih nastavi gurati gore i van iznad suprotnog ramena, s rukama blizu jedna drugoj.",
     "Trup i kukovi ostaju mirni i okrenuti naprijed – ne naginji se unatrag i ne okreći se za rukama.",
@@ -4945,7 +4943,7 @@ window.SEED = {
    "sides": true,
    "feel": "Prednji dio kuka stražnje noge, unutarnja strana prednjeg bedra i gornji dio leđa",
    "steps": [
-    "Iz uspravnog stava zakorači lijevom nogom u dugi iskorak i spusti oba dlana na pod s unutarnje strane lijevog stopala, sa stražnjom nogom opruženom.",
+    "Iz uspravnog stava zakorači lijevom nogom u dugi iskorak i spusti desni dlan na pod s unutarnje strane lijevog stopala, sa stražnjom nogom opruženom.",
     "Stisni stražnjicu stražnje noge i spusti lijevi lakat prema unutarnjoj strani lijevog stopala, samo koliko ide bez štipanja u preponi.",
     "Desni dlan ostavi na podu, a lijevu ruku podigni prema stropu i okreni prsni koš prema prednjoj nozi, dok pogled prati šaku.",
     "Uz izdah zadrži krajnji položaj 1–2 sekunde, s kukovima nisko i prednjim koljenom iznad stopala.",
@@ -5117,7 +5115,7 @@ window.SEED = {
    "rest": 20,
    "kg": 0,
    "sides": true,
-   "feel": "Prednja strana gležnja i donji dio lista (soleus)",
+   "feel": "Istezanje u donjem dijelu lista (soleus) i iznad pete; s prednje strane gležnja ne smije štipati",
    "steps": [
     "Stani licem prema zidu i postavi prednje stopalo nekoliko centimetara od zida, s prstima okrenutima ravno prema zidu i rukama na zidu.",
     "Stražnju nogu postavi korak iza radi ravnoteže, a težinu prebaci na prednju nogu.",
@@ -5473,8 +5471,8 @@ window.SEED = {
     "Nogu bližu zidu savij u koljenu i podigni petu prema stražnjici, tako da natkoljenice ostanu paralelne.",
     "Vanjskom stranom natkoljenice pritisni zid s oko 50–70 % snage, bez pomicanja zdjelice.",
     "Stajno koljeno blago savij i drži ga u liniji s kukom i drugim prstom, a zdjelicu vodoravno.",
-    "Drži 10 s uz mirno disanje, pa opusti 10 s.",
-    "Napravi sve zadržaje, okreni se i ponovi drugom stranom."
+    "Drži 10 s uz mirno disanje, pa opusti.",
+    "Okreni se drugim bokom prema zidu i isto napravi drugom nogom; tako izmjenjuj strane dok ne odradiš sve zadržaje."
    ],
    "mistakes": [
     "Trup se naginje prema zidu ili od njega – drži ramena iznad kukova.",
@@ -5889,7 +5887,7 @@ window.SEED = {
     "Trup se naginje naprijed – ramena i kukovi ostaju u istoj ravnini.",
     "Zadržavaš dah – diši mirno i ravnomjerno."
    ],
-   "note": "Kratka poluga je početni stupanj Copenhagen vježbe koji jača aduktore i bočni trup uz manje opterećenje koljena i prepona. Radi je 2–3 puta tjedno u predsezoni i jednom tjedno u sezoni, idealno nakon treninga s loptom. Lakše: donje koljeno ostaje na podu kao oslonac ili niža podloga od oko 30 cm, kao u početnim razinama programa; teže: dulji zadržaj do 30 s, a zatim prijelaz na dugu polugu. Oštra bol u preponi znači stani, a blaga upala mišića prvih dana je normalna, pa napreduj postupno.",
+   "note": "Kratka poluga je početni stupanj Copenhagen vježbe koji jača aduktore i bočni trup uz manje opterećenje koljena i prepona. Radi je 2–3 puta tjedno u predsezoni i jednom tjedno u sezoni, idealno nakon treninga s loptom. Lakše: donje koljeno ostaje na podu kao oslonac, kao u prvoj razini programa iz izvora; teže: dulji zadržaj do 30 s, a zatim prijelaz na dugu polugu. Oštra bol u preponi znači stani, a blaga upala mišića prvih dana je normalna, pa napreduj postupno.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6797385/",
    "sourceTitle": "Impact of a modified progressive Copenhagen adduction exercise programme on hip adduction strength and postexercise muscle soreness in professional footballers – PMC",
    "order": 710,
@@ -5934,7 +5932,7 @@ window.SEED = {
     "Stajno koljeno se potpuno ispruži ili jako savije – drži ga blago savijenog.",
     "Gubiš ravnotežu – gledaj u točku na podu i počni bez utega ili uz dodir prstima o zid."
    ],
-   "note": "Jednonožni RDL jača stražnju ložu i stražnjicu u izduženom položaju i uči kontrolu kuka na jednoj nozi, što je važno za prevenciju ozljede stražnje lože i stabilnost pri promjeni smjera. Radi ga u fazi 3 rehaba ili kao pomoćnu vježbu snage u predsezoni i sezoni, ali ne teško dan prije utakmice. Lakše: bez utega ili s prstima na zidu radi ravnoteže; teže: teža bučica ili girja ili sporo spuštanje 3 s. Ako osjetiš oštru bol u stražnjoj loži ili štipanje u preponi pri pregibu, smanji dubinu.",
+   "note": "Jednonožni RDL jača stražnju ložu i stražnjicu u izduženom položaju i uči kontrolu kuka na jednoj nozi, što je važno za prevenciju ozljede stražnje lože i stabilnost pri promjeni smjera. Radi ga u fazi 3 rehaba ili kao pomoćnu vježbu snage u predsezoni i sezoni, a teške serije najkasnije 4 dana prije utakmice. Lakše: bez utega ili s prstima na zidu radi ravnoteže; teže: teža bučica ili girja ili sporo spuštanje 3 s. Ako osjetiš oštru bol u stražnjoj loži ili štipanje u preponi pri pregibu, smanji dubinu.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/127/single-arm-single-leg-romanian-dead-lift/",
    "sourceTitle": "Single-Arm Single-Leg Romanian Deadlift | Exercise Library | ACE",
    "order": 711,
@@ -5954,9 +5952,9 @@ window.SEED = {
     "Koljeno"
    ],
    "equip": [
-    "Plyo box"
+    "Bez opreme"
    ],
-   "equipment": "Stepenica 15–20 cm (stuba na stubištu ili tribini); plyo box od 40 cm je previsok",
+   "equipment": "Stuba visoka 15–20 cm (stubište ili tribina); plyo box od 40 cm je previsok",
    "measure": "sets",
    "sets": 3,
    "reps": 10,
@@ -6024,7 +6022,7 @@ window.SEED = {
     "Trup se naginje naprijed – drži prsa gore i spuštaj se okomito.",
     "Stražnje koljeno udara u pod – kontroliraj spuštanje i samo lagano dotakni pod."
    ],
-   "note": "Split čučanj gradi snagu jedne noge i stabilnost kuka u položaju sličnom iskoraku i promjeni smjera u igri. Radi ga u fazi 3 rehaba ili kao vježbu snage u predsezoni i sezoni, ali ne teško dan prije utakmice. Lakše: bez bučica i s manjom dubinom; teže: teže bučice, sporo spuštanje 3 s ili bugarski čučanj. Ako povlači ili boli prednja strana kuka stražnje noge, smanji dubinu, jer bol znači stani.",
+   "note": "Split čučanj gradi snagu jedne noge i stabilnost kuka u položaju sličnom iskoraku i promjeni smjera u igri. Radi ga u fazi 3 rehaba ili kao vježbu snage u predsezoni i sezoni, a teške serije najkasnije 4 dana prije utakmice. Lakše: bez bučica i s manjom dubinom; teže: teže bučice, sporo spuštanje 3 s ili bugarski čučanj. Ako povlači ili boli prednja strana kuka stražnje noge, smanji dubinu, jer bol znači stani.",
    "source": "https://www.catalystathletics.com/exercise/174/Split-Squat/",
    "sourceTitle": "Split Squat - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "order": 713,
@@ -6091,9 +6089,10 @@ window.SEED = {
     "Koljeno"
    ],
    "equip": [
-    "Plyo box"
+    "Plyo box",
+    "Bez opreme"
    ],
-   "equipment": "Stepenica 15–30 cm (stuba na stubištu ili tribini); plyo box od 40 cm je previsok",
+   "equipment": "Stuba visoka 15–30 cm (stubište ili tribina); kad postane lako, plyo box na strani od 40 cm",
    "measure": "sets",
    "sets": 3,
    "reps": 10,
@@ -6116,7 +6115,7 @@ window.SEED = {
     "Zdjelica pada na strani slobodne noge – zategni bok stajne noge i smanji visinu.",
     "Prebrzo se spuštaš – kontroliraj spuštanje 2–3 s."
    ],
-   "note": "Bočni step-up jača kuk i koljeno na jednoj nozi, što prenosiš na doskoke, zaustavljanja i promjene smjera. Radi ga u fazi 3 rehaba ili kao dodatak treningu snage u predsezoni i sezoni. Lakše: niža stepenica od 10–15 cm; teže: viša stepenica ili bučice u rukama. Ako koljeno ili kuk bole, smanji visinu, a kod nelagode u preponi izbjegavaj duboko savijanje kuka.",
+   "note": "Bočni step-up jača kuk i koljeno na jednoj nozi, što prenosiš na doskoke, zaustavljanja i promjene smjera. Radi ga u fazi 3 rehaba ili kao dodatak treningu snage u predsezoni i sezoni. Lakše: niža stuba od 10–15 cm; teže: plyo box na strani od 40 cm, a zatim bučice u rukama. Ako koljeno ili kuk bole, smanji visinu, a kod nelagode u preponi izbjegavaj duboko savijanje kuka.",
    "source": "https://www.massgeneralbrigham.org/content/dam/unified-xwalk/pdf/patient-education/english/mass-general-hip-exercises.pdf",
    "sourceTitle": "Hip Exercises – Mass General Brigham (PDF)",
    "order": 715,
@@ -6138,7 +6137,7 @@ window.SEED = {
     "Klupa",
     "Strunjača"
    ],
-   "equipment": "Ravna klupa i strunjača; na terenu umjesto klupe partner drži gornju nogu",
+   "equipment": "Ravna klupa i strunjača; na terenu čvrsta klupa uz teren, visoka oko 40–50 cm",
    "measure": "time",
    "sets": 3,
    "reps": 10,
@@ -6161,9 +6160,9 @@ window.SEED = {
     "Tijelo se rotira naprijed – prsa i zdjelica gledaju ravno.",
     "Javlja se bol u preponi ili s unutarnje strane koljena – vrati se na kratku polugu."
    ],
-   "note": "U studiji Harøya i suradnika (2019) program s Copenhagen vježbom smanjio je rizik prijave problema s preponama kod nogometaša za 41 %, a duga poluga je zahtjevnija verzija te vježbe. Uvedi je tek kad kratku polugu odrađuješ bez boli, u predsezoni do 3 puta tjedno, a u sezoni jednom tjedno, ne dan prije utakmice. Lakše: kratka poluga s koljenom na klupi ili kraći zadržaj; teže: dinamička verzija u kojoj polako spuštaš i podižeš kukove po 3 s. Oštra bol u preponi ili s unutarnje strane koljena znači stani, a blaga upala mišića prvih dana je normalna, pa volumen povećavaj postupno.",
-   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6797385/",
-   "sourceTitle": "Impact of a modified progressive Copenhagen adduction exercise programme on hip adduction strength and postexercise muscle soreness in professional footballers – PMC",
+   "note": "U studiji Harøya i suradnika (2019) program s Copenhagen vježbom smanjio je rizik prijave problema s preponama kod nogometaša za 41 %, a duga poluga je zahtjevnija verzija te vježbe. Uvedi je tek kad kratku polugu odrađuješ bez boli, u predsezoni do 3 puta tjedno, a u sezoni jednom tjedno, najkasnije 4 dana prije utakmice. Lakše: kratka poluga s koljenom na klupi ili kraći zadržaj; teže: dinamička verzija u kojoj polako spuštaš i podižeš kukove po 3 s. Oštra bol u preponi ili s unutarnje strane koljena znači stani, a blaga upala mišića prvih dana je normalna, pa volumen povećavaj postupno.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/29891614/",
+   "sourceTitle": "The Adductor Strengthening Programme prevents groin problems among male football players: a cluster-randomised controlled trial - PubMed",
    "order": 716,
    "fav": false,
    "media": null,
@@ -6205,9 +6204,9 @@ window.SEED = {
     "U odmoru potpuno staneš – nastavi lagano okretati da se brže oporaviš.",
     "Trup i kukovi se ljuljaju – smanji otpor i drži trup mirnim."
    ],
-   "note": "Intervali na biciklu razvijaju kondiciju uz manje udaraca nego trčanje, pa su dobri za dane oporavka ili kad koljeno ili kuk ne podnose trčanje. Za sada nemaš bicikl, pa je vježba u knjižnici samo za kasnije i nije ni u jednom protokolu. Lakše: 20 s jako i 40 s lagano; teže: 10 ponavljanja ili 40 s jako. Ako osjetiš bol u kuku ili koljenu, smanji otpor.",
-   "source": "https://www.health.harvard.edu/heart-health/interval-training-a-shorter-more-enjoyable-workout",
-   "sourceTitle": "Interval training: A shorter, more enjoyable workout? - Harvard Health",
+   "note": "Intervali na biciklu razvijaju kondiciju uz manje udaraca nego trčanje, pa su dobra zamjena za trčanje kad koljeno ili kuk ne podnose udarce. I dalje su to naporni intervali, a ne lagani dan oporavka: najviše 1–2 puta tjedno i ne dan prije utakmice. Za sada nemaš bicikl, pa je vježba u knjižnici samo za kasnije i nije ni u jednom protokolu. Lakše: 20 s jako i 40 s lagano; teže: 10 ponavljanja ili 40 s jako. Ako osjetiš bol u kuku ili koljenu, smanji otpor.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
+   "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
    "fav": false,
    "media": null,
@@ -6250,7 +6249,7 @@ window.SEED = {
     "Koljeno upada prema unutra pri kočenju – guraj koljeno prema van, iznad stopala.",
     "Uspravan trup i ispružene noge – zadrži atletski stav s kukovima unatrag."
    ],
-   "note": "Lateral shuffle uvježbava bočno kretanje i kočenje koje trebaš u obrani jedan na jedan, pri zatvaranju protivnika i promjeni smjera. Radi ga u zagrijavanju ili na početku treninga s loptom, u predsezoni i sezoni, maksimalnom brzinom uz dovoljan odmor. Lakša varijanta je sporije kretanje s naglaskom na stavu, a teža reakcija na znak partnera ili dulja dionica od 7 m. Ako osjetiš bol u preponi ili kuku, stani i ne spuštaj se u preduboki stav.",
+   "note": "Lateral shuffle uvježbava bočno kretanje i kočenje koje trebaš u obrani jedan na jedan, pri zatvaranju protivnika i promjeni smjera. Radi ga u zagrijavanju ili na početku treninga s loptom, u predsezoni i sezoni, maksimalnom brzinom uz dovoljan odmor. Lakša varijanta je sporije kretanje s naglaskom na stavu, a teža dulja dionica od 7 m ili promjena smjera na nasumični zvučni signal (aplikacija na mobitelu). Ako osjetiš bol u preponi ili kuku, stani i ne spuštaj se u preduboki stav.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/181/lateral-shuffles/",
    "sourceTitle": "Butt & Hip Exercises | Lateral Shuffles",
    "order": 802,
@@ -6296,7 +6295,7 @@ window.SEED = {
     "Usporavanje prije cilja – ubrzavaj kroz crtu.",
     "Koljeno upada prema unutra pri okretu – drži koljeno iznad stopala."
    ],
-   "note": "Ovaj shuttle mjeri i trenira ubrzanje, kočenje i ponovno ubrzanje, kao kod pressinga i povratka u obranu. Za razliku od američkog pro agility testa (5-10-5 jardi, dodir crte rukom), ovdje su dionice u metrima, a crtu dodiruješ stopalom. Koristi ga kao test (bolji od 2 pokušaja) ili kao vježbu agilnosti odmoran nakon zagrijavanja, u predsezoni i sezoni, a ne kad si već umoran. Lakša varijanta je submaksimalan tempo s naglaskom na okretu, a teža start na znak partnera ili vođenje lopte. Ako osjetiš bol u preponi, kuku ili listu, stani.",
+   "note": "Ovaj shuttle mjeri i trenira ubrzanje, kočenje i ponovno ubrzanje, kao kod pressinga i povratka u obranu. Za razliku od američkog pro agility testa (5-10-5 jardi, dodir crte rukom), ovdje su dionice u metrima, a crtu dodiruješ stopalom. Koristi ga kao test (bolji od 2 pokušaja) ili kao vježbu agilnosti odmoran nakon zagrijavanja, u predsezoni i sezoni, a ne kad si već umoran. Lakša varijanta je submaksimalan tempo s naglaskom na okretu, a teža vođenje lopte ili start na nasumični zvučni signal (aplikacija na mobitelu). Ako osjetiš bol u preponi, kuku ili listu, stani.",
    "source": "https://www.topendsports.com/testing/tests/20m-agility.htm",
    "sourceTitle": "20 Meter Agility Test",
    "order": 803,
@@ -6434,7 +6433,7 @@ window.SEED = {
     "Spor prijelaz iz trčanja unatrag u sprint – zakoči jednim snažnim kontaktom i odmah se odgurni naprijed.",
     "Okretanje tijela u stranu pri trčanju unatrag – ostani cijelo vrijeme licem prema smjeru sprinta."
    ],
-   "note": "Prijelaz iz trčanja unatrag u sprint trebaš kad pratiš igru licem prema lopti pa moraš naglo krenuti naprijed, primjerice pri izlasku obrane ili pressingu. Raspored 9-3-6-3-9 m opisan je u istraživanju Kineziološkog fakulteta u Zagrebu kao pouzdan test agilnosti nogometaša, a možeš ga raditi i kao vježbu: odmoran, prije treninga s loptom, u predsezoni i sezoni. Lakša varijanta je isti raspored submaksimalnim tempom ili samo prvi dio (9 m naprijed, 3 m unatrag, 6 m naprijed), a teža start na znak partnera. Ako osjetiš bol u stražnjoj loži, listu ili kuku, stani.",
+   "note": "Prijelaz iz trčanja unatrag u sprint trebaš kad pratiš igru licem prema lopti pa moraš naglo krenuti naprijed, primjerice pri izlasku obrane ili pressingu. Raspored 9-3-6-3-9 m opisan je u istraživanju Kineziološkog fakulteta u Zagrebu kao pouzdan test agilnosti nogometaša, a možeš ga raditi i kao vježbu: odmoran, prije treninga s loptom, u predsezoni i sezoni. Lakša varijanta je isti raspored submaksimalnim tempom ili samo prvi dio (9 m naprijed, 3 m unatrag, 6 m naprijed), a teža start na nasumični zvučni signal (aplikacija na mobitelu). Ako osjetiš bol u stražnjoj loži, listu ili kuku, stani.",
    "source": "https://pubmed.ncbi.nlm.nih.gov/20145571/",
    "sourceTitle": "Reliability and factorial validity of agility tests for soccer players - PubMed",
    "order": 806,
@@ -6480,7 +6479,7 @@ window.SEED = {
     "Uspravno trčanje unatrag – ostani nisko, s ramenima ispred kukova.",
     "Okretanje tijela u stranu – cijelo vrijeme gledaj naprijed."
    ],
-   "note": "T-test kombinira sprint naprijed, bočno kretanje i trčanje unatrag, pa dobro opisuje agilnost nogometaša, posebno braniča. Koristi ga kao test (najbolji od 3 ispravna pokušaja, a za odrasle muškarce u timskim sportovima vrijeme ispod 9,5 s je odlično) ili kao vježbu agilnosti odmoran, prije treninga s loptom, u predsezoni i sezoni. Lakša varijanta je submaksimalan tempo ili kraći razmaci čunjeva, a teža smjer bočnog kretanja na znak partnera. Iza čunja A ostavi nekoliko metara slobodnog prostora (ili neka partner stoji iza tebe) jer se pri trčanju unatrag kroz cilj možeš spotaknuti. Ako osjetiš bol u preponi, kuku ili koljenu, stani, a pri dodirivanju čunja spuštaj se kroz koljena i kukove bez dubokog, bolnog pretklona.",
+   "note": "T-test kombinira sprint naprijed, bočno kretanje i trčanje unatrag, pa dobro opisuje agilnost nogometaša, posebno braniča. Koristi ga kao test (najbolji od 3 ispravna pokušaja, a za odrasle muškarce u timskim sportovima vrijeme ispod 9,5 s je odlično) ili kao vježbu agilnosti odmoran, prije treninga s loptom, u predsezoni i sezoni. Lakša varijanta je submaksimalan tempo ili kraći razmaci čunjeva, a teža smjer bočnog kretanja na nasumični zvučni signal (aplikacija na mobitelu). Iza čunja A ostavi nekoliko metara slobodnog prostora jer se pri trčanju unatrag kroz cilj možeš spotaknuti. Ako osjetiš bol u preponi, kuku ili koljenu, stani, a pri dodirivanju čunja spuštaj se kroz koljena i kukove bez dubokog, bolnog pretklona.",
    "source": "https://www.topendsports.com/testing/tests/t-test.htm",
    "sourceTitle": "T-Test Agility Calculator - Free Online Agility Assessment Tool",
    "order": 807,
@@ -6615,9 +6614,325 @@ window.SEED = {
     "Udaljenost brzih dionica naglo pada – uspori tempo ili smanji broj ponavljanja."
    ],
    "note": "Intervali 30/30 razvijaju sposobnost ponavljanja jakih napora, kao u pritisku i povratku u obranu tijekom utakmice. Koristi ih u predsezoni ili kao dodatni kondicijski rad u sezoni, najviše 1–2 puta tjedno i ne dan prije utakmice. Lakše: 6 ponavljanja ili 20 s brzo i 40 s lagano; teže: 10–12 ponavljanja. Isti protokol možeš odvoziti na sobnom biciklu ako ti je negdje dostupan, što je blaže za zglobove pri povratku nakon ozljede. Bol u kuku ili preponi znači stani.",
-   "source": "https://www.health.harvard.edu/heart-health/interval-training-a-shorter-more-enjoyable-workout",
-   "sourceTitle": "Interval training: A shorter, more enjoyable workout? - Harvard Health",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
+   "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "depth-drop": {
+   "name": "Depth drop",
+   "alt": "Doskok s kutije sa zadržavanjem",
+   "cat": "Eksplozivnost",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Kvadriceps",
+    "Gluteus",
+    "Koljeno",
+    "Gležanj"
+   ],
+   "equip": [
+    "Plyo box"
+   ],
+   "equipment": "Plyo box na strani od 40 cm, na neklizavoj podlozi",
+   "measure": "sets",
+   "sets": 3,
+   "reps": 4,
+   "sec": 30,
+   "rest": 90,
+   "kg": 0,
+   "sides": false,
+   "feel": "Kvadricepsi i gluteusi koji koče doskok, uz čvrste gležnjeve i zategnut trup",
+   "steps": [
+    "Postavi plyo box na najnižu stranu (40 cm) na neklizavu podlogu i stani na prednji rub, sa stopalima u širini kukova.",
+    "Iskorači jednom nogom s kutije i pusti se da padneš ravno dolje – ne skači s kutije ni gore ni naprijed.",
+    "Doskoči istodobno na oba stopala, prvo prednjim dijelom stopala, a zatim spusti pete.",
+    "Upij doskok savijanjem kukova i koljena do četvrt čučnja ili polučučnja i zaustavi pokret što brže, s koljenima u smjeru prstiju i prsima iznad koljena.",
+    "Zadrži doskok 2 sekunde bez dodatnog koraka, s rukama ispred tijela za ravnotežu.",
+    "Vrati se na kutiju hodajući i odmori 10–15 sekundi prije sljedećeg ponavljanja."
+   ],
+   "mistakes": [
+    "Skok s kutije prema gore ili naprijed – samo iskorači i padni ravno dolje.",
+    "Koljena upadaju prema unutra pri doskoku – guraj koljena u smjeru prstiju.",
+    "Tvrd, glasan doskok na pete ili ispružene noge – doskoči na prednji dio stopala i amortiziraj kukovima i koljenima.",
+    "Propadanje u duboki čučanj – zaustavi pokret u četvrt čučnja ili polučučnju; ako ne ide, radi doskoke iz skoka u mjestu dok ne ojačaš.",
+    "Ljuljanje ili dodatni korak nakon doskoka – zategni trup i zadrži doskok mirno 2 sekunde."
+   ],
+   "note": "Depth drop uči tijelo da brzo i sigurno upije silu doskoka, kao nakon skoka na glavu ili pri naglom zaustavljanju, i temelj je za depth jump. Radi ga odmoran, nakon zagrijavanja, na početku treninga snage ili prije treninga s loptom, u predsezoni i sezoni 1–2 puta tjedno, najkasnije 2 dana prije utakmice; prva 2–3 tjedna radi samo depth drop, a tek onda depth jump. Lakša varijanta je squat jump sa zadržanim doskokom na podu; teža je doskok u iskorak ili depth jump. Visina od 40 cm ti je dovoljna. Zbog kuka zaustavi doskok u četvrt čučnja ili polučučnju, bez dubokog savijanja, a ako osjetiš bol u kuku, preponi, koljenu ili Ahilovoj tetivi, stani.",
+   "source": "https://catalystathletics.com/exercise/550/Depth-Drop/",
+   "sourceTitle": "Depth Drop - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
+   "order": 408.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "hip-airplane": {
+   "name": "Avion na jednoj nozi",
+   "alt": "Hip airplane",
+   "cat": "Rehab",
+   "phase": 3,
+   "cord": "",
+   "zones": [
+    "Kuk",
+    "Gluteus",
+    "Gluteus medius"
+   ],
+   "equip": [
+    "Bez opreme",
+    "Švedske ljestve"
+   ],
+   "equipment": "Bez opreme; za početak lagani oslonac prstima na švedske ljestve ili kavez",
+   "measure": "sets",
+   "sets": 2,
+   "reps": 6,
+   "sec": 30,
+   "rest": 45,
+   "kg": 0,
+   "sides": true,
+   "feel": "Stražnjica i bočna strana kuka stajne noge, uz rad stopala na ravnoteži",
+   "steps": [
+    "Stani na jednu nogu uz švedske ljestve, s blago savijenim koljenom, i prstima jedne ruke lagano se pridrži za prečku.",
+    "Zategni trup i pregni se iz kuka kao u jednonožnom RDL-u, a slobodnu nogu ispruži unatrag; nagni se samo koliko možeš bez gubitka ravnoteže.",
+    "Drži ravnu liniju od glave do pete slobodne noge, a stajno koljeno iznad stopala.",
+    "Polako okreni zdjelicu i prsa prema stajnoj nozi, tako da se kuk slobodne noge spusti prema podu.",
+    "Zatim ih polako okreni na suprotnu stranu, tako da se kuk slobodne noge podigne prema stropu, a stajno koljeno i dalje gleda prema prstima.",
+    "Okret u oba smjera je jedno ponavljanje; nakon serije se uspravi i zamijeni nogu."
+   ],
+   "mistakes": [
+    "Okrećeš samo ramena – zdjelica i prsa okreću se zajedno, iz kuka stajne noge.",
+    "Stajno koljeno upada prema unutra – drži ga iznad drugog i trećeg prsta i smanji okret.",
+    "Leđa se grbe – pregni se manje i drži ravnu liniju od glave do pete.",
+    "Žuriš pa gubiš ravnotežu – okreći polako, oko 2 s u svaki smjer, i pridrži se prstima."
+   ],
+   "note": "Avion na jednoj nozi uči te kontrolirati rotaciju kuka na stajnoj nozi, koja ti treba pri udarcu, primanju lopte i promjeni smjera. Uvedi ga u fazi 3 rehaba, kad jednonožni most i jednonožni RDL ne bole, ili ga radi u zagrijavanju prije treninga snage, 2–3 puta tjedno. Lakše: manji nagib i manji okret uz oslonac prstima; teže: bez oslonca, zadržaj 2 s na krajevima okreta ili veći nagib trupa. Okret prema stajnoj nozi rotira savijeni kuk prema unutra, a taj položaj kod impingementa kuka zna štipati, pa ako štipa u preponi, radi samo okret prema van, a bol znači stani.",
+   "source": "https://squatuniversity.com/2018/05/06/the-hip-airplane/",
+   "sourceTitle": "The Hip Airplane – Squat University",
+   "order": 717,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "adukcija-na-boku": {
+   "name": "Adukcija kuka na boku",
+   "alt": "Side-lying hip adduction",
+   "cat": "Rehab",
+   "phase": 2,
+   "cord": "",
+   "zones": [
+    "Aduktori",
+    "Kuk"
+   ],
+   "equip": [
+    "Strunjača"
+   ],
+   "equipment": "Strunjača",
+   "measure": "sets",
+   "sets": 3,
+   "reps": 12,
+   "sec": 30,
+   "rest": 45,
+   "kg": 0,
+   "sides": true,
+   "feel": "Unutarnja strana bedra donje noge",
+   "steps": [
+    "Lezi na bok na strunjaču, s donjom nogom ispruženom u liniji s trupom i glavom na donjoj ruci.",
+    "Gornju nogu savij i stopalo postavi na pod ispred koljena donje noge.",
+    "Složi kukove jedan iznad drugoga i lagano zategni trbuh.",
+    "Ispruženu donju nogu podigni od poda koliko možeš bez naginjanja zdjelice, s prstima okrenutima naprijed.",
+    "Zadrži 1–2 s gore i spuštaj nogu polako 2–3 s, do tik iznad poda.",
+    "Napravi sva ponavljanja, pa se okreni na drugi bok."
+   ],
+   "mistakes": [
+    "Zdjelica se valja unatrag – složi kukove jedan iznad drugoga i podiži nogu manje.",
+    "Koljeno donje noge se savija – drži nogu ispruženu i podiži je unutarnjom stranom bedra.",
+    "Stopalo se okreće prema stropu – prsti donje noge gledaju naprijed.",
+    "Noga pada na pod – spuštaj je polako, 2–3 s."
+   ],
+   "note": "Aduktori su kod nogometaša najčešće mjesto ozljede prepona, a adukcija na boku jača ih bez opreme i uz manje opterećenje od Copenhagen planka. U EMG mjerenju na nogometašima ova vježba bez dodatnog otpora aktivirala je dugi aduktor oko 64 % maksimuma, a Copenhagen oko 108 %, pa je dobra stepenica između stiska lopte i Copenhagena. Radi je u fazi 2 rehaba ili u prevenciji 2–3 puta tjedno, nakon treninga s loptom. Lakše: manji raspon; teže: zadržaj 3 s gore i sporije spuštanje, a zatim Copenhagen plank – kratka poluga. Bol u preponi znači stani.",
+   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5455186/",
+   "sourceTitle": "Dynamic Hip Adduction, Abduction and Abdominal Exercises from the Holmich Groin-Injury Prevention Program Are Intense Enough to Be Considered Strengthening Exercises – A Cross-Sectional Study – PMC",
+   "order": 709.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "jednonozni-most-kutija": {
+   "name": "Jednonožni most s petom na kutiji",
+   "alt": "Single-leg hamstring bridge",
+   "cat": "Snaga",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Stražnja loža",
+    "Gluteus"
+   ],
+   "equip": [
+    "Plyo box",
+    "Strunjača"
+   ],
+   "equipment": "Plyo box na strani od 60 cm (lakše 50 ili 40 cm), prislonjen uz zid ili stup kaveza; tatami",
+   "measure": "sets",
+   "sets": 2,
+   "reps": 10,
+   "sec": 30,
+   "rest": 60,
+   "kg": 0,
+   "sides": true,
+   "feel": "Stražnja loža radne noge, od sjedne kosti do koljena, uz gluteus",
+   "steps": [
+    "Okreni plyo box na stranu od 60 cm, prisloni ga uz zid ili stup kaveza da ne klizi i lezi na leđa na tatami ispred njega.",
+    "Petu radne noge stavi na rub kutije i odmakni se toliko da koljeno bude tek blago savijeno (oko 20°).",
+    "Drugu nogu savij u kuku i koljenu iznad sebe, ruke prekriži na prsima i zategni trbuh.",
+    "Uz izdah pritisni petu u kutiju i podigni stražnjicu dok rame, kuk i koljeno ne budu u ravnoj liniji, bez izvijanja donjih leđa.",
+    "Zadrži 1 sekundu gore, pa se kontrolirano spusti dok stražnjica tek ne dotakne pod i odmah kreni u sljedeće ponavljanje.",
+    "Odradi sva ponavljanja jednom nogom, zatim zamijeni nogu."
+   ],
+   "mistakes": [
+    "Donja leđa se izvijaju da kukovi odu više – podiži samo do ravne linije ramena, kuka i koljena i drži rebra dolje.",
+    "Koljeno je previše savijeno pa radi uglavnom stražnjica – odmakni se od kutije da koljeno bude tek blago savijeno.",
+    "Pomažeš se rukama ili slobodnom nogom – ruke drži prekrižene na prsima, a slobodna noga miruje iznad tebe.",
+    "Zdjelica pada na stranu slobodne noge – drži oba kuka u istoj visini.",
+    "Kutija klizi prema tebi – prisloni je uz zid ili stup kaveza prije serije."
+   ],
+   "note": "Most s petom na visokoj kutiji jača stražnju ložu kao ispružač kuka uz gotovo ispruženo koljeno, a za razliku od Nordica ne ostavlja jaku upalu mišića, pa ga lako uklopiš i u tjedan s utakmicom. Isti položaj je i test: u istraživanju na 482 igrača australskog nogometa oni koji su kasnije ozlijedili desnu stražnju ložu imali su prije sezone manje ponavljanja na tom testu desnom nogom, iako test ne mjeri samo stražnju ložu, jer radi i stražnjica. Radi ga u predsezoni i sezoni, poslije treninga s loptom ili uz Nordic u treningu prevencije, 2–3 serije po 8–15 ponavljanja, a u tjednu s utakmicom bez otkaza i najkasnije 2 dana prije nje. Jednom mjesečno, najkasnije 4 dana prije utakmice, napravi što više pravilnih ponavljanja svakom nogom, zapiši ih i usporedi lijevu i desnu stranu. Lakše: niža strana kutije (50 ili 40 cm), ruke na podu ili obje pete na kutiji; teže: pauza od 3 s gore, sporije spuštanje ili bučica na kuku radne noge. Kuk: radni kuk je ispružen, a slobodni savijaj samo koliko ti je ugodno; štipanje u preponi ili grč i oštra bol u stražnjoj loži znače stani.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/23918443/",
+   "sourceTitle": "The predictive validity of a single leg bridge test for hamstring injuries in Australian Rules Football Players - PubMed",
+   "order": 216.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "ubrzanje-zaustavljanje": {
+   "name": "Ubrzanje i zaustavljanje",
+   "alt": "Deceleration drill",
+   "cat": "Kondicija",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Kvadriceps",
+    "Gluteus",
+    "Koljeno",
+    "Gležanj"
+   ],
+   "equip": [
+    "Čunjevi"
+   ],
+   "equipment": "Tri čunja: start, čunj na 10 m i čunj 4 m iza njega (zona zaustavljanja)",
+   "measure": "sets",
+   "sets": 3,
+   "reps": 3,
+   "sec": 30,
+   "rest": 90,
+   "kg": 0,
+   "sides": false,
+   "feel": "Kvadricepsi i gluteusi koji koče, uz rad listova i zategnut trup",
+   "steps": [
+    "Postavi čunj za start, drugi čunj 10 m dalje i treći 4 m iza drugog: između drugog i trećeg čunja je zona u kojoj moraš stati.",
+    "Iz visokog starta ubrzaj do drugog čunja, isprva oko 70–80 % maksimalne brzine.",
+    "Čim prođeš drugi čunj, zakoči s nekoliko kratkih, brzih koraka: spusti kukove, drži prsa gore i postavljaj stopala ispred tijela.",
+    "Stani unutar zone u atletskom stavu: stopala malo šire od kukova, koljena iznad stopala, kukovi unatrag i težina na cijelim stopalima.",
+    "Zadrži položaj 2 sekunde, pa se hodajući vrati na start i kreni u sljedeće ponavljanje.",
+    "Kad staješ sigurno unutar zone, povećaj brzinu do 90 %, skrati zonu na 3 m ili produlji ubrzanje na 15–20 m."
+   ],
+   "mistakes": [
+    "Kočenje jednim dugim korakom na petu s ispruženim koljenom – koči s više kratkih koraka i savijenim koljenima.",
+    "Trup pada naprijed pa ne možeš stati u zoni – spusti kukove, drži prsa gore i stopala postavljaj ispred tijela.",
+    "Koljena upadaju prema unutra pri kočenju – guraj koljena u smjeru prstiju.",
+    "Prevelika brzina prerano, pa staneš tek iza zone – smanji brzinu i povećavaj je tek kad staneš na vrijeme."
+   ],
+   "note": "Naglo kočenje jedna je od najčešćih radnji u nogometu i čest trenutak ozljede koljena, posebno prednje ukrižene sveze, a ova vježba ga uvježbava kontrolirano i postupno. Radi je odmoran nakon zagrijavanja, prije treninga s loptom ili u bloku agilnosti, u predsezoni 1–2 puta tjedno, a u sezoni u manjem volumenu, najkasnije 2 dana prije utakmice. Lakša varijanta je kraće ubrzanje (5 m) na pola brzine i dulja zona; teža je veća brzina, zona od 2 m, zaustavljanje na nasumični zvučni signal (aplikacija na mobitelu) ili zaustavljanje s okretom za 180° i ubrzanjem natrag. Zbog kuka stav na kraju drži u polučučnju, bez dubokog savijanja, a ako osjetiš bol u preponi, kuku ili koljenu, stani.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/34716561/",
+   "sourceTitle": "Deceleration Training in Team Sports: Another Potential 'Vaccine' for Sports-Related Injury? - PubMed",
+   "order": 802.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "lagano-trcanje": {
+   "name": "Lagano trčanje",
+   "alt": "Easy jog",
+   "cat": "Aktivacija",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Cijelo tijelo",
+    "Lisni mišić",
+    "Gležanj"
+   ],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "Bez opreme; oko terena ili po stazi",
+   "measure": "time",
+   "sets": 1,
+   "reps": 1,
+   "sec": 240,
+   "rest": 15,
+   "kg": 0,
+   "sides": false,
+   "feel": "Toplina u nogama i lagano ubrzano disanje, a i dalje možeš razgovarati",
+   "steps": [
+    "Trči lagano oko terena ili po stazi, tempom uz koji bi mogao razgovarati.",
+    "Prvu minutu trči sasvim polako, kratkim i mekanim koracima, a zatim malo produži korak.",
+    "Drži tijelo uspravno, ramena opuštena, a ruke savijene u laktovima i opuštene uz tijelo.",
+    "Zadnju minutu ubaci po 10–15 m bočnog trčanja (na obje strane) i trčanja unatrag.",
+    "Kad vrijeme istekne, u kratkom odmoru prošetaj do mjesta za sljedeću vježbu zagrijavanja."
+   ],
+   "mistakes": [
+    "Prebrz tempo pa se zadišeš već u zagrijavanju – uspori dok ne možeš pričati u punim rečenicama.",
+    "Preskočeno ili prekratko trčanje – mišićima i zglobovima trebaju 3–5 minuta da se zagriju prije njihanja nogu i skipova.",
+    "Dugi, teški koraci na petu – trči kratkim, mekanim koracima na sredini stopala."
+   ],
+   "note": "Lagano trčanje podiže temperaturu mišića i puls, pa su vježbe zagrijavanja koje slijede učinkovitije i sigurnije. Tako počinje i FIFA 11+, program zagrijavanja koji je u istraživanju na mladim nogometašicama smanjio rizik ozljeda: njegov prvi dio čine vježbe trčanja laganim tempom. Radi ga na početku zagrijavanja za teren 3–5 minuta, a kad je hladno, produži ga. Lakše: prvu minutu hodaj pa trči vrlo lagano; teže: zadnju minutu trči malo brže, ali bez zadihanosti.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/19066253/",
+   "sourceTitle": "Comprehensive warm-up programme to prevent injuries in young female footballers: cluster randomised controlled trial - PubMed",
+   "order": 100.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
+  },
+  "progresivna-ubrzanja": {
+   "name": "Progresivna ubrzanja",
+   "alt": "Build-up runs",
+   "cat": "Aktivacija",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Stražnja loža",
+    "Fleksori kuka",
+    "Kvadriceps",
+    "Lisni mišić"
+   ],
+   "equip": [
+    "Čunjevi"
+   ],
+   "equipment": "Dva čunja na 30 m razmaka",
+   "measure": "sets",
+   "sets": 3,
+   "reps": 1,
+   "sec": 30,
+   "rest": 45,
+   "kg": 0,
+   "sides": false,
+   "feel": "Stražnja loža, fleksori kuka i listovi spremni za sprint; svako ubrzanje je brže, a ti i dalje opušten",
+   "steps": [
+    "Postavi dva čunja na 30 m razmaka.",
+    "Iz laganog trčanja kod prvog čunja postupno ubrzavaj, tako da najveću brzinu postigneš u zadnjih 10 m.",
+    "Prvo ubrzanje trči do oko 60 % najveće brzine, drugo do oko 75 %, a treće do oko 90 %.",
+    "Iza drugog čunja postupno uspori kroz 10–15 m, bez naglog kočenja, pa se hodajući vrati na start.",
+    "Trči opušteno: uspravno tijelo, ruke rade naprijed-natrag, a stopalo dolazi na tlo ispod tijela."
+   ],
+   "mistakes": [
+    "Prvo ubrzanje odmah punom brzinom – povećavaj brzinu od ubrzanja do ubrzanja.",
+    "Naglo kočenje odmah iza čunja – usporavaj postupno kroz 10–15 m.",
+    "Grčenje ramena, šaka i lica pri većoj brzini – ostani opušten i kad trčiš brže."
+   ],
+   "note": "Progresivna ubrzanja završni su dio zagrijavanja prije sprinta, brzih dionica i utakmice: pripremaju stražnju ložu, fleksore kuka i listove za brzine koje lagano trčanje i skipovi ne dosežu. Tako završava i FIFA 11+, čiji treći dio čine vježbe trčanja većom brzinom. Radi ih na kraju zagrijavanja za teren kad poslije slijede sprint, brze dionice ili trening s loptom, a preskoči ih prije laganog trčanja. Lakše: samo dva ubrzanja, do 60 i 75 %; teže: četvrto ubrzanje do 95 %. Ako osjetiš povlačenje u stražnjoj loži ili preponi, stani i ne ubrzavaj dalje.",
+   "source": "https://pubmed.ncbi.nlm.nih.gov/19066253/",
+   "sourceTitle": "Comprehensive warm-up programme to prevent injuries in young female footballers: cluster randomised controlled trial - PubMed",
+   "order": 109.5,
    "fav": false,
    "media": null,
    "mediaType": null
@@ -6695,7 +7010,7 @@ window.SEED = {
   },
   "rehab-kuk-f2": {
    "name": "Rehab kuka · faza 2",
-   "desc": "Jačanje kuka. Radim ga 3 puta tjedno, prije treninga snage ili kao zaseban trening.",
+   "desc": "Jačanje kuka. Radi ga 3 puta tjedno, kao zaseban trening ili prije treninga u teretani. Copenhagen plank radi najviše 3 puta tjedno ukupno u predsezoni i jednom tjedno u sezoni: ako ga taj tjedan radiš u Treningu A ili Prevenciji ozljeda, ovdje ga preskoči.",
    "home": "rehab",
    "tag": "Rehab",
    "updatedAt": 3,
@@ -6764,7 +7079,7 @@ window.SEED = {
   },
   "snaga-a": {
    "name": "Trening A · noge i kukovi",
-   "desc": "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Cilj (snaga, hipertrofija ili izdržljivost) biraš u Napretku → Doziranje; kilograme upisuješ sam.",
+   "desc": "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Prije prve serije odradi Aktivaciju s užetom (ili 5 minuta laganog zagrijavanja) i 2–3 lakše serije mrtvog dizanja. Cilj (snaga, hipertrofija, izdržljivost ili eksplozivnost) biraš u Napretku → Doziranje; kilograme upisuješ sam.",
    "home": null,
    "tag": "Teretana",
    "updatedAt": 1,
@@ -6791,13 +7106,13 @@ window.SEED = {
      "ss": "a"
     },
     {
-     "exId": "kopenhagen-kratka",
-     "measure": "time",
-     "sec": 20,
-     "sets": 3,
-     "reps": 10,
-     "rest": 75,
-     "sides": true,
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
      "kg": 0,
      "ss": "a"
     },
@@ -6813,13 +7128,13 @@ window.SEED = {
      "ss": "b"
     },
     {
-     "exId": "nordic-curl",
-     "measure": "sets",
-     "sec": 30,
-     "sets": 2,
-     "reps": 5,
-     "rest": 90,
-     "sides": false,
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
      "kg": 0,
      "ss": "b"
     }
@@ -6827,7 +7142,7 @@ window.SEED = {
   },
   "snaga-b": {
    "name": "Trening B · gornji dio i trup",
-   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Cilj biraš u Napretku → Doziranje.",
+   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Prije prve serije odradi 5 minuta laganog zagrijavanja, 2 serije band pull-aparta i 1–2 lakše serije potiska s klupe. Cilj biraš u Napretku → Doziranje.",
    "home": null,
    "tag": "Teretana",
    "updatedAt": 4,
@@ -6902,7 +7217,7 @@ window.SEED = {
   },
   "snaga-c": {
    "name": "Trening C · noge i stražnja loža",
-   "desc": "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Cilj biraš u Napretku → Doziranje.",
+   "desc": "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Prije prve serije odradi Aktivaciju s užetom (ili 5 minuta laganog zagrijavanja) i 2–3 lakše serije čučnja. Cilj biraš u Napretku → Doziranje.",
    "home": null,
    "tag": "Teretana",
    "updatedAt": 5,
@@ -6987,7 +7302,7 @@ window.SEED = {
   },
   "trx-krug": {
    "name": "TRX krug",
-   "desc": "Šest TRX vježbi u krugu, bez odmora između vježbi; odmor tek nakon kruga. Tri kruga.",
+   "desc": "Šest TRX vježbi u krugu, bez odmora između vježbi; odmor tek nakon kruga. Tri kruga. Prve tri vježbe radiš s ručkama (trake srednje duljine), a zadnje tri sa stopalima u omčama (na visini sredine potkoljenice), pa trake podešavaš samo dvaput po krugu.",
    "home": null,
    "tag": "TRX",
    "updatedAt": 6,
@@ -6998,6 +7313,17 @@ window.SEED = {
      "sec": 30,
      "sets": 3,
      "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-fallout",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
      "rest": 0,
      "sides": false,
      "kg": 0,
@@ -7015,17 +7341,6 @@ window.SEED = {
      "ss": "k"
     },
     {
-     "exId": "trx-push-up",
-     "measure": "sets",
-     "sec": 30,
-     "sets": 3,
-     "reps": 8,
-     "rest": 0,
-     "sides": false,
-     "kg": 0,
-     "ss": "k"
-    },
-    {
      "exId": "trx-hamstring-curl",
      "measure": "sets",
      "sec": 30,
@@ -7037,7 +7352,7 @@ window.SEED = {
      "ss": "k"
     },
     {
-     "exId": "trx-fallout",
+     "exId": "trx-push-up",
      "measure": "sets",
      "sec": 30,
      "sets": 3,
@@ -7061,8 +7376,8 @@ window.SEED = {
    ]
   },
   "eksplozivnost": {
-   "name": "Eksplozivnost",
-   "desc": "Skokovi i bacanja dok si svjež, prije treninga snage. Svako ponavljanje maksimalno, s punim odmorom.",
+   "name": "Skokovi i bacanja",
+   "desc": "Radi ga dok si svjež, prije ostalih vježbi u teretani, ali nakon zagrijavanja: prvo odradi Aktivaciju s užetom (ili 5 minuta laganog trčanja ili poskoka). Svako ponavljanje maksimalno, s punim odmorom.",
    "home": null,
    "tag": "Teretana",
    "updatedAt": 7,
@@ -7121,11 +7436,21 @@ window.SEED = {
   },
   "prevencija": {
    "name": "Prevencija ozljeda",
-   "desc": "Stražnja loža, prepone, listovi i ravnoteža: 2 puta tjedno, oko 20 minuta, ne dan prije utakmice.",
+   "desc": "Stražnja loža, prepone, listovi i ravnoteža. U predsezoni 2 puta tjedno, u sezoni jednom, najkasnije 4 dana prije utakmice. Ako taj tjedan radiš i Trening A, Prevenciju radi jednom manje i ne isti dan, jer i on ima Nordic i Copenhagen. Prije prve vježbe se zagrij (5 minuta laganog trčanja ili poskoka), osim ako dolaziš ravno s treninga s loptom. Stisak lopte na početku je i provjera prepona: ako boli, preskoči Copenhagen.",
    "home": null,
    "tag": "Prevencija",
    "updatedAt": 8,
    "items": [
+    {
+     "exId": "adductor-squeeze",
+     "measure": "time",
+     "sec": 10,
+     "sets": 3,
+     "reps": 10,
+     "rest": 20,
+     "sides": false,
+     "kg": 0
+    },
     {
      "exId": "nordic-curl",
      "measure": "sets",
@@ -7147,6 +7472,16 @@ window.SEED = {
      "sides": true,
      "kg": 0,
      "ss": "a"
+    },
+    {
+     "exId": "jednonozni-most-kutija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 45,
+     "sides": true,
+     "kg": 0
     },
     {
      "exId": "jednonozni-rdl",
@@ -7179,26 +7514,26 @@ window.SEED = {
      "rest": 30,
      "sides": true,
      "kg": 0
-    },
-    {
-     "exId": "adductor-squeeze",
-     "measure": "time",
-     "sec": 10,
-     "sets": 3,
-     "reps": 10,
-     "rest": 20,
-     "sides": false,
-     "kg": 0
     }
    ]
   },
   "aktivacija-teren": {
    "name": "Zagrijavanje za teren",
-   "desc": "Prije treninga s loptom ili trčanja: guma oko koljena pa tehnika trčanja.",
+   "desc": "Prije treninga s loptom ili trčanja: 3–5 minuta laganog trčanja, njihanje nogu, vježbe s mini gumom (oko gležnjeva ili stopala) i tehnika trčanja. Progresivna ubrzanja na kraju (3 × 30 m, oko 60, 75 i 90 % brzine) radi kad slijede sprint, brze dionice ili trening s loptom, a preskoči ih prije laganog trčanja.",
    "home": null,
    "tag": "Prije treninga",
    "updatedAt": 9,
    "items": [
+    {
+     "exId": "lagano-trcanje",
+     "measure": "time",
+     "sec": 240,
+     "sets": 1,
+     "reps": 1,
+     "rest": 15,
+     "sides": false,
+     "kg": 0
+    },
     {
      "exId": "leg-swings",
      "measure": "sets",
@@ -7258,6 +7593,17 @@ window.SEED = {
      "rest": 45,
      "sides": false,
      "kg": 0
+    },
+    {
+     "exId": "progresivna-ubrzanja",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 45,
+     "sides": false,
+     "kg": 0,
+     "note": "30 m, do 60, 75 pa 90 % brzine"
     }
    ]
   },
@@ -7345,11 +7691,11 @@ window.SEED = {
   "box-to-box-aerobno": {
    "name_hr": "Box to Box aerobno trčanje",
    "goal_hr": "Aerobna izdržljivost s naletima visokog intenziteta, nalik utakmici",
-   "summary_hr": "Ciklus od 90 s: 40 s trčanja između šesnaesteraca, 20 s hoda, 20 s sprinta i 10 s hoda. Četiri ciklusa čine seriju; dvije serije s 90 s odmora (izvor navodi ~15 min, zbroj je ~13,5 min).",
+   "summary_hr": "Ciklus od 90 s: 40 s trčanja tamo-natrag između šesnaesteraca, 20 s hoda, 20 s sprinta i 10 s hoda. Četiri ciklusa čine seriju; dvije serije s 90 s odmora (izvor navodi ~15 min, zbroj je ~13,5 min).",
    "source_url": "https://statsports.com/article/drills-and-advice-to-improve-your-endurance-with-mendo-fitness",
    "source_title": "Drills and Advice to improve your Endurance with Mendo Fitness",
    "equipment_hr": "Teren pune veličine s oba šesnaesterca; GPS po želji",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 13.5,
    "blocks": [
@@ -7361,7 +7707,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S1 · 1/4 · Sprint",
@@ -7371,7 +7717,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S1 · 2/4 · Trčanje između šesnaesteraca",
@@ -7381,7 +7727,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S1 · 2/4 · Sprint",
@@ -7391,7 +7737,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S1 · 3/4 · Trčanje između šesnaesteraca",
@@ -7401,7 +7747,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S1 · 3/4 · Sprint",
@@ -7411,7 +7757,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S1 · 4/4 · Trčanje između šesnaesteraca",
@@ -7421,7 +7767,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S1 · 4/4 · Sprint",
@@ -7431,7 +7777,7 @@ window.SEED = {
      "rest_s": 100,
      "rest_type_hr": "hod 10 s + odmor između serija 90 s",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja. Slijedi 90 s odmora prije 2. serije."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja. Slijedi 90 s odmora prije 2. serije."
     },
     {
      "label_hr": "S2 · 1/4 · Trčanje između šesnaesteraca",
@@ -7441,7 +7787,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S2 · 1/4 · Sprint",
@@ -7451,7 +7797,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S2 · 2/4 · Trčanje između šesnaesteraca",
@@ -7461,7 +7807,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S2 · 2/4 · Sprint",
@@ -7471,7 +7817,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S2 · 3/4 · Trčanje između šesnaesteraca",
@@ -7481,7 +7827,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S2 · 3/4 · Sprint",
@@ -7491,7 +7837,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     },
     {
      "label_hr": "S2 · 4/4 · Trčanje između šesnaesteraca",
@@ -7501,7 +7847,7 @@ window.SEED = {
      "rest_s": 20,
      "rest_type_hr": "hod",
      "intensity_hr": "60–70 % brzine",
-     "cue_hr": "Ujednačeno trčanje od jednog do drugog šesnaesterca, nije sprint."
+     "cue_hr": "Trči 40 s bez stajanja tamo-natrag između šesnaesteraca (otprilike 3 duljine od 72 m), ujednačeno, nije sprint."
     },
     {
      "label_hr": "S2 · 4/4 · Sprint",
@@ -7511,7 +7857,7 @@ window.SEED = {
      "rest_s": 10,
      "rest_type_hr": "hod",
      "intensity_hr": "90 % brzine",
-     "cue_hr": "Snažan sprint, drži tehniku do kraja."
+     "cue_hr": "Sprint 20 s na 90 % (otprilike 2 duljine, okret na šesnaestercu), drži tehniku do kraja."
     }
    ],
    "order": 1
@@ -7519,11 +7865,11 @@ window.SEED = {
   "brzina-i-brzinska-izdrzljivost": {
    "name_hr": "Brzina i brzinska izdržljivost",
    "goal_hr": "Brzinska izdržljivost i maksimalna brzina",
-   "summary_hr": "Tri sve duža maksimalna sprinta (do šesnaesterca, do centra, cijelom dužinom) s povratkom hodom kao jedinim odmorom. Izvor: 2–3 serije bez dodatnog odmora; ovdje 2.",
+   "summary_hr": "Tri sve duža maksimalna sprinta (do šesnaesterca, do centra, cijelom duljinom) s povratkom hodom kao jedinim odmorom. Izvor: 2–3 serije bez dodatnog odmora; ovdje 2.",
    "source_url": "https://statsports.com/article/drills-and-advice-to-improve-your-endurance-with-mendo-fitness",
    "source_title": "Drills and Advice to improve your Endurance with Mendo Fitness",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 4,
    "blocks": [
@@ -7550,7 +7896,7 @@ window.SEED = {
      "cue_hr": "Udaljenost za teren od 105 m. Trajanje sprinta i hoda: procjena."
     },
     {
-     "label_hr": "S1 · Sprint cijelom dužinom terena",
+     "label_hr": "S1 · Sprint cijelom duljinom terena",
      "sets": 1,
      "reps": 1,
      "work_s": 16,
@@ -7583,7 +7929,7 @@ window.SEED = {
      "cue_hr": "Udaljenost za teren od 105 m. Trajanje sprinta i hoda: procjena."
     },
     {
-     "label_hr": "S2 · Sprint cijelom dužinom terena",
+     "label_hr": "S2 · Sprint cijelom duljinom terena",
      "sets": 1,
      "reps": 1,
      "work_s": 16,
@@ -7599,24 +7945,133 @@ window.SEED = {
   "intervali-15-15": {
    "name_hr": "15:15 intervali",
    "goal_hr": "Visokointenzivni intervali za kondiciju za utakmicu",
-   "summary_hr": "Šest dionica od 15 s s 15 s oporavka po seriji, na tri rute po terenu (svaka dvaput). Izvor: 2–3 serije s 1 min odmora; ovdje 2.",
+   "summary_hr": "Šest dionica od 15 s s 15 s oporavka po seriji, na tri rute po terenu redom 1-2-3-1-2-3. Izvor: 2–3 serije s 1 min odmora; ovdje 2.",
    "source_url": "https://statsports.com/article/drills-and-advice-to-improve-your-endurance-with-mendo-fitness",
    "source_title": "Drills and Advice to improve your Endurance with Mendo Fitness",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 6.5,
    "blocks": [
     {
-     "label_hr": "15:15 dionice",
-     "sets": 2,
-     "reps": 6,
+     "label_hr": "S1/2 · 1/6 · Ruta 1 · šesnaesterac – centar – natrag",
+     "sets": 1,
+     "reps": 1,
      "work_s": 15,
      "rest_s": 15,
-     "set_rest_s": 60,
      "rest_type_hr": "oporavak",
      "intensity_hr": "Stigni do cilja unutar 15 s",
-     "cue_hr": "Redoslijed 1-2-3-1-2-3: (1) šesnaesterac → centar → natrag; (2) šesnaesterac → centar → gol-linija → peterac; (3) šesnaesterac → iza centralnog kruga → natrag na šesnaesterac."
+     "cue_hr": "Od šesnaesterca do centra i natrag na šesnaesterac (72 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S1/2 · 2/6 · Ruta 2 · šesnaesterac – centar – peterac",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra pa natrag do linije peterca (oko 83 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S1/2 · 3/6 · Ruta 3 · iza centralnog kruga – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do iza centralnog kruga i natrag na šesnaesterac (oko 90 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S1/2 · 4/6 · Ruta 1 · šesnaesterac – centar – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra i natrag na šesnaesterac (72 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S1/2 · 5/6 · Ruta 2 · šesnaesterac – centar – peterac",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra pa natrag do linije peterca (oko 83 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S1/2 · 6/6 · Ruta 3 · iza centralnog kruga – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 60,
+     "rest_type_hr": "između serija",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do iza centralnog kruga i natrag na šesnaesterac (oko 90 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 1/6 · Ruta 1 · šesnaesterac – centar – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra i natrag na šesnaesterac (72 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 2/6 · Ruta 2 · šesnaesterac – centar – peterac",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra pa natrag do linije peterca (oko 83 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 3/6 · Ruta 3 · iza centralnog kruga – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do iza centralnog kruga i natrag na šesnaesterac (oko 90 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 4/6 · Ruta 1 · šesnaesterac – centar – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra i natrag na šesnaesterac (72 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 5/6 · Ruta 2 · šesnaesterac – centar – peterac",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do centra pa natrag do linije peterca (oko 83 m) unutar 15 s."
+    },
+    {
+     "label_hr": "S2/2 · 6/6 · Ruta 3 · iza centralnog kruga – natrag",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 15,
+     "rest_s": 15,
+     "rest_type_hr": "oporavak",
+     "intensity_hr": "Stigni do cilja unutar 15 s",
+     "cue_hr": "Od šesnaesterca do iza centralnog kruga i natrag na šesnaesterac (oko 90 m) unutar 15 s."
     }
    ],
    "order": 4
@@ -7628,7 +8083,7 @@ window.SEED = {
    "source_url": "https://statsports.com/article/drills-and-advice-to-improve-your-endurance-with-mendo-fitness",
    "source_title": "Drills and Advice to improve your Endurance with Mendo Fitness",
    "equipment_hr": "Opseg terena za trčanje u krug",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 21,
    "blocks": [
@@ -7638,9 +8093,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 180,
      "rest_s": 60,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Drži jednak tempo; ako je 60 s po krugu prebrzo, trči najbrže što možeš održati."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Krug oko terena je oko 360 m: krug za 60 s (izvor) bio bi 6 m/s, prebrzo za 3 minute. Trči ujednačeno oko svoje MAS (npr. MAS 4,5 m/s → krug za ~80 s).",
+     "mas_pct": 100,
+     "lap_m": 360
     },
     {
      "label_hr": "Runda 1 · Trčanje 2 min",
@@ -7648,9 +8104,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 120,
      "rest_s": 120,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Drži jednak tempo; ako je 60 s po krugu prebrzo, trči najbrže što možeš održati."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Drži jednak tempo, oko svoje MAS.",
+     "mas_pct": 100,
+     "lap_m": 360
     },
     {
      "label_hr": "Runda 1 · Trčanje 1 min",
@@ -7658,9 +8115,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 60,
      "rest_s": 180,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Drži jednak tempo; ako je 60 s po krugu prebrzo, trči najbrže što možeš održati."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Drži jednak tempo, oko svoje MAS.",
+     "mas_pct": 100,
+     "lap_m": 360
     },
     {
      "label_hr": "Runda 2 · Trčanje 3 min",
@@ -7668,9 +8126,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 180,
      "rest_s": 60,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Izvor navodi 12 min, što je jedna runda; ako je previše, stani nakon 1. runde."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Druga runda. Izvor navodi ukupno 12 min trčanja (2 × 6 min).",
+     "mas_pct": 100,
+     "lap_m": 360
     },
     {
      "label_hr": "Runda 2 · Trčanje 2 min",
@@ -7678,9 +8137,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 120,
      "rest_s": 120,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Drži jednak tempo; ako je 60 s po krugu prebrzo, trči najbrže što možeš održati."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Drži jednak tempo, oko svoje MAS.",
+     "mas_pct": 100,
+     "lap_m": 360
     },
     {
      "label_hr": "Runda 2 · Trčanje 1 min",
@@ -7688,9 +8148,10 @@ window.SEED = {
      "reps": 1,
      "work_s": 60,
      "rest_s": 180,
-     "rest_type_hr": "odmor",
-     "intensity_hr": "Cilj ~60 s po krugu terena",
-     "cue_hr": "Drži jednak tempo; ako je 60 s po krugu prebrzo, trči najbrže što možeš održati."
+     "intensity_hr": "Ujednačeno, oko tvoje MAS",
+     "cue_hr": "Drži jednak tempo, oko svoje MAS.",
+     "mas_pct": 100,
+     "lap_m": 360
     }
    ],
    "order": 2
@@ -7701,20 +8162,21 @@ window.SEED = {
    "summary_hr": "Tri maksimalna sprinta s letećim startom i potpunim oporavkom. Broje se samo pokušaji na barem 95 % osobne maks. brzine; cilj je ~8 takvih tjedno, a tjedni sprint-volumen diži najviše 50 m.",
    "source_url": "https://statsports.com/the-locker/sprint-training-an-essential-tool-for-injury-prevention",
    "source_title": "Sprint Training - An Essential Tool For Injury Prevention",
-   "equipment_hr": "Čunjevi za zonu ubrzanja i ciljnu zonu; GPS preporučen za provjeru brzine",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "equipment_hr": "Čunjevi na startu, na 20 m i na 60 m (20 m zona ubrzanja, 40 m zona maksimalne brzine); GPS preporučen za provjeru brzine",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 6.5,
    "blocks": [
     {
-     "label_hr": "Leteći sprint",
+     "label_hr": "Leteći sprint · 20 m ubrzanja + 40 m maksimalno",
      "sets": 1,
      "reps": 3,
-     "work_s": 8,
+     "work_s": 10,
      "rest_s": 180,
      "rest_type_hr": "potpuni oporavak",
-     "intensity_hr": "≥95 % osobne maks. brzine",
-     "cue_hr": "Postupno ubrzaj kroz zonu ubrzanja pa sprintaj maksimalno kroz ciljnu zonu. Udaljenosti zona su u izvoru samo na slici. Trajanje i odmor: procjena; odmaraj dok se potpuno ne oporaviš."
+     "intensity_hr": "≥ 95 % osobne maks. brzine",
+     "cue_hr": "Prvih 20 m postupno ubrzavaj, sljedećih 40 m trči maksimalnom brzinom, zatim polako uspori. Trajanje i odmor: procjena; odmaraj dok se potpuno ne oporaviš.",
+     "distance_m": 60
     }
    ],
    "order": 9
@@ -7722,11 +8184,11 @@ window.SEED = {
   "k3-predsezonska-brzina": {
    "name_hr": "Predsezonska brzina (K3 Performance)",
    "goal_hr": "Tehnika trčanja, ubrzanje i reaktivna brzina",
-   "summary_hr": "Tehničke vježbe A/B hod i skip, sprintovi iz tri početna položaja, trčanje s otporom elastične gume pa kontrast bez otpora, te reaktivne utrke 1 na 1 na 10 m.",
+   "summary_hr": "Tehničke vježbe A/B hod i skip, sprintovi iz tri početna položaja, padajući startovi pa sprint iz visokog starta te reaktivni startovi na 10 m. Izvor koristi gumu za trčanje s otporom i partnera; ovdje su solo zamjene.",
    "source_url": "https://statsports.com/article/top-5-pre-season-speed-tips-from-k3performances-john-phillips",
    "source_title": "Top 5 pre-season speed tips from K3Performance's John Phillips",
-   "equipment_hr": "Čunjevi, elastična guma za trčanje s otporom (bungee), lopta, partner",
-   "warmup_hr": "Izvor ne navodi zasebno; A/B vježbe služe kao tehnička priprema. Prije toga tvoje zagrijavanje s elastičnim užetom.",
+   "equipment_hr": "Čunjevi, lopta, mobitel s aplikacijom za nasumični zvučni signal",
+   "warmup_hr": "Izvor ne navodi zasebno; A/B vježbe služe kao tehnička priprema. Prije toga odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 12.5,
    "blocks": [
@@ -7808,18 +8270,18 @@ window.SEED = {
      "cue_hr": "Iz položaja za sklek ustani i sprintaj. Trajanje: procjena. Odmor = povratak hodom (procjena; izvor ne navodi odmor)."
     },
     {
-     "label_hr": "Trčanje s otporom gume",
+     "label_hr": "Padajući start",
      "sets": 1,
      "reps": 4,
      "work_s": 5,
      "rest_s": 25,
      "rest_type_hr": "hod natrag",
      "distance_m": 20,
-     "intensity_hr": "Sprint uz otpor",
-     "cue_hr": "15–25 m. Gumu drži partner ili čvrsto sidro (izvor ne precizira). Trajanje: procjena. Odmor = povratak hodom (procjena; izvor ne navodi odmor)."
+     "intensity_hr": "Sprint iz pada naprijed",
+     "cue_hr": "Treniraš sam, pa umjesto trčanja s gumom: stani uspravno, nagni se naprijed iz gležnjeva dok ne moraš iskoračiti, pa sprintaj 15–20 m. Ako imaš blagu uzbrdicu, sprintaj uzbrdo. Trajanje: procjena. Odmor = povratak hodom (procjena; izvor ne navodi odmor)."
     },
     {
-     "label_hr": "Kontrastno trčanje bez otpora",
+     "label_hr": "Sprint iz visokog starta",
      "sets": 1,
      "reps": 2,
      "work_s": 4,
@@ -7827,10 +8289,10 @@ window.SEED = {
      "rest_type_hr": "hod natrag",
      "distance_m": 20,
      "intensity_hr": "Sprint",
-     "cue_hr": "15–25 m, nakon trčanja s otporom. Trajanje: procjena. Odmor = povratak hodom (procjena; izvor ne navodi odmor)."
+     "cue_hr": "15–25 m punom brzinom, odmah nakon padajućih startova. Trajanje: procjena. Odmor = povratak hodom (procjena; izvor ne navodi odmor)."
     },
     {
-     "label_hr": "Reaktivne utrke 1 na 1",
+     "label_hr": "Reaktivni startovi na 10 m",
      "sets": 1,
      "reps": 9,
      "work_s": 3,
@@ -7838,7 +8300,7 @@ window.SEED = {
      "rest_type_hr": "hod natrag",
      "distance_m": 10,
      "intensity_hr": "Maksimalna reakcija i sprint",
-     "cue_hr": "1–3: reagiraj na odskok lopte; 4–6: na boju čunja koju partner izgovori; 7–9: na partnerov pokret. Trajanje i odmor: procjena."
+     "cue_hr": "1–3: baci loptu uvis i kreni čim odskoči od tla; 4–6: kreni na nasumični zvučni signal (aplikacija na mobitelu); 7–9: isto, ali iz bočnog stava ili okrenut leđima. Trajanje i odmor: procjena."
     }
    ],
    "order": 10
@@ -7850,7 +8312,7 @@ window.SEED = {
    "source_url": "https://statsports.com/article/drills-and-advice-to-improve-your-endurance-with-mendo-fitness",
    "source_title": "Drills and Advice to improve your Endurance with Mendo Fitness",
    "equipment_hr": "Ravna površina; čunjevi na 20 m i 40 m",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 13,
    "blocks": [
@@ -7882,13 +8344,13 @@ window.SEED = {
   "mas-mreze-15-15": {
    "name_hr": "MAS mreže 15:15",
    "goal_hr": "Aerobni kapacitet: intervali na 100 % MAS",
-   "summary_hr": "15 s trčanja na 100 % MAS i 15 s aktivnog oporavka na 70 % MAS, bez stajanja 5 min po seriji. Izvor: 2–4 serije s 2–3 min odmora; ovdje 2 serije i 3 min.",
+   "summary_hr": "15 s trčanja na 100 % MAS (maksimalne aerobne brzine) i 15 s aktivnog oporavka na 70 % MAS, bez stajanja 5 min po seriji. Izvor: 2–4 serije s 2–3 min odmora; ovdje 2 serije i 3 min.",
    "source_url": "https://statsports.com/article/maximal-aerobic-speed-a-useful-tool-to-improve-aerobic-capacity",
    "source_title": "Maximal Aerobic Speed: A Useful Tool To Improve Aerobic Capacity?",
    "equipment_hr": "Čunjevi za dionice izračunate prema tvojoj MAS",
-   "warmup_hr": "Izvor ne navodi. Prvo napravi MAS test; prije treninga svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi. Prvo napravi MAS test; prije treninga odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
-   "total_min": 12.5,
+   "total_min": 13,
    "blocks": [
     {
      "label_hr": "MAS 15:15",
@@ -7897,9 +8359,11 @@ window.SEED = {
      "work_s": 15,
      "rest_s": 15,
      "set_rest_s": 180,
-     "rest_type_hr": "aktivni oporavak: trčanje na 70 % MAS",
+     "rest_type_hr": "trčanje na 70 % MAS",
      "intensity_hr": "100 % MAS",
-     "cue_hr": "Dionica = MAS × 15 m, oporavak = 0,7 × MAS × 15 m (npr. MAS 4 m/s → 60 m i 42 m). 10 ponavljanja = 5 min bez stajanja."
+     "cue_hr": "Dionica = MAS × 15 m, oporavak = 0,7 × MAS × 15 m (npr. MAS 4 m/s → 60 m i 42 m). 10 dionica i 10 oporavaka = 5 min bez stajanja, zatim odmor.",
+     "mas_pct": 100,
+     "rest_mas_pct": 70
     }
    ],
    "order": 8
@@ -7907,11 +8371,11 @@ window.SEED = {
   "mas-test-5-min": {
    "name_hr": "MAS test – 5 minuta",
    "goal_hr": "Test aerobne sposobnosti; daje tvoju MAS brzinu za MAS intervale",
-   "summary_hr": "Trči što dalje možeš 5 minuta, ravnomjerno raspoređujući snagu. MAS je prosječna brzina: prijeđeni metri / 300 s.",
+   "summary_hr": "Trči što dalje možeš 5 minuta, ravnomjerno raspoređujući snagu. MAS (maksimalna aerobna brzina) je tvoja prosječna brzina u testu: prijeđeni metri / 300 s.",
    "source_url": "https://statsports.com/article/maximal-aerobic-speed-a-useful-tool-to-improve-aerobic-capacity",
    "source_title": "Maximal Aerobic Speed: A Useful Tool To Improve Aerobic Capacity?",
    "equipment_hr": "Izmjerena staza ili opseg terena; GPS po želji",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 5,
    "blocks": [
@@ -7922,7 +8386,7 @@ window.SEED = {
      "work_s": 300,
      "rest_s": 0,
      "intensity_hr": "Maksimalni tempo koji možeš održati 5 min",
-     "cue_hr": "Zapiši udaljenost: MAS (m/s) = metri / 300. Prvi pokušaj može biti upoznavanje, test se smije ponoviti isti tjedan. Ponovi za 3–4 tjedna."
+     "cue_hr": "Na kraju upiši prijeđene metre: MAS (m/s) = metri / 300. Prvi pokušaj može biti upoznavanje, test se smije ponoviti isti tjedan. Ponovi za 3–4 tjedna."
     }
    ],
    "order": 7
@@ -7934,7 +8398,7 @@ window.SEED = {
    "source_url": "https://statsports.com/article/individual-training-with-mendo-fitness-speed-drills-to-improve-acceleration",
    "source_title": "Individual training with Mendo Fitness: Speed Drills to improve acceleration",
    "equipment_hr": "Teren s oznakama, lopta, čunjevi (3 za shuttle, 5–6 za slalom, nekoliko za okrete)",
-   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije treninga napravi svoje zagrijavanje s elastičnim užetom.",
+   "warmup_hr": "Izvor ne navodi zagrijavanje. Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja).",
    "cooldown_hr": "Izvor ne navodi. Prijedlog: 5 min laganog hoda i istezanja.",
    "total_min": 27,
    "blocks": [
@@ -7945,9 +8409,9 @@ window.SEED = {
      "work_s": 14,
      "rest_s": 30,
      "rest_type_hr": "odmor",
-     "distance_m": 72,
+     "distance_m": 54,
      "intensity_hr": "100 % napora",
-     "cue_hr": "Od šesnaesterca do visine centralnog kruga, oštar okret oko čunjeva, sprint natrag. Udaljenost (teren 105 m) i trajanje: procjena."
+     "cue_hr": "Od šesnaesterca do visine centralnog kruga (oko 27 m), oštar okret oko čunjeva, sprint natrag (ukupno oko 54 m). Udaljenost (teren 105 m) i trajanje: procjena."
     },
     {
      "label_hr": "Shuttle sprintovi s loptom",
@@ -8007,7 +8471,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 24.0,
    "order": 100,
@@ -8045,7 +8509,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 19.0,
    "order": 101,
@@ -8060,10 +8524,9 @@ window.SEED = {
      "sets": 1,
      "reps": 3,
      "work_s": 300,
-     "distance_m": 850,
      "intensity_hr": "kontinuirano 5 min: jog → tempo → jog → hod, gore-dolje po terenu",
      "rest_s": 120,
-     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "rest_type_hr": "stajanje ili lagani hod (izvor ne navodi)",
      "cue_hr": "Jog do šesnaesterca, tempo do centra, jog do drugog šesnaesterca, hod do gol-linije – okret i isto natrag, 5 min bez stajanja."
     }
    ]
@@ -8082,7 +8545,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 3.5,
    "order": 102,
@@ -8118,7 +8581,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 26.0,
    "order": 103,
@@ -8174,7 +8637,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 18.5,
    "order": 104,
@@ -8585,7 +9048,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 23.0,
    "order": 105,
@@ -8623,7 +9086,7 @@ window.SEED = {
      "distance_m": 52.5,
      "intensity_hr": "brzo (~5,3–6,6 m/s)",
      "rest_s": 60,
-     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+     "cue_hr": "Do centra za 8–10 s. Zatim 60 s odmora pa odmah novi krug."
     },
     {
      "label_hr": "Krug 2/6 · Run 1 (177 m)",
@@ -8653,7 +9116,7 @@ window.SEED = {
      "distance_m": 52.5,
      "intensity_hr": "brzo (~5,3–6,6 m/s)",
      "rest_s": 60,
-     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+     "cue_hr": "Do centra za 8–10 s. Zatim 60 s odmora pa odmah novi krug."
     },
     {
      "label_hr": "Krug 3/6 · Run 1 (177 m)",
@@ -8683,7 +9146,7 @@ window.SEED = {
      "distance_m": 52.5,
      "intensity_hr": "brzo (~5,3–6,6 m/s)",
      "rest_s": 60,
-     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+     "cue_hr": "Do centra za 8–10 s. Zatim 60 s odmora pa odmah novi krug."
     },
     {
      "label_hr": "Krug 4/6 · Run 1 (177 m)",
@@ -8713,7 +9176,7 @@ window.SEED = {
      "distance_m": 52.5,
      "intensity_hr": "brzo (~5,3–6,6 m/s)",
      "rest_s": 60,
-     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+     "cue_hr": "Do centra za 8–10 s. Zatim 60 s odmora pa odmah novi krug."
     },
     {
      "label_hr": "Krug 5/6 · Run 1 (177 m)",
@@ -8743,7 +9206,7 @@ window.SEED = {
      "distance_m": 52.5,
      "intensity_hr": "brzo (~5,3–6,6 m/s)",
      "rest_s": 60,
-     "cue_hr": "Do centra za 8–10 s. Zatim odmah novi krug."
+     "cue_hr": "Do centra za 8–10 s. Zatim 60 s odmora pa odmah novi krug."
     },
     {
      "label_hr": "Krug 6/6 · Run 1 (177 m)",
@@ -8789,7 +9252,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 16.0,
    "order": 106,
@@ -8848,7 +9311,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Čunjevi i lopta, površina oko 80 × 50 m",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 17.0,
    "order": 107,
@@ -8884,7 +9347,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 20.5,
    "order": 108,
@@ -8899,10 +9362,9 @@ window.SEED = {
      "sets": 1,
      "reps": 4,
      "work_s": 240,
-     "distance_m": 630,
      "intensity_hr": "maksimalna ubrzanja + jog/hod kao oporavak, kontinuirano 4 min",
      "rest_s": 90,
-     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "rest_type_hr": "stajanje ili lagani hod (izvor ne navodi)",
      "cue_hr": "Jog ~16,5 m, maksimalno ubrzanje do sredine širine, jog, hod do bočne linije – okret i isto natrag, 4 min."
     }
    ]
@@ -8910,18 +9372,19 @@ window.SEED = {
   "ss-pre-3c": {
    "name_hr": "Run 3C · Speed demon",
    "goal_hr": "Brzinska izdržljivost",
-   "summary_hr": "Brzinska izdržljivost kroz tri zahtjevne dionice s kratkim odmorom od 20 s: dvostruka duljina terena, dionica s okretima na rubovima centralnog kruga i jedna puna duljina. Broj ponavljanja u PDF-u nije naveden.",
+   "summary_hr": "Brzinska izdržljivost kroz tri zahtjevne dionice s kratkim odmorom od 20 s: dvostruka duljina terena, dionica s okretima na rubovima centralnog kruga i jedna puna duljina. PDF ne navodi broj krugova ni odmor nakon Run 3; ovdje je 5 krugova (kao u 2D) sa 60 s odmora nakon Run 3 (kao u 2C).",
    "how_hr": [
     "Run 1: s gol-linije do suprotne gol-linije i natrag (210 m) za 30–35 s; 20 s odmora.",
     "Run 2: do dalje strane centralnog kruga, natrag do bliže strane kruga, pa do suprotne gol-linije (~142 m) za 20–25 s; 20 s odmora.",
-    "Run 3: od gol-linije do gol-linije (105 m) za 15–17 s."
+    "Run 3: od gol-linije do gol-linije (105 m) za 15–17 s; zatim 60 s odmora.",
+    "Ponovi Run 1–2–3; ukupno 5 krugova. Broj krugova i odmor nakon Run 3 PDF ne navodi: ako ti je previše, stani nakon 4. kruga."
    ],
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine s oznakama",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
-   "total_min": 2.0,
+   "total_min": 14,
    "order": 109,
    "group": "pre",
    "code": "3C",
@@ -8930,7 +9393,7 @@ window.SEED = {
    "when_hr": "4. tj. čet",
    "blocks": [
     {
-     "label_hr": "Run 1 – gol-linija do gol-linije i natrag",
+     "label_hr": "Krug 1/5 · Run 1 (210 m)",
      "sets": 1,
      "reps": 1,
      "work_s": 35,
@@ -8940,7 +9403,7 @@ window.SEED = {
      "cue_hr": "105 m tamo i natrag za 30–35 s."
     },
     {
-     "label_hr": "Run 2 – preko centralnog kruga i dalje",
+     "label_hr": "Krug 1/5 · Run 2 (~142 m)",
      "sets": 1,
      "reps": 1,
      "work_s": 25,
@@ -8950,14 +9413,138 @@ window.SEED = {
      "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
     },
     {
-     "label_hr": "Run 3 – cijela duljina",
+     "label_hr": "Krug 1/5 · Run 3 (105 m)",
      "sets": 1,
      "reps": 1,
      "work_s": 17,
      "distance_m": 105,
      "intensity_hr": "brzo (~6,2–7,0 m/s)",
-     "rest_s": 0,
-     "rest_type_hr": "nije otisnuto",
+     "rest_s": 60,
+     "rest_type_hr": "pretpostavka: PDF ne navodi odmor nakon Run 3",
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s. Zatim 60 s odmora pa novi krug."
+    },
+    {
+     "label_hr": "Krug 2/5 · Run 1 (210 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 210,
+     "intensity_hr": "brzinska izdržljivost (~6,0–7,0 m/s)",
+     "rest_s": 20,
+     "cue_hr": "105 m tamo i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 2/5 · Run 2 (~142 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 25,
+     "distance_m": 141.6,
+     "intensity_hr": "brzinska izdržljivost s okretima (~5,7–7,1 m/s)",
+     "rest_s": 20,
+     "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
+    },
+    {
+     "label_hr": "Krug 2/5 · Run 3 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzo (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "rest_type_hr": "pretpostavka: PDF ne navodi odmor nakon Run 3",
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s. Zatim 60 s odmora pa novi krug."
+    },
+    {
+     "label_hr": "Krug 3/5 · Run 1 (210 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 210,
+     "intensity_hr": "brzinska izdržljivost (~6,0–7,0 m/s)",
+     "rest_s": 20,
+     "cue_hr": "105 m tamo i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 3/5 · Run 2 (~142 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 25,
+     "distance_m": 141.6,
+     "intensity_hr": "brzinska izdržljivost s okretima (~5,7–7,1 m/s)",
+     "rest_s": 20,
+     "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
+    },
+    {
+     "label_hr": "Krug 3/5 · Run 3 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzo (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "rest_type_hr": "pretpostavka: PDF ne navodi odmor nakon Run 3",
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s. Zatim 60 s odmora pa novi krug."
+    },
+    {
+     "label_hr": "Krug 4/5 · Run 1 (210 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 210,
+     "intensity_hr": "brzinska izdržljivost (~6,0–7,0 m/s)",
+     "rest_s": 20,
+     "cue_hr": "105 m tamo i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 4/5 · Run 2 (~142 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 25,
+     "distance_m": 141.6,
+     "intensity_hr": "brzinska izdržljivost s okretima (~5,7–7,1 m/s)",
+     "rest_s": 20,
+     "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
+    },
+    {
+     "label_hr": "Krug 4/5 · Run 3 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzo (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "rest_type_hr": "pretpostavka: PDF ne navodi odmor nakon Run 3",
+     "cue_hr": "Gol-linija do gol-linije za 15–17 s. Zatim 60 s odmora pa novi krug."
+    },
+    {
+     "label_hr": "Krug 5/5 · Run 1 (210 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 35,
+     "distance_m": 210,
+     "intensity_hr": "brzinska izdržljivost (~6,0–7,0 m/s)",
+     "rest_s": 20,
+     "cue_hr": "105 m tamo i natrag za 30–35 s."
+    },
+    {
+     "label_hr": "Krug 5/5 · Run 2 (~142 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 25,
+     "distance_m": 141.6,
+     "intensity_hr": "brzinska izdržljivost s okretima (~5,7–7,1 m/s)",
+     "rest_s": 20,
+     "cue_hr": "Do dalje strane kruga, natrag do bliže, pa do suprotne gol-linije – 20–25 s."
+    },
+    {
+     "label_hr": "Krug 5/5 · Run 3 (105 m)",
+     "sets": 1,
+     "reps": 1,
+     "work_s": 17,
+     "distance_m": 105,
+     "intensity_hr": "brzo (~6,2–7,0 m/s)",
+     "rest_s": 60,
+     "rest_type_hr": "pretpostavka: PDF ne navodi odmor nakon Run 3",
      "cue_hr": "Gol-linija do gol-linije za 15–17 s."
     }
    ]
@@ -8976,7 +9563,7 @@ window.SEED = {
    "source_url": null,
    "source_title": "STATSports Pre-Season Training Program (PDF)",
    "equipment_hr": "Teren pune veličine, čunjevi za shuttle (razmak 6,4 m)",
-   "warmup_hr": "Prije trčanja odradi svoje zagrijavanje s elastičnim užetom (Aktivacija).",
+   "warmup_hr": "Prije trčanja odradi Zagrijavanje za teren (počinje s 3–5 minuta laganog trčanja); prije brzih dionica ne preskači progresivna ubrzanja na kraju.",
    "cooldown_hr": "5 min laganog hoda i istezanja.",
    "total_min": 20.5,
    "order": 110,
@@ -8991,10 +9578,9 @@ window.SEED = {
      "sets": 1,
      "reps": 4,
      "work_s": 240,
-     "distance_m": 600,
      "intensity_hr": "shuttle i ubrzanje maksimalno + jog/hod kao oporavak, kontinuirano 4 min",
      "rest_s": 90,
-     "rest_type_hr": "pasivni između blokova (nije navedeno)",
+     "rest_type_hr": "stajanje ili lagani hod (izvor ne navodi)",
      "cue_hr": "Dolje: jog, shuttle A→C→B→D, jog, hod. Gore: jog, ubrzanje, jog, hod. 4 min bez stajanja."
     }
    ]
@@ -9053,8 +9639,8 @@ window.SEED_PLAN = {
     ]
    }
   ],
-  "note": "Plan prvo daje dane odmora za svježinu, a zatim uvodi trčanja: najprije raste volumen, pa intenzitet. Trening snage koji propiše klub radi se uz ovaj plan. Dani bez oznake nemaju trčanje. Dodirni oznaku za trening."
+  "note": "Plan prvo daje dane odmora za svježinu, a zatim uvodi trčanja: najprije raste volumen, pa intenzitet. Uz plan radi i trening snage (Trening A, B ili C ili onaj koji propiše klub), ali teški trening nogu ne stavljaj na dan prije trčanja 2C, 2D, 3C ili 3D. Dani bez oznake nemaju trčanje. Dodirni oznaku za trening."
  }
 };
-window.SEED_RENAMED = {"protocols": {"snaga-a": {"name": ["Snaga A · donji dio"], "desc": ["Glavni trening snage za noge i kukove: mrtvo dizanje, zatim dva superseta. Kilograme za mrtvo dizanje upiši u uređivanju.", "Glavni trening snage za noge i kukove."], "tag": ["Snaga"]}, "snaga-b": {"name": ["Snaga B · gornji dio i trup"], "desc": ["Guranje i povlačenje u supersetovima, pa trup i nošenje. Trajanje oko 40 minuta."], "tag": ["Snaga"]}, "snaga-c": {"name": ["Snaga C · noge i stražnja loža"], "desc": ["Drugi trening nogu: čučanj, zatim supersetovi za stražnju ložu, listove i trup."], "tag": ["Snaga"]}, "eksplozivnost": {"tag": ["Snaga"]}}};
+window.SEED_RENAMED = {"protocols": {"snaga-a": {"name": ["Snaga A · donji dio"], "desc": ["Glavni trening snage za noge i kukove: mrtvo dizanje, zatim dva superseta. Kilograme za mrtvo dizanje upiši u uređivanju.", "Glavni trening snage za noge i kukove.", "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Cilj (snaga, hipertrofija ili izdržljivost) biraš u Napretku → Doziranje; kilograme upisuješ sam."], "tag": ["Snaga"]}, "snaga-b": {"name": ["Snaga B · gornji dio i trup"], "desc": ["Guranje i povlačenje u supersetovima, pa trup i nošenje. Trajanje oko 40 minuta.", "Guranje i povlačenje u supersetovima, pa trup i nošenje. Cilj biraš u Napretku → Doziranje."], "tag": ["Snaga"]}, "snaga-c": {"name": ["Snaga C · noge i stražnja loža"], "desc": ["Drugi trening nogu: čučanj, zatim supersetovi za stražnju ložu, listove i trup.", "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Cilj biraš u Napretku → Doziranje."], "tag": ["Snaga"]}, "eksplozivnost": {"tag": ["Snaga"], "name": ["Eksplozivnost"], "desc": ["Skokovi i bacanja dok si svjež, prije treninga snage. Svako ponavljanje maksimalno, s punim odmorom.", "Radi ga dok si svjež, prije ostalih vježbi u teretani. Svako ponavljanje maksimalno, s punim odmorom."]}, "rehab-kuk-f2": {"desc": ["Jačanje kuka. Radim ga 3 puta tjedno, prije treninga snage ili kao zaseban trening."]}, "prevencija": {"desc": ["Stražnja loža, prepone, listovi i ravnoteža: 2 puta tjedno, oko 20 minuta, ne dan prije utakmice."]}, "trx-krug": {"desc": ["Šest TRX vježbi u krugu, bez odmora između vježbi; odmor tek nakon kruga. Tri kruga."]}, "aktivacija-teren": {"desc": ["Prije treninga s loptom ili trčanja: guma oko koljena pa tehnika trčanja.", "Prije treninga s loptom ili trčanja: 3–5 minuta laganog trčanja, njihanje nogu, vježbe s mini gumom (oko gležnjeva ili stopala) i tehnika trčanja. Progresivna ubrzanja na kraju (3 × 30 m, oko 60, 75 i 90 % brzine) radi kad slijede sprint ili brze dionice, a inače ih preskoči."]}}, "exercises": {"kb-swing": {"name": ["KB swing"]}}};
 window.SEED_RETIRED = {"exercises": ["uze-skare"]};

@@ -5,6 +5,7 @@
   --text:#F4F5F6; --text-body:#E8E9EC; --text-2:#A4AAB4; --muted:#676D78;
   --accent:#5789E8; --accent-text:#80A6EC; --tag-bg:#26324A; --danger:#FF8F87; --success:#57D08E;
   --scrim:rgba(25,29,37,.86);
+  --accent-fill:#4271D6;   /* small white text on a blue fill: 4,6:1 (white on --accent is only 3,4:1) */
   --font:'Figtree', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme:dark;
 }
@@ -38,19 +39,21 @@ a{color:var(--accent-text);text-decoration:none}
 .list{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;align-items:center;gap:14px;min-height:81px;padding:4px 16px 4px 4px;box-sizing:border-box;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text);text-align:left;width:100%}
 .row .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.row .t{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t{font-size:15px;font-weight:600;line-height:19px;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .row .m{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--text-body)}
 .thumb{flex:none;width:72px;height:72px;border-radius:16px;background:var(--thumb);display:flex;align-items:center;justify-content:center;overflow:hidden;color:rgba(244,245,246,.45);font-weight:600;font-size:17px}
 .thumb video,.thumb img{width:100%;height:100%;object-fit:cover}
 .chev{flex:none;width:16px;height:16px;color:var(--text-body)}
-.tag{flex:none;padding:3px 8px;border-radius:7px;background:var(--tag-bg);color:var(--accent-text);font-size:12px;font-weight:500}
+.tag{flex:none;max-width:100%;box-sizing:border-box;padding:3px 8px;border-radius:7px;background:var(--tag-bg);color:var(--accent-text);font-size:12px;font-weight:500}
+.row .m .tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));padding:0 max(16px, env(safe-area-inset-right, 0px)) 2px max(16px, env(safe-area-inset-left, 0px))}
 .chips::-webkit-scrollbar{display:none}
 .chips.wrap{flex-wrap:wrap;overflow:visible;margin:0;padding:0}
-.chip{flex:none;height:40px;padding:0 15px;box-sizing:border-box;border-radius:14px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:14px;font-weight:600;white-space:nowrap}
+.chip{flex:none;height:44px;padding:0 15px;box-sizing:border-box;border-radius:14px;border:2px solid var(--border);background:transparent;color:var(--text);font-size:14px;font-weight:600;white-space:nowrap}
 .chip[aria-pressed="true"]{border-color:var(--accent)}
-.tagbtn{height:36px;padding:0 12px;border:0;border-radius:8px;background:var(--surface);color:var(--text-2);font-size:14px;font-weight:500}
+.tagbtn{height:44px;padding:0 12px;border:0;border-radius:8px;background:var(--surface);color:var(--text-2);font-size:14px;font-weight:500}
+.sheet .tagbtn{background:var(--surface-2)}   /* on a sheet (same colour as --surface) an unselected tag still reads as a button */
 .tagbtn[aria-pressed="true"]{background:var(--tag-bg);color:var(--accent-text)}
 
 .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border:0;border-radius:20px;background:var(--accent);color:#fff;font-size:19px;font-weight:700}
@@ -72,6 +75,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .step b{width:70px;text-align:center;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .sbtn{width:44px;height:44px;border-radius:22px;border:1px solid #3E4551;background:var(--surface-2);color:var(--text);font-size:20px;line-height:1}
 .switch{position:relative;width:52px;height:32px;border:0;border-radius:16px;background:var(--border);flex:none}
+.switch::before{content:"";position:absolute;inset:-6px -4px}   /* 60 × 44 px to tap, same look (the knob is ::after) */
 .switch::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:12px;background:var(--text);transition:left .15s}
 .switch[aria-checked="true"]{background:var(--accent)}
 .switch[aria-checked="true"]::after{left:24px}
@@ -95,7 +99,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .hcard .tt b{font-size:40px;line-height:46px;font-weight:600;text-wrap:balance}
 .hcard .tt span{font-size:16px;color:#E0DDDB}
 .dots{display:flex;justify-content:center;padding:10px 0 4px}
-.dot{width:20px;height:40px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+.dot{width:20px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
 .dot i{display:block;width:7px;height:7px;border-radius:4px;background:#5B5E64;transition:width .2s}
 .dot[aria-current="true"] i{width:15px;background:var(--text)}
 
@@ -118,6 +122,12 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .media .ph{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-2);font-size:13px}
 .media .ph svg{width:40px;height:40px;opacity:.5}
 .badge{position:absolute;right:12px;bottom:12px;padding:6px 12px;border-radius:8px;background:var(--scrim);font-size:13px;font-weight:600}
+/* two-panel pictures (LEFT start, RIGHT end): the whole 3:2 frame, and the set badge sits on the lower edge so it never covers feet */
+.media.two{aspect-ratio:3/2;overflow:visible}
+.media.two:has(.badge),.prog + .media.two{margin-bottom:20px}
+.media.two .badge{left:50%;right:auto;bottom:-14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;text-align:center;box-shadow:0 0 0 2px var(--bg)}
+.swapm{position:absolute;right:10px;top:10px;z-index:1;height:30px;padding:0 12px;border:0;border-radius:8px;background:var(--scrim);color:var(--text);font-size:13px;font-weight:600}
+.swapm::before{content:"";position:absolute;inset:-7px -4px}   /* at least 44 px to tap, same look (as .switch) */
 .ttl{text-align:center;font-size:17px;line-height:22px;font-weight:600;margin-top:16px;text-wrap:balance}
 .meta{text-align:center;font-size:14px;color:var(--text-body);margin-top:6px}
 .hint{text-align:center;font-size:13px;color:var(--text-2);margin-top:4px;min-height:18px}
@@ -153,11 +163,17 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 
 /* sheets & toast */
 .sheet-bg{position:absolute;inset:0;background:rgba(10,12,16,.6);display:flex;align-items:flex-end;z-index:20}
-.sheet{width:100%;max-height:80%;overflow-y:auto;background:var(--surface);border-radius:24px 24px 0 0;padding-top:10px;padding-bottom:24px;box-sizing:border-box}
+.sheet{width:100%;max-height:80%;overflow-y:auto;background:var(--surface);border-radius:24px 24px 0 0;padding-top:10px;padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px));box-sizing:border-box}
 .sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 12px}
 .sheet h3{margin:4px 0 14px;font-size:18px;font-weight:600}
-.sheet .opt{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;padding:0 4px;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-size:16px;text-align:left}
-.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:84px;z-index:30;padding:12px 18px;border-radius:14px;background:#3A4252;color:var(--text);font-size:14px;font-weight:500;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#sheet-h:focus{outline:none}   /* the title takes focus when a sheet opens (for VoiceOver and the keyboard); no ring on a heading */
+.sheet .opt{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-height:56px;padding:0 4px;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-size:16px;text-align:left}
+.sheet .btn:not(.sec):not(.danger){background:var(--accent-fill)}   /* sheet buttons use 16-17 px text: small text needs the darker fill */
+/* a message never takes a tap: it sits above the tab bar and the home indicator, and in the player above the controls */
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom, 0px));z-index:30;padding:12px 18px;border-radius:14px;background:#3A4252;color:var(--text);font-size:14px;font-weight:500;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none}
+.ctrl ~ .toast{bottom:calc(124px + env(safe-area-inset-bottom, 0px))}
+/* the visually hidden file field behind a label: keyboard focus shows on the label */
+label:has(+ .vsr:focus-visible),div:has(> #mfile:focus-visible) label[for="mfile"]{outline:2px solid var(--accent);outline-offset:2px}
 .empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 24px;text-align:center;color:var(--text-2);font-size:15px;line-height:22px}
 .done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
 .done .ck{width:96px;height:96px;border-radius:48px;box-shadow:inset 0 0 0 3.5px var(--accent);display:flex;align-items:center;justify-content:center}
@@ -169,8 +185,15 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .feat{display:flex;gap:16px;align-items:flex-start;font-size:16px;line-height:22px;color:var(--text-body)}
 .feat svg{flex:none;width:22px;height:22px;color:var(--accent)}
 .hero{position:relative;height:clamp(220px, 40svh, 380px);background:#2E2C33;display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* a scrim under the top bar (back, pencil, MOJ TRENING) so it stays readable on a bright video; .over (z 2) and the credit (z 3) sit above it */
+.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,rgba(25,29,37,.75),rgba(25,29,37,0));z-index:1;pointer-events:none}
 .hero video,.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero .fade{position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(180deg,rgba(25,29,37,0),var(--bg))}
+.hero.two{height:auto;display:block;padding-top:54px;background:var(--bg)}
+.hero.two img{position:static;display:block;height:auto;aspect-ratio:3/2;object-fit:contain}
+.hero.two .fade{height:10%}
+.hero.two::before{display:none}   /* the top bar sits on the plain background above a two-panel picture */
+.hero .credit{top:60px;z-index:3}
 .hero .ic{opacity:.3}
 .hero .ic svg{width:110px;height:110px}
 .over{position:absolute;top:0;left:0;right:0;z-index:2}
@@ -181,7 +204,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .wd{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:var(--text-2);padding:0;font-size:12px;font-weight:600}
 .wd .c{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:2px solid transparent;color:var(--text);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
 .wd .c.plan{border-color:var(--border)}
-.wd .c.done{background:var(--accent);color:#fff}
+.wd .c.done{background:var(--accent-fill);color:#fff}
 .wd .c.miss{border-color:var(--danger);color:var(--danger)}
 .wd[aria-current="date"] .l{color:var(--text)}
 .wd[aria-current="date"] .c:not(.done){border-color:var(--accent)}
@@ -192,12 +215,17 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .search .fbtn{position:absolute;right:7px;top:7px;width:44px;height:44px;border-radius:16px;color:var(--text-2)}
 .search .fbtn svg{position:static;width:22px;height:22px;color:currentColor}
 .search .fbtn[aria-pressed="true"]{color:var(--accent-text);background:var(--tag-bg)}
-.search .fbtn .cnt{position:absolute;right:4px;top:4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
+.search .fbtn .cnt{position:absolute;right:4px;top:4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent-fill);color:#fff;font-size:11px;font-weight:700;line-height:16px;text-align:center}
 .search .input{padding-right:58px}
 
 /* exercise detail */
 .media img.fit{object-fit:contain}
-.credit{position:absolute;left:10px;bottom:10px;max-width:60%;padding:4px 8px;border-radius:7px;background:var(--scrim);color:var(--text-2);font-size:11px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* licence credit: top-left, never under the set badge (bottom-right), up to two lines so the licence is never cut off */
+.credit{position:absolute;left:10px;top:10px;max-width:62%;padding:4px 8px;border:0;border-radius:7px;background:var(--scrim);color:var(--text-2);font-size:11px;line-height:14px;text-align:left;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.lic .lb{display:block;margin-top:10px;font-size:13px;font-weight:500;color:var(--text-2)}
+.lic p{margin:2px 0 0;font-size:15px;line-height:22px;color:var(--text-body);overflow-wrap:anywhere}
+.lic .dv{margin-top:14px;font-size:13px;line-height:19px;color:var(--text-2)}
+.lic .all{margin-top:16px;font-size:15px}
 .bul.num::before,.bul.warn::before{display:none}
 .bul.num i{flex:none;width:22px;height:22px;margin-top:1px;border-radius:11px;background:var(--tag-bg);color:var(--accent-text);font-style:normal;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .bul.warn{position:relative;padding-left:22px}
@@ -241,8 +269,8 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 /* published 4-week pre-season schedule */
 .plangrid{display:grid;grid-template-columns:28px repeat(7,1fr);gap:6px;margin:14px 0 0;align-items:center}
 .plangrid .ph{font-size:12px;font-weight:600;color:var(--text-2);text-align:center}
-.plangrid .pc{height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
-.plangrid .pe{height:36px;border-radius:10px;background:rgba(255,255,255,.025)}
+.plangrid .pc{height:44px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--accent-text);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.plangrid .pe{height:44px;border-radius:10px;background:rgba(255,255,255,.025)}
 
 /* dose chips sit outside the gutter: keep them inside the screen */
 .chips.center{justify-content:center;margin-left:0;margin-right:0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
@@ -255,7 +283,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .pgrid{display:grid;gap:6px;margin:16px 0 0;align-items:center}
 .pgrid .pw{font-size:12px;font-weight:600;color:var(--text-2);text-align:center}
 .pcell{height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text-body);font-size:12px;font-weight:600;padding:0 4px;line-height:14px}
-.pcell.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.pcell.done{background:var(--accent-fill);border-color:var(--accent-fill);color:#fff}
 .pcell.next{border:2px solid var(--accent);color:var(--accent-text)}
 .sechead{margin:14px 6px 2px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
 .list > .sechead:first-child{margin-top:0}
@@ -266,7 +294,7 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .stat{border-radius:18px;background:var(--surface);border:1px solid var(--border);padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-size:22px;font-weight:700}
 .stat span{font-size:12px;color:var(--text-2);line-height:16px}
-.psec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:24px 2px 10px}
+.psec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:24px 2px 10px 17px}
 .psec h2{margin:0;font-size:17px;font-weight:600}
 .psec span{font-size:13px;color:var(--text-2);text-align:right}
 .lift{border-radius:20px;background:var(--surface);border:1px solid var(--border);padding:13px 15px;display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
@@ -278,9 +306,10 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .lift .why{font-size:13px;line-height:18px;color:var(--text-2)}
 .lift .pfrom{font-size:12px;color:var(--text-2)}
 .acts{display:grid;grid-template-columns:1fr auto;gap:8px}
-.bt{height:42px;border-radius:14px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;padding:0 12px}
+/* action buttons (and a label styled as one); the field session's block text is a <span class="bt"> (.blk .bt) and must not look like a button */
+button.bt,label.bt{height:44px;border-radius:14px;border:0;background:var(--accent-fill);color:#fff;font-weight:700;font-size:14px;padding:0 12px}
 .bt.ghost{background:transparent;border:1px solid var(--border);color:var(--text-body);font-weight:600}
-.bt.amber{background:#B7853F}
+.bt.amber{background:#946A2E}
 .pips{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--text-2)}
 .pip{width:22px;height:6px;border-radius:3px;background:var(--border)}
 .pip.on{background:var(--success)}
@@ -308,11 +337,10 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .xrow .tx em.g{color:var(--success)}
 .xrow .tx em.a{color:#FFC27A}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.seg2 button{height:40px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-body);font-size:14px;font-weight:600}
+.seg2 button{height:44px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-body);font-size:14px;font-weight:600}
 .seg2 button.on{border-color:var(--success);color:var(--success)}
 .seg2 button.onA{border-color:#FFC27A;color:#FFC27A}
 .mini{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)}
-.mini .sbtn{width:36px;height:36px;border-radius:18px}
 .mini b{color:var(--text);font-size:16px;min-width:22px;text-align:center}
 .chart .delta.same{color:var(--text-2);font-weight:600}
 
@@ -331,3 +359,15 @@ table.kg td:first-child{padding-left:0;white-space:normal}
 table.kg td b{display:block;color:var(--text);font-weight:600}
 table.kg td span{font-size:11px;color:var(--text-2)}
 table.kg td.on{color:var(--accent-text);font-weight:700}
+
+/* protocol builder & exercise editor: typed kilograms, hint under a label, part titles */
+.prow .k small{display:block;margin-top:2px;font-size:13px;line-height:17px;color:var(--text-2)}
+.step.wide b{width:84px}
+.kgbox{position:relative;flex:none;display:flex;align-items:center;width:84px;height:44px;border-radius:14px;background:var(--surface-2);box-sizing:border-box}
+.kgbox:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.kgin{width:100%;height:44px;border:0;border-radius:14px;background:transparent;padding:0 30px 0 4px;box-sizing:border-box;text-align:right;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);outline:0}
+.kgin:placeholder-shown{padding:0;text-align:center}
+.kgin::placeholder{color:var(--text-2);opacity:1}
+.kgbox .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-2);pointer-events:none}
+.kgin:placeholder-shown + .u{display:none}
+.input.bsec{height:48px;border-radius:16px;background:var(--surface-2)}

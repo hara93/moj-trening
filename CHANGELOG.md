@@ -1,12 +1,30 @@
 # Promjene
 
-## 1.4.1 — 2. 11. 2026
+## 1.5 — 3. 11. 2026.
 
-- Treninzi u teretani više se ne zovu po cilju: **Trening A · noge i kukovi**, **Trening B · gornji dio i trup** i **Trening C · noge i stražnja loža** (prije Snaga A/B/C). Svaki od njih možeš raditi kao snagu, hipertrofiju, izdržljivost ili eksplozivnost; cilj biraš u treningu, a popis protokola ga pokazuje uz naziv.
+Provjera cijele aplikacije: popravljeni su gotovo svi nalazi revizije (280; četiri čekaju tvoju odluku) i završnog pregleda (41).
+
+- **Tvoje slike:** 81 vježba ima tvoju sliku početnog i završnog položaja, uvijek cijelu, u knjižnici, na stranici vježbe, u zaglavlju protokola i u playeru. U PROMPTI-ZA-SLIKE.md ostale su upute za 10 novih slika i 3 za ponoviti.
+- **Sigurnosna kopija:** izvoz na iPhoneu otvara izbornik za dijeljenje (*Spremi u Datoteke*) i javlja pravi ishod. Na početnoj se pojavi podsjetnik kad kopije nema ili je starija od 30 dana. Uvoz prvo pokaže što će se zamijeniti, odbija TAE paket i čuva podatke od prije uvoza, pa ih možeš vratiti.
+- **Zaštita podataka:** neuspjelo spremanje ostaje vidljivo, oštećeni podaci čuvaju se sa strane, dvije otvorene kopije aplikacije više ne brišu jedna drugoj treninge, a trening u tijeku preživi ponovno učitavanje.
+- **Ažuriranja na mobitelu:** protokoli koje treniraš ili kojima si mijenjao samo kilograme, serije i ponavljanja dobivaju poboljšanja, a tvoje doze i napredak ostaju. Isto vrijedi za vježbe kojima si dodao svoju sliku ili video.
+- **Player:** „Spremi i ponovi”; strelica natrag pita prije izlaska i može spremiti odrađeno; preskočene vježbe ne računaju se kao odrađene, a djelomično odrađene ne guraju napredak. Vrijeme je točno i nakon zaključanog ekrana, supersetovi s različitim brojem serija imaju odmor, a signali se mogu čuti i kad je iPhone na nečujnom (postavke playera).
+- **Builder:** različita ponavljanja po seriji (npr. 6/5/5/4) i naslovi dijelova; kilograme upisuješ izravno; koraci prate tvoju opremu (bučice 2,5–20 kg, girja 20 kg, šipka po 10 kg, landmine po 5 kg); prije odbacivanja izmjena pita.
+- **Napredovanje i Doziranje:** postavka najmanjih ploča na šipki (zadano 5 kg); na šipci prvo više ponavljanja, pa +10 kg; bučice idu do stvarnog para; skokovi i bacanja ne dobivaju dodatna ponavljanja; postoci prate stvarni izračun; cilj se nudi samo za treninge u teretani.
+- **Tjedni plan i Napredak:** dan utakmice u tjednu i upozorenja prije nje (i za sprintove na terenu); kartica Teretana sa sljedećim treningom; TAE treninzi računaju se u plan; tjedni i mreža dosljednosti točni su i nakon pomicanja sata; vježba isprobana iz knjižnice i rezultati testova ne računaju se kao trening; grafovi i rekordi bez nula kilograma.
+- **TAE program:** kartica Testovi za rezultate i „Kreni ispočetka”. Novi privatni paket ažurira treninge koje nisi mijenjao: nakon nadogradnje ga ponovno uvezi u Mojim podacima.
+- **Teren:** čitljiviji nacrti; MAS test bilježi rezultat i daje tvoje udaljenosti; STATSports plan pokazuje odrađena trčanja i sljedeće; Zagrijavanje za teren počinje laganim trčanjem i završava progresivnim ubrzanjima; vježbe za rad bez partnera.
+- **Knjižnica i protokoli:** 152 vježbe (nove: jednonožni most s petom na kutiji, hip airplane, adukcija na boku, depth drop, ubrzanje i zaustavljanje, lagano trčanje i progresivna ubrzanja); pretraga razumije sinonime; Trening A, B i C prvi su u Mojim protokolima i počinju zagrijavanjem; „Eksplozivnost” se sada zove „Skokovi i bacanja”; tjedni volumen nordijskog pregiba i kopenhagena je uravnotežen.
+- **Licence, izgled i pristupačnost:** puni podaci o autoru i licenci za svaku licenciranu snimku; veće tipke i bolji kontrast; popis blokova treninga na terenu opet je ispravan; nijedan zaslon ne klizi u stranu.
+- **Rad bez interneta:** na slabom signalu aplikacija se otvori iz spremljene kopije, slike ostaju dostupne i nakon nadogradnje, a ostaci verzije 2.x su obrisani.
+
+## 1.4.1 — 2. 11. 2026.
+
+- Treninzi u teretani više se ne zovu po cilju: **Trening A · noge i kukovi**, **Trening B · gornji dio i trup** i **Trening C · noge i stražnja loža** (prije Snaga A/B/C). Svaki od njih možeš raditi kao snagu, hipertrofiju, izdržljivost ili eksplozivnost; cilj razdoblja biraš u Napretku → Doziranje i primijeniš ga u treningu, a popis protokola ga pokazuje uz naziv.
 - Na mobitelu se mijenjaju samo nazivi i opisi koje nisi dirao. Tvoji kilogrami, dani, cilj i napredak ostaju, a protokol koji si sam preimenovao zadržava tvoj naziv. Već odrađeni treninzi u povijesti dobivaju novi naziv.
 - Ni ostali tekstovi više ne pretpostavljaju cilj: savjet u Doziranju govori o treninzima u teretani, a Eksplozivnost ima oznaku Teretana umjesto Snaga.
 
-## 1.4 — 2. 11. 2026
+## 1.4 — 2. 11. 2026.
 
 - **Doziranje** (Napredak → Doziranje):
   - cilj razdoblja: Snaga (4–6 pon., 85–100 %), Hipertrofija (8–12, 70–80 %), Izdržljivost (12–15+, 65–70 %) ili Eksplozivnost (3–5, lakše i brzo);
@@ -15,18 +33,18 @@
 - Protokol snage dobiva prijedlog serija, ponavljanja, odmora i kilograma za odabrani cilj, s pregledom promjena prije potvrde.
 - Treninzi TAE programa mogu jednim dodirom dobiti kilograme iz tvojih težina; ponavljanja i serije ostaju kao u programu.
 
-## 1.3 — 2. 11. 2026
+## 1.3 — 2. 11. 2026.
 
 - **Napredak** je nova, četvrta tipka dolje: treninzi ovaj tjedan, niz tjedana, prijedlozi, krivulje glavnih vježbi, rekordi i kalendar dosljednosti zadnjih 12 tjedana.
 - **Prijedlozi umjesto automatike:** kad 2 (ili 3, po izboru) treninga zaredom odradiš sve serije, aplikacija predloži veće opterećenje, a ti ga prihvatiš ili odgodiš. Ako nova težina dvaput zaredom ne ide, nudi povratak na prethodnu.
 - **Kraj treninga:** svaka vježba je unaprijed „Sve odrađeno”; ako nisi uspio, to označiš i upišeš koliko si napravio u zadnjoj seriji.
 - Vježbe sa šipkom ili bučicama bez kilograma dobivaju podsjetnik „Upiši početne težine”.
 
-## 1.2.1 — 2. 11. 2026
+## 1.2.1 — 2. 11. 2026.
 
 - Čip „TAE” u knjižnici prikazuje sve vježbe iz uvezenog programa. TAE-ovi video linkovi iz PDF-a više ne rade (njihova stranica je ugašena, a videi se puštaju samo kod njih), pa ih aplikacija ne prikazuje; gdje postoji arhivirana TAE stranica s opisom i rasporedom, vježba ima taj link.
 
-## 1.2 — 2. 11. 2026
+## 1.2 — 2. 11. 2026.
 
 - **Programi:** novi odjeljak u Protokolima. Kupljeni TAE 6-tjedni program (24 treninga, raspored po tjednima, njihove slike i video linkovi) uvozi se iz privatnog paketa i nikad nije u ovom javnom repozitoriju. Program pokazuje odrađene treninge i sljedeći trening.
 - Naslovi dijelova treninga (zagrijavanje, snaga, pliometrija…), triseti i serije s različitim brojem ponavljanja (npr. 6/5/5/4).
@@ -36,7 +54,7 @@
 - Protokoli dolaze bez kilograma: početne težine upisuješ sam.
 - „Recipročne škare s užetom” su uklonjene (uže preko kolotura samo klizi, nema opterećenja).
 
-## 1.1 — 2. 11. 2026
+## 1.1 — 2. 11. 2026.
 
 Isti izgled i struktura kao 1.0, uz ove nadogradnje:
 
@@ -44,12 +62,12 @@ Isti izgled i struktura kao 1.0, uz ove nadogradnje:
 - **Sastavljanje treninga:** supersetovi i krugovi (prekidač „Superset sa sljedećom vježbom”), kilogrami po vježbi u protokolu, kopiranje protokola. Player izmjenjuje vježbe u supersetu po krugovima.
 - **Napredovanje opterećenja:** na kraju treninga označiš vježbe koje su bile lake; nakon dva takva treninga zaredom aplikacija sama podigne opterećenje (pravilo „2 za 2”: šipka +2,5/+5 kg, bučice i TRX prvo ponavljanja). Izvori: ACSM 2009, Plotkin i sur. 2022.
 - **Plan i napredak:** dani u tjednu za svaki protokol i trening na terenu, tjedna traka i kartica „Danas” na početnoj, niz tjedana po planu, kartica „Napredak” u svakoj vježbi.
-- **Kondicija na terenu:** STATSports predsezonski plan (11 trčanja, raspored za 4 tjedna) i vlastiti nacrti terena s dimenzijama i animiranom putanjom za svih 21 trening; nacrt je i u playeru.
-- **Slike i videi:** slobodno licencirane snimke za 18 vježbi (izvori u MEDIA-LICENSES.md); privatni paket slika uvozi se u postavkama („Uvezi paket slika”) i ostaje samo na mobitelu; upute za ChatGPT za ostale vježbe u PROMPTI-ZA-SLIKE.md.
+- **Kondicija na terenu:** STATSports predsezonski plan (11 trčanja, raspored za 4 tjedna) i vlastiti nacrti terena s dimenzijama i animiranom putanjom za svaki od 21 treninga; nacrt je i u playeru.
+- **Slike i videi:** slobodno licencirane snimke za 18 vježbi (izvori u MEDIA-LICENSES.md); privatni paket slika uvozi se u Mojim podacima (zupčanik na početnoj, „Uvezi paket slika”) i ostaje samo na mobitelu; upute za ChatGPT za ostale vježbe u PROMPTI-ZA-SLIKE.md.
 - **10 gotovih protokola**, od toga 7 novih: Snaga B i C, TRX krug, Eksplozivnost, Prevencija ozljeda, Zagrijavanje za teren, Mobilnost i oporavak.
 - Vježbe i protokoli koje nisi mijenjao dobivaju poboljšanja automatski; tvoje izmjene, favoriti, brisanja, videi i povijest uvijek ostaju.
 
-## 1.0 — 1. 11. 2026 (baza)
+## 1.0 — 1. 11. 2026. (baza)
 
 Prva samostalna verzija, osnova za sve daljnje nadogradnje.
 
@@ -58,5 +76,5 @@ Verzije 2.0–2.2.1 su odložene i sačuvane pod git oznakom `v2.2.1`; aplikacij
 - Knjižnica: 36 vježbi (rehabilitacija kuka u 3 faze, aktivacija s elastičnim užetom Ø6/Ø8 preko kolotura, mobilnost, snaga, kondicija), pretraga, filtri, favoriti, vlastite vježbe s videom.
 - Protokoli: Rehab kuka, Aktivacija s užetom, Snaga A; sastavljanje, uređivanje doza, promjena redoslijeda.
 - Player: odbrojavanje, promjena strane, pauze, zvučni signali, vibracija, ekran ostaje upaljen.
-- Kondicija na terenu: 10 treninga prema javnim objavama STATSporta, s izvorima.
+- Kondicija na terenu: 10 treninga prema javnim objavama STATSportsa, s izvorima.
 - Podaci na uređaju, izvoz i uvoz sigurnosne kopije, rad bez interneta.

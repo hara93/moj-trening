@@ -1,0 +1,739 @@
+{
+ "_about": "Jedini izvor za slike i snimke vježbi u aplikaciji. tools/build/build_media.py iz ove datoteke radi media.js, MEDIA-LICENSES.md, sličice i popis vježbi sa slikom za build_prompts.py. Ručno se mijenja samo ova datoteka.",
+ "own": {
+  "dir": "assets/slike",
+  "made": "2. 11. 2026.",
+  "note": "Dvodijelne slike (lijevo početni, desno završni položaj), generirane umjetnom inteligencijom prema uputama iz PROMPTI-ZA-SLIKE.md i pregledane radi tehnike i položaja glave. sha256 je otisak izvorne JPEG slike 1536 × 1024 iz koje je napravljena WebP slika.",
+  "images": {
+   "90-90": {
+    "sha256": "ab6683b3af70a623efc56151fd7c0f940d51ca24d410ca82f0cf33c1c984530d"
+   },
+   "a-skip": {
+    "sha256": "742ab5b685ac8a84219cb55d465d531a7fc7250b6f2837ff59d732b2d38af721"
+   },
+   "ab-wheel-rollout": {
+    "sha256": "232cd2a41e176a87cbb3be944958c421f916cb5811f3d8252d85f218fcb7dea1"
+   },
+   "abdukcija-stojeci": {
+    "sha256": "be0190f30e4b5267b230e196d648df60853c5434853f5b52a98f4b5eb867888c"
+   },
+   "adductor-squeeze": {
+    "sha256": "8630e9b9f26aed33d54b49f2083f4ffa1b51f3b05dc4a991ce4635ffe79dec92"
+   },
+   "b-skip": {
+    "sha256": "7777714c708928395e8c09bc788ddcf940266853a41a7379ab5e6be13d4a4142"
+   },
+   "ball-hamstring-curl": {
+    "sha256": "7cdeed42dd234e4b89e9d18604663934bab43a8892e0ec484e8a7b6a830ee686"
+   },
+   "ball-rollout": {
+    "sha256": "e863432a359a8659c006e56601202260087cab9bf75998e1171b12dc680ca2e4"
+   },
+   "band-pull-apart": {
+    "sha256": "b494b2a330e71d529f18840407d6cdda7dd3d0c1911ba7fd3e768986d065ed0c"
+   },
+   "banded-glute-bridge": {
+    "sha256": "469a95c775e36164d0f939c601b1d77894eadd13b9512eaa6f9a259d775ca0ef"
+   },
+   "banded-march": {
+    "sha256": "00938907f4601b677eeff2f9485aee0dcd7e12214fb5ffbb3de3d71478dc447b"
+   },
+   "bocni-plank": {
+    "sha256": "b65ba248ddd58bcdbe4fd26ff19166b40b6dbd8c333cef65f16c3024e9adcd12"
+   },
+   "bocni-step-up": {
+    "sha256": "437f162cb3bf2c1f2024677865114b9ffdb621578062eedf06347fa73640b879"
+   },
+   "bocno-podizanje": {
+    "sha256": "7ccce165ec7b8f3893a7eabf0c007d92218323bbb7cb88b60ce9845d582bc176"
+   },
+   "chin-up": {
+    "sha256": "b52eb0f911f637c752e0a769d7a3f0dd011cab8133102c822e290a31d3844688"
+   },
+   "cord-chop": {
+    "sha256": "740fc4fbb507705fc7513135f3495d0b2fbf8cf0d95de0ea6e40a4370266b3e6"
+   },
+   "cord-lift": {
+    "sha256": "4edc6cb0688b0a67e3f86a0ea7a7217515ef884e355366cf3a155e59b1d515d6"
+   },
+   "db-overhead-press": {
+    "sha256": "b7e8bcc111593aadf149aba6630c590aec71115f23627447a552f40ba4fd32e3"
+   },
+   "face-pull-cord": {
+    "sha256": "83e94aa31a4a083d8f007d5fc01a82346b6a7cfa57daec783ede978b96681427"
+   },
+   "farmers-walk": {
+    "sha256": "59a1cfb692c81d3c4d2ca2307e2b69ccaa05fd38836878c48a3dfaec8648164d"
+   },
+   "figure-4": {
+    "sha256": "750d6c3925c40b8e585aa6b3a7925e16eced424e0a6b990a2408cacd368a7421"
+   },
+   "goblet-squat": {
+    "sha256": "06c786bafb7cc191b628a60df5ea40ca8f127b179b8e51fea34658b2314c69e2"
+   },
+   "half-kneeling-landmine-press": {
+    "sha256": "abfaa619628181931b6f94e31a9f6a7a4cab04d32848e2728d42455e9f645f56"
+   },
+   "hanging-knee-raise": {
+    "sha256": "2df9591b3370cdc446115a5cebf5ca7de6b06a94ae9fea4b9f4b2f5029acca30"
+   },
+   "high-knees": {
+    "sha256": "eb1d5b71c0ab9cc9ff5b5af35ebad3116337ae5c16b3a7131e816752333c9548"
+   },
+   "hollow-hold": {
+    "sha256": "d64b60e7d43ff5c4bada971c8fe98126dbb242fd4b1a6f127f0e25461b06979d"
+   },
+   "intervali-30-30": {
+    "sha256": "0c7adfd653ecf4c3435567bf6e5a29c7954bf341ae3024e2f1ba1f5bc6b354cb",
+    "iz": "bicikl-intervali.jpg (paket od 2. 11. 2026.): prikazuje trčanje 30/30, pa pripada vježbi intervali-30-30"
+   },
+   "inverted-row": {
+    "sha256": "1ea5f99d04ad2020dd95ab46c7c570fcc2789ff502b67f43ae1c14f3c2f5564f"
+   },
+   "iso-abdukcija": {
+    "sha256": "b9c90bc42f22cdd7a51db911a225a261e7b61f36e749f81e305185d6677a863f"
+   },
+   "istezanje-pregibaca": {
+    "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c"
+   },
+   "klizanje-pete": {
+    "sha256": "37a916841d3e60eb2f1ecbe1902a92a6b9d0b72e42aa859f59b33fd8cacb5f5e"
+   },
+   "knee-to-wall": {
+    "sha256": "e63eb1bfefe909c283ba4e20920644743c5ee92856dfc1767fee8db864cdaf15"
+   },
+   "kopenhagen-kratka": {
+    "sha256": "c8a9c2acc0978dd6e2aceb1a6a284051f64a88408af18f0d28b103d05bf4c85f"
+   },
+   "landmine-reverse-lunge": {
+    "sha256": "ce1a731976d9b64817a129f1db09b168270ddda64c7463208332d8f700297f2f"
+   },
+   "landmine-rotation": {
+    "sha256": "2741efc9d87a8f31fb252287cd8eb1ac5a809ca019b222e37631f10efba7e68b"
+   },
+   "landmine-row": {
+    "sha256": "445497d50691692b75e1ec0c49d5073190e0c065fa52c56559f1c41ad854c2b7"
+   },
+   "landmine-squat": {
+    "sha256": "52db719074433ce51ff32b21be878f4ec101d882f4be0fa3a8f714a7a1f8b94c"
+   },
+   "leg-swings": {
+    "sha256": "861be65cf6c27e807aed80b1d711a7c128b752aecf1c5d3a6b1aae63f46dd568"
+   },
+   "med-ball-chest-pass": {
+    "sha256": "6364bb5c3cd53aa2a8119cc8b5ce835760c2e95d1004cbc33e13720f341bb83a"
+   },
+   "med-ball-rotational-throw": {
+    "sha256": "c27c9eccf0f0cefa46fac22b06ae6a4171cb4385d90e4458887941c04d27517f"
+   },
+   "med-ball-slam": {
+    "sha256": "59b8fd552a6b9070a86c33a8c79e2f2164e9b1a365356ab9568cfba78aeec686"
+   },
+   "most": {
+    "sha256": "51db4bfc5133db112f725884e3c157a722992c69b89f65a716576da9d51d9d44"
+   },
+   "mountain-climbers": {
+    "sha256": "074e949168c61bee623beb80b9aacdb0fa73cab8e49f546212c048a858ba1a28"
+   },
+   "njihanje-aduktora": {
+    "sha256": "2b0b1b7114487113a1ad74fb6bfcf8358f31885d341e4c02ac63813618e7c104"
+   },
+   "njihanje-unatrag": {
+    "sha256": "08c67ac6bb0509837ec3f654745087bfb93bcae1010b7477c5910c5aace17ee1"
+   },
+   "nordic-curl": {
+    "sha256": "767309bbf5ba0a27b85cfa1d901c43b509bd6706db40da42d80aea0a6a6a6caf"
+   },
+   "open-book": {
+    "sha256": "bee1c9fc713213fd93d3b55e628b1256447cdbb75d62d4ad63a01566ee79ba1d"
+   },
+   "pogo-jumps": {
+    "sha256": "810a55ae4761c7f93f4882b4150561b1814bdca6c9c08df844621068dda7ae0f"
+   },
+   "pro-agility-5-10-5": {
+    "sha256": "6e23869c23965a8b410a664edf602d5125d7c6778ae7a52becfc8f2567d3f2da"
+   },
+   "ravnoteza-dosezanje": {
+    "sha256": "39a71bef02433c0a9441aed82c145d911ac5f3b23ff1950afc952c43706ccc45"
+   },
+   "single-arm-db-press": {
+    "sha256": "b117c3714d52bc5997bacd1c5ebef03bfa506d66ba48175e53fdebec79655059"
+   },
+   "single-leg-calf-raise": {
+    "sha256": "508e34b7c1861382063685e96ded6b1d9d3a68909d3d7b36c681d382e89b63c6"
+   },
+   "single-leg-hop": {
+    "sha256": "de2d33db8b251835ca3cd6dcd36201eaed0b8e6dffa5667bec08c2d27e932937"
+   },
+   "skoljka": {
+    "sha256": "6ca81e78de7041f39aeee9d185099cc1e38b8762200f8494033e0483744a6ec4"
+   },
+   "soleus-raise": {
+    "sha256": "21e3d2d13fa9336f79fa4238ba5cc47f157842fb519c3e08d26dbe77aa12a40e"
+   },
+   "spustanje-stepenica": {
+    "sha256": "f1d903a84dd4e468b13c192fd0b1c631bb581f73a68bda2cd89b429221d45745"
+   },
+   "step-up": {
+    "sha256": "a712ce34484d7daaebc24074038538d6ac2e5f458ecd62a4c705c0665627b36e"
+   },
+   "stezanje-straznjice": {
+    "sha256": "f4678739ec69da6f161eb1f4d02571f94227f17f355ab44f4c1ead3d98316310"
+   },
+   "stir-the-pot": {
+    "sha256": "a5445ddae1bcbbb86d97a086aa2315b27ab8a21b935bfe74df8c5cfad10645dc"
+   },
+   "suitcase-carry": {
+    "sha256": "7483919b74efdfbfdbad8fc1a6b706e16edf3e7e2d095cf2cb522517abb4fff9"
+   },
+   "t-test": {
+    "sha256": "e5c1d6b8d248486ddde0ad72c50873732a3c33dbcb631232b1f5367d30769cca"
+   },
+   "tibialis-raise": {
+    "sha256": "1604154a26023ae0a3f4e8c64290a66c333acf9be2d9f63afdcd7cf779d1ba05"
+   },
+   "trap-bar": {
+    "sha256": "b6c68e9ae932b1796eb86f69c9ee386303aaaaa6f43d526f20c686c3148e484f"
+   },
+   "trx-atomic-push-up": {
+    "sha256": "a6da8556230eb1cd03439ad47a12e616d1733934e347e67e1c52d33eff9ab898"
+   },
+   "trx-chest-press": {
+    "sha256": "0e2538183e97a83bf13323a4c7fa1104f451e49af74039f57b0ec69672255187"
+   },
+   "trx-fallout": {
+    "sha256": "e8f69337efe7f46c3ef961396f680abc8dc4f0d70196d5cfd7e2830bdb2b3d95"
+   },
+   "trx-lateral-lunge": {
+    "sha256": "20638760d8c3e7c4be7e611af42ddfc90eb5fea97b1b39db5eaf6ee37c079e18"
+   },
+   "trx-mountain-climber": {
+    "sha256": "55d95e335e57aaddf69fc21cf7819c7a5666a130408d3cac7de15993e03f9929"
+   },
+   "trx-plank": {
+    "sha256": "dde373e24ec90791c7c06ab8c0b7110ba30cfc1d9f9c80cb9170c0994856e262"
+   },
+   "trx-power-pull": {
+    "sha256": "7545c66bc8d1267650cca0b949a5eb638f82a6a5dc5dc3b5257c3dc54eb45a7f"
+   },
+   "trx-side-plank": {
+    "sha256": "15577716957080ad88c27b1c6e1af0304977a892104089dbf35456d98c0b8149"
+   },
+   "trx-sprinter-start": {
+    "sha256": "3ac0104db2d97e2c2ee1c73647bcd89585b392cc7de9c0e62a8d1e2d996d4c98"
+   },
+   "trx-suspended-lunge": {
+    "sha256": "229be9fc2e811def6a2a5b6049d55914a805240c7d754caac9f40e105706aff9"
+   },
+   "trx-y-fly": {
+    "sha256": "6cc611fd6214896bfbf82f808f17d8ed033251873a4a7918471ff41e13d868a3"
+   },
+   "uze-abdukcija": {
+    "sha256": "081ca605d60181ae822cc462a615a01ed3823bcf7d5969f8f0b33dc381777936"
+   },
+   "uze-addukcija": {
+    "sha256": "b0e08dae8bbf1ae8a4549b1e66ae756964ed2ad15a9e5ee647429ca043cf52a2"
+   },
+   "uze-ekstenzija": {
+    "sha256": "16e8e76e777584e7441ff7b7147bd342f0dd028ea2065757477d4cbfa1a5b572"
+   },
+   "uze-fleksija": {
+    "sha256": "5dd77a1931e5e7f58aedd8d8091cc37431786d17e184c3d80b448499ffafb7ed"
+   },
+   "uze-koljeno": {
+    "sha256": "8beef7be4d948b7b575946b44312addd015f8532c259fb8949cad4764a73a41b"
+   },
+   "uze-kruzenje": {
+    "sha256": "0d0b6d15f2f1b1d9033ae1a4850de9572b3c19f6e12fcbaf2b0c7d200350756f"
+   },
+   "uze-njihanje": {
+    "sha256": "47e35a6c8757d3109eae1930c3aa218e23ea335f5030a092eab173d8569abe01"
+   }
+  }
+ },
+ "removed": {
+  "trx-push-up": "DVIDS video 694423 pokazuje glavu spuštenu ispod prsa i laktove široko u stranu, a upute traže suprotno.",
+  "dead-bug": "DVIDS fotografija 1942620 je grupni snimak samo početnog položaja; osoba desno podiže glavu i ramena, što aplikacija navodi kao grešku.",
+  "side-plank": "Kolaž s Wikimedia Commonsa (Side_Plank.jpg) ima engleske natpise, okvir i logotipe, a glava nije u produžetku kralježnice kako traže upute."
+ },
+ "licensed": {
+  "bench-press": {
+   "video": "bench-press.mp4",
+   "poster": "bench-press.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 21",
+     "https://wger.de/api/v2/video/21/"
+    ],
+    [
+     "vježba 73 na wgeru",
+     "https://wger.de/en/exercise/73/view-base"
+    ]
+   ],
+   "changes": "Isječak od 12 s, bez zvuka, pretvoren u H.264 MP4 (640 × 352). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true
+  },
+  "db-bench-press": {
+   "video": "db-bench-press.mp4",
+   "poster": "db-bench-press.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 20",
+     "https://wger.de/api/v2/video/20/"
+    ],
+    [
+     "vježba 75 na wgeru",
+     "https://wger.de/en/exercise/75/view-base"
+    ]
+   ],
+   "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/db-bench-press.mp4",
+    "sha256": "34ebab152d3122e9bdfce70a97686e43214af177ae3a0138455703d5ae5f7006",
+    "crop": [
+     0,
+     0,
+     1280,
+     720
+    ],
+    "size": [
+     960,
+     540
+    ],
+    "start": 0,
+    "end": 99,
+    "kbps": 900,
+    "poster": "v1.4.1:assets/ex/db-bench-press.jpg",
+    "posterSha256": "a3333ebe6358e2dbe9b2bf9741c3db29a332379f7e33ad97de8e54bd8afb28a1"
+   }
+  },
+  "hip-thrust": {
+   "video": "hip-thrust.mp4",
+   "poster": "hip-thrust.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 72",
+     "https://wger.de/api/v2/video/72/"
+    ],
+    [
+     "vježba 294 na wgeru",
+     "https://wger.de/en/exercise/294/view-base"
+    ]
+   ],
+   "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/hip-thrust.mp4",
+    "sha256": "4bdfefb2ffd3604231b02fbf4702fbd8488802d3e2c3f503cc583d6ec052112a",
+    "crop": [
+     0,
+     0,
+     1280,
+     720
+    ],
+    "size": [
+     960,
+     540
+    ],
+    "start": 0,
+    "end": 99,
+    "kbps": 900,
+    "poster": "v1.4.1:assets/ex/hip-thrust.jpg",
+    "posterSha256": "ffa36b6bb530ecf2c3836287a4cf594b4ca785a5b6619e5a7dc50d1d853d4177"
+   }
+  },
+  "incline-db-press": {
+   "video": "incline-db-press.mp4",
+   "poster": "incline-db-press.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 24",
+     "https://wger.de/api/v2/video/24/"
+    ],
+    [
+     "vježba 537 na wgeru",
+     "https://wger.de/en/exercise/537/view-base"
+    ]
+   ],
+   "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/incline-db-press.mp4",
+    "sha256": "c6c3da592e668c91779f5976a9eb9295559cfd49a41fccdc56ef241969a9d3be",
+    "crop": [
+     0,
+     0,
+     1280,
+     720
+    ],
+    "size": [
+     960,
+     540
+    ],
+    "start": 0,
+    "end": 99,
+    "kbps": 900,
+    "poster": "v1.4.1:assets/ex/incline-db-press.jpg",
+    "posterSha256": "91bd0dccce36c4dcae333231202c5d6d2b7eeda99fe4bf028ff3fb9f9c4250ad"
+   }
+  },
+  "pull-up": {
+   "video": "pull-up.mp4",
+   "poster": "pull-up.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 71",
+     "https://wger.de/api/v2/video/71/"
+    ],
+    [
+     "vježba 475 na wgeru",
+     "https://wger.de/en/exercise/475/view-base"
+    ]
+   ],
+   "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/pull-up.mp4",
+    "sha256": "6cf6b161e3b0afd8476ed72692a5effbe24796ffdadc774999df607b535b1be9",
+    "crop": [
+     0,
+     0,
+     1280,
+     720
+    ],
+    "size": [
+     960,
+     540
+    ],
+    "start": 0,
+    "end": 99,
+    "kbps": 900,
+    "poster": "v1.4.1:assets/ex/pull-up.jpg",
+    "posterSha256": "a984a19491d38026d0ba63608e3d00570150b8f7f38235c90554e827502fe6fa"
+   }
+  },
+  "rdl-bucice": {
+   "video": "rdl-bucice.mp4",
+   "poster": "rdl-bucice.jpg",
+   "author": "Goulart",
+   "credit": "Goulart / wger",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "source": [
+    [
+     "wger, video 2",
+     "https://wger.de/api/v2/video/2/"
+    ],
+    [
+     "vježba 507 na wgeru",
+     "https://wger.de/en/exercise/507/view-base"
+    ]
+   ],
+   "changes": "Isječak od 8 do 12 s, bez zvuka, pretvoren u H.264; za aplikaciju smanjen na 960 × 540 (oko 900 kbit/s, 30 sličica u sekundi). Naslovna slika izvađena iz videa. Pokret nije mijenjan.",
+   "changed": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/rdl-bucice.mp4",
+    "sha256": "d551604e86fb34f2ad06fece3c1613b1f915b667cc9feb4eab32f89473475a8c",
+    "crop": [
+     0,
+     0,
+     1280,
+     720
+    ],
+    "size": [
+     960,
+     540
+    ],
+    "start": 0,
+    "end": 99,
+    "kbps": 900,
+    "poster": "v1.4.1:assets/ex/rdl-bucice.jpg",
+    "posterSha256": "4be7e2c9795a08014cdfdd793f41f41b7c48f70154aa5ba4759ae9848c21c75f"
+   }
+  },
+  "plank": {
+   "photo": "plank.jpg",
+   "author": "Nenad Stojković (Shixart1985)",
+   "credit": "Nenad Stojković / Wikimedia Commons",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+   "title": "Woman performing plank exercise at home gym",
+   "source": [
+    [
+     "Wikimedia Commons",
+     "https://commons.wikimedia.org/wiki/File:Woman_performing_plank_exercise_at_home_gym.jpg"
+    ]
+   ],
+   "changes": "Smanjeno na najviše 1280 piksela i ponovno spremljeno kao JPEG; cijeli kadar zadržan."
+  },
+  "jednonozni-most": {
+   "photo": "jednonozni-most.jpg",
+   "author": "Sharon Holland, Uniformed Services University",
+   "credit": "Sharon Holland / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "Making better service members through operational fitness",
+   "source": [
+    [
+     "DVIDS, fotografija 4927508",
+     "https://www.dvidshub.net/image/4927508/making-better-service-members-through-operational-fitness"
+    ]
+   ],
+   "changes": "DVIDS-ov JPEG širine 1000 piksela ponovno spremljen u kvaliteti 75 % radi bržeg učitavanja; kadar nije mijenjan.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/jednonozni-most.jpg",
+    "sha256": "ed4a9ca4a66486cb0f4e14f196bdea64a248cb150e3017f844829f834d33c969",
+    "jpegQuality": 75
+   }
+  },
+  "trx-body-saw": {
+   "video": "trx-body-saw.mp4",
+   "poster": "trx-body-saw.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Body Saw",
+   "source": [
+    [
+     "DVIDS, video 642039",
+     "https://www.dvidshub.net/video/642039/trx-body-saw"
+    ]
+   ],
+   "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3 do 19,42 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-body-saw.mp4",
+    "sha256": "5411a50999e772673e572528fa097a79928281a8f19964d159a6e966e430e4e5",
+    "crop": [
+     268,
+     6,
+     516,
+     286
+    ],
+    "start": 3.0,
+    "end": 19.42,
+    "kbps": 500,
+    "poster": 5.82
+   }
+  },
+  "trx-high-row": {
+   "video": "trx-high-row.mp4",
+   "poster": "trx-high-row.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX High Row",
+   "source": [
+    [
+     "DVIDS, video 640267",
+     "https://www.dvidshub.net/video/640267/trx-high-row"
+    ]
+   ],
+   "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3,5 do 16,9 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-high-row.mp4",
+    "sha256": "0d6a6275500721580ad62d56cb13c2339bdc837b59c1f03cd236638971286cd9",
+    "crop": [
+     268,
+     6,
+     516,
+     286
+    ],
+    "start": 3.5,
+    "end": 16.9,
+    "kbps": 500,
+    "poster": 2.32
+   },
+   "thumb": {
+    "x": 0.7
+   }
+  },
+  "trx-hip-press": {
+   "video": "trx-hip-press.mp4",
+   "poster": "trx-hip-press.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Hip Press",
+   "source": [
+    [
+     "DVIDS, video 692907",
+     "https://www.dvidshub.net/video/692907/trx-hip-press"
+    ]
+   ],
+   "changes": "Izrezani crni rubovi (kadar 640 × 360), bez naslova; isječak od 3,6 do 16,95 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (640 × 360, oko 600 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-hip-press.mp4",
+    "sha256": "8d3e18f1fb95a981526bdd47ed656d675bb11f373f04f891925acbaaac1e3c98",
+    "crop": [
+     0,
+     60,
+     640,
+     360
+    ],
+    "start": 3.6,
+    "end": 16.95,
+    "kbps": 600,
+    "poster": 4.12
+   }
+  },
+  "trx-reverse-lunge": {
+   "video": "trx-reverse-lunge.mp4",
+   "poster": "trx-reverse-lunge.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Step Back Lunge",
+   "source": [
+    [
+     "DVIDS, video 694607",
+     "https://www.dvidshub.net/video/694607/trx-step-back-lunge"
+    ]
+   ],
+   "changes": "Izrezani crni rubovi (kadar 640 × 360), bez naslova; isječak od 7,8 do 16,2 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (640 × 360, oko 600 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-reverse-lunge.mp4",
+    "sha256": "bc9e1c894b6a519363f026c178d61b41a5e789ff99e0e0e88c8bb0134fef70a0",
+    "crop": [
+     0,
+     60,
+     640,
+     360
+    ],
+    "start": 7.8,
+    "end": 16.2,
+    "kbps": 600,
+    "poster": 3.32
+   }
+  },
+  "trx-row": {
+   "video": "trx-row.mp4",
+   "poster": "trx-row.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Low Row",
+   "source": [
+    [
+     "DVIDS, video 640277",
+     "https://www.dvidshub.net/video/640277/trx-low-row"
+    ]
+   ],
+   "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 3,5 do 21,5 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-row.mp4",
+    "sha256": "444e83ba5662e39b75bb87de3d2af9e6ce6ab9ddbf3ee9e679db285b754dccfb",
+    "crop": [
+     268,
+     6,
+     516,
+     286
+    ],
+    "start": 3.5,
+    "end": 21.5,
+    "kbps": 500,
+    "poster": 3.52
+   },
+   "thumb": {
+    "x": 0.77
+   }
+  },
+  "trx-single-leg-squat": {
+   "video": "trx-single-leg-squat.mp4",
+   "poster": "trx-single-leg-squat.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Single Leg Squat",
+   "source": [
+    [
+     "DVIDS, video 642055",
+     "https://www.dvidshub.net/video/642055/trx-single-leg-squat"
+    ]
+   ],
+   "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 4,3 do 14,9 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-single-leg-squat.mp4",
+    "sha256": "7cd11cc1ebaa6e2f49aeee72c21af527a62ee2b2d2483db624ca496ea3098632",
+    "crop": [
+     268,
+     6,
+     516,
+     286
+    ],
+    "start": 4.3,
+    "end": 14.9,
+    "kbps": 500,
+    "poster": 4.27
+   }
+  },
+  "trx-squat": {
+   "video": "trx-squat.mp4",
+   "poster": "trx-squat.jpg",
+   "author": "Capt. Matthew Holfinger, U.S. Marine Corps Training and Education Command",
+   "credit": "Capt. Matthew Holfinger, USMC / DVIDS",
+   "license": "Javno vlasništvo (rad američke vlade)",
+   "licenseUrl": "https://www.dvidshub.net/about/copyright",
+   "title": "TRX Assisted Squat",
+   "source": [
+    [
+     "DVIDS, video 642032",
+     "https://www.dvidshub.net/video/642032/trx-assisted-squat"
+    ]
+   ],
+   "changes": "Izrezan gornji od dva kuta kamere, bez naslova i crnih rubova; isječak od 1 do 15 s izvornog videa, bez zvuka, ponovno kodirano u H.264 (516 × 286, oko 500 kbit/s). Naslovna slika izvađena iz videa.",
+   "dvids": true,
+   "recut": {
+    "from": "v1.4.1:assets/ex/trx-squat.mp4",
+    "sha256": "7f0612e66de4f9feb228c7fe4d69cabcae30087ea11f80f1897443822f6f94df",
+    "crop": [
+     268,
+     6,
+     516,
+     286
+    ],
+    "start": 1.0,
+    "end": 15.0,
+    "kbps": 500,
+    "poster": 3.52
+   }
+  }
+ },
+ "dvids_note": {
+  "en": "The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement.",
+  "hr": "Prikaz vizualnih materijala Ministarstva rata SAD-a ne znači i ne predstavlja njegovu podršku."
+ }
+}
