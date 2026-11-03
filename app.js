@@ -2655,7 +2655,7 @@ function lineChart(id, pts, fmtV, label){
 }
 // weeks: oldest first; segs: [{ k, cls }] bottom first; avg: the line (0 = none)
 function weekBars(id, weeks, segs, fmtV, avg, label, tipSub){
-  const W = 300, B = 116, T = 26, n = weeks.length, slot = W / n, bw = 20;
+  const W = 300, B = 124, T = 42, n = weeks.length, slot = W / n, bw = 20;
   const tot = w => segs.reduce((a, s) => a + (w[s.k] || 0), 0), mx = Math.max.apply(null, [avg || 0].concat(weeks.map(tot))) || 1, H = v => v / mx * (B - T);
   let body = '<line class="gr" x1="0" y1="'+B+'" x2="'+W+'" y2="'+B+'"/>', tips = '', hits = '';
   weeks.forEach((w, i) => {
@@ -2676,9 +2676,9 @@ function weekBars(id, weeks, segs, fmtV, avg, label, tipSub){
   return '<svg class="lch bars" id="'+esc(id)+'" viewBox="0 0 '+W+' '+(B + 22)+'" role="img" aria-label="'+esc(label)+'">' + body + tips + hits + '</svg>';
 }
 // the headline of a load card: value, a pill with the change, what it is compared with
-function loadHead(txt, v, prev, vs){
+function loadHead(txt, v, prev, vs, none){
   const p = prev > 0 && v > 0 ? Math.round((v - prev) / prev * 100) : null;
-  return '<div class="hv"><span class="v">'+esc(txt)+'</span>' + (p == null ? '' : '<span class="pill '+(p > 0 ? 'up' : p < 0 ? 'dn' : 'eq')+'">'+(p > 0 ? '▲ ' : p < 0 ? '▼ ' : '')+Math.abs(p)+' %</span><span class="vs">'+esc(vs)+'</span>') + '</div>';
+  return '<div class="hv"><span class="v">'+esc(txt)+'</span>' + (p == null ? '' : '<span class="pill '+(p > 0 ? 'up' : p < 0 ? 'dn' : 'eq')+'">'+(p > 0 ? '▲ ' : p < 0 ? '▼ ' : '')+Math.abs(p)+' %</span><span class="vs">'+esc(vs)+'</span>') + (p == null && none ? '<span class="vs">'+esc(none)+'</span>' : '') + '</div>';
 }
 const LOAD_LABEL = { kg: 'Volumen tereta', reps: 'Ukupno ponavljanja', secs: 'Ukupno vrijeme', m: 'Metri' };
 const LOAD_RANGES = [['3', '3 mj', 91], ['6', '6 mj', 183], ['sve', 'Sve', 0]];
@@ -2714,11 +2714,11 @@ function weekLoadHtml(){
   const pct = (v, a) => a > 0 ? ' (' + (v >= a ? '+' : '−') + Math.abs(Math.round((v - a) / a * 100)) + ' % od prosjeka)' : '';
   let out = head;
   if (anyVl) { const a = avg('vl'), f = v => loadFmt('vl', v);
-    out += '<div class="lc"><div class="hd"><span class="t">Snaga · volumen tereta</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.vl), cur.vl, a, 'od prosjeka 4 tjedna') +
+    out += '<div class="lc"><div class="hd"><span class="t">Snaga · volumen tereta</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.vl), cur.vl, a, 'od prosjeka 4 tjedna', 'ovaj tjedan') +
       weekBars('wk-vl', W, [{ k: 'vl', cls: 'bs' }], f, a, 'Volumen tereta po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.vl) + pct(cur.vl, a) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w)) +
       chartTable(['Tjedan', 'Volumen tereta'], W.slice().reverse().map(w => [range(w), f(w.vl)])) + '</div>'; }
   if (anyM) { const a = avg('m'), f = v => loadFmt('m', v);
-    out += '<div class="lc"><div class="hd"><span class="t">Teren · metri</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.m), cur.m, a, 'od prosjeka 4 tjedna') +
+    out += '<div class="lc"><div class="hd"><span class="t">Teren · metri</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.m), cur.m, a, 'od prosjeka 4 tjedna', 'ovaj tjedan') +
       weekBars('wk-m', W, [{ k: 'ost', cls: 'bt1' }, { k: 'hsr', cls: 'bt2' }], f, a, 'Metri na terenu po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.m) + pct(cur.m, a) + ', od toga brzo trčanje ' + f(cur.hsr) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w) + ' · brzo ' + f(w.hsr)) +
       '<div class="lg2"><span><i class="k1"></i>Ostali metri</span><span><i class="k2"></i>Brzo trčanje</span></div>' +
       chartTable(['Tjedan', 'Metri (brzo trčanje)'], W.slice().reverse().map(w => [range(w), f(w.m) + ' (' + f(w.hsr) + ')'])) + '</div>'; }
