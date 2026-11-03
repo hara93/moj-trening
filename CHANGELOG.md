@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.6 — 3. 11. 2026.
+
+- **Zupčanik za postavke:** pravilan zupčanik s osam jednakih zubaca (na početnom zaslonu i u playeru) umjesto nepravilne zvijezde.
+
 ## 1.6.5 — 3. 11. 2026.
 
 - **Bočno hodanje s gumom:** nova slika (stajno stopalo ostaje na mjestu, glava uspravnija). Svih 152 slika vježbi sada je pregledano i dobro.
