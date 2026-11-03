@@ -55,7 +55,7 @@ One single portrait image (2:3), not two panels. Outdoors on a green football pi
 - Veličina: 1024 × 1536, uspravno
 
 ```text
-One single portrait image (2:3), not two panels. Level camera at chest height, slightly wide. The athlete stands relaxed in his home gym holding a hexagonal dumbbell in one hand, looking at the equipment, not at the camera, surrounded by his equipment, neatly arranged: power cage with Olympic bar, plyo box, rack of hexagonal dumbbells, two kettlebells, TRX straps hanging from the cage, medicine ball and tatami mat. Calm overview of all the tools. Keep the lower third of the frame calm and darker for the card's title; the athlete in the upper two thirds.
+One single portrait image (2:3), not two panels. Level camera at chest height, slightly wide. The athlete stands relaxed in his home gym holding a hexagonal dumbbell in one hand, looking at the equipment, not at the camera, surrounded by his equipment, neatly arranged: power cage with Olympic bar, plyo box, rack of hexagonal dumbbells, two kettlebells, suspension straps hanging from the cage, medicine ball and tatami mat. Calm overview of all the tools. Keep the lower third of the frame calm and darker for the card's title; the athlete in the upper two thirds.
 ```
 
 ## Za ponoviti (57)
@@ -212,7 +212,7 @@ Two panels, identical camera in both: level 45° rear view from behind the athle
   - pogled ravno u kameru u oba panela
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back with straight arms in front of the chest, overhand grip; body straight from head to heels. RIGHT (end): straight arms raised overhead and apart in a Y, body pulled up nearly upright, shoulder blades down and back. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; ribs down, no arch in the lower back; elbows and wrists straight; feet shoulder-width, heels planted. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back with straight arms in front of the chest, overhand grip; body straight from head to heels. RIGHT (end): straight arms raised overhead and apart in a Y, body pulled up nearly upright, shoulder blades down and back. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; ribs down, no arch in the lower back; elbows and wrists straight; feet shoulder-width, heels planted. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 #### TRX Chest Press (TRX potisak za prsa)
@@ -224,7 +224,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
   - ručke završavaju u visini ramena umjesto uz prsa
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, anchor at the upper right, whole body in frame. LEFT (start): facing away from the anchor in a short split stance, leaning into the handles, arms straight in front of the chest, palms down, hands slightly wider than the shoulders; body straight from head to heels. RIGHT (end): elbows tucked about 45° from the trunk, hands beside the chest, chest lowered between the handles; body straight, more inclined. Form: neck in line with the trunk, gaze at the floor ahead, not at the camera; glutes and abs tight, hips not sagging; front foot flat, rear heel lifted. Equipment: TRX straps lengthened, hanging from the top of the power cage, outside the arms.
+Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, anchor at the upper right, whole body in frame. LEFT (start): facing away from the anchor in a short split stance, leaning into the handles, arms straight in front of the chest, palms down, hands slightly wider than the shoulders; body straight from head to heels. RIGHT (end): elbows tucked about 45° from the trunk, hands beside the chest, chest lowered between the handles; body straight, more inclined. Form: neck in line with the trunk, gaze at the floor ahead, not at the camera; glutes and abs tight, hips not sagging; front foot flat, rear heel lifted. Equipment: suspension straps lengthened, hanging from the top of the power cage, outside the arms.
 ```
 
 #### TRX Suspended Lunge (TRX iskorak sa stražnjom nogom u omči)
@@ -235,7 +235,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
   - prednje stopalo se između panela pomaklo naprijed, a mora ostati na istom mjestu
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera at hip height, TRX anchor behind him at the upper left, whole body in frame. LEFT (start): standing on the right leg, back to the anchor; left forefoot in the cradle behind, knee bent; arms in a running position. RIGHT (end): right knee at about 90°, shin near vertical, left knee sliding back and down, trunk upright, slight lean from the hips. Right foot on the same spot in both panels. Form: head neutral, gaze straight ahead, not at the camera; right foot flat, toes forward, knee over the middle of the foot; hips square. Equipment: TRX with handles joined into one cradle at mid-shin height, hanging from the top of the power cage.
+Two panels, identical camera in both: level side view from the athlete's right, camera at hip height, suspension trainer anchor behind him at the upper left, whole body in frame. LEFT (start): standing on the right leg, back to the anchor; left forefoot in the cradle behind, knee bent; arms in a running position. RIGHT (end): right knee at about 90°, shin near vertical, left knee sliding back and down, trunk upright, slight lean from the hips. Right foot on the same spot in both panels. Form: head neutral, gaze straight ahead, not at the camera; right foot flat, toes forward, knee over the middle of the foot; hips square. Equipment: suspension trainer with handles joined into one cradle at mid-shin height, hanging from the top of the power cage.
 ```
 
 #### TRX Power Pull (TRX jednoručno veslanje s rotacijom)
@@ -248,7 +248,7 @@ Two panels, identical camera in both: level side view from the athlete's right, 
   - u završnom panelu lice okrenuto prema kameri
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, TRX anchor at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back, feet parallel, a little wider than the hips; joined handle in the right hand, right elbow bent beside the ribs; left arm reaching straight toward the anchor. RIGHT (end): right arm straight toward the anchor, trunk and hips rotated open to the left together, left arm reaching down and back. Form: head turns with the trunk, gaze follows the left hand, never at the camera; body straight from head to heels; both feet planted, toes toward the anchor. Equipment: TRX straps shortened, handles joined, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, suspension trainer anchor at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back, feet parallel, a little wider than the hips; joined handle in the right hand, right elbow bent beside the ribs; left arm reaching straight toward the anchor. RIGHT (end): right arm straight toward the anchor, trunk and hips rotated open to the left together, left arm reaching down and back. Form: head turns with the trunk, gaze follows the left hand, never at the camera; body straight from head to heels; both feet planted, toes toward the anchor. Equipment: suspension straps shortened, handles joined, hanging from the top of the power cage.
 ```
 
 ### Eksplozivnost
@@ -263,7 +263,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
   - TRX je vezan bočno na stup u visini glave, a ne obješen s vrha kaveza
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right at hip height, cage behind him at the left edge, athlete facing image right, whole body in frame. LEFT (start): facing away from the anchor, straps under the armpits, hands at the chest; body leaning forward 45°; right foot flat, knee bent over the toes; left leg extended back on the ball of the foot, heel up. RIGHT (end): same lean, right foot on the same spot, fully extended and up on the toes; left knee driven forward to hip height, ankle flexed. Form: head in line with the trunk, gaze forward-down, not at the camera; body straight from head to heel; toes forward. Equipment: TRX straps hanging taut from the top of the power cage.
+Two panels, identical camera in both: level side view from the athlete's right at hip height, cage behind him at the left edge, athlete facing image right, whole body in frame. LEFT (start): facing away from the anchor, straps under the armpits, hands at the chest; body leaning forward 45°; right foot flat, knee bent over the toes; left leg extended back on the ball of the foot, heel up. RIGHT (end): same lean, right foot on the same spot, fully extended and up on the toes; left knee driven forward to hip height, ankle flexed. Form: head in line with the trunk, gaze forward-down, not at the camera; body straight from head to heel; toes forward. Equipment: suspension straps hanging taut from the top of the power cage.
 ```
 
 #### Pogo jumps (Pogo poskoci)
@@ -310,7 +310,7 @@ Two panels, identical camera in both: level side view from the athlete's right a
   - oba panela prikazuju isti položaj; lijevo treba početni položaj na koljenima sa stopalima u omčama
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera low at hip height, cage at the right edge, head toward image left, full body in frame. LEFT (start): on all fours, hands on the mat under the shoulders, knees under the hips; toes of both feet in the foot cradles at mid-shin height, directly under the anchor. RIGHT (end): knees lifted into a high plank, arms straight; ears, shoulders, hips, knees and ankles in one straight line. Form: neck in line with the trunk, gaze at the mat just ahead of the hands, not at the camera; abs and glutes tight; feet together, toes pulled toward the shins. Equipment: TRX foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's left, camera low at hip height, cage at the right edge, head toward image left, full body in frame. LEFT (start): on all fours, hands on the mat under the shoulders, knees under the hips; toes of both feet in the foot cradles at mid-shin height, directly under the anchor. RIGHT (end): knees lifted into a high plank, arms straight; ears, shoulders, hips, knees and ankles in one straight line. Form: neck in line with the trunk, gaze at the mat just ahead of the hands, not at the camera; abs and glutes tight; feet together, toes pulled toward the shins. Equipment: suspension-strap foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Side Plank (TRX bočni plank)
@@ -324,7 +324,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
   - noge razmaknute; trebaju biti skupa, gornje stopalo ispred donjeg
 
 ```text
-Two panels, identical camera in both: level front view at hip height, facing the athlete's chest, cage at the right edge, head toward image left, full body in frame. LEFT (start): on the right forearm, elbow under the shoulder, hips resting on the mat; both feet in the foot cradles under the anchor, top foot just in front of the bottom one; left hand on the hip. RIGHT (end): hips lifted until head, trunk, hips and feet form one straight line; legs together. Form: head in line with the tilted spine, eyes forward and slightly down, not into the lens; chest and pelvis square to the camera; toes pulled toward the shins. Equipment: TRX foot cradles at equal mid-shin height, hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level front view at hip height, facing the athlete's chest, cage at the right edge, head toward image left, full body in frame. LEFT (start): on the right forearm, elbow under the shoulder, hips resting on the mat; both feet in the foot cradles under the anchor, top foot just in front of the bottom one; left hand on the hip. RIGHT (end): hips lifted until head, trunk, hips and feet form one straight line; legs together. Form: head in line with the tilted spine, eyes forward and slightly down, not into the lens; chest and pelvis square to the camera; toes pulled toward the shins. Equipment: suspension-strap foot cradles at equal mid-shin height, hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Fallout (TRX stojeći rollout)
@@ -335,7 +335,7 @@ Two panels, identical camera in both: level front view at hip height, facing the
   - neutralni hvat, a upute traže dlanove prema dolje
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera at hip height, cage behind him at the left edge, facing image right, full body in frame. LEFT (start): standing tall, back to the anchor, feet hip-width; arms straight in front at shoulder height, palms down on the handles, straps taut. RIGHT (end): straight arms raised overhead beside the ears while the whole body leans forward as one straight line from heels to head; feet on the same spot. Form: head between the arms, in line with the trunk, gaze at the floor ahead, not at the camera; ribs down, glutes tight, no arch in the lower back; feet flat, toes forward. Equipment: TRX straps at mid length, anchored high on the power cage behind him.
+Two panels, identical camera in both: level side view from the athlete's right, camera at hip height, cage behind him at the left edge, facing image right, full body in frame. LEFT (start): standing tall, back to the anchor, feet hip-width; arms straight in front at shoulder height, palms down on the handles, straps taut. RIGHT (end): straight arms raised overhead beside the ears while the whole body leans forward as one straight line from heels to head; feet on the same spot. Form: head between the arms, in line with the trunk, gaze at the floor ahead, not at the camera; ribs down, glutes tight, no arch in the lower back; feet flat, toes forward. Equipment: suspension straps at mid length, anchored high on the power cage behind him.
 ```
 
 #### Landmine rotation (Landmine rotacija (landmine 180))
@@ -611,7 +611,7 @@ Two panels, identical camera in both: level front view from about 20° to the at
   - u završnom panelu pomaknula su se oba stopala, a stajno treba ostati na mjestu
 
 ```text
-Two panels, identical camera in both: level front view from about 20° to the athlete's left, camera at hip height, TRX anchor high on the power cage in front of him, whole body in frame. LEFT (start): standing tall facing the anchor, feet together, toes forward; handles at the ribs, elbows by the sides, straps taut. RIGHT (end): the left foot stepped wide to the left, toes forward; hips sat back over the left foot, left knee bent over the toes; right leg straight, right foot flat on its starting spot; arms straighter, straps taut. Form: head neutral, gaze ahead along the trunk, not at the camera; chest up with a slight hip hinge; heels down. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level front view from about 20° to the athlete's left, camera at hip height, strap anchor high on the power cage in front of him, whole body in frame. LEFT (start): standing facing the anchor, feet together, toes forward; handles at the ribs, elbows by the sides, straps taut. RIGHT (end): the left foot stepped wide to the left, toes forward; hips sat back over the left foot, left knee bent over the toes; right leg straight, right foot flat on its starting spot; arms straighter, straps taut. Form: head neutral, gaze ahead along the trunk, not at the camera; chest up with a slight hip hinge; heels down. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 ### Rehab
@@ -961,7 +961,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
 - Kamera: level side view from the athlete's left, camera at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back on straight arms, neutral grip with palms facing each other; body straight from head to heels at about 45°, heels planted. RIGHT (end): chest pulled up to the handles, elbows bent and driven back close to the ribs, hands beside the chest, shoulder blades squeezed; body still straight. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; glutes and abs tight; feet hip-width, toes up, weight on the heels. Equipment: TRX straps shortened, hanging from the top of the power cage.
+Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back on straight arms, neutral grip with palms facing each other; body straight from head to heels at about 45°, heels planted. RIGHT (end): chest pulled up to the handles, elbows bent and driven back close to the ribs, hands beside the chest, shoulder blades squeezed; body still straight. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; glutes and abs tight; feet hip-width, toes up, weight on the heels. Equipment: suspension straps shortened, hanging from the top of the power cage.
 ```
 
 #### TRX High Row (TRX visoko veslanje)
@@ -970,7 +970,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
 - Kamera: level 45° front view from the athlete's left, camera at chest height
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back on straight arms held at shoulder height, overhand grip with palms down; body straight from head to heels. RIGHT (end): pulled up with the elbows wide and high, upper arms level with the shoulders, hands in front of the shoulders, shoulder blades squeezed; body still straight. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; shoulders down, away from the ears; feet hip-width, heels planted. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back on straight arms held at shoulder height, overhand grip with palms down; body straight from head to heels. RIGHT (end): pulled up with the elbows wide and high, upper arms level with the shoulders, hands in front of the shoulders, shoulder blades squeezed; body still straight. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; shoulders down, away from the ears; feet hip-width, heels planted. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 #### TRX Reverse Fly (TRX odručenje u T)
@@ -979,7 +979,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
 - Kamera: level 45° front view from the athlete's left, camera at chest height
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back with straight arms in front of the chest, overhand grip, elbows slightly bent; body straight from head to heels. RIGHT (end): arms opened wide to the sides at shoulder height in a T, same slight elbow bend, body pulled more upright, shoulder blades squeezed. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; shoulders and ribs down, no arch in the lower back; feet hip-width, heels planted. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): facing the anchor, leaning back with straight arms in front of the chest, overhand grip, elbows slightly bent; body straight from head to heels. RIGHT (end): arms opened wide to the sides at shoulder height in a T, same slight elbow bend, body pulled more upright, shoulder blades squeezed. Form: neck in line with the trunk, gaze toward the anchor, not at the camera; shoulders and ribs down, no arch in the lower back; feet hip-width, heels planted. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 #### TRX Push-up (TRX sklek sa stopalima u omčama)
@@ -988,7 +988,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
 - Kamera: level side view from the athlete's left, camera low at plank height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera low at plank height, TRX at the right, whole body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, feet together directly under the anchor; body straight from head to heels. RIGHT (end): elbows bent about 45° from the trunk, chest lowered close to the mat; body one straight line, straps still vertical. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight, hips not sagging; toes pulled toward the shins. Equipment: TRX with foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's left, camera low at plank height, suspension trainer at the right, whole body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, feet together directly under the anchor; body straight from head to heels. RIGHT (end): elbows bent about 45° from the trunk, chest lowered close to the mat; body one straight line, straps still vertical. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight, hips not sagging; toes pulled toward the shins. Equipment: suspension trainer with foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Pec Fly (TRX razvlačenje za prsa)
@@ -997,7 +997,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
 - Kamera: level 45° front view from the athlete's left, camera at chest height
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, TRX anchor behind him at the top of the power cage, whole body in frame. LEFT (start): facing away from the anchor, leaning slightly forward, body straight, arms straight in front of the chest at shoulder width, palms facing each other, elbows slightly bent. RIGHT (end): arms opened in a wide arc until level with the shoulders, same slight elbow bend, chest slightly forward between the straps. Form: neck in line with the trunk, gaze forward and down, not at the camera; abs and glutes tight; feet a little wider than the hips, flat; small lean only. Equipment: TRX straps lengthened, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's left, camera at chest height, suspension trainer anchor behind him at the top of the power cage, whole body in frame. LEFT (start): facing away from the anchor, leaning slightly forward, body straight, arms straight in front of the chest at shoulder width, palms facing each other, elbows slightly bent. RIGHT (end): arms opened in a wide arc until level with the shoulders, same slight elbow bend, chest slightly forward between the straps. Form: neck in line with the trunk, gaze forward and down, not at the camera; abs and glutes tight; feet a little wider than the hips, flat; small lean only. Equipment: suspension straps lengthened, hanging from the top of the power cage.
 ```
 
 #### TRX Hamstring Curl (TRX pregib potkoljenice)
@@ -1006,7 +1006,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's l
 - Kamera: level side view from the athlete's right, camera low at mat height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera low at mat height, TRX hanging at the right, whole body in frame. LEFT (start): lying on the back on a mat, heels in the foot cradles at mid-shin height directly under the anchor, legs straight, hips lifted so shoulders, hips and heels form one straight line; arms along the body, palms down. RIGHT (end): knees bent, heels pulled toward the buttocks, hips still high so shoulders, hips and knees line up. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; toes pulled toward the shins; feet and knees hip-width and parallel. Equipment: TRX with foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera low at mat height, suspension trainer hanging at the right, whole body in frame. LEFT (start): lying on the back on a mat, heels in the foot cradles at mid-shin height directly under the anchor, legs straight, hips lifted so shoulders, hips and heels form one straight line; arms along the body, palms down. RIGHT (end): knees bent, heels pulled toward the buttocks, hips still high so shoulders, hips and knees line up. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; toes pulled toward the shins; feet and knees hip-width and parallel. Equipment: suspension trainer with foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Hip Press (TRX most s petama u omčama)
@@ -1015,7 +1015,7 @@ Two panels, identical camera in both: level side view from the athlete's right, 
 - Kamera: level side view from the athlete's right, camera at mat height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera at mat height, TRX hanging at the right, whole body in frame. LEFT (start): lying on the back on a mat, heels in the foot cradles at mid-shin height directly under the anchor, knees bent to about 90°, hips just above the mat; arms along the body, palms down. RIGHT (end): hips lifted until shoulders, hips and knees form one straight line, knees still at about 90°, glutes squeezed. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; no arch in the lower back; toes pulled toward the shins, knees hip-width. Equipment: TRX with foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera at mat height, suspension trainer hanging at the right, whole body in frame. LEFT (start): lying on the back on a mat, heels in the foot cradles at mid-shin height directly under the anchor, knees bent to about 90°, hips just above the mat; arms along the body, palms down. RIGHT (end): hips lifted until shoulders, hips and knees form one straight line, knees still at about 90°, glutes squeezed. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; no arch in the lower back; toes pulled toward the shins, knees hip-width. Equipment: suspension trainer with foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Single-leg Squat (TRX jednonožni čučanj)
@@ -1024,7 +1024,7 @@ Two panels, identical camera in both: level side view from the athlete's right, 
 - Kamera: level 45° front view from the athlete's right, camera at hip height
 
 ```text
-Two panels, identical camera in both: level 45° front view from the athlete's right, camera at hip height, TRX anchor at the upper right, whole body in frame. LEFT (start): standing tall on the right leg facing the anchor, handles at the ribs, elbows bent, straps taut; left leg straight, lifted just off the floor in front. RIGHT (end): hips sent back and down to a controlled depth, trunk slightly forward, back flat, right knee over the middle of the foot, arms extended toward the anchor for balance, left leg straight in front. Form: head neutral, gaze toward the anchor, not at the camera; whole right foot flat, heel down, toes forward; pelvis level. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level 45° front view from the athlete's right, camera at hip height, suspension trainer anchor at the upper right, whole body in frame. LEFT (start): standing tall on the right leg facing the anchor, handles at the ribs, elbows bent, straps taut; left leg straight, lifted just off the floor in front. RIGHT (end): hips sent back and down to a controlled depth, trunk slightly forward, back flat, right knee over the middle of the foot, arms extended toward the anchor for balance, left leg straight in front. Form: head neutral, gaze toward the anchor, not at the camera; whole right foot flat, heel down, toes forward; pelvis level. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 #### TRX Hamstring Runner (TRX naizmjenični pregib potkoljenice)
@@ -1033,7 +1033,7 @@ Two panels, identical camera in both: level 45° front view from the athlete's r
 - Kamera: level side view from the athlete's right, camera at mat height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera at mat height, TRX hanging at the right, whole body in frame. LEFT (start): lying on the back on a mat, both heels in the foot cradles at mid-shin height directly under the anchor, legs straight, hips lifted so shoulders, hips and heels form one line; arms along the body, palms down. RIGHT (end): right knee bent with the right heel pulled toward the buttock while the left leg stays straight; hips still high and level. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; toes pulled toward the shins; pelvis does not twist. Equipment: TRX with foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera at mat height, suspension trainer hanging at the right, whole body in frame. LEFT (start): lying on the back, both heels in the foot cradles at mid-shin height directly under the anchor, legs straight, hips lifted so shoulders, hips and heels form one line; arms along the body, palms down. RIGHT (end): right knee bent with the right heel pulled toward the buttock while the left leg stays straight; hips still high and level. Form: head and shoulders resting on the mat, gaze up, never at the camera, chin tucked; toes pulled toward the shins; pelvis does not twist. Equipment: suspension trainer with foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 ### Eksplozivnost
@@ -1136,7 +1136,7 @@ Two panels, identical camera in both: level three-quarter view from the athlete'
 - Kamera: level side view from the athlete's right, camera low at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): forearm plank, elbows under the shoulders, forearms parallel; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): pushed back through the forearms toward the cage; elbows now clearly in front of the shoulders, feet slightly behind the anchor; body still straight. Form: neck in line with the trunk, gaze at the mat between the forearms, not at the camera; abs and glutes tight; toes pulled toward the shins. Equipment: TRX foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): forearm plank, elbows under the shoulders, forearms parallel; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): pushed back through the forearms toward the cage; elbows now clearly in front of the shoulders, feet slightly behind the anchor; body still straight. Form: neck in line with the trunk, gaze at the mat between the forearms, not at the camera; abs and glutes tight; toes pulled toward the shins. Equipment: suspension-strap foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Pike (TRX podizanje kukova (pike))
@@ -1145,7 +1145,7 @@ Two panels, identical camera in both: level side view from the athlete's right, 
 - Kamera: level side view from the athlete's right, camera low at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): hips lifted toward the ceiling with straight legs until above the shoulders, body in an inverted V; arms straight, shoulders above the hands. Form: head between the arms, in line with the trunk, gaze toward the knees, not at the camera; knees straight, feet together, toes pulled toward the shins. Equipment: TRX foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): hips lifted toward the ceiling with straight legs until above the shoulders, body in an inverted V; arms straight, shoulders above the hands. Form: head between the arms, in line with the trunk, gaze toward the knees, not at the camera; knees straight, feet together, toes pulled toward the shins. Equipment: suspension-strap foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### Bird dog (Ptica-pas)
@@ -1284,7 +1284,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
 - Kamera: level side view from the athlete's left, camera at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): standing tall facing the anchor, feet hip-width or slightly wider, toes slightly out; hands hold the handles at the ribs, elbows bent by the sides, straps taut. RIGHT (end): hips sat down and back to about thigh-parallel depth, knees over the toes, chest up; arms now straight forward, straps still taut. Form: head neutral, gaze straight ahead along the straps, not at the camera; back flat; whole feet flat, heels down, same spot in both panels. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): standing tall facing the anchor, feet hip-width or slightly wider, toes slightly out; hands hold the handles at the ribs, elbows bent by the sides, straps taut. RIGHT (end): hips sat down and back to about thigh-parallel depth, knees over the toes, chest up; arms now straight forward, straps still taut. Form: head neutral, gaze straight ahead along the straps, not at the camera; back flat; whole feet flat, heels down, same spot in both panels. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 #### TRX Reverse Lunge (TRX iskorak unatrag uz pomoć traka)
@@ -1293,7 +1293,7 @@ Two panels, identical camera in both: level side view from the athlete's left, c
 - Kamera: level side view from the athlete's left, camera at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, TRX anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): standing tall facing the anchor, feet hip-width; handles at the ribs, elbows by the sides, straps taut. RIGHT (end): the right leg stepped far back, right knee just above the floor, on the ball of the foot; left shin near vertical, left knee over the midfoot, left foot flat; trunk upright; straps taut. Form: head neutral, gaze straight ahead, not at the camera; hips square; left foot on the same spot in both panels. Equipment: TRX straps at mid length, hanging from the top of the power cage.
+Two panels, identical camera in both: level side view from the athlete's left, camera at hip height, suspension trainer anchor at the top of the power cage at the upper left, whole body in frame. LEFT (start): standing tall facing the anchor, feet hip-width; handles at the ribs, elbows by the sides, straps taut. RIGHT (end): the right leg stepped far back, right knee just above the floor, on the ball of the foot; left shin near vertical, left knee over the midfoot, left foot flat; trunk upright; straps taut. Form: head neutral, gaze straight ahead, not at the camera; hips square; left foot on the same spot in both panels. Equipment: suspension straps at mid length, hanging from the top of the power cage.
 ```
 
 ### Rehab
@@ -1523,7 +1523,7 @@ Two panels, identical camera in both: level side view from the athlete's right a
 - Kamera: level side view from the athlete's right, camera low at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, feet together directly under the anchor; body straight from head to heels. RIGHT (end): both knees pulled in under the chest, hips just above shoulder height; arms straight, shoulders above the hands. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight; toes pulled toward the shins. Equipment: TRX foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's right, camera low at hip height, cage at the left edge, head toward image right, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, feet together directly under the anchor; body straight from head to heels. RIGHT (end): both knees pulled in under the chest, hips just above shoulder height; arms straight, shoulders above the hands. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight; toes pulled toward the shins. Equipment: suspension-strap foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### TRX Mountain Climber (TRX penjač)
@@ -1532,7 +1532,7 @@ Two panels, identical camera in both: level side view from the athlete's right, 
 - Kamera: level side view from the athlete's left, camera low at hip height
 
 ```text
-Two panels, identical camera in both: level side view from the athlete's left, camera low at hip height, cage at the right edge, head toward image left, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): left knee pulled in under the chest, foot still in its cradle; right leg straight; hips only slightly higher. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight, pelvis level; toes pulled toward the shins. Equipment: TRX foot cradles hanging from the top of the power cage, tatami mat.
+Two panels, identical camera in both: level side view from the athlete's left, camera low at hip height, cage at the right edge, head toward image left, full body in frame. LEFT (start): high plank, hands on the mat under the shoulders; toes of both feet in the foot cradles at mid-shin height, directly under the anchor; body straight from head to heels. RIGHT (end): left knee pulled in under the chest, foot still in its cradle; right leg straight; hips only slightly higher. Form: neck in line with the trunk, gaze at the mat ahead of the hands, not at the camera; abs and glutes tight, pelvis level; toes pulled toward the shins. Equipment: suspension-strap foot cradles hanging from the top of the power cage, tatami mat.
 ```
 
 #### Rollout na velikoj lopti (Stability ball rollout)
