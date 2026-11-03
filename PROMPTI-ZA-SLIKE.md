@@ -7,7 +7,7 @@ Jedna uputa za svaku vježbu, da u aplikaciji svuda bude isti sportaš. Lik i st
 3. Provjeri sliku: ista kamera u oba panela, glava i vrat u liniji s trupom, pogled nikad u kameru, stopala i oprema kao u uputi. Ako nešto ne valja, napiši ChatGPT-u što da ispravi.
 4. Spremi sliku pod nazivom datoteke koji piše uz vježbu (npr. `goblet-squat.jpg`) i pošalji mi je, pa je ugradim u aplikaciju za sve uređaje.
 
-Pregled: 1 za ponoviti, 0 novih, 151 dobra (ukupno 152 vježbe) i 5 naslovnih slika.
+Pregled: 0 za ponoviti, 0 novih, 152 dobre (ukupno 152 vježbe) i 5 naslovnih slika.
 
 ## Naslovne slike za slajdere
 
@@ -58,25 +58,7 @@ One single portrait image (2:3), not two panels. Outdoors on a green football pi
 One single portrait image (2:3), not two panels. Level camera at chest height, slightly wide. The athlete stands relaxed in his home gym holding a hexagonal dumbbell in one hand, looking at the equipment, not at the camera, surrounded by his equipment, neatly arranged: power cage with Olympic bar, plyo box, rack of hexagonal dumbbells, two kettlebells, suspension straps hanging from the cage, medicine ball and tatami mat. Calm overview of all the tools. Keep the lower third of the frame calm and darker for the card's title; the athlete in the upper two thirds.
 ```
 
-## Za ponoviti (1)
-
-Ove slike već su u aplikaciji, ali ih treba napraviti ponovno. Ispod naziva piše što na postojećoj slici ne valja; nova uputa to već ispravlja. Spremi novu sliku pod istim nazivom datoteke.
-
-### Rehab
-
-#### Lateral band walk (Bočno hodanje s mini gumom)
-
-- Datoteka: `bocno-hodanje.jpg`
-- Kamera: level front view at hip height, facing the athlete's chest
-- Što ne valja na postojećoj slici:
-  - glava je i dalje nagnuta naprijed, a pogled ide ravno dolje u vlastita koljena i stopala u oba panela; gotovo isto kao prije
-  - desno stajno stopalo pomaknulo se oko 70 px prema van; obje noge su se raširile umjesto da korakne samo lijeva
-
-```text
-Two panels, identical camera in both: level front view at hip height, facing the athlete's chest, full body in frame, camera locked in place; he steps to his left (image right). LEFT (start): half squat, feet hip-width and parallel, knees bent over the toes, hips back, chest slightly forward, mini band just above the knees and taut; hands on the hips. RIGHT (end): ONLY the left foot has moved: it stepped about 25 cm out to his left (image right); the right foot stays on exactly the same spot of the floor and at exactly the same position in the frame as in the left panel, so the hips and head shift slightly toward image right; stance now wider than the shoulders; same half-squat height, band stretched, knees pushed out over the feet. Form: head held up in line with the slightly forward-leaning trunk, chin level and clearly away from the chest, the top of the head not tipped toward the camera; eyes open, irises clearly visible, looking forward at a point on the floor about 4–5 m ahead and a little to the side of the camera, not down at his own feet, knees or band, and not at the camera; trunk still and level; toes forward, whole feet flat. Equipment: mini band.
-```
-
-## Dobre slike (151)
+## Dobre slike (152)
 
 Ove slike su dobre i ostaju. Uputa je tu samo ako neku ipak poželiš napraviti ponovno.
 
@@ -1269,6 +1251,15 @@ Two panels, identical camera in both: level front view facing the athlete's ches
 
 ```text
 Two panels, identical camera in both: level front view at hip height, facing the athlete's chest, Swedish ladder along the right edge, full body in frame; his left side is next to the ladder, the right leg works. LEFT (start): standing tall, left hand holding a rung at shoulder height, feet hip-width, mini band around both ankles; weight on the left leg, left knee visibly soft, slightly bent about 10°, not locked. RIGHT (end): straight right leg moved out to the side about 25 cm, foot just off the floor, toes pointing straight forward, band taut; left leg unchanged, left knee still slightly bent. Form: head neutral, chin level; eyes lowered to a point on the floor about 3 m in front of him, below the camera, clearly not meeting the lens in either panel; trunk upright, shoulders level over the hips, no lean toward the ladder; left foot flat, toes forward. Equipment: mini band, Swedish ladder.
+```
+
+#### Lateral band walk (Bočno hodanje s mini gumom)
+
+- Datoteka: `bocno-hodanje.jpg`
+- Kamera: level front view at hip height, facing the athlete's chest
+
+```text
+Two panels, identical camera in both: level front view at hip height, facing the athlete's chest, full body in frame, camera locked in place; he steps to his left (image right). LEFT (start): half squat, feet hip-width and parallel, knees bent over the toes, hips back, chest slightly forward, mini band just above the knees and taut; hands on the hips. RIGHT (end): ONLY the left foot has moved: it stepped about 25 cm out to his left (image right); the right foot stays on exactly the same spot of the floor and at exactly the same position in the frame as in the left panel, so the hips and head shift slightly toward image right; stance now wider than the shoulders; same half-squat height, band stretched, knees pushed out over the feet. Form: head held up in line with the slightly forward-leaning trunk, chin level and clearly away from the chest, the top of the head not tipped toward the camera; eyes open, irises clearly visible, looking forward at a point on the floor about 4–5 m ahead and a little to the side of the camera, not down at his own feet, knees or band, and not at the camera; trunk still and level; toes forward, whole feet flat. Equipment: mini band.
 ```
 
 #### Adukcija kuka na boku (Side-lying hip adduction)
