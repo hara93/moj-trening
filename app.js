@@ -1108,18 +1108,45 @@ function doseOptions(e){
     return [b, b+15, b+30].map(s => ({ label: (n > 1 ? n + ' × ' : '') + s + ' s', it: Object.assign(exItem(e), {sec:s}) })); }
   const s = e.sets||3; return [s, s+1, s+2].map(n => ({ label: n + ' × ' + (e.reps||10), it: Object.assign(exItem(e), {sets:n}) }));
 }
-// under the media, like GOWOD: "Upute" (the cues) | "Zašto" (why, how it should feel, the source). Česte greške stay in the data,
-// unshown. The tab you pick stays for every exercise while the app is open (S.exTab), on the exercise page and in the player's
-// card (wrap: the player's card section opening tag).
+// under the media, like GOWOD: "Upute" (equipment, the cues, the video links) | "Cilj" (why, the target areas, how it should feel,
+// the source) | "Opterećenje" (the load card and the last sessions). Česte greške stay in the data, unshown. The tab you pick stays
+// for every exercise while the app is open (S.exTab: 'upute' | 'cilj' | 'opt'; 1.6.1's 'zasto' reads as 'cilj'). The player's card
+// (wrap: its section opening tag) has only Upute | Cilj, shorter: the cues; the areas, Osjećaj and the first sentence of the why.
+const EX_TABS = [['upute', 'Upute'], ['cilj', 'Cilj'], ['opt', 'Opterećenje']];
+const exTabOf = v => v === 'zasto' ? 'cilj' : v === 'cilj' || v === 'opt' ? v : 'upute';
+// the first sentence of a text: up to a . ! or ? followed by a capital letter (so "npr. ovako" or "2. dan" do not cut it)
+const firstSentence = t => (String(t || '').match(/^[\s\S]*?[.!?](?=\s+[A-ZČĆŠĐŽ„"(]|\s*$)/) || [String(t || '')])[0].trim();
 function exInfoHtml(e, wrap){
-  const z = S.exTab === 'zasto', steps = e.steps || [];
-  const tab = (k, t, on) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+on+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
-  const body = z
-    ? ((e.note ? '<p>'+esc(e.note)+'</p>' : '') + (e.feel ? '<p class="feel"><b>Osjećaj:</b> '+esc(e.feel)+'</p>' : '') +
-       (e.source ? '<p class="src"><span class="lb">Izvor</span><a href="'+esc(e.source)+'" target="_blank" rel="noopener">'+esc(e.sourceTitle || 'Otvori izvor')+'</a></p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>'
-    : steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
-  return (wrap || '<section class="exinfo gut">') + '<div class="extabs" role="tablist" aria-label="Upute i zašto">' + tab('upute', 'Upute', !z) + tab('zasto', 'Zašto', z) + '</div>' +
-    '<div class="expanel" id="expanel" role="tabpanel" data-tab="'+(z ? 'zasto' : 'upute')+'" aria-labelledby="extab-'+(z ? 'zasto' : 'upute')+'">' + body + '</div></section>';
+  const pl = !!wrap, steps = e.steps || [], list = pl ? EX_TABS.slice(0, 2) : EX_TABS;
+  let on = exTabOf(S.exTab); if (pl && on === 'opt') on = 'upute';   // the player has no Opterećenje: it shows Upute, S.exTab stays
+  const tab = (k, t) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+(k === on)+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
+  const a = (href, t) => '<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(t)+' ↗</a>';
+  const cues = steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
+  const zones = Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('');
+  let body;
+  if (on === 'upute') {
+    const eq = e.equipment || exEquip(e).join(', ') || 'Bez opreme';
+    const vids = (e.video ? a(e.video, e.videoTitle || 'Pogledaj demonstraciju') : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
+    body = pl ? cues : '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
+  } else if (on === 'cilj' && pl) {
+    const box = zones || e.feel ? '<div class="pfeel">' + (zones ? '<div class="tagrow">'+zones+'</div>' : '') + (e.feel ? '<span><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</span>' : '') + '</div>' : '';
+    body = (box + (e.note ? '<p>'+esc(firstSentence(e.note))+'</p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>';
+  } else if (on === 'cilj') {
+    const facts = (zones ? '<div><dt>Ciljana područja</dt><dd><div class="tagrow">'+zones+'</div></dd></div>' : '') + (e.feel ? '<div><dt>Osjećaj</dt><dd>'+esc(e.feel)+'</dd></div>' : '');
+    body = ((e.note ? '<p>'+esc(e.note)+'</p>' : '') + (facts ? '<dl class="exfacts">'+facts+'</dl>' : '') +
+      (e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>';
+  } else body = exOptHtml(e);
+  return (wrap || '<section class="exinfo gut">') + '<div class="extabs n'+list.length+'" role="tablist" aria-label="O vježbi">' + list.map(x => tab(x[0], x[1])).join('') + '</div>' +
+    '<div class="expanel'+(on === 'opt' ? ' opt' : '')+'" id="expanel" role="tabpanel" data-tab="'+on+'" aria-labelledby="extab-'+on+'">' + body + '</div></section>';
+}
+// the Opterećenje tab: the newest session, the load card (period chips, chart, trend, Tablica), then the last sessions;
+// nothing logged yet: one row that says what to do (no period chips)
+function exOptHtml(e){
+  const h = historyOf(e.id);
+  const head = '<div class="opthd"><span>'+(h.length ? 'Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b>' : '')+'</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
+  if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
+    '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
+  return head + exLoadCard(e, S.loadRange) + exHistHtml(e, h);
 }
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
@@ -1131,18 +1158,10 @@ VIEWS.ex = function(t){
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
+    // 1.6.2: everything about the exercise sits in the three tabs (nothing below them: the old Opterećenje section, Povijest and
+    // the Detalji card moved into Opterećenje, Cilj and Upute)
     exInfoHtml(e) +
-    // Opterećenje: the volume of this exercise over time, then the last sessions (the old sparkline card is gone)
-    '<div class="gut"><div class="psec"><h2>Opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' + exLoadCard(e, S.loadRange) + exHistHtml(e) + '</div>' +
-    '<div class="cards" aria-label="Detalji">' +
-      '<section class="icard" aria-label="Detalji">' +
-        '<span class="lb">Ciljana područja</span><div class="tagrow">' + (Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('') || '<span style="color:var(--text-2)">—</span>') + '</div>' +
-        '<span class="lb">Oprema</span><p>' + esc(e.equipment || exEquip(e).join(', ')) + '</p>' +
-        (e.video ? '<span class="lb">Video</span><p><a href="'+esc(e.video)+'" target="_blank" rel="noopener">'+esc(e.videoTitle || 'Pogledaj demonstraciju')+' ↗</a></p>' : '') +
-        (packVideo(e) ? '<span class="lb">TAE video</span><p><a href="'+esc(packVideo(e))+'" target="_blank" rel="noopener">Pogledaj kod TAE ↗</a></p>' : '') +
-      '</section>' +
-    '</div>' +
-    '<div style="height:8px"></div></div>' +
+    '<div style="height:16px"></div></div>' +
     '<div class="ctrl gut">' +
       '<button class="small" data-a="editEx" data-id="'+esc(e.id)+'">Uredi</button><span></span>' +
       '<button class="ring" data-a="playEx" data-id="'+esc(e.id)+'" aria-label="Pokreni vježbu"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--accent)" stroke-width="3.5"/></svg><span class="n">'+I.play+'</span></button>' +
@@ -1232,7 +1251,7 @@ VIEWS.exEdit = function(t){
       '<div class="field"><label class="label" for="f-eq">Oprema (opis)</label><input id="f-eq" class="input" data-bind="equipment" value="'+esc(d.equipment)+'" placeholder="npr. Uže Ø6 + kolotur"></div>' +
       '<div class="field"><label class="label" for="f-feel">Osjećaj</label><input id="f-feel" class="input" data-bind="feel" value="'+esc(d.feel)+'" placeholder="Gdje se vježba osjeća"></div>' +
       '<div class="field"><label class="label" for="f-steps">Upute (svaki red jedna)</label><textarea id="f-steps" class="input" rows="5" data-bind="stepsText">'+esc(d.stepsText)+'</textarea></div>' +
-      '<div class="field"><label class="label" for="f-note">Zašto</label><textarea id="f-note" class="input" rows="3" data-bind="note">'+esc(d.note)+'</textarea></div>' +
+      '<div class="field"><label class="label" for="f-note">Cilj</label><textarea id="f-note" class="input" rows="3" data-bind="note">'+esc(d.note)+'</textarea></div>' +
       '<div class="field"><label class="label" for="f-video">Link na video demonstraciju (po želji)</label><input id="f-video" class="input" type="url" inputmode="url" data-bind="video" value="'+esc(d.video)+'" placeholder="https://"></div>' +
       (isNew ? '' : '<button class="btn danger" data-a="delEx">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši vježbu') + '</button>') +
     '</div><div style="height:16px"></div></div>' +
@@ -2765,10 +2784,11 @@ function exLoadCard(e, range, compact){
     (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
     chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)])) + '</div>';
 }
-// the history list under the chart: the last sessions, how they went
-function exHistHtml(e){
-  const h = historyOf(e.id); if (!h.length) return '';
-  return '<div class="psec"><h2>Povijest</h2><span>zadnji treninzi</span></div><div class="lc hist">' + h.slice(0, 6).map(x => {
+// the history list under the chart: the last sessions, how they went; the label counts every logged session of the exercise
+function exHistHtml(e, h){
+  h = h || historyOf(e.id); if (!h.length) return '';
+  const n = new Set(h.map(x => x.at)).size;
+  return '<div class="opthd sub"><span>Zadnji treninzi</span><span>'+n+' '+plural(n, 'trening', 'treninga', 'treninga')+'</span></div><div class="lc hist">' + h.slice(0, 6).map(x => {
     const tags = (x.done === false ? '<span class="tag">nije išlo' + (x.lastReps != null ? ' · zadnja serija ' + esc(x.lastReps) + ' pon.' : '') + '</span>' : '') + (x.setsDone != null ? '<span class="tag">' + esc(x.setsDone + ' od ' + (x.sets || 1) + ' ' + plural(x.sets || 1, 'serije', 'serije', 'serija')) + '</span>' : '');
     return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(dose(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
 }
@@ -2939,7 +2959,7 @@ VIEWS.play = function(){
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
         '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p></section>'
-    : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the same Upute | Zašto tabs as the exercise page
+    : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the exercise page's Upute | Cilj tabs, shorter (no Opterećenje)
     : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Upute</span><p style="color:var(--text-2)">Bez uputa.</p></section>';
   return '<div class="view">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
@@ -3135,7 +3155,9 @@ const A = {
   openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
   dose: d => { top().dose = +d.i; render(); },
-  exTab: d => { S.exTab = d.v === 'zasto' ? 'zasto' : 'upute'; const v = app.querySelector('.view'), st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  // the page keeps its place; when the new tab is shorter and the page shrank under the tab row, it scrolls back to the tab row
+  exTab: d => { S.exTab = exTabOf(d.v); const v = app.querySelector('.view'), st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (!v2) return; v2.scrollTop = st;
+    const tl = v2.querySelector('.extabs'), dy = tl ? tl.getBoundingClientRect().top - v2.getBoundingClientRect().top : 0; if (dy < 0) v2.scrollTop = Math.max(0, v2.scrollTop + dy - 12); },
   credit: d => { S.sheet = { kind:'credit', id: d.id }; render(); },
   mediaSwap: d => { S.alt = S.alt || {}; S.alt[d.id] = (S.alt[d.id] || 0) + 1; render(); },
   fav: async d => { const e = S.ex[d.id]; if (!e) return; const n = Object.assign({}, e, { fav: !e.fav }); delete n.id; e.fav = n.fav; render(); await save('exercises', d.id, n); },

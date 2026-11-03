@@ -131,8 +131,6 @@ textarea.input{height:auto;padding:16px 18px;line-height:24px;resize:none}
 .ttl{text-align:center;font-size:17px;line-height:22px;font-weight:600;margin-top:16px;text-wrap:balance}
 .meta{text-align:center;font-size:14px;color:var(--text-body);margin-top:6px}
 .hint{text-align:center;font-size:13px;color:var(--text-2);margin-top:4px;min-height:18px}
-.cards{display:flex;gap:9px;overflow-x:auto;scroll-snap-type:x mandatory;padding:16px max(16px, env(safe-area-inset-left, 0px)) 4px;scroll-padding-inline:max(16px, env(safe-area-inset-left, 0px));scrollbar-width:none}
-.cards::-webkit-scrollbar{display:none}
 .icard{flex:0 0 calc(100% - 40px);scroll-snap-align:start;box-sizing:border-box;padding:18px 16px;border-radius:24px;background:var(--surface);display:flex;flex-direction:column;gap:6px;min-height:220px}
 .icard .lb{font-size:13px;font-weight:500;color:var(--text-2)}
 .icard * + .lb{margin-top:12px}
@@ -371,16 +369,41 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .kgin:placeholder-shown + .u{display:none}
 .input.bsec{height:48px;border-radius:16px;background:var(--surface-2)}
 
-/* exercise page: "Upute" | "Zašto" tabs under the media (the cues with a check, or why + how it should feel + source) */
+/* exercise page: "Upute" | "Cilj" | "Opterećenje" tabs under the media (1.6.2); the player's card has Upute | Cilj */
 .exinfo{margin-top:20px}
 .extabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.extabs.n3{grid-template-columns:1fr 1fr 1fr;gap:8px}
+.extabs.n3 .chip{padding:0 4px;min-width:0}
 .extabs .chip{height:48px}
 .extabs .chip[aria-selected="true"]{border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
 .expanel{display:flex;flex-direction:column;gap:12px;padding:16px 2px 2px}
 .expanel p{margin:0;font-size:16px;line-height:24px;color:var(--text-body)}
-.expanel .feel b{font-weight:600;color:var(--text)}
-.expanel .src{display:flex;flex-direction:column;gap:2px}
 .expanel .lb{font-size:13px;font-weight:500;color:var(--text-2)}
+/* Upute: the equipment row above the cues, the video links after them */
+.exequip{display:flex;gap:10px;align-items:baseline;padding:10px 14px;margin:0 0 6px;border-radius:16px;background:var(--surface);font-size:15px;line-height:20px;color:var(--text-body)}
+.exequip .lb{flex:none}
+.expanel .exvid{display:flex;flex-wrap:wrap;column-gap:18px;font-size:14px;line-height:20px}
+.exvid a{display:inline-flex;align-items:center;min-height:44px}
+/* Cilj: the why, one facts card (target areas, how it should feel), the source on one line */
+.exfacts{margin:4px 0 0;padding:4px 16px;border-radius:22px;background:var(--surface);border:1px solid var(--border)}
+.exfacts > div{padding:12px 0;border-top:1px solid var(--border)}
+.exfacts > div:first-child{border-top:0}
+.exfacts dt{font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:8px}
+.exfacts dd{margin:0;font-size:16px;line-height:22px;color:var(--text-body)}
+.expanel .src{margin:4px 0 0}   /* as the approved mockup draws it: the body text size, the link in the accent colour */
+/* Opterećenje: the header row (newest session, Kako se računa?), the load card, the last sessions */
+.expanel.opt{gap:0;padding-top:8px}
+.opthd{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;margin:0 0 4px 15px}
+.opthd span{font-size:13px;color:var(--text-2);min-width:0}
+.opthd b{font-weight:600;color:var(--text)}
+.opthd.sub{margin-top:22px}
+.emp{display:flex;gap:14px;align-items:flex-start;padding:4px 0 6px}
+.emp .ic{flex:none;width:44px;height:44px;border-radius:14px;background:var(--surface-2);color:var(--text-2);display:flex;align-items:center;justify-content:center}
+.emp .ic svg{width:22px;height:22px}
+.emp b{display:block;font-size:15px;font-weight:600;margin-bottom:4px}
+.expanel .emp p{margin:0;font-size:14px;line-height:20px;color:var(--text-2)}
+/* the player's Cilj: the target areas and Osjećaj in one box, then the first sentence of the why */
+.pfeel{padding:12px 14px;border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:20px;color:var(--text-body)}
 .expanel .none{color:var(--text-2)}
 .bul.ck{color:var(--text-body)}
 .bul.ck::before{display:none}
@@ -476,6 +499,6 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .madd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .madd .input{height:44px;min-width:0;border-radius:14px;padding:0 12px;background:var(--surface-2)}
 .prow .input.tkm{width:96px;height:44px;flex:none;border-radius:14px;padding:0 12px;text-align:right;background:var(--surface-2)}
-/* 1.6.1: the player's card carries the exercise page's Upute | Zašto tabs */
+/* 1.6.1: the player's card carries the exercise page's tabs (1.6.2: Upute | Cilj) */
 .icard.pinfo{gap:0;min-height:0}
 .icard.pinfo .expanel{padding-bottom:0}
