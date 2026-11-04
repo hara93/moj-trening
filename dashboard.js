@@ -35,6 +35,7 @@
   function quickLinks() {
     return '<nav class="db-quick" aria-label="Prečaci iz pregleda">' +
       '<button type="button" data-a="dashboardProtocols">'+icon('protocol')+'<span>Moji protokoli</span></button>' +
+      '<button type="button" data-a="historyList">'+icon('calendar')+'<span>Povijest treninga</span></button>' +
       '<button type="button" data-a="dashboardCalendar">'+icon('calendar')+'<span>Mjesec</span></button>' +
       '<button type="button" data-a="dashboardProgress">'+icon('chart')+'<span>Napredak</span></button></nav>';
   }
@@ -120,7 +121,7 @@
 
   function sessionAction(s) {
     const a = s && s.action;
-    return a && ['openPr','openField','openProg'].includes(a.name) && typeof a.id === 'string' ? ' data-a="'+a.name+'" data-id="'+esc(a.id)+'"' : '';
+    return a && ['openPr','openField','openProg','historyOpen'].includes(a.name) && typeof a.id === 'string' ? ' data-a="'+a.name+'" data-id="'+esc(a.id)+'"' : '';
   }
 
   function contributions(vm, group) {

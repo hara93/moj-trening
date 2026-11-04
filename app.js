@@ -261,7 +261,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.11.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -290,8 +290,8 @@ function persist(){
 // follows the other copy, and every workout either copy logged stays
 function mergeOtherCopy(cur){
   let base = null, theirs = null;
-  try { base = JSON.parse(savedJson); theirs = cleanData(JSON.parse(cur)); } catch(e){ return; }
-  if (!theirs) return;
+  try { base = JSON.parse(savedJson); theirs = cleanData(JSON.parse(cur)); } catch(e){ return false; }
+  if (!base || !theirs) return false;
   const same = (a, b) => (a == null && b == null) || (a != null && b != null && mtCanon(a) === mtCanon(b));
   DATA_COLLS.forEach(c => {
     const ours = collMap(c), b = (base && base[c]) || {}, t = theirs[c] || {};
@@ -299,11 +299,9 @@ function mergeOtherCopy(cur){
       if (same(ours[id], b[id]) && !same(t[id], b[id])) { if (t[id]) ours[id] = Object.assign({}, t[id], { id }); else delete ours[id]; }
     });
   });
-  const key = l => l.at + '|' + l.kind + '|' + l.refId, have = {};
-  S.log.forEach(l => { have[key(l)] = 1; });
-  theirs.log.forEach(l => { if (!have[key(l)]) S.log.push(l); });
-  S.log.sort((a, b) => b.at - a.at);
   S._deleted = Array.from(new Set((S._deleted || []).concat(theirs._deleted)));
+  S.log = HistoryStore.merge(Array.isArray(base.log) ? base.log.filter(x => x && typeof x.at === 'number') : [], S.log, theirs.log, same, S._deleted);
+  return true;
 }
 // another copy saved and nothing is open here: show its data
 function takeOtherCopy(){
@@ -322,7 +320,7 @@ function applyData(d){
   Object.keys(d.protocols||{}).forEach(id => S.pr[id] = Object.assign({}, d.protocols[id], { id }));
   Object.keys(d.field||{}).forEach(id => S.field[id] = Object.assign({}, d.field[id], { id }));
   for (const k in S.prog) delete S.prog[k]; Object.keys(d.programs||{}).forEach(id => S.prog[id] = Object.assign({}, d.programs[id], { id }));
-  S.log = Array.isArray(d.log) ? d.log : [];
+  S.log = HistoryStore.live(Array.isArray(d.log) ? d.log : [], d._deleted).sort((a,b) => b.at-a.at);
 }
 // the item as it is stored on the phone (where a refused save goes back to): null = not stored, undefined = not known
 function storedItem(coll, id){
@@ -410,6 +408,7 @@ function cleanData(d){
     return true;
   });
   out._deleted = (Array.isArray(d._deleted) ? d._deleted : []).filter(x => typeof x === 'string');
+  out.log = HistoryStore.live(out.log, out._deleted);
   if (d.settings !== undefined) out.settings = cleanSettings(d.settings);
   return out;
 }
@@ -459,6 +458,7 @@ function loadOwnMedia(id){
 // a clip read from the phone appears on the screen that asked for it, also in the player and the editor (unless you are typing)
 function mediaShown(){
   const v = top().v, a = document.activeElement;
+  if (v === 'historyEdit') return;
   if (v === 'play' || (FORM_VIEWS[v] && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))) { if (!renderQueued) { renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); } }
   else softRender();
 }
@@ -702,7 +702,7 @@ const shortDate = (t, year) => { const d = new Date(t); return d.getDate() + '. 
 // trainings in a history: a single exercise tried from the library or a test result is not a training
 const nTrainings = log => (log || []).filter(l => l && l.kind !== 'exercise' && l.kind !== 'test').length;
 // what replacing the data would erase from the history: entries of every kind that the incoming data does not have
-const logKey = l => (l.at || 0) + '|' + (l.kind || '') + '|' + (l.refId || l.test || '');
+const logKey = l => l.historyId || (l.at || 0) + '|' + (l.kind || '') + '|' + (l.refId || l.test || '');
 const lostEntries = (log, incoming) => { const have = new Set((incoming || []).filter(Boolean).map(logKey)); return (log || []).filter(l => l && !have.has(logKey(l))); };
 const lostText = lost => { const t = nTrainings(lost), r = lost.filter(l => l.kind === 'test').length, e = lost.filter(l => l.kind === 'exercise').length;
   const p = [t ? t + ' ' + plural(t, 'trening', 'treninga', 'treninga') : '', r ? r + ' ' + plural(r, 'rezultat testa', 'rezultata testa', 'rezultata testa') : '', e ? e + ' ' + plural(e, 'vježba iz knjižnice', 'vježbe iz knjižnice', 'vježbi iz knjižnice') : ''].filter(Boolean);
@@ -754,7 +754,7 @@ function dataHint(){
 /* ---------- render core ---------- */
 const app = document.getElementById('app');
 const scrollMem = {};
-const FORM_VIEWS = { exEdit:1, build:1, play:1 };
+const FORM_VIEWS = { exEdit:1, build:1, play:1, historyEdit:1 };
 let renderQueued = false;
 function softRender(){
   if (FORM_VIEWS[top().v]) return; // never clobber an open form or the running player
@@ -1238,7 +1238,8 @@ VIEWS.dashboard = function(t) {
     unallocatedSessions:actual.coverage.unassignedSessions, partialSessions:actual.coverage.partialSessions, missingPlannedSessions:0 };
   const savedByIndex = new Map(actual.sessions.map(s => [s.index, s.snapshots]));
   for (const [index, log] of status.log.entries()) {
-    sessions.push({ id:String(log.at), date:dateKey(log.at), label:log.name, kind:log.kind, status:'done',
+    sessions.push({ id:log.historyId, date:dateKey(log.at), label:log.name, kind:log.kind, status:'done',
+      action:{ name:'historyOpen', id:log.historyId },
       contributions:muscleContributions(savedByIndex.get(index), 'completed') });
   }
   for (const slot of remaining) {
@@ -1276,6 +1277,84 @@ VIEWS.dashboard = function(t) {
       projected:groups.filter(g => g.actual.equivalent + g.planned.equivalent > 0).length }
   });
 };
+
+const historyWorkout = l => l && (l.kind == null || ['protocol','exercise','field'].includes(l.kind));
+const historyRecord = id => S.log.find(l => historyWorkout(l) && l.historyId === id);
+const pairedMas = (l,test) => l.kind === 'field' && l.refId === 'mas-test-5-min' &&
+  test.kind === 'test' && test.test === 'mas' && test.parentSessionId === l.historyId;
+
+function historyDisplay(l) {
+  if (!l) return null;
+  const items = Array.isArray(l.items) && l.items.map((x,i) => {
+    const snap = MuscleWork.sanitize(l.muscleWork && l.muscleWork[i]);
+    const saved = snap && snap.exerciseId === x.exId && snap.name !== x.exId ? snap.name : x.name;
+    const current = S.ex[x.exId];
+    return { ...x, name:saved || (current && current.name) || x.exId,
+      nameSource:saved ? 'snapshot' : current ? 'library' : 'id' };
+  });
+  return { ...l, id:l.historyId, title:l.name, items:items || undefined,
+    archived:l.kind !== 'field' && !items,
+    linkedMas:S.log.find(x => pairedMas(l,x)) };
+}
+
+VIEWS.history = function(t) {
+  const all = S.log.filter(historyWorkout).sort((a,b) => b.at-a.at), query = norm(t.query).trim();
+  const matches = query ? all.filter(l => norm(l.name).includes(query)) : all;
+  const pageSize = 15, page = Math.min(Math.max(1,t.page || 1), Math.max(1, Math.ceil(matches.length/pageSize)));
+  const entries = matches.slice((page-1)*pageSize, page*pageSize).map(l => ({
+    id:l.historyId, historyId:l.historyId, title:l.name, name:l.name, at:l.at, kind:l.kind, secs:l.secs, srpe:l.srpe,
+    archived:l.kind !== 'field' && !Array.isArray(l.items)
+  }));
+  return TrainingHistory.render({ mode:'list', query:t.query || '', page, pageSize, total:all.length, filteredTotal:matches.length, entries });
+};
+VIEWS.historyDetail = t => TrainingHistory.render({ mode:'detail', entry:historyDisplay(historyRecord(t.id)), deleteConfirm:!!t.original });
+VIEWS.historyEdit = t => TrainingHistory.render({ mode:'edit', entry:historyDisplay(t.original) });
+
+function historyError(message) {
+  const error = document.getElementById('history-edit-error');
+  if (error) {
+    error.hidden = false; error.textContent = message; error.tabIndex = -1;
+    error.focus({ preventScroll:true }); error.scrollIntoView({ block:'nearest' });
+  }
+  else toast(message, true);
+}
+
+function changeHistory(original, replacement) {
+  // Capture edits made in a second tab before comparing the exact record the user opened.
+  let raw;
+  try { raw = localStorage.getItem(STORE_KEY); }
+  catch (_) { historyError('Ne mogu pristupiti povijesti na ovom uređaju. Pokušaj ponovno.'); return false; }
+  if (!raw && savedJson) { historyError('Pohrana se u međuvremenu promijenila. Ponovno otvori aplikaciju.'); return false; }
+  if (raw && savedJson !== raw) {
+    if (!mergeOtherCopy(raw)) { historyError('Noviju kopiju povijesti nije moguće pročitati. Promjena nije spremljena.'); return false; }
+    savedJson = raw; pendingExt = null;
+  }
+  const current = historyRecord(original.historyId);
+  if (!current || mtCanon(current) !== mtCanon(original)) {
+    historyError('Ovaj se zapis u međuvremenu promijenio. Vrati se na popis i ponovno ga otvori.'); return false;
+  }
+  const before = S.log, previousDeleted = S._deleted;
+  const protocol = current.kind === 'protocol' && S.pr[current.refId];
+  const removed = [];
+  const next = [];
+  for (const row of before) {
+    if (row.historyId === current.historyId) {
+      if (replacement) next.push(clone(replacement)); else removed.push(row.historyId);
+    } else if (pairedMas(current,row)) {
+      if (replacement) next.push({ ...row, at:replacement.at }); else removed.push(row.historyId);
+    } else next.push(row);
+  }
+  S.log = next.sort((a,b) => b.at - a.at);
+  if (removed.length) S._deleted = (previousDeleted || []).concat(removed.map(id => 'log/' + id));
+  if (protocol && (!replacement || current.at !== replacement.at || mtCanon(current.items) !== mtCanon(replacement.items))) {
+    S.pr[protocol.id] = HistoryStore.reconcile(protocol, before, S.log, S.ex);
+  }
+  if (persist()) return true;
+  S.log = before; S._deleted = previousDeleted;
+  if (protocol) S.pr[protocol.id] = protocol;
+  historyError('Promjena nije spremljena. Tvoj prethodni zapis je sačuvan.');
+  return false;
+}
 
 // Moji protokoli: Trening A, B, C on top in their order, then the rest by last use (trained or changed);
 // ones never used keep the shipped order (the seed numbers them 1–10)
@@ -1956,7 +2035,7 @@ const masNow = () => { const l = masLast(); return l ? l.value : 0; };
 const masM = (pct, s) => Math.round(masNow() * pct / 100 * s);
 const masTxt = v => String(Math.round(v * 100) / 100).replace('.', ',');
 const masOk = m => m >= 600 && m <= 2400;   // 2 to 8 m/s
-const masEntry = (m, at) => ({ kind:'test', test:'mas', name:'MAS test', value: Math.round(m / 3) / 100, unit:'m/s', dist: m, at: at || Date.now() });
+const masEntry = (m, at) => ({ historyId:uid('h'), kind:'test', test:'mas', name:'MAS test', value: Math.round(m / 3) / 100, unit:'m/s', dist: m, at: at || Date.now() });
 const masOut = (m, done) => masOk(m) ? 'MAS ' + masTxt(m / 300) + ' m/s' + (done ? ' · sprema se kad dodirneš Završi' : '')
   : m > 0 ? 'Upiši metre u 5 minuta, od 600 do 2400 m.' : done ? 'Upiši metre pa dodirni Završi. Bez njih se sprema samo trening.' : '';
 // your distance for one run of a MAS block: metres in its work time, or the time of one lap when the block runs laps
@@ -2443,6 +2522,7 @@ function lrDefault(j){ const it = P.items[j] || {}; return Math.max(0, repsOf(it
 function lastRepsOf(j){ return P.lastReps && P.lastReps[j] != null ? Math.max(0, +P.lastReps[j] || 0) : lrDefault(j); }
 function finish(){
   P.done = true; P.finishedAt = Date.now(); clearInterval(ticker); keepAwake(false);
+  if (!P.historyId) P.historyId = uid('h');
   if (!P.quit) { beep(988, 420, 0.22); buzz([120,80,120]); }
   P.secs = Math.round((P.finishedAt - P.startedAt)/1000);
   P.answers = P.answers || {}; P.lastReps = P.lastReps || {}; P.auto = {};
@@ -2545,7 +2625,7 @@ function savePlay(){
   lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
     answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null,
-    musclePlan:P.musclePlan, at: Date.now() });
+    musclePlan:P.musclePlan, historyId:P.historyId, at: Date.now() });
 }
 function clearPlay(){ try { localStorage.removeItem(PLAY_KEY); } catch(e){} }
 // on the next start: an unfinished session (up to 12 h old) can be continued; a finished one that never reached the history can be saved
@@ -2558,7 +2638,8 @@ function playResume(){
   if (S.sheet || FORM_VIEWS[top().v]) { setTimeout(playResume, 500); return; }
   if ((!s.done && Date.now() - (s.at || 0) > 12 * 3600e3) || (s.mode === 'field' ? !S.field[s.ref.id] : !(s.items || []).length)) { clearPlay(); return; }
   // its save was refused, but a later save stored it after all (it was kept in memory): nothing to offer, never a second entry
-  if (s.done && S.log.some(l => l.at === s.finishedAt && l.kind === s.ref.kind && l.refId === s.ref.id)) { clearPlay(); return; }
+  if (s.done && (S.log.some(l => s.historyId ? l.historyId === s.historyId : l.at === s.finishedAt && l.kind === s.ref.kind && l.refId === s.ref.id) ||
+    (s.historyId && (S._deleted || []).includes('log/' + s.historyId)))) { clearPlay(); return; }
   S.sheet = { kind:'resume', s }; render();
 }
 function restorePlay(s){
@@ -2569,6 +2650,7 @@ function restorePlay(s){
   P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined, dose: f && s.dose === 'season' ? 'season' : f ? 'full' : undefined,
     steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
   if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
+  if (P.done) P.historyId = typeof s.historyId === 'string' && /^h[a-z0-9]+$/.test(s.historyId) ? s.historyId : uid('h');
   // A finished player saved by an older version has no historical muscle profile.
   if (P.done && P.ref.kind === 'protocol') P.musclePlan = P.items.map((it,j) => {
     const snap = MuscleWork.sanitize(Array.isArray(s.musclePlan) && s.musclePlan[j]);
@@ -2595,18 +2677,9 @@ function saveSoFar(){
   if (P.mode === 'ex' && progCandidates().length) return;
   const r = logSession(); leavePlay(); if (r.saved) toast(r.cut || 'Spremljeno je ono što si odradio.');   // never a silent cap; a refused save has said so itself
 }
-// The history is never cut silently. Sessions older than a year keep their date, name and duration but not the per-exercise
-// details (a tenth of the space: this site's storage holds about 2,5 M characters, shared with another app); past 2000 sessions
-// (many years) the oldest are removed and you are told.
+// Keep exercise details independent of age. The existing 2000-record limit is reported when reached.
 const LOG_MAX = 2000;
 function trimLog(){
-  const yr = Date.now() - 365 * DAY_MS;
-  S.log = S.log.map(l => {
-    if (l.at >= yr || !l.items) return l;
-    const summary = { ...l };
-    delete summary.items;
-    return summary;
-  });
   if (S.log.length <= LOG_MAX) return '';
   const n = S.log.length - LOG_MAX; S.log = S.log.slice(0, LOG_MAX);
   // 'zapisa': the history also holds test results and exercises tried from the library
@@ -2635,7 +2708,8 @@ function sessionEntry(){
 function logSession(){
   const entry = sessionEntry();
   // A retry of this finished player must not apply progression or add its muscle work twice.
-  if (S.log.some(l => l.at === entry.at && l.kind === entry.kind && l.refId === entry.refId)) {
+  if (S.log.some(l => l.historyId === P.historyId || (l.at === entry.at && l.kind === entry.kind && l.refId === entry.refId)) ||
+      (S._deleted || []).includes('log/' + P.historyId)) {
     const saved = persist();
     if (saved) clearPlay();
     return { news: [], cut: '', saved };
@@ -2645,10 +2719,12 @@ function logSession(){
   entry.load2 = computeSession(entry); if (entry.srpe) entry.load2.au = entry.srpe * Math.round(entry.load2.min);
   const previousLog = S.log;
   const previousProtocol = entry.kind === 'protocol' && S.pr[entry.refId];
+  entry.historyId = P.historyId;
   const news = applyProgress();
   S.log = [entry, ...previousLog];
   const test = masFromPlay();
-  if (test) S.log.splice(1, 0, test);
+  if (test) S.log.splice(1, 0, { ...test, parentSessionId:entry.historyId });
+  S.log.sort((a,b) => b.at-a.at);
   const cut = trimLog();
   if (!persist()) {
     S.log = previousLog;
@@ -2663,9 +2739,10 @@ const newsMsg = news => (news.length > 1 ? 'Novi prijedlozi' : 'Novi prijedlog')
 function fmtDur(s){ s = Math.round(s || 0); return s < 60 ? s + ' s' : Math.round(s / 60) + ' min'; }
 // reps you actually did in a logged item: per-set reps, only the sets done, the failed last set as you entered it
 function repsDone(x){
+  if (x.historySetsUnknown || x.historyRepsUnknown) return 0;
   const n = x.setsDone != null ? x.setsDone : (x.sets || 1), list = Array.isArray(x.repsList) ? x.repsList : null; let t = 0;
-  for (let s = 1; s <= n; s++) t += (list && list[s - 1]) || x.reps || 0;
-  if (x.done === false && x.lastReps != null && n > 0) t += x.lastReps - ((list && list[n - 1]) || x.reps || 0);
+  for (let s = 1; s <= n; s++) t += list?.[s - 1] ?? x.reps ?? 0;
+  if (x.done === false && x.lastReps != null && n > 0) t += x.lastReps - (list?.[n - 1] ?? x.reps ?? 0);
   return Math.max(0, t);
 }
 // the done screen tells the week as it will be once this session is saved
@@ -2855,8 +2932,7 @@ function bestE1(exId){
   let best = 0; const since = Date.now() - 56 * DAY_MS;
   S.log.forEach(l => { if (l.at < since) return; (l.items || []).forEach(x => {
     if (x.exId !== exId || !(x.kg > 0) || x.measure === 'time' || x.skipped) return;
-    const list = Array.isArray(x.repsList) ? x.repsList.map(Number).filter(v => v > 0) : [];
-    const reps = x.done === false ? (x.lastReps || 0) : list.length ? Math.max.apply(null, list) : (x.reps || 0);
+    const reps = liftReps(x);
     if (reps > 0) best = Math.max(best, e1rm(x.kg, Math.min(reps, 10)));
   }); });
   return best;
@@ -2954,7 +3030,7 @@ function dosingHtml(){
 // added at one load show too
 function liftSeries(h, n){
   const time = !!h.length && h[h.length - 1].measure === 'time';
-  let pts = h.filter(x => (x.measure === 'time') === time);
+  let pts = h.filter(x => (x.measure === 'time') === time && !x.historySetsUnknown && !x.historyRepsUnknown);
   if (!time && pts.some(x => x.kg > 0)) pts = pts.filter(x => x.kg > 0);
   if (n) pts = pts.slice(-n);
   const kg = !time && pts.some(x => x.kg !== pts[0].kg);
@@ -2963,9 +3039,15 @@ function liftSeries(h, n){
 // reps of the best set of a logged exercise with a load, counted the way Doziranje does (bestE1): the failed last set as you
 // entered it; 0 for timed work, sets without kilograms and skipped exercises
 function liftReps(x){
-  if (!(x.kg > 0) || x.measure === 'time' || x.skipped) return 0;
-  const list = Array.isArray(x.repsList) ? x.repsList.map(Number).filter(v => v > 0) : [];
-  return x.done === false ? (x.lastReps || 0) : list.length ? Math.max.apply(null, list) : (x.reps || 0);
+  if (!(x.kg > 0) || x.measure === 'time' || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return 0;
+  const n = x.setsDone ?? x.sets ?? 1;
+  if (!(n > 0)) return 0;
+  const fullSets = x.done === false ? n-1 : n;
+  const reps = (x.repsList || []).slice(0,fullSets);
+  let best = reps.reduce((value,r) => Math.max(value,r), 0);
+  if (fullSets > reps.length) best = Math.max(best,x.reps || 0);
+  if (x.done === false) best = Math.max(best,x.lastReps || 0);
+  return best;
 }
 /* ---------- training load ("Opterećenje"): strength volume, field metres, the season dose ---------- */
 // Strength, per logged item, from what was really done (repsDone: sets done, per-set reps, the failed last set; skipped = 0):
@@ -2990,7 +3072,7 @@ const zeroLoad = () => ({ m: 0, hsr: 0, spr: 0, z: [0, 0, 0, 0], t: 0 });
 function addLoad(a, b, k){ k = k == null ? 1 : k; a.m += b.m * k; a.hsr += b.hsr * k; a.spr += b.spr * k; a.t += (b.t || 0) * k; for (let i = 0; i < 4; i++) a.z[i] += b.z[i] * k; return a; }
 function itemLoad(x){
   const o = { kg: 0, reps: 0, secs: 0, m: 0, hsr: 0, spr: 0, z: [0, 0, 0, 0] };
-  if (!x || x.skipped) return o;
+  if (!x || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return o;
   const sd = x.sides ? 2 : 1, n = x.setsDone != null ? x.setsDone : (x.sets || 1), e = S.ex[x.exId];
   if (x.measure === 'time') o.secs = n * (x.sec || 0) * sd;
   else { o.reps = repsDone(x) * sd; if (x.kg > 0) o.kg = o.reps * x.kg; }
@@ -3005,7 +3087,7 @@ function itemLoad(x){
 // 0 kg ones are left out of that chart), otherwise reps or seconds; metres for an own running drill
 function exLoadSeries(exId, days){
   const e = S.ex[exId], from = days ? calDay(Date.now(), -days) : 0;
-  const h = historyOf(exId).filter(x => x.at >= from).reverse();
+  const h = historyOf(exId).filter(x => x.at >= from && !x.historySetsUnknown && !x.historyRepsUnknown).reverse();
   if (!h.length) return null;
   const time = h[h.length - 1].measure === 'time';
   let pts = h.filter(x => (x.measure === 'time') === time);
@@ -3157,6 +3239,7 @@ function fieldLoad(f, dose, mas){
 const fieldInt = f => f ? fieldLoad(f).li : 0;
 // what a field session in the history did: its stored load, else (an entry from before 1.6) the full session with today's MAS
 function fieldLogLoad(l){
+  if (l.fieldLoadStatus === 'partial') return l.load || null;
   if (l.load && typeof l.load.m === 'number') return l.load;
   const f = S.field[l.refId]; return f ? fieldLoad(f) : null;
 }
@@ -3307,11 +3390,11 @@ function setLoad(e, fx, s, ctx){
 const lmVal = (a, i) => Array.isArray(a) && lmNum(a[i]) && a[i] >= 0 ? a[i] : null;
 // the sets a logged item did: reps (per-set list, a failed last set with its reps and 0 in reserve) or seconds, with the tap
 function lmSets(x){
-  if (!lmObj(x) || x.skipped) return [];
+  if (!lmObj(x) || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return [];
   const N = Math.max(1, Math.round(+x.sets) || 1), done = x.setsDone != null ? Math.max(0, Math.min(N, Math.round(+x.setsDone) || 0)) : N, out = [];
   for (let s = 0; s < done; s++) {
     if (x.measure === 'time') out.push({ t: +x.sec || 0, sir: lmVal(x.sirList, s) });
-    else out.push({ n: lmVal(x.repsList, s) || +x.reps || 0, rir: lmVal(x.rirList, s) });
+    else out.push({ n: lmVal(x.repsList, s) ?? (+x.reps || 0), rir: lmVal(x.rirList, s) });
   }
   if (x.done === false && lmNum(x.lastReps) && out.length && x.measure !== 'time') { out[out.length - 1].n = Math.max(0, x.lastReps); out[out.length - 1].rir = 0; }
   return out;
@@ -3379,7 +3462,12 @@ function weekLoads(n){
   for (let k = n - 1; k >= 0; k--) { const a = calDay(ws, -7 * k); out.push({ ws: a, we: calDay(a, 7), vl: 0, m: 0, hsr: 0 }); }
   S.log.forEach(l => {
     if (!isTraining(l)) return; const w = out.find(o => l.at >= o.ws && l.at < o.we); if (!w) return;
-    if (l.kind === 'field') { const fl = fieldLogLoad(l); if (fl) { w.m += fl.m; w.hsr += fl.hsr; } }
+    if (l.kind === 'field') {
+      const fl = fieldLogLoad(l);
+      if (l.fieldLoadStatus === 'partial') w.partial = true;
+      if (fl) { w.m += fl.m || 0; w.hsr += fl.hsr || 0; }
+    }
+    if ((l.items || []).some(x => x.historySetsUnknown || x.historyRepsUnknown)) w.partial = true;
     (l.items || []).forEach(x => { const il = itemLoad(x); w.vl += il.kg; w.m += il.m; w.hsr += il.hsr; });
   });
   out.forEach(w => { w.ost = Math.max(0, w.m - w.hsr); });
@@ -3479,7 +3567,8 @@ function exHistHtml(e, h, max){
 function weekLoadHtml(){
   const W = weekLoads(8), cur = W[7], prev4 = W.slice(3, 7), avg = k => prev4.reduce((a, w) => a + w[k], 0) / 4;
   const anyVl = W.some(w => w.vl > 0), anyM = W.some(w => w.m > 0);
-  const head = '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
+  const head = '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' +
+    (W.some(w => w.partial) ? '<p class="sub">Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad.</p>' : '');
   if (!anyVl && !anyM) return head + '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad odradiš treninge s kilogramima ili trčanje na terenu, ovdje vidiš koliko si napravio svaki tjedan u zadnjih 8 tjedana.</p>';
   const range = w => shortDate(w.ws) + ' – ' + shortDate(calDay(w.we, -1));
   const pct = (v, a) => a > 0 ? ' (' + (v >= a ? '+' : '−') + Math.abs(Math.round((v - a) / a * 100)) + ' % od prosjeka)' : '';
@@ -3680,6 +3769,7 @@ function lmCardHtml(o){
 function exLastPts(exId){
   for (const l of S.log) {
     if (!l || !Array.isArray(l.items)) continue;
+    if (l.load2Status === 'needsProfile' && l.items.some(x => x.exId === exId && !x.skipped)) return null;
     let B = 0, hit = false;
     l.items.forEach((x, i) => { if (!x || x.exId !== exId || x.skipped) return; hit = true;
       const s = l.load2 && l.load2.v === LM.MV && Array.isArray(l.load2.ex) && lmNum(l.load2.ex[i]) ? l.load2.ex[i] : itemPts(x, { at: l.at }).B; B += s; });
@@ -3939,6 +4029,36 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
+  historyList: () => go({ v:'history', page:1 }),
+  historyOpen: d => go({ v:'historyDetail', id:d.id }),
+  historyPage: d => { const t = top(); t.page = Number(d.page) || 1; render(); app.querySelector('.history')?.scrollTo(0,0); },
+  historyEdit: () => {
+    const row = historyRecord(top().id);
+    if (row) go({ v:'historyEdit', id:row.historyId, original:clone(row) });
+  },
+  historyCancelEdit: () => back(),
+  historySave: () => {
+    const original = top().original, form = document.getElementById('history-edit-form');
+    if (!original || !form) return;
+    const fields = TrainingHistory.readEdit(form, original);
+    if (!fields.ok) { historyError(fields.error); return; }
+    if (!Object.keys(fields.patch).length) { back(); return; }
+    const result = HistoryModel.edit(original, fields.patch);
+    if (!result.ok) { historyError(result.errors.map(e => e.message).join(' ')); return; }
+    if (mtCanon(original) === mtCanon(result.entry)) { back(); return; }
+    if (changeHistory(original,{ ...result.entry, editedAt:Date.now() })) { back(); toast('Izmjene treninga su spremljene.'); }
+  },
+  historyDeleteAsk: () => {
+    const row = historyRecord(top().id);
+    if (!row) return;
+    top().original = clone(row); render();
+  },
+  historyDeleteCancel: () => { delete top().original; render(); },
+  historyDeleteConfirm: () => {
+    const original = top().original;
+    if (!original) return;
+    if (changeHistory(original,null)) { back(); toast('Trening je obrisan iz povijesti.'); }
+  },
   dashboardForecast: () => { const t = top(); t.forecast = !t.forecast; render(); },
   dashboardGroup: d => {
     if (!MuscleWork.groups.some(g => g.id === d.id)) return;
@@ -4334,7 +4454,7 @@ const A = {
     const el = document.getElementById('testv'), raw = String(el ? el.value : '').trim().replace(',', '.'), v = /^\d+(\.\d+)?$/.test(raw) ? +raw : NaN;
     s.v = el ? el.value : '';
     if (!(v >= t.min && v <= t.max)) { toast(t.err); if (el) el.focus(); return; }
-    const e = { kind:'test', test: t.id, name: t.names[s.s || ''], value: Math.round(v * 100) / 100, unit: t.unit, at: Date.now() }; if (s.s) e.side = s.s;
+    const e = { historyId:uid('h'), kind:'test', test: t.id, name: t.names[s.s || ''], value: Math.round(v * 100) / 100, unit: t.unit, at: Date.now() }; if (s.s) e.side = s.s;
     S.log.unshift(e);
     if (!persist()) { S.log = S.log.filter(l => l !== e); render(); return; }   // the phone refused: nothing is kept, the sheet stays
     S.sheet = null; render(); toast('Rezultat je spremljen: ' + progTestVal(e) + '.');
@@ -4384,8 +4504,18 @@ app.addEventListener('click', ev => {
   const fn = A[el.dataset.a];
   if (fn) { ev.preventDefault(); fn(Object.assign({}, el.dataset), el, ev); }
 });
+app.addEventListener('submit', ev => {
+  if (ev.target.id === 'history-edit-form') { ev.preventDefault(); A.historySave(); }
+});
 app.addEventListener('input', ev => {
   const t = ev.target;
+  if (t.id === 'history-query') {
+    const pos = t.selectionStart;
+    top().query = t.value; top().page = 1; render();
+    const next = document.getElementById('history-query');
+    if (next) { next.focus({ preventScroll:true }); if (pos != null) next.setSelectionRange(pos,pos); }
+    return;
+  }
   if (t.id === 'srpe') { rpeSet(t); return; }   // the screen is not rebuilt while sliding
   if (t.id === 'libq') { S.lib.q = t.value; const l = document.getElementById('liblist'); if (l) l.innerHTML = libListHtml(); return; }
   if (t.id === 'masdist') { masTyped(t); return; }

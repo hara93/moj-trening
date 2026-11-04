@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.11.0 — 4. 11. 2026.
+
+- U **Moj pregled → Povijest treninga** možeš pretražiti odrađene treninge i pojedinačne vježbe, od najnovijih prema starijima. Dodir na odrađeni trening u tjednom pregledu otvara isti zapis. U detaljima se vide spremljene serije, ponavljanja, težine, rezerva i podaci o trčanju kada su dostupni.
+- **Uredi zapis** omogućuje ispravak treninga. Novi datum, izvedene serije i podaci o terenskom radu ažuriraju odgovarajući tjedan u planeru i grafovima. Raspodjela serija koristi mišiće spremljene uz odrađeni trening.
+- **Izbriši zapis** traži potvrdu. Ako trening ima izričito povezan MAS rezultat, brišu se zajedno. Ručno spremljeni testovi čuvaju se zasebno.
+- Pojedinosti o vježbama više se ne uklanjaju kad trening navrši godinu dana. Postojeće ograničenje povijesti i dalje iznosi 2000 zapisa.
+
 ## 1.10.0 — 4. 11. 2026.
 
 - **Moj pregled** na prvoj ikoni donje trake prikazuje odrađene treninge, tjednu pokrivenost 18 mišićnih skupina i usporedbu rada po skupinama. Dodir na mišić otvara vježbe i treninge iz kojih dolaze njegove serije. **Moji protokoli** dostupni su iz pregleda.
