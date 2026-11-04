@@ -176,11 +176,11 @@
    "istezanje-pregibaca": {
     "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c"
    },
-   "jednonozni-most-kutija": {
-    "sha256": "da0c69a0f965a605cedc2681ac4f371a0740092d487b0495b87b7e97dca8442a"
-   },
    "jednonozni-most": {
     "sha256": "e71e7a9fc40b77aee9fa389a46b3aaeca4f95d56de90e9ae9a6bd12cbd2fbed1"
+   },
+   "jednonozni-most-kutija": {
+    "sha256": "da0c69a0f965a605cedc2681ac4f371a0740092d487b0495b87b7e97dca8442a"
    },
    "jednonozni-rdl": {
     "sha256": "ad9b7893b453d272c794935dad1c1245e3c515c62417ea8b7ce7337b344b597c"
@@ -214,6 +214,9 @@
    },
    "landmine-row": {
     "sha256": "98c161621dff1ea3c219f0a813fc474001de133fd2dafed5c7c488153e93b2fb"
+   },
+   "landmine-single-leg-hip-thrust": {
+    "sha256": "d01ceaed9bd1b870a43c7dcbca954a92b1daa09e3275671808b5f3ebb818ecc9"
    },
    "landmine-squat": {
     "sha256": "444ad33027514dc3f4d5d78c900ca44415499db2892325e6ca67f03ce0c916d5"
@@ -290,11 +293,11 @@
    "ravnoteza-dosezanje": {
     "sha256": "71e90a95e98dcef437e43cfe0ffe57cb4e94a6b98565005dc4cc159148d8676c"
    },
-   "rdl-bucice": {
-    "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7"
-   },
    "rdl": {
     "sha256": "7f1509845914f36bb72e5cb22cc94aa897340d0c33a73afd5e068fb2d7afd8c9"
+   },
+   "rdl-bucice": {
+    "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7"
    },
    "renegade-row": {
     "sha256": "f80c38dafb7c263aa1090f7eb000ac4c977ddd957eeb91d83d5b72481d55b6c8"

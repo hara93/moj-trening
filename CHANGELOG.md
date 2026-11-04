@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.7.1 — 4. 11. 2026.
+
+- **Nova vježba: Landmine Single-Leg Hip Thrust** (jednonožni potisak kuka s landmine šipkom): slika s tvojim sportašem, upute, cilj, faktori opterećenja. Sada je 153 vježbe.
+
 ## 1.7.0 — 4. 11. 2026.
 
 Prvi korak modela opterećenja.

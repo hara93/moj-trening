@@ -1,4 +1,4 @@
-const CACHE = 'mt-v1.7.0';
+const CACHE = 'mt-v1.7.1';
 const SHELL = ['./', './index.html', './style.css', './hash.js', './data.js', './seed-history.js', './media.js', './pitch.js', './loadfx.js', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
 // pictures, thumbnails and font files stay from one version to the next (a new version must not take away, e.g. offline at
 // the gym, what was already shown); each is saved the first time a screen shows it

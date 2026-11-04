@@ -378,6 +378,10 @@ window.EXMEDIA = {
   "pic": "assets/slike/landmine-row.webp",
   "thumb": "assets/thumb/landmine-row.webp"
  },
+ "landmine-single-leg-hip-thrust": {
+  "pic": "assets/slike/landmine-single-leg-hip-thrust.webp",
+  "thumb": "assets/thumb/landmine-single-leg-hip-thrust.webp"
+ },
  "landmine-squat": {
   "pic": "assets/slike/landmine-squat.webp",
   "thumb": "assets/thumb/landmine-squat.webp"

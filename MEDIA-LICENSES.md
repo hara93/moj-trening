@@ -2,7 +2,7 @@
 
 Popis svih slika i snimki vježbi koje dolaze s aplikacijom. Datoteku radi `tools/build/build_media.py` iz `tools/build/media_sources.json`; ne mijenja se ručno.
 
-## Slike napravljene za aplikaciju (152)
+## Slike napravljene za aplikaciju (153)
 
 Dvodijelne slike u mapi `assets/slike/` (lijevo početni, desno završni položaj) generirane su umjetnom inteligencijom (generatorom slika) prema uputama iz `PROMPTI-ZA-SLIKE.md`, a prije ugradnje pregledane su radi tehnike, oslonaca i položaja glave (3. 11. 2026.). Nisu preuzete iz tuđih izvora, pa za njih ne vrijedi licenca treće strane. U aplikaciji su spremljene kao WebP 1200 × 800, a sličice u mapi `assets/thumb/` (192 × 192) izrezane su iz lijeve polovice slike.
 
@@ -79,6 +79,7 @@ Dvodijelne slike u mapi `assets/slike/` (lijevo početni, desno završni položa
 | Landmine iskorak unatrag | landmine-reverse-lunge.webp |
 | Landmine press iz polukleka | half-kneeling-landmine-press.webp |
 | Landmine rotation | landmine-rotation.webp |
+| Landmine Single-Leg Hip Thrust | landmine-single-leg-hip-thrust.webp |
 | Landmine squat | landmine-squat.webp |
 | Lateral band walk | bocno-hodanje.webp |
 | Lateral bound | lateral-bound.webp |
