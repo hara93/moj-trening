@@ -665,5 +665,5 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .mpick .figs{margin-top:8px;padding:12px 0 10px;border-radius:20px;background:var(--surface)}
 .mleg{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin:8px 2px 0}
 .mleg .sw{display:inline-block;width:12px;height:12px;border-radius:4px;background:var(--accent)}
-.mleg .sw.s{opacity:.45;margin-left:6px}
+.mleg .sw.s{opacity:.3;margin-left:6px}
 .mpick .zch{margin-top:8px}

@@ -2,7 +2,7 @@
    Figure: Tomislav's original anatomical figure (incoming/fig3), paths rounded to 0.1 and made relative.
    BODY.regions = { id: { label_hr, view } }      BODY.ids = region ids in figure order
    BODY.svg({ on:[ids], prime:[ids], size:px tall, view:'both'|'front'|'back', tappable:bool, stroke:px, cls:'' })
-   Colours: outline var(--body-line, #C9CED8) at 70 %, prime var(--accent) at .9, secondary ('on') at .45.
+   Colours: outline var(--body-line, #C9CED8) at 70 %, prime var(--accent) at .9, secondary ('on') at .3 (review: the main muscles stand out even when they are small).
    Every region carries data-region (its id); tappable ones also get class "body-tap" + role/aria-label/aria-pressed (1.8: the
    app reads data-region on the exercise page too). BODY.css holds optional hover/press styles. */
 (function (root) {
@@ -61,7 +61,7 @@
       ids.forEach(function (id) {
         if (R[id][0] !== v) return;
         var st = prime[id] ? 'prime' : on[id] ? 'on' : '';
-        var op = st === 'prime' ? '.9' : st === 'on' ? '.45' : '0';
+        var op = st === 'prime' ? '.9' : st === 'on' ? '.3' : '0';
         out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (st ? ' is-' + st : '') + '"' +
           ' data-region="' + id + '"' + (tap ? ' role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + (st ? 'true' : 'false') + '"' : '') +
           ' style="fill:var(--accent,#5789E8)" fill-opacity="' + op + '" d="' + R[id][2] + '"/>';
