@@ -3207,6 +3207,12 @@ function rpeHtml(){
     '<div class="rpes"><span>1</span><b id="rpelab" aria-live="polite">' + (v ? esc(rpeTxt(v)) : 'povuci za ocjenu') + '</b><span>10</span></div></section>';
 }
 const auHtml = (v, min) => v ? 'Tvoj osjećaj: ' + v + ' × ' + Math.round(min) + ' min = <b>' + thou(v * Math.round(min)) + '</b>' : 'Ocijeni težinu: iz toga se uče tvoji bodovi.';
+// a tap on the track (iOS Safari leaves the thumb where it was): the rating is the tapped spot (thumb 28 px)
+function rpeTap(t, ev){
+  const r = t.getBoundingClientRect(), w = r.width - 28;
+  if (ev && ev.detail > 0 && typeof ev.clientX === 'number' && w > 0 && ev.clientY >= r.top && ev.clientY <= r.bottom) t.value = String(Math.max(1, Math.min(10, 1 + Math.round((ev.clientX - r.left - 14) / w * 9))));
+  rpeSet(t);
+}
 function rpeSet(t){
   if (!P || !P.done) return;
   const v = Math.max(1, Math.min(10, Math.round(+t.value) || 5)); P.srpe = v;
@@ -3841,7 +3847,7 @@ const A = {
 
 app.addEventListener('click', ev => {
   actionSeq++;
-  if (ev.target && ev.target.id === 'srpe') { rpeSet(ev.target); return; }   // a tap on the slider without moving it rates too
+  if (ev.target && ev.target.id === 'srpe') { rpeTap(ev.target, ev); return; }   // a tap on the slider rates where it was tapped
   const el = ev.target.closest('[data-a]');
   if (!el || !app.contains(el)) return;
   if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } S.sheet = null; render(); return; }   // the quit sheet always closes as 'Nastavi trening'
