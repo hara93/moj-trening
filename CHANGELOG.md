@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.8.0 — 4. 11. 2026.
+
+- **Stranica vježbe u tri kartice koje kližeš:** Upute, Cilj i Opterećenje bez gumba gore; stranica stane na ekran bez skrolanja, duži tekst skrola se unutar kartice.
+- **Figura s mišićima:** na kartici Cilj tvoja figura sprijeda i straga s glavnim i pomoćnim mišićima vježbe. Svih 153 vježbi ima precizno određene mišiće.
+- **Filter u Knjižnici:** kategorija, oprema kao ikonice i figura na kojoj dodiruješ mišiće; broj vježbi, „Prikaži N vježbi”, aktivni filteri iznad popisa. Filteri se pamte.
+- **Uređivač vježbe:** mišiće biraš dodirom na figuri (glavni, pomoćni, ukloni); zone se same usklade.
+- Ispravak: nepromijenjene vježbe na mobitelu opet dobivaju novi sadržaj iz nadogradnji (povijest sadržaja do 1.7.1).
+
 ## 1.7.1 — 4. 11. 2026.
 
 - **Nova vježba: Landmine Single-Leg Hip Thrust** (jednonožni potisak kuka s landmine šipkom): slika s tvojim sportašem, upute, cilj, faktori opterećenja. Sada je 153 vježbe.
