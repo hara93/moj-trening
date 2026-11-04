@@ -696,16 +696,16 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .swb .lc.hist .hrow{padding:5px 0}
 .view.exv .media.two{background:transparent}   /* the letterboxed two-panel photo sits on the page colour, no grey bands */
 .view.exv + .ctrl{padding-top:4px}
-#swc-opt .swb{gap:5px;padding-bottom:10px}
+#swc-opt .swb{gap:5px;padding-bottom:8px}
 #swc-opt .swb .lc .hv{margin:0}
 .swb .lc.hist{padding:0}
-/* Tablica and Kako se računa? share the last row: 28 px drawn, 44 px to tap (the hit area reaches 8 px above and below) */
-.c3f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:12px;margin:0}
+/* Tablica and Kako se računa? share the last row: 44 px tall to tap, 28 px of the card (8 px reach into the gap above and the
+   card's bottom padding, which is exactly 8 px, so the card never scrolls for them) */
+.c3f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:12px;margin:-8px 0 -8px}
 .c3f .ltab{margin:0}
-.c3f .ltab summary{position:relative;min-height:28px;min-width:44px;font-size:13.5px}
-.c3f .ltab summary::before,.swb .c3f .howc::before{content:"";position:absolute;inset:-8px -6px}
+.c3f .ltab summary{min-height:44px;min-width:44px;font-size:13.5px}
 .c3f .ltab[open]{flex:1 0 100%;order:2}
-.swb .c3f .howc{position:relative;margin:0 -10px 0 auto;height:28px;font-size:13.5px}
+.swb .c3f .howc{margin:0 -10px 0 auto;height:44px;font-size:13.5px}
 .swb .lc.hist .hrow{padding:4px 0;min-height:0;line-height:18px}
 .swh{padding-top:8px}
 .swb .lc .hv .v{line-height:24px}
