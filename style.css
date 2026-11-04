@@ -702,7 +702,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 /* Tablica and Kako se računa? share the last row: 28 px drawn, 44 px to tap (the hit area reaches 8 px above and below) */
 .c3f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:12px;margin:0}
 .c3f .ltab{margin:0}
-.c3f .ltab summary{position:relative;min-height:28px;font-size:13.5px}
+.c3f .ltab summary{position:relative;min-height:28px;min-width:44px;font-size:13.5px}
 .c3f .ltab summary::before,.swb .c3f .howc::before{content:"";position:absolute;inset:-8px -6px}
 .c3f .ltab[open]{flex:1 0 100%;order:2}
 .swb .c3f .howc{position:relative;margin:0 -10px 0 auto;height:28px;font-size:13.5px}
