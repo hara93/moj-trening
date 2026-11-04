@@ -5,6 +5,7 @@
   --text:#F4F5F6; --text-body:#E8E9EC; --text-2:#A4AAB4; --muted:#676D78;
   --accent:#5789E8; --accent-text:#80A6EC; --tag-bg:#26324A; --danger:#FF8F87; --success:#57D08E;
   --scrim:rgba(25,29,37,.86);
+  --body-line:var(--text-body);   /* 1.8: the muscle figure's outline (body.js draws it at 70 %) */
   --accent-fill:#4271D6;   /* small white text on a blue fill: 4,6:1 (white on --accent is only 3,4:1) */
   --font:'Figtree', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme:dark;
