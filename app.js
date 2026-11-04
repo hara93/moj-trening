@@ -1107,7 +1107,10 @@ function libFiltered(){
   const words = libSearchText(S.lib.q).split(/\s+/).filter(Boolean), c = S.lib.cat, eq = S.lib.eq || [], cs = S.lib.cats || [], mu = S.lib.mus || [];
   // 1.8, the filter: OR inside a section, AND between sections; Zona by the exercise's muscles (main or secondary; 'cijelo' =
   // Cijelo tijelo), the exercises that work a chosen muscle as a main one first
-  const muHit = e => { const m = exMuscles(e); return mu.some(r => r === 'cijelo' ? wholeBody(e) : m.prime.indexOf(r) !== -1 || m.sec.indexOf(r) !== -1); };
+  // (review) the joints have no muscle of their own: an exercise tagged Koljeno / Gležanj (rehab, landings) is found under the
+  // knee / ankle region too, as a secondary one, like the list and the search show it
+  const JOINT = { front_knees: 'Koljeno', front_shins_ankles: 'Gležanj' };
+  const muHit = e => { const m = exMuscles(e); return mu.some(r => r === 'cijelo' ? wholeBody(e) : m.prime.indexOf(r) !== -1 || m.sec.indexOf(r) !== -1 || (!!JOINT[r] && (e.zones || []).indexOf(JOINT[r]) !== -1)); };
   const muRank = e => { if (!mu.length) return 0; const m = exMuscles(e); return mu.some(r => m.prime.indexOf(r) !== -1) ? 0 : 1; };
   const syn = a => a.map(x => LIB_SYN[x] || '').join(' ');
   return Object.values(S.ex).filter(e => {
@@ -3526,6 +3529,8 @@ function sheetHtml(){
     const x = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
     const whole = mu.indexOf('cijelo') !== -1, regs = mu.filter(r => r !== 'cijelo'), fig = bodyFig({ prime: regs, sec: [] }, { act: 'musTap', size: 360, cls: 'filtfig' });
     body = '<div class="fhd"><h3>Filter vježbi</h3><span class="fcnt" id="fcnt" aria-live="polite" aria-label="' + n + ' ' + plural(n, 'vježba', 'vježbe', 'vježbi') + '">' + n + '</span></div>' +
+      (S.lib.cat !== 'Sve' || S.lib.q ? '<div class="chips wrap fpre" role="group" aria-label="Također filtrira">' + (S.lib.cat !== 'Sve' ? '<button class="afc" data-a="filtDrop" data-k="libcat" data-v="'+esc(S.lib.cat)+'" aria-label="Ukloni filter: '+esc(S.lib.cat)+'">'+esc(S.lib.cat)+x+'</button>' : '') +
+        (S.lib.q ? '<button class="afc" data-a="filtDrop" data-k="q" data-v="" aria-label="Ukloni pretragu: '+esc(S.lib.q)+'">„'+esc(S.lib.q)+'“'+x+'</button>' : '') + '</div>' : '') +
       '<div class="fsec"><div class="fl" id="fl-cat">Kategorija</div><div class="chips wrap fcats" role="group" aria-labelledby="fl-cat">' + CATS.map(c => '<button class="chip sm" data-a="catToggle" data-v="'+esc(c)+'" aria-pressed="'+(cs.indexOf(c) !== -1)+'">'+esc(c)+'</button>').join('') + '</div></div>' +
       '<div class="fsec"><div class="fl" id="fl-eq">Oprema</div><div class="eqgrid" role="group" aria-labelledby="fl-eq">' + EQ_TILES.map(t => '<button class="eqt" data-a="eqTile" data-v="'+esc(t[0])+'" aria-pressed="'+tileOn(t)+'"><span class="bx">'+t[2]+'</span><span class="tx">'+esc(t[0])+'</span></button>').join('') + '</div></div>' +
       '<div class="fsec" id="fzona"><div class="fl"><span id="fl-z">Zona</span><button class="chip sm" data-a="musTap" data-v="cijelo" aria-pressed="'+whole+'">Cijelo tijelo</button></div>' +
@@ -3992,18 +3997,23 @@ const A = {
     svg.querySelectorAll('.tipg.on').forEach(x => x.classList.remove('on')); if (g && !on) g.classList.add('on'); },
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
-  eqSheet: () => { S.sheet = { kind:'eq' }; render(); },
+  // (review) the library row's category, when it is one of the data categories, becomes a Kategorija pill of the sheet, so the
+  // count never depends on something the sheet does not show; the other row categories (Favoriti, TRX …) and the search text
+  // show as removable chips at the top of the sheet
+  eqSheet: () => { if (CATS.indexOf(S.lib.cat) !== -1) { const a = S.lib.cats = (S.lib.cats || []).slice(); if (a.indexOf(S.lib.cat) === -1) a.push(S.lib.cat); lsSet('mt.libcats', a); S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); }
+    S.sheet = { kind:'eq' }; render(); },
   // 1.8: the filter sheet (Kategorija, Oprema tiles, Zona on the figure) and the chip row of the filters in use
   catToggle: d => { const a = S.lib.cats = (S.lib.cats || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libcats', a); render(); },
   eqTile: d => { const t = EQ_TILES.find(x => x[0] === d.v); if (!t) return; const on = tileOn(t); S.lib.eq = (S.lib.eq || []).filter(x => t[1].indexOf(x) === -1).concat(on ? [] : t[1]); lsSet('mt.libeq', S.lib.eq); render(); },
   musTap: d => { if (d.v !== 'cijelo' && !MUSCLE_ZONE[d.v]) return; const a = S.lib.mus = (S.lib.mus || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libmus', a); render(); },
   filtDrop: d => {
     if (d.k === 'libcat') { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); }
+    else if (d.k === 'q') S.lib.q = '';
     else if (d.k === 'cat') { S.lib.cats = (S.lib.cats || []).filter(x => x !== d.v); lsSet('mt.libcats', S.lib.cats); }
     else if (d.k === 'mus') { S.lib.mus = (S.lib.mus || []).filter(x => x !== d.v); lsSet('mt.libmus', S.lib.mus); }
     else { const t = EQ_TILES.find(x => x[0] === d.v); S.lib.eq = (S.lib.eq || []).filter(x => !t || t[1].indexOf(x) === -1); lsSet('mt.libeq', S.lib.eq); }
     render(); },
-  filtClear: () => { S.lib.eq = []; S.lib.cats = []; S.lib.mus = []; ['mt.libeq', 'mt.libcats', 'mt.libmus'].forEach(k => lsSet(k, [])); if (!S.sheet) { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); } render(); },
+  filtClear: () => { S.lib.eq = []; S.lib.cats = []; S.lib.mus = []; ['mt.libeq', 'mt.libcats', 'mt.libmus'].forEach(k => lsSet(k, [])); S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); if (S.sheet) S.lib.q = ''; render(); },
   // the exercise page's dots: jump to that card
   swGo: d => { const r = document.getElementById('swrow'), i = +d.i; if (!r || !r.children[i]) return; S.exTab = EX_CARDS[i]; r.scrollTo({ left: swPos(r, i), behavior: stillMotion() ? 'auto' : 'smooth' }); },
   // the editor's muscle picker: main → secondary → off

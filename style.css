@@ -628,6 +628,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .fhd h3{margin:0 !important;font-size:19px !important}
 .fcnt{font-size:17px;font-weight:600;color:var(--accent-text);font-variant-numeric:tabular-nums}
 .fsec{margin-top:12px;flex:none}
+.fpre{gap:8px;margin-top:4px;flex:none}
 .fl{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:600;margin:0 2px 10px}
 .chip.sm{height:44px;padding:0 13px;border-radius:12px;font-size:13.5px}
 .fcats{gap:7px}
