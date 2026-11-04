@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.9.1 — 4. 11. 2026.
+
+- Nova figura tijela sprijeda i straga prikazuje mišićna područja u knjižnici, na kartici vježbe i pri uređivanju vježbe. Postojeće oznake glavnih i pomoćnih mišića vrijede i na novoj figuri.
+
 ## 1.9.0 — 4. 11. 2026.
 
 - Gumb **Mjesec** uz tjedni raspored otvara kalendar s treninzima i utakmicama. Dodir na datum prikazuje cijeli raspored i postojeća upozorenja za taj dan.

@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Build body.js from the supplied anatomy-interactive.svg (no runtime dependencies).
+
+Usage: python3 tools/build/build_body.py [source.svg[.gz]] [body.js]
+The bundled source is a lossless, compressed copy of the supplied SVG.
+The traced SVG is reduced to polylines within 0.5 source pixels (less than 0.1
+screen pixels in the exercise cards), retaining its named masks and outlines.
+Background/rest masks are omitted; both views use matching cropped frames.
+"""
+import hashlib
+import gzip
+import json
+import math
+import re
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+LABELS = {
+    'front_chest': 'Prsa', 'front_shoulders': 'Prednja ramena',
+    'front_biceps': 'Biceps', 'front_forearms': 'Podlaktice',
+    'front_abs': 'Trbušni mišići', 'front_obliques': 'Kosi trbušni mišići',
+    'front_hip_flexors': 'Pregibači kuka', 'front_adductors': 'Aduktori',
+    'front_quadriceps': 'Kvadriceps', 'front_knees': 'Koljena',
+    'front_shins_ankles': 'Potkoljenice i gležnjevi',
+    'back_upper_back_trapezius': 'Gornja leđa i trapez',
+    'back_latissimus': 'Široki leđni mišići', 'back_lower_back': 'Donja leđa',
+    'back_rear_shoulders': 'Stražnja ramena', 'back_triceps': 'Triceps',
+    'back_glutes': 'Gluteus', 'back_gluteus_medius': 'Gluteus medius',
+    'back_hamstrings': 'Stražnja loža', 'back_calves': 'Listovi',
+}
+TOLERANCE = 0.35
+ORIGIN = {'front': (250, 40), 'back': (870, 40)}
+
+
+def distance(point, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    if dx == dy == 0:
+        return math.hypot(point[0] - a[0], point[1] - a[1])
+    t = max(0, min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / (dx * dx + dy * dy)))
+    return math.hypot(point[0] - a[0] - t * dx, point[1] - a[1] - t * dy)
+
+
+def reduce_points(points):
+    keep = {0, len(points) - 1}
+    pending = [(0, len(points) - 1)]
+    while pending:
+        a, b = pending.pop()
+        if b <= a + 1:
+            continue
+        index = max(range(a + 1, b), key=lambda i: distance(points[i], points[a], points[b]))
+        if distance(points[index], points[a], points[b]) > TOLERANCE:
+            keep.add(index)
+            pending.extend(((a, index), (index, b)))
+    return [points[i] for i in sorted(keep)]
+
+
+def quadratic(a, c, b):
+    if distance(c, a, b) <= 0.1:
+        return [b]
+    ac = ((a[0] + c[0]) / 2, (a[1] + c[1]) / 2)
+    cb = ((c[0] + b[0]) / 2, (c[1] + b[1]) / 2)
+    middle = ((ac[0] + cb[0]) / 2, (ac[1] + cb[1]) / 2)
+    return quadratic(a, ac, middle) + quadratic(middle, cb, b)
+
+
+def subpaths(d):
+    tokens = re.findall(r'[A-Za-z]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?', d)
+    out, points, i = [], [], 0
+    while i < len(tokens):
+        command = tokens[i]
+        i += 1
+        if command not in ('M', 'L', 'Q', 'Z'):
+            raise ValueError('Unsupported source command ' + command)
+        if command == 'Z':
+            if points[-1] != points[0]:
+                points.append(points[0])
+            out.append((points, True))
+            points = []
+            continue
+        count = 4 if command == 'Q' else 2
+        values = [float(x) for x in tokens[i:i + count]]
+        i += count
+        if command == 'M':
+            if points:
+                out.append((points, False))
+            points = [(values[0], values[1])]
+        elif command == 'L':
+            points.append((values[0], values[1]))
+        else:
+            points.extend(quadratic(points[-1], (values[0], values[1]), (values[2], values[3])))
+    if points:
+        out.append((points, False))
+    return out
+
+
+def compact(d, view):
+    x0, y0 = ORIGIN[view]
+    def number(n):
+        return format(n, '.1f').rstrip('0').rstrip('.') if n else '0'
+    result = []
+    for points, closed in subpaths(d):
+        points = reduce_points(points)
+        if closed:
+            points = points[:-1]
+        for i, (x, y) in enumerate(points):
+            result.append(('M' if i == 0 else 'L') + number(round(x - x0, 1)) + ' ' + number(round(y - y0, 1)))
+        if closed:
+            result.append('Z')
+    return ''.join(result)
+
+
+def main():
+    source = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).with_name('anatomy-interactive.svg.gz')
+    output = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).resolve().parents[2] / 'body.js'
+    raw = source.read_bytes()
+    if source.suffix == '.gz':
+        raw = gzip.decompress(raw)
+    root = ET.fromstring(raw)
+    groups = {node.get('id'): node for node in root}
+    paths = {node.get('id'): node.get('d') for node in groups['muscle-regions'] if node.get('id') in LABELS}
+    if set(paths) != set(LABELS):
+        raise ValueError('The supplied figure must contain all 20 known regions')
+    regions = {key: [key.split('_')[0], label, compact(paths[key], key.split('_')[0])] for key, label in LABELS.items()}
+    outlines = {'front': [], 'back': []}
+    for node in groups['anatomy-outlines']:
+        d = node.get('d', '')
+        points = [p for segment, _ in subpaths(d) for p in segment]
+        if not points:
+            continue
+        xs = [p[0] for p in points]
+        if min(xs) < 800 < max(xs):
+            raise ValueError('Outline crosses the front/back frames')
+        view = 'front' if max(xs) < 800 else 'back'
+        outlines[view].append(compact(d, view))
+    data = {'regions': regions, 'lines': {view: ''.join(ds) for view, ds in outlines.items()}}
+    template = Path(__file__).with_name('body-runtime.js.in').read_text()
+    digest = hashlib.sha256(raw).hexdigest()
+    output.write_text('// Generated by tools/build/build_body.py from anatomy-interactive.svg.\n'
+                      '// Source SHA-256: ' + digest + '\n' + template.replace('/* BODY_DATA */', json.dumps(data, ensure_ascii=False, separators=(',', ':'))))
+    print(str(output) + ': ' + str(output.stat().st_size) + ' bytes, 20 regions, 2 combined outline paths')
+
+
+if __name__ == '__main__':
+    main()
