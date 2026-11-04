@@ -748,3 +748,19 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
   .view.exv .media.two.b32{aspect-ratio:3/2}
   .view.exv .media.two .badge{right:auto}
 }
+/* 1.8.2: the room for the full-width photo and a 4th cue comes from tighter spacing around the title, doses and inside the cards
+   (cues 15 px on 20 px lines) and a figure of at most 142 px in Ciljana područja: each card still fits without scrolling at 393 × 852 */
+.view.exv .ttl{margin-top:6px}
+.view.exv .meta{margin-top:0}
+.view.exv .dz{margin-top:0;margin-bottom:-6px}
+.view.exv .exswipe{margin-top:6px}
+.swb{padding:11px 16px 10px;gap:9px}
+.swb .pz{font-size:15px;line-height:20px}
+.swb .cues{gap:4px}
+.swb .cues .bul{font-size:15px;line-height:20px}
+.swb .cues .bul::before{margin-top:7px}
+.view.exv .tgt .tf .body-fig{width:auto;max-height:142px}
+.swh{padding-top:6px}
+#swc-opt .swb{gap:4px}
+.swb .lc.hist .hrow{padding:3px 0}
+#swc-opt .swb .opthd{min-height:18px;line-height:18px}
