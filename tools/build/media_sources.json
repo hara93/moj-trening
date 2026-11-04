@@ -77,7 +77,9 @@
    "bicikl-intervali": {
     "sha256": "a4eff33e218a21c6460152ecf245302b87abb48e63bf7c548aa08d17e7f2f4b3",
     "picBot": 376,
-    "picY": 50
+    "picY": 30,
+    "picTop": 14,
+    "picBox": "16:10"
    },
    "bird-dog": {
     "sha256": "c7f8b266188179fdc328eefcc4bc8960855990378035253a1b74ce12b7bc8f9a",
@@ -422,7 +424,9 @@
    },
    "single-leg-calf-raise": {
     "sha256": "508e34b7c1861382063685e96ded6b1d9d3a68909d3d7b36c681d382e89b63c6",
-    "picY": 35
+    "picY": 4,
+    "picTop": 8,
+    "picBox": "16:10"
    },
    "single-leg-hip-thrust": {
     "sha256": "673def3623d7e55090a50c911aac6bf4261f1c5353f0382f7407eec1f913bbb6",
@@ -454,7 +458,9 @@
    },
    "spustanje-stepenica": {
     "sha256": "2b85b706316c4214b7621bafad96f2f142643694deea97ee6c6e83e7848090b6",
-    "picY": 8
+    "picY": 22,
+    "picBc": 362,
+    "picBox": "16:10"
    },
    "squat-jump": {
     "sha256": "acf2418e3dfc159d819548a46d5241b21cd8324199bac2b21a603a1bbebad381",

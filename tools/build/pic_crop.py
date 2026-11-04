@@ -3,7 +3,9 @@
 # hold the athlete and the equipment, the box it needs and the vertical position (CSS object-position y, in %) that keeps them whole.
 #   content: on a 600 x 400 grid, pixels of the athlete's colours and the usual equipment (blue shirt and shoes, skin, hair, red / orange
 #     cones and plates, teal / green plates and mats; ath_hit below), rows with at least 3 such pixels; dark equipment the colours miss
-#     (a black box, the bike's stand) is added by hand in media_sources.json as "picBot" / "picTop" (rows of the same grid). The racks,
+#     (a black box, the bike's stand) is added by hand in media_sources.json as "picBot" / "picTop" (rows of the same grid; review 1.8.2:
+#     near-black hair, which the brown-hair colour misses, as "picTop" too: bicikl-intervali, single-leg-calf-raise; a colour rule for
+#     it also matched shadows and moved 52 crops) and grey equipment under the pill as "picBc" (the stair of spustanje-stepenica). The racks,
 #     wall bars and TRX anchors that run off the picture's edge are background: cutting a little more of them cuts nothing.
 #   box: 5:3 (360 of the 400 rows visible) when the content fits with 6 rows (or at least 3) to spare at both ends, else 16:10 (375
 #     rows), else the whole 3:2. A sided exercise's "Lijeva i desna" pill sits on the bottom edge (10 px inside, x 220..380 of 600):
@@ -47,6 +49,7 @@ def crop(i, o, sided):
     if 'picTop' in o: t = min(t, o['picTop'])
     if 'picBot' in o: b = max(b, o['picBot'])
     bc = max([y for y in range(H) if any(hit(x, y) for x in range(220, 380))] or [-1]) if sided else -1
+    if sided and 'picBc' in o: bc = max(bc, o['picBc'])
     for name, vis in BOX:
         ov = H - vis
         if not ov: return name, 50, (t, b)

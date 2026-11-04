@@ -110,7 +110,8 @@ window.EXMEDIA = {
  },
  "bicikl-intervali": {
   "pic": "assets/slike/bicikl-intervali.webp",
-  "picY": 50,
+  "picY": 30,
+  "picBox": "16:10",
   "thumb": "assets/thumb/bicikl-intervali.webp"
  },
  "bird-dog": {
@@ -672,7 +673,8 @@ window.EXMEDIA = {
  },
  "single-leg-calf-raise": {
   "pic": "assets/slike/single-leg-calf-raise.webp",
-  "picY": 35,
+  "picY": 4,
+  "picBox": "16:10",
   "thumb": "assets/thumb/single-leg-calf-raise.webp"
  },
  "single-leg-hip-thrust": {
@@ -712,7 +714,8 @@ window.EXMEDIA = {
  },
  "spustanje-stepenica": {
   "pic": "assets/slike/spustanje-stepenica.webp",
-  "picY": 8,
+  "picY": 22,
+  "picBox": "16:10",
   "thumb": "assets/thumb/spustanje-stepenica.webp"
  },
  "squat-jump": {
