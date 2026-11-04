@@ -10,9 +10,7 @@ and `stroke-width` changed from 2 to 1.75; the drawing paths are unchanged.
 | Tile | Tabler icon |
 |---|---|
 | Bez opreme | stretching-2 |
-| Šipka | barbell |
 | Girja | dumbbell |
-| Pilates lopta | exercise-ball |
 | Čunjevi | traffic-cone |
 | Ostalo | dots |
 
