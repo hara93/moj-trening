@@ -1250,6 +1250,8 @@ function exInfoHtml(e, wrap){
     const vids = !SHOW_SOURCES ? '' : (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
     body = pl ? cues : '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
   } else if (on === 'cilj' && pl) {
+    // (review) the player names the same main muscles as the exercise page's Cilj card (not the zones)
+    const pm = exMuscles(e), zones = pm.prime.length ? muscleTags({ prime: pm.prime, sec: [] }) : muscleTags({ prime: pm.sec, sec: [] });
     const box = zones || e.feel ? '<div class="pfeel">' + (zones ? '<div class="tagrow">'+zones+'</div>' : '') + (e.feel ? '<span><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</span>' : '') + '</div>' : '';
     body = (box + (e.note ? '<p>'+esc(firstSentence(e.note))+'</p>' : '')) || '<p class="none">Dodaj objašnjenje u uređivanju.</p>';
   } else if (on === 'cilj') {
