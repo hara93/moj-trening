@@ -731,3 +731,20 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
   .view.exv .media.two .badge{right:calc(8.59% - 13px)}   /* band = (1 − 1.5 × 7/16) / 2 = 17.2 % of the width */
   .tgt .tf .body-fig{width:auto;height:136px}
 }
+
+/* 1.8.2: the two-panel picture spans the full width again (no bands at the sides), in a low 5:3 box: object-fit cover, cropped at the
+   top / bottom at the picture's own height (picY, inline object-position), a taller 16:10 or the whole 3:2 where the content needs it
+   (b1610, b32); on the exercise page and in the player, at every phone size. Own videos and photos share the box, whole (contain). */
+.media.two,.view.exv .media,.view.exv .media.two{aspect-ratio:5/3}
+.media.two.b1610,.view.exv .media.two.b1610{aspect-ratio:16/10}
+.media.two.b32,.view.exv .media.two.b32{aspect-ratio:3/2}
+.media.two img,.media.two img.fit,.view.exv .media.two img{object-fit:cover}
+/* the "Lijeva i desna" pill sits on the photo's bottom edge, centred (10 px over the picture, where pic_crop.py keeps the strip free) */
+.view.exv .media.two .badge{left:50%;right:auto;top:auto;bottom:-12px;transform:translateX(-50%);writing-mode:horizontal-tb;width:max-content;max-width:calc(100% - 32px);height:22px;padding:0 10px;border-radius:11px;font-size:12px;line-height:22px;background:var(--surface-2);color:var(--text-body);box-shadow:0 0 0 2px var(--bg)}
+.view.exv .media.two:has(.badge){margin-bottom:8px}
+@media (max-height:700px){
+  .view.exv .media,.view.exv .media.two{aspect-ratio:5/3}
+  .view.exv .media.two.b1610{aspect-ratio:16/10}
+  .view.exv .media.two.b32{aspect-ratio:3/2}
+  .view.exv .media.two .badge{right:auto}
+}

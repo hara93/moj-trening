@@ -239,7 +239,7 @@ function mediaList(e){
   if (!e) return [];
   const out = [], m = (window.EXMEDIA || {})[e.id] || {}, lic = { credit: m.credit, url: m.url, lic: m.lic, cid: e.id };
   if (e.media && MEDIA[e.media]) out.push({ type: e.mediaType === 'image' ? 'image' : 'video', src: MEDIA[e.media], own: true });
-  if (m.pic) out.push({ type: 'image', src: m.pic, thumb: m.thumb, two: true });
+  if (m.pic) out.push({ type: 'image', src: m.pic, thumb: m.thumb, two: true, picY: m.picY, picBox: m.picBox });
   if (SHOW_SOURCES && m.video) out.push(Object.assign({ type: 'video', src: m.video, poster: m.img, thumb: m.thumb }, lic));
   if (MEDIA['pack:' + e.id]) out.push({ type: 'image', src: MEDIA['pack:' + e.id], credit: SHOW_SOURCES ? (S.pack && S.pack.credit) || 'Privatni paket slika' : '', pack: true });
   if (SHOW_SOURCES && m.img && !m.video) out.push(Object.assign({ type: 'image', src: m.img, thumb: m.thumb }, lic));
@@ -1203,13 +1203,16 @@ function swapHtml(e, m){
   const v = m.next.type === 'video';
   return '<button class="swapm" data-a="mediaSwap" data-id="'+esc(e.id)+'" aria-label="'+(v ? 'Prikaži video' : 'Prikaži drugu sliku')+'">'+(v ? 'Video' : 'Slika')+'</button>';
 }
+// 1.8.2: a two-panel picture spans the full width in a low 5:3 box (a taller 16:10 or the whole 3:2 where the content needs it) and is
+// cropped at the top / bottom at its own height (media.js picY, tools/build/pic_crop.py), so no athlete, bar, box or foot is cut
+const PIC_BOX = { '16:10': ' b1610', '3:2': ' b32' };
 function mediaHtml(e, badge, inPlayer){
   const m = exMedia(e); let inner, credit = '';
   if (m) {
-    inner = m.type === 'image' ? '<img class="fit" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'">' : videoTag(m);
+    inner = m.type === 'image' ? '<img class="fit" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'"'+(m.two ? ' style="object-position:50% '+(Number.isFinite(m.picY) ? m.picY : 50)+'%"' : '')+'>' : videoTag(m);
     credit = creditHtml(m) + swapHtml(e, m);
   } else inner = '<div class="ph">' + pathIcon(catIcon(e && e.cat), 44) + (inPlayer ? '' : '<span>Dodaj svoj video ili sliku u uređivanju</span>') + '</div>';   // mid-workout only the icon
-  return '<div class="media'+(m && m.two ? ' two' : '')+'">' + inner + credit + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
+  return '<div class="media'+(m && m.two ? ' two' + (PIC_BOX[m.picBox] || '') : '')+'">' + inner + credit + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
 }
 // the protocol header: the first exercise's best media, whole (a two-panel picture is never cropped), with its credit and poster
 function heroHtml(p, fm){

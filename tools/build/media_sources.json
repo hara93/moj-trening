@@ -6,463 +6,624 @@
   "note": "Dvodijelne slike (lijevo početni, desno završni položaj), generirane umjetnom inteligencijom prema uputama iz PROMPTI-ZA-SLIKE.md i pregledane radi tehnike i položaja glave. sha256 je otisak izvorne JPEG slike 1536 × 1024 iz koje je napravljena WebP slika.",
   "images": {
    "90-90": {
-    "sha256": "3415374950b5c4dd19c5f705d9afa52ae069666c4f2ea27c6b25ccaee5a6c3a1"
+    "sha256": "3415374950b5c4dd19c5f705d9afa52ae069666c4f2ea27c6b25ccaee5a6c3a1",
+    "picY": 54
    },
    "a-skip": {
-    "sha256": "7d4a65aeeb6ff5889d4940ef95a7ec9bcfeb180d91171d2eb376d452e16e9628"
+    "sha256": "7d4a65aeeb6ff5889d4940ef95a7ec9bcfeb180d91171d2eb376d452e16e9628",
+    "picY": 20
    },
    "ab-wheel-rollout": {
-    "sha256": "232cd2a41e176a87cbb3be944958c421f916cb5811f3d8252d85f218fcb7dea1"
+    "sha256": "232cd2a41e176a87cbb3be944958c421f916cb5811f3d8252d85f218fcb7dea1",
+    "picY": 50
    },
    "abdukcija-stojeci": {
-    "sha256": "1b349764e04296750d64fec4ed8643ecce2404cb46a095f5c8a56eea3f9fa1f7"
+    "sha256": "1b349764e04296750d64fec4ed8643ecce2404cb46a095f5c8a56eea3f9fa1f7",
+    "picY": 0,
+    "picBox": "16:10"
    },
    "adductor-squeeze": {
-    "sha256": "3cd83aea3258b70c4b06b545bff558d9286250adc2467b1fe8d56a727162638f"
+    "sha256": "3cd83aea3258b70c4b06b545bff558d9286250adc2467b1fe8d56a727162638f",
+    "picY": 50
    },
    "adukcija-na-boku": {
-    "sha256": "b4e460b35dba867fb972ee5ede13262843e01b35dbb9c2e40ad830b18e763dab"
+    "sha256": "b4e460b35dba867fb972ee5ede13262843e01b35dbb9c2e40ad830b18e763dab",
+    "picY": 50
    },
    "arrowhead-agility": {
-    "sha256": "5ae3abc97be4b8227e35dc14291f435b4cf93c2fbf1e0c29c0f0e14aec0b8c1b"
+    "sha256": "5ae3abc97be4b8227e35dc14291f435b4cf93c2fbf1e0c29c0f0e14aec0b8c1b",
+    "picY": 50
    },
    "b-skip": {
-    "sha256": "b9245de716dd1b5a31bdf6d423c4000b9d0988812e398385c98596b04d18ba88"
+    "sha256": "b9245de716dd1b5a31bdf6d423c4000b9d0988812e398385c98596b04d18ba88",
+    "picY": 15
    },
    "back-squat": {
-    "sha256": "f31817fd08eabe83d9299de802165e0830bd3f6c91bd736b1f0773d3b4900aa7"
+    "sha256": "f31817fd08eabe83d9299de802165e0830bd3f6c91bd736b1f0773d3b4900aa7",
+    "picY": 18
    },
    "ball-hamstring-curl": {
-    "sha256": "f1f61a79615c2bc8366a6412fa3d485b0e7f60664bf40e03cdb3215ff1f77149"
+    "sha256": "f1f61a79615c2bc8366a6412fa3d485b0e7f60664bf40e03cdb3215ff1f77149",
+    "picY": 50
    },
    "ball-rollout": {
-    "sha256": "e863432a359a8659c006e56601202260087cab9bf75998e1171b12dc680ca2e4"
+    "sha256": "e863432a359a8659c006e56601202260087cab9bf75998e1171b12dc680ca2e4",
+    "picY": 50
    },
    "band-pull-apart": {
-    "sha256": "c74abe809dc7d87e19909e3ff52eeeb0877efe3656c89bb59f39b52692f8f242"
+    "sha256": "c74abe809dc7d87e19909e3ff52eeeb0877efe3656c89bb59f39b52692f8f242",
+    "picY": 16
    },
    "banded-glute-bridge": {
-    "sha256": "3e4e8e6be88f10f27796442cb38043d551c4ee3f1ee460bb5ce86582e8a39f89"
+    "sha256": "3e4e8e6be88f10f27796442cb38043d551c4ee3f1ee460bb5ce86582e8a39f89",
+    "picY": 50
    },
    "banded-march": {
-    "sha256": "0a0f35f640444e30666320840b76952468534adcd09e27767a8bd19532a89057"
+    "sha256": "0a0f35f640444e30666320840b76952468534adcd09e27767a8bd19532a89057",
+    "picY": 8
    },
    "bb-row": {
-    "sha256": "da586ebe23a4f0717343df2c9f4966ad88413493cba350f99ea3913eaf0dd786"
+    "sha256": "da586ebe23a4f0717343df2c9f4966ad88413493cba350f99ea3913eaf0dd786",
+    "picY": 50
    },
    "bb-squat-jump": {
-    "sha256": "0f6fd80323013cc63d2ca325aeacf66b5a86450aecd848aa3ae99bd19a85a884"
+    "sha256": "0f6fd80323013cc63d2ca325aeacf66b5a86450aecd848aa3ae99bd19a85a884",
+    "picY": 15
    },
    "bench-press": {
-    "sha256": "0b4fb462d51bb09ef139c140e2e0dff7bd92366830ba082b471bbc24cc695551"
+    "sha256": "0b4fb462d51bb09ef139c140e2e0dff7bd92366830ba082b471bbc24cc695551",
+    "picY": 55
    },
    "bicikl-intervali": {
-    "sha256": "a4eff33e218a21c6460152ecf245302b87abb48e63bf7c548aa08d17e7f2f4b3"
+    "sha256": "a4eff33e218a21c6460152ecf245302b87abb48e63bf7c548aa08d17e7f2f4b3",
+    "picBot": 376,
+    "picY": 50
    },
    "bird-dog": {
-    "sha256": "c7f8b266188179fdc328eefcc4bc8960855990378035253a1b74ce12b7bc8f9a"
+    "sha256": "c7f8b266188179fdc328eefcc4bc8960855990378035253a1b74ce12b7bc8f9a",
+    "picY": 50
    },
    "bocni-plank": {
-    "sha256": "e165a45e66cbd8c208aef073ffc082f0d64c6ebb445ed8cd85481addb675291e"
+    "sha256": "e165a45e66cbd8c208aef073ffc082f0d64c6ebb445ed8cd85481addb675291e",
+    "picY": 50
    },
    "bocni-step-up": {
-    "sha256": "572f031a630340c542dfbfc3068f0e81cbc3cb4dd6f4f48d43dca3a74b324f10"
+    "sha256": "572f031a630340c542dfbfc3068f0e81cbc3cb4dd6f4f48d43dca3a74b324f10",
+    "picY": 10,
+    "picBox": "16:10"
    },
    "bocno-hodanje": {
-    "sha256": "faafa641dcd41c41b7bc3c8d83c0bf18236b609bf072462ffab7f6e4d8355b56"
+    "sha256": "faafa641dcd41c41b7bc3c8d83c0bf18236b609bf072462ffab7f6e4d8355b56",
+    "picY": 35
    },
    "bocno-podizanje": {
-    "sha256": "8996dcb58fbbe467976a486b210d3546dedc56043ec14ef2938afc1602309e94"
+    "sha256": "8996dcb58fbbe467976a486b210d3546dedc56043ec14ef2938afc1602309e94",
+    "picY": 50
    },
    "box-jump": {
-    "sha256": "9c509ad0693ce5737512f50baf7c5b1bc7da773ab99a32f0132b4bae35dbadac"
+    "sha256": "9c509ad0693ce5737512f50baf7c5b1bc7da773ab99a32f0132b4bae35dbadac",
+    "picY": 50
    },
    "broad-jump": {
-    "sha256": "d04034c4f57349ddcbba2f22dc04195b1285a1a06b85ae9b3ef800778f024c98"
+    "sha256": "d04034c4f57349ddcbba2f22dc04195b1285a1a06b85ae9b3ef800778f024c98",
+    "picY": 50
    },
    "bugarski": {
-    "sha256": "f76b254ad8397b62cb05082657df1d3b6e895de0cd68d5d4578ed035446c3606"
+    "sha256": "f76b254ad8397b62cb05082657df1d3b6e895de0cd68d5d4578ed035446c3606",
+    "picY": 19
    },
    "chin-up": {
-    "sha256": "86904454230e571aae9661a8870d5aa43ffe1dc76fd214f617bdde4b027695a0"
+    "sha256": "86904454230e571aae9661a8870d5aa43ffe1dc76fd214f617bdde4b027695a0",
+    "picY": 0
    },
    "cord-chop": {
-    "sha256": "9a44e4267b73d957e4c36417eafc883c033669817ecde917d9988fdff27f75c0"
+    "sha256": "9a44e4267b73d957e4c36417eafc883c033669817ecde917d9988fdff27f75c0",
+    "picY": 51
    },
    "cord-lift": {
-    "sha256": "21744b1072b2ff746e3d286b31c1072206d5addc01088767be3207f20dfe3586"
+    "sha256": "21744b1072b2ff746e3d286b31c1072206d5addc01088767be3207f20dfe3586",
+    "picY": 50
    },
    "db-bench-press": {
-    "sha256": "9777a560d84c3cd3fc4734f7437d689d327eef45e183358860b5051eead35651"
+    "sha256": "9777a560d84c3cd3fc4734f7437d689d327eef45e183358860b5051eead35651",
+    "picY": 50
    },
    "db-lateral-lunge": {
-    "sha256": "c0740cda95465049d60c7dee136e51a49542d7d647efbd9281f946f0f384c27c"
+    "sha256": "c0740cda95465049d60c7dee136e51a49542d7d647efbd9281f946f0f384c27c",
+    "picY": 10
    },
    "db-overhead-press": {
-    "sha256": "619adf882bd21b52bf1cb753505edc7b793ad8b6e9fff9523139b26c1d48c81b"
+    "sha256": "619adf882bd21b52bf1cb753505edc7b793ad8b6e9fff9523139b26c1d48c81b",
+    "picY": 4
    },
    "db-reverse-lunge": {
-    "sha256": "c6a6a5b604fdd884e82a15ef8104ead0053dd5e547cd6e485d03bdd28f493dc3"
+    "sha256": "c6a6a5b604fdd884e82a15ef8104ead0053dd5e547cd6e485d03bdd28f493dc3",
+    "picY": 12
    },
    "db-row": {
-    "sha256": "0b04ff6e0e4a4947c195912a1e6a95be0a90e9fd1f703622ff0a91ed3e799f8d"
+    "sha256": "0b04ff6e0e4a4947c195912a1e6a95be0a90e9fd1f703622ff0a91ed3e799f8d",
+    "picY": 50
    },
    "dead-bug": {
-    "sha256": "69ace574dd7f8b11f89a3a58539ccbd7e976ae03d00ddd547166db075d8d5886"
+    "sha256": "69ace574dd7f8b11f89a3a58539ccbd7e976ae03d00ddd547166db075d8d5886",
+    "picY": 50
    },
    "deadlift": {
-    "sha256": "6092fbd34585dd6b95323b07a24506c22933c2d05015d7cfabc9b4d641c5a905"
+    "sha256": "6092fbd34585dd6b95323b07a24506c22933c2d05015d7cfabc9b4d641c5a905",
+    "picY": 16
    },
    "depth-drop": {
-    "sha256": "595f8d465245a1f75c7456db3c7f3a11f09339842fbe370908d95fe2d7a6009d"
+    "sha256": "595f8d465245a1f75c7456db3c7f3a11f09339842fbe370908d95fe2d7a6009d",
+    "picY": 22
    },
    "depth-jump": {
-    "sha256": "5870c2eb3733e704e8e3148ac630eddf31591b629c1805950974785555da2747"
+    "sha256": "5870c2eb3733e704e8e3148ac630eddf31591b629c1805950974785555da2747",
+    "picBot": 375,
+    "picY": 50,
+    "picBox": "3:2"
    },
    "face-pull-cord": {
-    "sha256": "a780be4fbd277df866cbbd8f4b32fc98cb480b2ca39d254955d6251fb5fd5c34"
+    "sha256": "a780be4fbd277df866cbbd8f4b32fc98cb480b2ca39d254955d6251fb5fd5c34",
+    "picY": 28
    },
    "farmers-walk": {
-    "sha256": "59a1cfb692c81d3c4d2ca2307e2b69ccaa05fd38836878c48a3dfaec8648164d"
+    "sha256": "59a1cfb692c81d3c4d2ca2307e2b69ccaa05fd38836878c48a3dfaec8648164d",
+    "picY": 19
    },
    "figure-4": {
-    "sha256": "750d6c3925c40b8e585aa6b3a7925e16eced424e0a6b990a2408cacd368a7421"
+    "sha256": "750d6c3925c40b8e585aa6b3a7925e16eced424e0a6b990a2408cacd368a7421",
+    "picY": 50
    },
    "four-cone-drill": {
-    "sha256": "da0b15f34b8313ac6fdd5045773d990d1fdee2157b97659501ea51b3a8999477"
+    "sha256": "da0b15f34b8313ac6fdd5045773d990d1fdee2157b97659501ea51b3a8999477",
+    "picY": 50
    },
    "front-squat": {
-    "sha256": "118ebd71aaa0fb5d7ff021d716bb17c36d5b1678b228ddc8b17d73a77cafc9ab"
+    "sha256": "118ebd71aaa0fb5d7ff021d716bb17c36d5b1678b228ddc8b17d73a77cafc9ab",
+    "picY": 55
    },
    "goblet-squat": {
-    "sha256": "3326897dd94a5a1fdf70a8caff3d1a6f0ed3e5b578fa8685973329d3aa121b0f"
+    "sha256": "3326897dd94a5a1fdf70a8caff3d1a6f0ed3e5b578fa8685973329d3aa121b0f",
+    "picY": 11
    },
    "half-kneeling-db-press": {
-    "sha256": "06e0dc9a32b18d08dff1b2cea166262cf3722286233df5cb7379226368e0a206"
+    "sha256": "06e0dc9a32b18d08dff1b2cea166262cf3722286233df5cb7379226368e0a206",
+    "picY": 30
    },
    "half-kneeling-landmine-press": {
-    "sha256": "abfaa619628181931b6f94e31a9f6a7a4cab04d32848e2728d42455e9f645f56"
+    "sha256": "abfaa619628181931b6f94e31a9f6a7a4cab04d32848e2728d42455e9f645f56",
+    "picY": 50
    },
    "hanging-knee-raise": {
-    "sha256": "4283457f78a638aa9cacd84384b9adfe12f6dada79cc3c2efb30d02e53fa5294"
+    "sha256": "4283457f78a638aa9cacd84384b9adfe12f6dada79cc3c2efb30d02e53fa5294",
+    "picY": 2
    },
    "high-knees": {
-    "sha256": "5f767bfba79e006bc14bd2d708ff928ad17a94d57c6bd26902945d769c8dc66f"
+    "sha256": "5f767bfba79e006bc14bd2d708ff928ad17a94d57c6bd26902945d769c8dc66f",
+    "picY": 8
    },
    "hip-airplane": {
-    "sha256": "4eaecf8c0d3c3ec7f0d80ef68c4ab91bf028e8e723aa98ac04847b2cc60cde4d"
+    "sha256": "4eaecf8c0d3c3ec7f0d80ef68c4ab91bf028e8e723aa98ac04847b2cc60cde4d",
+    "picY": 0
    },
    "hip-thrust": {
-    "sha256": "58b356d341521e40285788565dc465770e71aa9d89eaab0315486482dd0d4d77"
+    "sha256": "58b356d341521e40285788565dc465770e71aa9d89eaab0315486482dd0d4d77",
+    "picY": 50
    },
    "hollow-hold": {
-    "sha256": "752b1ef34134688408bd4284e8f3849237de32ddb82469e3bf60ce58a21de096"
+    "sha256": "752b1ef34134688408bd4284e8f3849237de32ddb82469e3bf60ce58a21de096",
+    "picY": 50
    },
    "incline-db-press": {
-    "sha256": "4e047ffdffd0a5425aaa1e0513920bf8ebd3d2e6560754458719d344f41cfd8c"
+    "sha256": "4e047ffdffd0a5425aaa1e0513920bf8ebd3d2e6560754458719d344f41cfd8c",
+    "picY": 45
    },
    "intervali-30-30": {
-    "sha256": "4890ce7534a4c310c87bf905bc8f0af690d62db9186f596a7b455908472dd28a"
+    "sha256": "4890ce7534a4c310c87bf905bc8f0af690d62db9186f596a7b455908472dd28a",
+    "picY": 50
    },
    "inverted-hamstring": {
-    "sha256": "044836dfc21668a10fff113044459b9004d000fba3453c0cf3775d074f5dfaea"
+    "sha256": "044836dfc21668a10fff113044459b9004d000fba3453c0cf3775d074f5dfaea",
+    "picY": 8
    },
    "inverted-row": {
-    "sha256": "8777d9e83840a4fdf080f519ef9cb9a2d8fdbd363aa57094674b64e194996293"
+    "sha256": "8777d9e83840a4fdf080f519ef9cb9a2d8fdbd363aa57094674b64e194996293",
+    "picY": 50
    },
    "iso-abdukcija": {
-    "sha256": "7f446b05758641b5ac10a4b09b1f9e13d988fbd0a32be77529cd90968e06eb0f"
+    "sha256": "7f446b05758641b5ac10a4b09b1f9e13d988fbd0a32be77529cd90968e06eb0f",
+    "picY": 16
    },
    "istezanje-pregibaca": {
-    "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c"
+    "sha256": "5f03c6bf6e454f306bfa61e447e6bfb0fd27180ad1189aa7cc962efa2e8d4e8c",
+    "picY": 50
    },
    "jednonozni-most": {
-    "sha256": "e71e7a9fc40b77aee9fa389a46b3aaeca4f95d56de90e9ae9a6bd12cbd2fbed1"
+    "sha256": "e71e7a9fc40b77aee9fa389a46b3aaeca4f95d56de90e9ae9a6bd12cbd2fbed1",
+    "picY": 50
    },
    "jednonozni-most-kutija": {
-    "sha256": "da0c69a0f965a605cedc2681ac4f371a0740092d487b0495b87b7e97dca8442a"
+    "sha256": "da0c69a0f965a605cedc2681ac4f371a0740092d487b0495b87b7e97dca8442a",
+    "picY": 50
    },
    "jednonozni-rdl": {
-    "sha256": "ad9b7893b453d272c794935dad1c1245e3c515c62417ea8b7ce7337b344b597c"
+    "sha256": "ad9b7893b453d272c794935dad1c1245e3c515c62417ea8b7ce7337b344b597c",
+    "picY": 12
    },
    "kb-swing": {
-    "sha256": "bb8a6fc181dd001ba1e23cac00407f8e13b94044601e826821c8be46a3fd7080"
+    "sha256": "bb8a6fc181dd001ba1e23cac00407f8e13b94044601e826821c8be46a3fd7080",
+    "picY": 19
    },
    "klizanje-pete": {
-    "sha256": "37a916841d3e60eb2f1ecbe1902a92a6b9d0b72e42aa859f59b33fd8cacb5f5e"
+    "sha256": "37a916841d3e60eb2f1ecbe1902a92a6b9d0b72e42aa859f59b33fd8cacb5f5e",
+    "picY": 50
    },
    "knee-control-band": {
-    "sha256": "feb03b2a652e823f7504f79e723fcaf64c045b8ef657722db86c83d144ed17ed"
+    "sha256": "feb03b2a652e823f7504f79e723fcaf64c045b8ef657722db86c83d144ed17ed",
+    "picY": 42
    },
    "knee-to-wall": {
-    "sha256": "e63eb1bfefe909c283ba4e20920644743c5ee92856dfc1767fee8db864cdaf15"
+    "sha256": "e63eb1bfefe909c283ba4e20920644743c5ee92856dfc1767fee8db864cdaf15",
+    "picY": 16
    },
    "kopenhagen-duga": {
-    "sha256": "cc068f8723c5eb48d37238883c3a71ec0fb981885a8887cb5daab2e43de4fa03"
+    "sha256": "cc068f8723c5eb48d37238883c3a71ec0fb981885a8887cb5daab2e43de4fa03",
+    "picY": 50
    },
    "kopenhagen-kratka": {
-    "sha256": "f4fbbe049ec0fe02d69f4530f009ed222edc236a885fc693b1300411fddc5822"
+    "sha256": "f4fbbe049ec0fe02d69f4530f009ed222edc236a885fc693b1300411fddc5822",
+    "picY": 50
    },
    "lagano-trcanje": {
-    "sha256": "0da9873c320ff3e35014f8cf86bb29db25f3b36e2bedccc4b0151659b4467519"
+    "sha256": "0da9873c320ff3e35014f8cf86bb29db25f3b36e2bedccc4b0151659b4467519",
+    "picY": 10
    },
    "landmine-reverse-lunge": {
-    "sha256": "d6e99b07edb27fa42eb5580a588a2fd55ee52c618304482424c8954202922bbf"
+    "sha256": "d6e99b07edb27fa42eb5580a588a2fd55ee52c618304482424c8954202922bbf",
+    "picY": 50
    },
    "landmine-rotation": {
-    "sha256": "424aa657594b9eae72cca721bf5b762d82f96b32a5023715d102c8fa3e71ae3d"
+    "sha256": "424aa657594b9eae72cca721bf5b762d82f96b32a5023715d102c8fa3e71ae3d",
+    "picY": 26
    },
    "landmine-row": {
-    "sha256": "98c161621dff1ea3c219f0a813fc474001de133fd2dafed5c7c488153e93b2fb"
+    "sha256": "98c161621dff1ea3c219f0a813fc474001de133fd2dafed5c7c488153e93b2fb",
+    "picY": 50
    },
    "landmine-single-leg-hip-thrust": {
-    "sha256": "d01ceaed9bd1b870a43c7dcbca954a92b1daa09e3275671808b5f3ebb818ecc9"
+    "sha256": "d01ceaed9bd1b870a43c7dcbca954a92b1daa09e3275671808b5f3ebb818ecc9",
+    "picY": 50
    },
    "landmine-squat": {
-    "sha256": "444ad33027514dc3f4d5d78c900ca44415499db2892325e6ca67f03ce0c916d5"
+    "sha256": "444ad33027514dc3f4d5d78c900ca44415499db2892325e6ca67f03ce0c916d5",
+    "picY": 21
    },
    "lateral-bound": {
-    "sha256": "e9c3f391c74c538de0e270d42d0b003b0d08c7417be2a9d33f475d71943bea2d"
+    "sha256": "e9c3f391c74c538de0e270d42d0b003b0d08c7417be2a9d33f475d71943bea2d",
+    "picY": 50
    },
    "lateral-shuffle": {
-    "sha256": "c27ba706f5bb69cbb31562d2ee3d5be34a992272ec62a2fd13aa928d8f386e50"
+    "sha256": "c27ba706f5bb69cbb31562d2ee3d5be34a992272ec62a2fd13aa928d8f386e50",
+    "picY": 50
    },
    "leg-cradle": {
-    "sha256": "2c9329bf2323010fb936bf804857023ecbef4d8c56efe59ca6615487a29e7d04"
+    "sha256": "2c9329bf2323010fb936bf804857023ecbef4d8c56efe59ca6615487a29e7d04",
+    "picY": 9
    },
    "leg-swings": {
-    "sha256": "5935e88fc47f60c63dce8438616dcb2ed698127557048affaa71f75650bb2bf7"
+    "sha256": "5935e88fc47f60c63dce8438616dcb2ed698127557048affaa71f75650bb2bf7",
+    "picY": 11
    },
    "med-ball-broad-jump": {
-    "sha256": "cce975a55b819bc4fc3bfaac34ac6f602b9d3222b93dc9e4c4f5df4a90dd2c09"
+    "sha256": "cce975a55b819bc4fc3bfaac34ac6f602b9d3222b93dc9e4c4f5df4a90dd2c09",
+    "picY": 49
    },
    "med-ball-chest-pass": {
-    "sha256": "6364bb5c3cd53aa2a8119cc8b5ce835760c2e95d1004cbc33e13720f341bb83a"
+    "sha256": "6364bb5c3cd53aa2a8119cc8b5ce835760c2e95d1004cbc33e13720f341bb83a",
+    "picY": 45
    },
    "med-ball-rotational-throw": {
-    "sha256": "5a4bba3d0f9944dc44ccad0e4d2bf921252fb60fbab651d23d8f4a782038a860"
+    "sha256": "5a4bba3d0f9944dc44ccad0e4d2bf921252fb60fbab651d23d8f4a782038a860",
+    "picY": 50
    },
    "med-ball-slam": {
-    "sha256": "0965a5899da81dda444d6ded20a9cfa30d00e31706269956583614531f6a3700"
+    "sha256": "0965a5899da81dda444d6ded20a9cfa30d00e31706269956583614531f6a3700",
+    "picY": 0
    },
    "monster-walk": {
-    "sha256": "8dc4ad945d05377cc59209155745ee73da029360d11a7d8736c8eb93a66421cb"
+    "sha256": "8dc4ad945d05377cc59209155745ee73da029360d11a7d8736c8eb93a66421cb",
+    "picY": 38
    },
    "most": {
-    "sha256": "173f06074c3e794362f4a94dc9a4b6e2462368eb751832ae91d7337a60392bee"
+    "sha256": "173f06074c3e794362f4a94dc9a4b6e2462368eb751832ae91d7337a60392bee",
+    "picY": 50
    },
    "mountain-climbers": {
-    "sha256": "074e949168c61bee623beb80b9aacdb0fa73cab8e49f546212c048a858ba1a28"
+    "sha256": "074e949168c61bee623beb80b9aacdb0fa73cab8e49f546212c048a858ba1a28",
+    "picY": 50
    },
    "njihanje-aduktora": {
-    "sha256": "2b0b1b7114487113a1ad74fb6bfcf8358f31885d341e4c02ac63813618e7c104"
+    "sha256": "2b0b1b7114487113a1ad74fb6bfcf8358f31885d341e4c02ac63813618e7c104",
+    "picY": 50
    },
    "njihanje-unatrag": {
-    "sha256": "08c67ac6bb0509837ec3f654745087bfb93bcae1010b7477c5910c5aace17ee1"
+    "sha256": "08c67ac6bb0509837ec3f654745087bfb93bcae1010b7477c5910c5aace17ee1",
+    "picY": 50
    },
    "nordic-curl": {
-    "sha256": "767309bbf5ba0a27b85cfa1d901c43b509bd6706db40da42d80aea0a6a6a6caf"
+    "sha256": "767309bbf5ba0a27b85cfa1d901c43b509bd6706db40da42d80aea0a6a6a6caf",
+    "picY": 28
    },
    "open-book": {
-    "sha256": "d7ac40fd7e1fa2230ab9fb8101bcd2bb93418890c0b693cc24bf90cfdf3676cb"
+    "sha256": "d7ac40fd7e1fa2230ab9fb8101bcd2bb93418890c0b693cc24bf90cfdf3676cb",
+    "picY": 50
    },
    "pallof-press": {
-    "sha256": "7208f3c8b7ffdf9dd448b79e4a9eda031c90acd43842f21cb11283962af06f03"
+    "sha256": "7208f3c8b7ffdf9dd448b79e4a9eda031c90acd43842f21cb11283962af06f03",
+    "picY": 30,
+    "picBox": "16:10"
    },
    "plank": {
-    "sha256": "11a17230b86bc9fb4a74be5b768dff016f823fd4d7d30615915eb66bf12f2b06"
+    "sha256": "11a17230b86bc9fb4a74be5b768dff016f823fd4d7d30615915eb66bf12f2b06",
+    "picY": 50
    },
    "pogo-jumps": {
-    "sha256": "9afcbe92d85f74bae8750955341cfe23f27163fcb13e298d6bb4dd63c52baf66"
+    "sha256": "9afcbe92d85f74bae8750955341cfe23f27163fcb13e298d6bb4dd63c52baf66",
+    "picY": 21
    },
    "pro-agility-5-10-5": {
-    "sha256": "9603aba08e13ab9586e2b3f70a471833abe73576a020df56d515de9d4823cb6e"
+    "sha256": "9603aba08e13ab9586e2b3f70a471833abe73576a020df56d515de9d4823cb6e",
+    "picY": 50
    },
    "progresivna-ubrzanja": {
-    "sha256": "91dc5cde64a517fd4de7cbd9e009ee0ac11c1f7ffcc91ad3c559db11f3f9245a"
+    "sha256": "91dc5cde64a517fd4de7cbd9e009ee0ac11c1f7ffcc91ad3c559db11f3f9245a",
+    "picY": 50
    },
    "pull-up": {
-    "sha256": "c9ad3519e937bfc029df003f9c0f983b89a44e0effd2b26c12f0d713a380dce1"
+    "sha256": "c9ad3519e937bfc029df003f9c0f983b89a44e0effd2b26c12f0d713a380dce1",
+    "picY": 2
    },
    "push-up": {
-    "sha256": "df62d383e98fde6ff81a1d23459c07988d50ce50801fdebe4ad015aefbd1f4d0"
+    "sha256": "df62d383e98fde6ff81a1d23459c07988d50ce50801fdebe4ad015aefbd1f4d0",
+    "picY": 50
    },
    "quad-stretch": {
-    "sha256": "e5d92168983c1ab94827a9b04d727eb29cf3740d651d5ea8e3d31cc39496418c"
+    "sha256": "e5d92168983c1ab94827a9b04d727eb29cf3740d651d5ea8e3d31cc39496418c",
+    "picY": 0,
+    "picBox": "16:10"
    },
    "ravnoteza-dosezanje": {
-    "sha256": "71e90a95e98dcef437e43cfe0ffe57cb4e94a6b98565005dc4cc159148d8676c"
+    "sha256": "71e90a95e98dcef437e43cfe0ffe57cb4e94a6b98565005dc4cc159148d8676c",
+    "picY": 15
    },
    "rdl": {
-    "sha256": "7f1509845914f36bb72e5cb22cc94aa897340d0c33a73afd5e068fb2d7afd8c9"
+    "sha256": "7f1509845914f36bb72e5cb22cc94aa897340d0c33a73afd5e068fb2d7afd8c9",
+    "picY": 11
    },
    "rdl-bucice": {
-    "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7"
+    "sha256": "a5d9f428a41e14bcf70fe81f6b61bfe1dec34e99d8bd40781870db5a29f14ec7",
+    "picY": 10
    },
    "renegade-row": {
-    "sha256": "f80c38dafb7c263aa1090f7eb000ac4c977ddd957eeb91d83d5b72481d55b6c8"
+    "sha256": "f80c38dafb7c263aa1090f7eb000ac4c977ddd957eeb91d83d5b72481d55b6c8",
+    "picY": 50
    },
    "shoulder-taps": {
-    "sha256": "5f957483640c4e8162d7f2d93cfed91744a3a46a60df72ba82f667febee217e7"
+    "sha256": "5f957483640c4e8162d7f2d93cfed91744a3a46a60df72ba82f667febee217e7",
+    "picY": 50
    },
    "side-plank": {
-    "sha256": "3fb866c06d8d7c101dc33e35db12ba43968794f6114a8e59b0892bf85ce6d9e9"
+    "sha256": "3fb866c06d8d7c101dc33e35db12ba43968794f6114a8e59b0892bf85ce6d9e9",
+    "picY": 50
    },
    "single-arm-db-press": {
-    "sha256": "1ea203a0fab714e9f8760a35396117b7b4b9780e1294b79681083c98c35f7ef8"
+    "sha256": "1ea203a0fab714e9f8760a35396117b7b4b9780e1294b79681083c98c35f7ef8",
+    "picY": 50
    },
    "single-leg-calf-raise": {
-    "sha256": "508e34b7c1861382063685e96ded6b1d9d3a68909d3d7b36c681d382e89b63c6"
+    "sha256": "508e34b7c1861382063685e96ded6b1d9d3a68909d3d7b36c681d382e89b63c6",
+    "picY": 35
    },
    "single-leg-hip-thrust": {
-    "sha256": "673def3623d7e55090a50c911aac6bf4261f1c5353f0382f7407eec1f913bbb6"
+    "sha256": "673def3623d7e55090a50c911aac6bf4261f1c5353f0382f7407eec1f913bbb6",
+    "picY": 50
    },
    "single-leg-hop": {
-    "sha256": "de2d33db8b251835ca3cd6dcd36201eaed0b8e6dffa5667bec08c2d27e932937"
+    "sha256": "de2d33db8b251835ca3cd6dcd36201eaed0b8e6dffa5667bec08c2d27e932937",
+    "picY": 50
    },
    "skoljka": {
-    "sha256": "d47907e7e664c581a191b2eddc9af089484d97c3ee7f46be29365ddf6ac0f483"
+    "sha256": "d47907e7e664c581a191b2eddc9af089484d97c3ee7f46be29365ddf6ac0f483",
+    "picY": 50
    },
    "soleus-raise": {
-    "sha256": "21e3d2d13fa9336f79fa4238ba5cc47f157842fb519c3e08d26dbe77aa12a40e"
+    "sha256": "21e3d2d13fa9336f79fa4238ba5cc47f157842fb519c3e08d26dbe77aa12a40e",
+    "picY": 36
    },
    "split-cucanj": {
-    "sha256": "3a542a29a4dde539f5ffce5a2e8df0517e5e5abf9a96355fa36c45cae6c2200d"
+    "sha256": "3a542a29a4dde539f5ffce5a2e8df0517e5e5abf9a96355fa36c45cae6c2200d",
+    "picY": 20
    },
    "split-squat-jump": {
-    "sha256": "dacda004760a2eef170ee4c2da3f5c0adbe6c7f3dbf942f3d406617943253c80"
+    "sha256": "dacda004760a2eef170ee4c2da3f5c0adbe6c7f3dbf942f3d406617943253c80",
+    "picY": 50
    },
    "sprint-backpedal-sprint": {
-    "sha256": "aadd8061b53157c81e5972b6874e91b3c5b21e5925ed182b74d75180a8644037"
+    "sha256": "aadd8061b53157c81e5972b6874e91b3c5b21e5925ed182b74d75180a8644037",
+    "picY": 40
    },
    "spustanje-stepenica": {
-    "sha256": "2b85b706316c4214b7621bafad96f2f142643694deea97ee6c6e83e7848090b6"
+    "sha256": "2b85b706316c4214b7621bafad96f2f142643694deea97ee6c6e83e7848090b6",
+    "picY": 8
    },
    "squat-jump": {
-    "sha256": "acf2418e3dfc159d819548a46d5241b21cd8324199bac2b21a603a1bbebad381"
+    "sha256": "acf2418e3dfc159d819548a46d5241b21cd8324199bac2b21a603a1bbebad381",
+    "picY": 8
    },
    "step-up": {
-    "sha256": "a712ce34484d7daaebc24074038538d6ac2e5f458ecd62a4c705c0665627b36e"
+    "sha256": "a712ce34484d7daaebc24074038538d6ac2e5f458ecd62a4c705c0665627b36e",
+    "picY": 12,
+    "picBox": "16:10"
    },
    "stezanje-straznjice": {
-    "sha256": "f4678739ec69da6f161eb1f4d02571f94227f17f355ab44f4c1ead3d98316310"
+    "sha256": "f4678739ec69da6f161eb1f4d02571f94227f17f355ab44f4c1ead3d98316310",
+    "picY": 50
    },
    "stir-the-pot": {
-    "sha256": "a5445ddae1bcbbb86d97a086aa2315b27ab8a21b935bfe74df8c5cfad10645dc"
+    "sha256": "a5445ddae1bcbbb86d97a086aa2315b27ab8a21b935bfe74df8c5cfad10645dc",
+    "picY": 50
    },
    "suitcase-carry": {
-    "sha256": "875ffd1a3afa1e6bd379e4b7a217f420e9f659ec65926adfe1aa9efa6e47cec7"
+    "sha256": "875ffd1a3afa1e6bd379e4b7a217f420e9f659ec65926adfe1aa9efa6e47cec7",
+    "picY": 15
    },
    "t-test": {
-    "sha256": "2b5ec9d3c632f7ed9d9f0f8bda291571bb854763b53b97b27e6a27d19a329f74"
+    "sha256": "2b5ec9d3c632f7ed9d9f0f8bda291571bb854763b53b97b27e6a27d19a329f74",
+    "picY": 42
    },
    "tibialis-raise": {
-    "sha256": "1604154a26023ae0a3f4e8c64290a66c333acf9be2d9f63afdcd7cf779d1ba05"
+    "sha256": "1604154a26023ae0a3f4e8c64290a66c333acf9be2d9f63afdcd7cf779d1ba05",
+    "picY": 19
    },
    "trap-bar": {
-    "sha256": "ab33b38e72b591f8758090d5ba69aa5973386803a8499ae5bacaf434fb2ae358"
+    "sha256": "ab33b38e72b591f8758090d5ba69aa5973386803a8499ae5bacaf434fb2ae358",
+    "picY": 18
    },
    "trx-atomic-push-up": {
-    "sha256": "a6da8556230eb1cd03439ad47a12e616d1733934e347e67e1c52d33eff9ab898"
+    "sha256": "a6da8556230eb1cd03439ad47a12e616d1733934e347e67e1c52d33eff9ab898",
+    "picY": 34
    },
    "trx-body-saw": {
-    "sha256": "6e3e3365c1c7afcd79303d0b97736e37be00134e8c94e2b9971d64574e298998"
+    "sha256": "6e3e3365c1c7afcd79303d0b97736e37be00134e8c94e2b9971d64574e298998",
+    "picY": 45
    },
    "trx-chest-press": {
-    "sha256": "661d84ef830758a4f9aaf79741c0d8794175e2cb30f5015f33487e4fff515383"
+    "sha256": "661d84ef830758a4f9aaf79741c0d8794175e2cb30f5015f33487e4fff515383",
+    "picY": 6
    },
    "trx-fallout": {
-    "sha256": "9a68d7ab72b2d8ea627baf7b7e2c92ef4f2d2ec1eb36d20192713b9a0439fb5c"
+    "sha256": "9a68d7ab72b2d8ea627baf7b7e2c92ef4f2d2ec1eb36d20192713b9a0439fb5c",
+    "picY": 11
    },
    "trx-hamstring-curl": {
-    "sha256": "3aee4f1c8732acdff6549df4ad83ce534800162ab1cf0277dc1738828606a009"
+    "sha256": "3aee4f1c8732acdff6549df4ad83ce534800162ab1cf0277dc1738828606a009",
+    "picY": 28
    },
    "trx-hamstring-runner": {
-    "sha256": "503dd2fc2757d81c6de6e0324f49e86a11e12ada49425e17cc90a610a45a6959"
+    "sha256": "503dd2fc2757d81c6de6e0324f49e86a11e12ada49425e17cc90a610a45a6959",
+    "picY": 11
    },
    "trx-high-row": {
-    "sha256": "82d4e155362e887a302ea7c5fe7febfcf8526d5f54706dfad5b6d6f335584ce3"
+    "sha256": "82d4e155362e887a302ea7c5fe7febfcf8526d5f54706dfad5b6d6f335584ce3",
+    "picY": 12
    },
    "trx-hip-press": {
-    "sha256": "806675e34d3cbb4a2508292a2b7cb1536384f315df450c7746a22e02dcc3d1bf"
+    "sha256": "806675e34d3cbb4a2508292a2b7cb1536384f315df450c7746a22e02dcc3d1bf",
+    "picY": 28
    },
    "trx-lateral-lunge": {
-    "sha256": "23e436b0f40e9e43a27d3362b722d6c8fdf990f3dfa9b528d427ebef51c469de"
+    "sha256": "23e436b0f40e9e43a27d3362b722d6c8fdf990f3dfa9b528d427ebef51c469de",
+    "picY": 52
    },
    "trx-mountain-climber": {
-    "sha256": "55d95e335e57aaddf69fc21cf7819c7a5666a130408d3cac7de15993e03f9929"
+    "sha256": "55d95e335e57aaddf69fc21cf7819c7a5666a130408d3cac7de15993e03f9929",
+    "picY": 30
    },
    "trx-pec-fly": {
-    "sha256": "1da8149e0136eb16c1f5f2bfec55a489365bf1a02fa659c8ae0ed20fb34f1f97"
+    "sha256": "1da8149e0136eb16c1f5f2bfec55a489365bf1a02fa659c8ae0ed20fb34f1f97",
+    "picY": 4
    },
    "trx-pike": {
-    "sha256": "e04d9767122cae46c1cd054aebe4dad1ab2a7b620e0dbb783a3acc5cd5d9aa00"
+    "sha256": "e04d9767122cae46c1cd054aebe4dad1ab2a7b620e0dbb783a3acc5cd5d9aa00",
+    "picY": 46
    },
    "trx-plank": {
-    "sha256": "d28f0be1bfb674f1cbbddf95900c0d33d4f70023ff3231e5e87d8c2d01b2bf74"
+    "sha256": "d28f0be1bfb674f1cbbddf95900c0d33d4f70023ff3231e5e87d8c2d01b2bf74",
+    "picY": 42
    },
    "trx-power-pull": {
-    "sha256": "84d2c2f36bac9c58c7c038b6ae777fa9b94dc88dd3ca92add260de87ceff5ae9"
+    "sha256": "84d2c2f36bac9c58c7c038b6ae777fa9b94dc88dd3ca92add260de87ceff5ae9",
+    "picY": 61
    },
    "trx-push-up": {
-    "sha256": "bcad2af674a350861f1f0fa88e7e1269b16de848d507337eb2d8ee31bd55bd2f"
+    "sha256": "bcad2af674a350861f1f0fa88e7e1269b16de848d507337eb2d8ee31bd55bd2f",
+    "picY": 21
    },
    "trx-reverse-fly": {
-    "sha256": "be4d9e1ad1b2605f9cb62349dd92d80fcd657a56f0b581a7e536f00c66328fd0"
+    "sha256": "be4d9e1ad1b2605f9cb62349dd92d80fcd657a56f0b581a7e536f00c66328fd0",
+    "picY": 1
    },
    "trx-reverse-lunge": {
-    "sha256": "381bd8853044b521ecdd525148b5f52173e3789a756aba7e9f1263047740a1eb"
+    "sha256": "381bd8853044b521ecdd525148b5f52173e3789a756aba7e9f1263047740a1eb",
+    "picY": 21
    },
    "trx-row": {
-    "sha256": "300d8293648d3d05e21b566414030ac1c7917355c5c9f3e3fc95662a52c5a727"
+    "sha256": "300d8293648d3d05e21b566414030ac1c7917355c5c9f3e3fc95662a52c5a727",
+    "picY": 0
    },
    "trx-side-plank": {
-    "sha256": "e2d816591a1d394ef9ad1b18691222815e89e00e710a052e9701a7070193cf1e"
+    "sha256": "e2d816591a1d394ef9ad1b18691222815e89e00e710a052e9701a7070193cf1e",
+    "picY": 50
    },
    "trx-single-leg-squat": {
-    "sha256": "5062669816e31d0f3cfc7ae4e0af43185a80a36bb8652e7986d384d28e7e7c30"
+    "sha256": "5062669816e31d0f3cfc7ae4e0af43185a80a36bb8652e7986d384d28e7e7c30",
+    "picY": 24
    },
    "trx-sprinter-start": {
-    "sha256": "dfbe5add26d9b9af27525c2ebcc5a86f88a0626967b69898f36a96872d2ab3be"
+    "sha256": "dfbe5add26d9b9af27525c2ebcc5a86f88a0626967b69898f36a96872d2ab3be",
+    "picY": 51
    },
    "trx-squat": {
-    "sha256": "347b23e9fd88aa3962f67512c4c29cd322950426a464bb45aad564c410cc91fe"
+    "sha256": "347b23e9fd88aa3962f67512c4c29cd322950426a464bb45aad564c410cc91fe",
+    "picY": 18
    },
    "trx-suspended-lunge": {
-    "sha256": "6992dd7f079173d8711fa03744036fc3b6a44f4d92cb28595d9b9170b85b5d92"
+    "sha256": "6992dd7f079173d8711fa03744036fc3b6a44f4d92cb28595d9b9170b85b5d92",
+    "picY": 15
    },
    "trx-y-fly": {
-    "sha256": "7de8341e65b1c34c5df8366215eac7a98f3b624e051ccbb0bcd2c495c13ada8e"
+    "sha256": "7de8341e65b1c34c5df8366215eac7a98f3b624e051ccbb0bcd2c495c13ada8e",
+    "picY": 26
    },
    "ubrzanje-zaustavljanje": {
-    "sha256": "4cfc7487d4188d1417dc3c5adaa04d7c0b15e3dbf0304ff6a209195efc4eeda5"
+    "sha256": "4cfc7487d4188d1417dc3c5adaa04d7c0b15e3dbf0304ff6a209195efc4eeda5",
+    "picY": 50
    },
    "uze-abdukcija": {
-    "sha256": "4a796139ca55ff844085bcbf4073e482c4185d1965411c85fd7db701e0bdc0e9"
+    "sha256": "4a796139ca55ff844085bcbf4073e482c4185d1965411c85fd7db701e0bdc0e9",
+    "picY": 16
    },
    "uze-addukcija": {
-    "sha256": "fc2ecc56afa7b426f8237c42cfe57e537d3df0b96694060c4d52971e28e81511"
+    "sha256": "fc2ecc56afa7b426f8237c42cfe57e537d3df0b96694060c4d52971e28e81511",
+    "picY": 35
    },
    "uze-ekstenzija": {
-    "sha256": "90af214db8deb1215efeda41e31f29e29e4536cf9fc7fa1deb96902ed99843c3"
+    "sha256": "90af214db8deb1215efeda41e31f29e29e4536cf9fc7fa1deb96902ed99843c3",
+    "picY": 30
    },
    "uze-fleksija": {
-    "sha256": "eeb499d9d480b5d27d357ef5da057378dabef48ffcc724c009908df99abce279"
+    "sha256": "eeb499d9d480b5d27d357ef5da057378dabef48ffcc724c009908df99abce279",
+    "picY": 14
    },
    "uze-koljeno": {
-    "sha256": "a16a24a3ddf733a2f482009bb6e3d538a041f28f2a6ec51fd2d2d577c19bd339"
+    "sha256": "a16a24a3ddf733a2f482009bb6e3d538a041f28f2a6ec51fd2d2d577c19bd339",
+    "picY": 12
    },
    "uze-kruzenje": {
-    "sha256": "f247d64e83048a315e965e92ea2d153d5cd86bdcb3e625d0a50b136f4be5c7c5"
+    "sha256": "f247d64e83048a315e965e92ea2d153d5cd86bdcb3e625d0a50b136f4be5c7c5",
+    "picY": 15
    },
    "uze-njihanje": {
-    "sha256": "0ebced5140b38cfd67a5b84848fd199b933b1cc558a3b4c0e5fba159005eec8e"
+    "sha256": "0ebced5140b38cfd67a5b84848fd199b933b1cc558a3b4c0e5fba159005eec8e",
+    "picY": 16
    },
    "worlds-greatest-stretch": {
-    "sha256": "3656b092d456c7615fa54600e25ee56e74b9c18c85df496b2d60fb802af25185"
+    "sha256": "3656b092d456c7615fa54600e25ee56e74b9c18c85df496b2d60fb802af25185",
+    "picY": 20
    },
    "zigzag-sprint": {
-    "sha256": "3849fe26c1bc5d4d23b9f3eb68728163db0406f842ee30b77cc7903b6c7209ef"
+    "sha256": "3849fe26c1bc5d4d23b9f3eb68728163db0406f842ee30b77cc7903b6c7209ef",
+    "picY": 38
    }
   }
  },
