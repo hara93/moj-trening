@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.6.11 — 4. 11. 2026.
+
+- **Bez izvora i vanjskih linkova (za sada):** nigdje se više ne prikazuju retci „Izvor: …”, linkovi „Pogledaj demonstraciju” i „Pogledaj kod TAE”, preuzete snimke i fotografije s natpisima autora ni spominjanje izvora u opisima treninga na terenu. Svuda je tvoja slika. Podaci i datoteke ostaju spremljeni; jedna postavka u kodu (SHOW_SOURCES) sve vraća.
+
 ## 1.6.10 — 3. 11. 2026.
 
 - **Donja traka na iPhoneu, pravi uzrok:** s prozirnom statusnom trakom („black-translucent”) noviji iOS aplikaciju na početnom zaslonu pomakne gore i donjih 59 pt ostavi praznima; tu aplikacija ne može ništa nacrtati. Statusna traka je sada tamna i neprozirna („black”), pa aplikacija ide do dna ekrana. iOS to čita pri dodavanju na početni zaslon: ikonu treba ukloniti i ponovno dodati (prije toga izvezi sigurnosnu kopiju).
