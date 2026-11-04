@@ -89,7 +89,7 @@ window.SEED = {
     "Zdjelica se podiže ili se donja leđa izvijaju – drži leđa na podu.",
     "U preponi se javlja bol – smanji jačinu stiska."
    ],
-   "note": "Slabi aduktori glavni su rizik za ozljedu prepona. Odlična aktivacija prije treninga i utakmice; bol u preponi znači stani.",
+   "note": "Slabi aduktori jedan su od glavnih rizika za ozljedu prepona. Odlična aktivacija prije treninga i utakmice; bol u preponi znači stani.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5455186/",
    "sourceTitle": "Dynamic Hip Adduction, Abduction and Abdominal Exercises from the Holmich Groin-Injury Prevention Program Are Intense Enough to Be Considered Strengthening Exercises – A Cross-Sectional Study – PMC",
    "order": 102,
@@ -241,7 +241,7 @@ window.SEED = {
     "Trup se naginje u stranu – zdjelica i ramena ostaju mirni.",
     "Spuštaš se dublje od plitkog čučnja – zadrži istu, plitku visinu."
    ],
-   "note": "Upadanje koljena unutra pri doskoku povezano je s ozljedama koljena, pa i prednje ukrižene sveze. Učiš ga aktivno ispraviti, uz laganu gumu.",
+   "note": "Upadanje koljena unutra pri doskoku povezano je s ozljedama koljena. Učiš ga vratiti iznad stopala; preteška guma pojačava upadanje.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10547095/",
    "sourceTitle": "The Use of Elastic Resistance Bands to Reduce Dynamic Knee Valgus in Squat-Based Movements: A Narrative Review – PMC",
    "order": 105,
@@ -345,7 +345,7 @@ window.SEED = {
     "Koljena se ne dižu, nego samo sitno trčiš – podiži koljena do visine kuka.",
     "Ruke se križaju ispred tijela – vodi ih naprijed-natrag."
    ],
-   "note": "Razvija brzu izmjenu nogu i položaj tijela u sprintu. Radi ih prije treninga s loptom; ako štipa u preponi, smanji visinu.",
+   "note": "Razvija brzu izmjenu nogu i položaj tijela u sprintu. Radi ga prije treninga s loptom; ako štipa u preponi, smanji visinu.",
    "source": "https://www.acefitness.org/resources/pros/expert-articles/3813/the-dynamic-warm-up-every-runner-should-try/",
    "sourceTitle": "The Dynamic Warm-up Every Runner Should Try – ACE",
    "order": 107,
@@ -398,7 +398,7 @@ window.SEED = {
     "Trup se naginje unatrag – drži se visoko.",
     "Ritam je spor ili neujednačen – radi kraće dionice, ali ritmično."
    ],
-   "note": "Uči položaj tijela i postavljanje stopala ispod kukova za sprint. Dio je zagrijavanja, ne zamjena za sprint.",
+   "note": "Uči položaj tijela i postavljanje stopala ispod kukova za sprint. Dio je zagrijavanja; ako bole listovi ili Ahilova, smanji dionice.",
    "source": "https://coachathletics.com.au/coaching-education/rethinking-the-role-of-a-and-b-skipsin-improving-sprinting-performance",
    "sourceTitle": "Rethinking The Role of A- and B-Skips in Improving Sprinting Performance — Athletics Coach by Australian Athletics",
    "order": 108,
@@ -855,7 +855,7 @@ window.SEED = {
     "Pokreti su brzi i nekontrolirani – spuštaj 3 s i zastani.",
     "Glava i ramena se podižu – opusti vrat i drži glavu na podu."
    ],
-   "note": "Uči držati trup stabilnim dok se udovi kreću, što prenosi snagu u sprintu, udarcu i duelu.",
+   "note": "Uči držati trup stabilnim dok se udovi kreću, što prenosi snagu u sprintu, udarcu i duelu. Bol u križima ili štipanje u kuku: smanji raspon.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/147/supine-dead-bug/",
    "sourceTitle": "Ab Exercises | Supine Dead Bug – ACE Exercise Library",
    "order": 118,
@@ -905,7 +905,7 @@ window.SEED = {
     "Laktovi se savijaju pa vježba postaje veslanje – drži ruke gotovo ispružene.",
     "Uže se vraća naglo – vraćaj ga sporo, oko 2 s."
    ],
-   "note": "Uravnotežuje rad prsa i prednjih ramena, pa čuva zdrava ramena i dobro držanje.",
+   "note": "Uravnotežuje rad prsa i prednjih ramena, pa čuva zdrava ramena i dobro držanje. Bol u ramenu: smanji otpor.",
    "source": "https://www.strengthlog.com/band-pull-apart/",
    "sourceTitle": "How to Do Band Pull-Apart: Muscles Worked & Proper Form – StrengthLog",
    "order": 119,
@@ -1914,7 +1914,7 @@ window.SEED = {
    "sides": false,
    "feel": "Ekscentrična snaga stražnje lože",
    "steps": [
-    "Klekni leđima prema ljestvama, pete ispod držača.",
+    "Klekni leđima prema ljestvama, pete ispod podstavljenog držača.",
     "Polako se naginji naprijed, koči stražnjom ložom što dulje.",
     "Dočekaj se na dlanove; kukovi ispruženi, ravna linija."
    ],
@@ -2019,7 +2019,7 @@ window.SEED = {
    "sides": true,
    "feel": "Snaga lista i Ahilove tetive",
    "steps": [
-    "Prsti na rubu ploče, bučica u ruci radne strane.",
+    "Prednji dio stopala na rubu ploče, bučica uz radnu nogu.",
     "Spusti petu do istezanja, pa se podigni što više.",
     "Guraj kroz palac i drugi prst, bez odskakivanja iz dna."
    ],
@@ -2068,7 +2068,7 @@ window.SEED = {
    "sides": true,
    "feel": "Snaga dubljeg dijela lista (soleus)",
    "steps": [
-    "Sjedni, prsti na ploči, bučica tik iznad koljena.",
+    "Sjedni, prednji dio stopala na ploči, bučica tik iznad koljena.",
     "Podigni petu što više i kratko zadrži.",
     "Spuštaj polako ispod razine prstiju; koljeno ostaje savijeno."
    ],
@@ -2481,7 +2481,7 @@ window.SEED = {
    "sides": true,
    "feel": "Snaga ramena i tricepsa, miran trup",
    "steps": [
-    "Poluklek, bučica na ramenu strane koljena na podu.",
+    "Poluklek, bučica na ramenu iste strane kao koljeno na podu.",
     "Potisni bučicu ravno gore do ispružene ruke.",
     "Spuštaj polako; trup uspravan, bez naginjanja u stranu."
    ],
@@ -3846,7 +3846,7 @@ window.SEED = {
     "Dug kontakt i zastoj između poskoka – odbij se odmah, kao opruga, s kratkim kontaktom.",
     "Glasno lupanje stopalima – doskoči tiho i elastično."
    ],
-   "note": "Razvija opružnu snagu gležnja za brze korake, sprint i promjenu smjera. Dobri su u zagrijavanju i kao uvod u skokove.",
+   "note": "Razvija opružnu snagu gležnja za brze korake, sprint i promjenu smjera. Dobar je u zagrijavanju i kao uvod u skokove.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13608166/",
    "sourceTitle": "Immediate Effects of a Pogo-Jump Microdose on Vertical Jump Performance in Adolescent Basketball Players: A Randomized Crossover Pilot Study - PMC",
    "order": 402,
@@ -3896,7 +3896,7 @@ window.SEED = {
     "Preduboki čučanj prije odraza – spusti se samo do polučučnja, tako je odraz brži, a kuku ugodniji.",
     "Trup se pretjerano naginje naprijed – drži prsa gore i pogled naprijed."
    ],
-   "note": "Temeljna vježba eksplozivnosti i doskoka za odraz, start sprinta i skok na glavu. Polučučanj je ugodniji za kuk; ne dan prije utakmice.",
+   "note": "Temeljna vježba eksplozivnosti i doskoka za odraz, start sprinta i skok na glavu. Polučučanj štedi kuk; ne radi ga dan prije utakmice.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/116/squat-jumps/",
    "sourceTitle": "Butt & Hip Exercises | Squat Jumps",
    "video": "https://www.youtube.com/watch?v=tZSYZdtbONc",
@@ -4005,7 +4005,7 @@ window.SEED = {
     "Skakanje unatrag s kutije – siđi korak po korak da poštediš tetive i zglobove.",
     "Skokovi u nizu bez pauze – resetiraj se između skokova da svaki bude maksimalan."
    ],
-   "note": "Razvija eksplozivnost za start, skok na glavu i duel, uz manje udara na zglobove. Kreni sa stranom od 40 cm, ne dan prije utakmice.",
+   "note": "Razvija eksplozivnost za start, skok i duel, uz manje udara na zglobove. Kreni sa stranom od 40 cm; ne radi ga dan prije utakmice.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/115/box-jumps/",
    "sourceTitle": "Butt & Hip Exercises | Box Jumps",
    "video": "https://www.youtube.com/watch?v=DXu-8TAJwi4",
@@ -4060,7 +4060,7 @@ window.SEED = {
     "Koljena upadaju prema unutra pri doskoku – drži koljena iznad prstiju.",
     "Slab zamah rukama – zamahni snažno unatrag pa naprijed jer ruke donose dio duljine skoka."
    ],
-   "note": "Razvija horizontalnu eksplozivnost za ubrzanje i prve korake. Test: najbolji od tri skoka, mjereno do stražnjeg ruba pete; ne dan prije utakmice.",
+   "note": "Razvija horizontalnu eksplozivnost za ubrzanje i prve korake. Test: najbolji od tri skoka, do stražnjeg ruba peta; ne radi ga dan prije utakmice.",
    "source": "https://www.topendsports.com/testing/tests/longjump.htm",
    "sourceTitle": "Standing Long Jump Test (Broad Jump) - Calculator, Norms & Standards",
    "video": "https://www.youtube.com/watch?v=AOkmLTD8J24",
@@ -4116,7 +4116,7 @@ window.SEED = {
     "Predug skok koji ne možeš zaustaviti – skrati udaljenost dok ne zadržiš doskok.",
     "Doskok na petu s ispruženim koljenom – doskoči na prednji dio stopala i savij koljeno i kuk."
    ],
-   "note": "Razvija bočnu eksplozivnost i kontrolu doskoka na jednoj nozi za promjenu smjera i duele. Bez dubokog pregiba kuka; ne dan prije utakmice.",
+   "note": "Razvija bočnu eksplozivnost i kontrolu doskoka na jednoj nozi za promjenu smjera i duele. Bez dubokog pregiba kuka; ne radi ga dan prije utakmice.",
    "source": "https://www.strengthlog.com/lateral-bound/",
    "sourceTitle": "How to Do Lateral Bound: Muscles Worked & Proper Form – StrengthLog",
    "video": "https://www.youtube.com/watch?v=ViVoHbYwT-Y",
@@ -4173,7 +4173,7 @@ window.SEED = {
     "Doskok s ispruženim koljenom – savij kuk i koljeno i upij doskok.",
     "Zdjelica pada u stranu i trup se ruši – drži zdjelicu ravno i trup zategnut."
    ],
-   "note": "Uči kontrolu doskoka na jednoj nozi, kao nakon skoka na glavu. Usporedi lijevu i desnu nogu; ne doskači u dubok pregib kuka.",
+   "note": "Uči kontrolu doskoka na jednoj nozi, kao nakon skoka na glavu. Usporedi duljinu skoka lijevom i desnom; ne doskači u dubok pregib kuka.",
    "source": "https://www.topendsports.com/testing/tests/hop-and-stop.htm",
    "sourceTitle": "Hop and Stop Test Calculator - Limb Symmetry Index for Athletes",
    "video": "https://www.youtube.com/watch?v=6BkwOUl3fAw",
@@ -4230,7 +4230,7 @@ window.SEED = {
     "Koljena upadaju prema unutra pri doskoku – drži koljena u liniji sa stopalima.",
     "Doskok na pete s ispruženim koljenima – doskoči prvo prednjim dijelom stopala uz savijena koljena."
    ],
-   "note": "Trenira brzo pretvaranje kočenja u odraz za promjenu smjera i skok. Radi ga tek nakon depth dropa, nikad dan prije utakmice.",
+   "note": "Trenira brzo pretvaranje kočenja u odraz za promjenu smjera i skok. Radi ga tek kad savladaš depth drop, nikad dan prije utakmice.",
    "source": "https://catalystathletics.com/exercise/551/Depth-Jump/",
    "sourceTitle": "Depth Jump - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "video": "https://www.youtube.com/watch?v=GeN0S3XCZnM",
@@ -4286,7 +4286,7 @@ window.SEED = {
     "Koljena upadaju prema unutra – guraj koljena u smjeru prstiju.",
     "Skakanje preblizu kukama, stupovima ili gornjim prečkama kaveza – prije prve serije provjeri razmak sa svih strana i iznad šipke."
    ],
-   "note": "Povezuje snagu iz čučnja s brzinom odraza za skok na glavu. Uteg drži malim da skok ostane brz; ne dan prije utakmice.",
+   "note": "Povezuje snagu iz čučnja s brzinom odraza za skok na glavu. Uteg neka bude malen; ne radi ga dan prije utakmice.",
    "source": "https://www.topendsports.com/testing/tests/bosco-squat-jump-plus.htm",
    "sourceTitle": "Bosco Squat Jump with Weights",
    "order": 410,
@@ -4661,7 +4661,7 @@ window.SEED = {
    "feel": "Duboki trbušni mišići i ramena",
    "steps": [
     "Prsti stopala u omčama, plank na podlakticama.",
-    "Odgurni se unatrag, laktovi ispred ramena, pa natrag naprijed.",
+    "Odgurni se unatrag, laktovi ispred ramena, pa se vrati.",
     "Opseg povećavaj samo dok donja leđa ostaju ravna."
    ],
    "mistakes": [
@@ -4724,7 +4724,7 @@ window.SEED = {
     "Ramena bježe iza šaka – drži ramena iznad šaka cijelo vrijeme.",
     "Trzaj nogama umjesto rada trbuha – pokret kreni stezanjem trbuha, polako."
    ],
-   "note": "Jača trbuh i ramena za stabilan trup u sprintu. Uvedi ga kad držiš TRX plank 30 s; štipa li prepona, diži niže.",
+   "note": "Jača trbuh i ramena za stabilan trup u sprintu. Uvedi ga kad držiš TRX plank 30 s; ako štipa u preponi, diži kukove niže.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/88/trx-reg-suspended-pike/",
    "sourceTitle": "Ab Exercises | TRX ® Suspended Pike",
    "order": 503,
@@ -5413,7 +5413,7 @@ window.SEED = {
     "Ruke se razmiču – drži šake zajedno i ručku blizu tijela cijelim putem.",
     "Gubiš ravnotežu – prednje stopalo postavi malo u stranu za širu bazu."
    ],
-   "note": "Sila ide odozdo prema gore preko tijela, kao u odrazu i duelu u zraku, dok trup ostaje miran.",
+   "note": "Sila ide odozdo prema gore preko tijela, kao u odrazu i duelu u zraku. Bol u kuku stražnje noge: smanji otpor.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/341/kneeling-hay-baler/",
    "sourceTitle": "Full Body/Integrated Exercises | Kneeling Hay Baler",
    "order": 516,
@@ -5667,7 +5667,7 @@ window.SEED = {
    "steps": [
     "Objesi se nathvatom u širini ramena, ramena dalje od ušiju.",
     "Bez zamaha podigni koljena do visine kukova.",
-    "Spuštaj polako; ako štipa u preponi, stani niže."
+    "Spuštaj polako; koljena diži samo do granice bez štipanja."
    ],
    "mistakes": [
     "Njišeš se i zamahuješ nogama – kreni iz mirnog visa i spuštaj noge sporo.",
@@ -5720,7 +5720,7 @@ window.SEED = {
    "feel": "Mobilnost kuka, unutarnjeg bedra i gornjih leđa",
    "steps": [
     "Iskorak lijevom nogom, desni dlan spusti uz lijevo stopalo.",
-    "Lakat spusti prema stopalu, bez štipanja u preponi.",
+    "Lijevi lakat spusti prema stopalu, bez štipanja u preponi.",
     "Tu ruku podigni prema stropu, okreni prsa i prati šaku."
    ],
    "mistakes": [
@@ -5932,7 +5932,7 @@ window.SEED = {
     "Stopalo se okreće prema van – neka prsti gledaju ravno u zid.",
     "Svod stopala propada – drži težinu ravnomjerno na peti te ispod palca i malog prsta."
    ],
-   "note": "Pokretljiv gležanj pomaže pri kočenju, promjeni smjera, čučnju i doskoku te rasterećuje koljeno i kuk. Povremeno usporedi lijevu i desnu nogu.",
+   "note": "Pokretljiv gležanj pomaže pri kočenju, promjeni smjera, čučnju i doskoku te rasterećuje koljeno i kuk. Povremeno izmjeri udaljenost palca od zida, lijevo i desno.",
    "source": "https://northcheshireandmersey.nhs.uk/media/5ndj32ll/ankle-range-of-motion-exercises-patient-advice-sheet.pdf",
    "sourceTitle": "Ankle range of motion exercises - Patient advice sheet",
    "order": 605,
@@ -6083,7 +6083,7 @@ window.SEED = {
     "Stražnji kuk forsiraš u unutarnju rotaciju – stani prije štipanja ili sjedni na povišenje.",
     "Pokret dolazi iz uvijanja donjih leđa – rotiraj iz kukova, a ramena drži mirna."
    ],
-   "note": "Rotacija kuka treba ti za promjene smjera, udarac i duele. Kod impingementa kuka radi ga uz fizioterapeuta, do granice bez boli.",
+   "note": "Rotacija kuka treba ti za promjene smjera, udarac i duele. Kod impingementa kuka radi ga uz dogovor s fizioterapeutom, do granice bez boli.",
    "source": "https://health.clevelandclinic.org/90-90-stretch",
    "sourceTitle": "The 90/90 Stretch & How It Helps Hip Mobility – Cleveland Clinic",
    "order": 608,
@@ -6569,7 +6569,7 @@ window.SEED = {
    "sides": true,
    "feel": "Snaga stražnjice radne noge",
    "steps": [
-    "Lezi na leđa, jedno stopalo na podu, druga noga ispružena.",
+    "Na leđima, jedno stopalo na podu, druga noga ispružena gore.",
     "Gurni kroz petu i podigni kukove, kratko zadrži.",
     "Zdjelica ostaje vodoravna, ne pada na strani slobodne noge."
    ],
@@ -7152,7 +7152,7 @@ window.SEED = {
     "U odmoru potpuno staneš – nastavi lagano okretati da se brže oporaviš.",
     "Trup i kukovi se ljuljaju – smanji otpor i drži trup mirnim."
    ],
-   "note": "Kondicija kad koljeno ili kuk ne podnose trčanje. Naporno, a ne lagani dan oporavka: 1–2 puta tjedno, ne dan prije utakmice.",
+   "note": "Kondicija kad koljeno ili kuk ne podnose trčanje. To su naporni intervali, a ne lagani dan oporavka: najviše 1–2 puta tjedno, nikad dan prije utakmice.",
    "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
    "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
@@ -7415,8 +7415,8 @@ window.SEED = {
    "feel": "Agilnost, nagla promjena smjera i ubrzanje",
    "steps": [
     "Čunjevi na 0, 6, 9, 12 i 18 m.",
-    "Sprint 9, unatrag 3, sprint 6, unatrag 3, sprint 9.",
-    "Unatrag trči nisko, kratkim koracima na prednjem dijelu stopala."
+    "Sprint 9 m, unatrag 3 m, sprint 6 m.",
+    "Unatrag 3 m, sprint 9 m; unatrag nisko, kratkim koracima."
    ],
    "mistakes": [
     "Trčanje unatrag na petama i uspravljenim tijelom – ostani nisko, s ramenima ispred kukova i težinom na prednjem dijelu stopala.",
@@ -7637,7 +7637,7 @@ window.SEED = {
     "U pauzi potpuno staneš – nastavi lagano kasati ili hodati radi oporavka.",
     "Udaljenost brzih dionica naglo pada – uspori tempo ili smanji broj ponavljanja."
    ],
-   "note": "Razvija ponavljanje jakih napora, kao pri pressingu i povratku u obranu. Najviše 1–2 puta tjedno, ne dan prije utakmice.",
+   "note": "Razvijaju sposobnost ponavljanja jakih napora, kao pri pressingu i povratku u obranu. Najviše 1–2 puta tjedno, ne dan prije utakmice.",
    "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
    "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
@@ -7796,7 +7796,7 @@ window.SEED = {
     "Stopalo se okreće prema stropu – prsti donje noge gledaju naprijed.",
     "Noga pada na pod – spuštaj je polako, 2–3 s."
    ],
-   "note": "Aduktori su kod nogometaša najčešće mjesto ozljede prepona. Ova vježba ih jača blaže od Copenhagen planka i stepenica je prema njemu.",
+   "note": "Aduktori su kod nogometaša najčešće mjesto ozljede prepona. Jača ih blaže od Copenhagen planka i stepenica je prema njemu.",
    "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5455186/",
    "sourceTitle": "Dynamic Hip Adduction, Abduction and Abdominal Exercises from the Holmich Groin-Injury Prevention Program Are Intense Enough to Be Considered Strengthening Exercises – A Cross-Sectional Study – PMC",
    "order": 709.5,
