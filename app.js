@@ -1419,9 +1419,27 @@ function musclePickerHtml(d){
     '<div class="chips wrap" style="margin-top:10px">' + ZONE_ONLY.concat(fig ? [] : ZONES.filter(z => ZONE_ONLY.indexOf(z) === -1)).map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+(zs.indexOf(z)!==-1)+'">'+esc(exZoneLabel(z))+'</button>').join('') + '</div>' +
     '<p class="lnote" style="margin:10px 2px 0" id="mzones">Zone u filteru i opterećenju: ' + (zs.length ? esc(zs.map(exZoneLabel).join(', ')) : 'nijedna') + '</p></div>';
 }
+// 1.8 (review): the zones change only by what the taps changed: a zone goes when its last region was taken off here, a region
+// you added brings its zone, every other zone (the shipped joint zones Koljeno / Gležanj, Kuk, the order, zones[0]) stays;
+// zones[0] moves only when its own main muscles were taken off the main ones. Tapped back to the muscles the editor opened with,
+// the exercise gets its muscles and zones back exactly (a shipped one keeps its fingerprint and its updates).
 function setDraftMuscles(dr, prime, sec){
-  if (!prime.length && !sec.length) { dr.muscles = null; dr.zones = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1); return; }
-  dr.muscles = { prime, sec }; dr.zones = musclesZones(dr.muscles, dr.zones);
+  const b = dr._mz || (dr._mz = { raw: dr.muscles === undefined ? undefined : clone(dr.muscles), m: exMuscles(dr), z: (dr.zones || []).slice() });
+  const zOf = a => a.reduce((s, r) => { const z = MUSCLE_ZONE[r]; if (z && s.indexOf(z) === -1) s.push(z); return s; }, []);
+  const set = a => a.slice().sort().join();
+  const only = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1);   // Kuk / Cijelo tijelo as their chips say now
+  if (set(prime) === set(b.m.prime) && set(sec) === set(b.m.sec)) {
+    if (b.raw === undefined) delete dr.muscles; else dr.muscles = clone(b.raw);
+    dr.zones = b.z.filter(z => ZONE_ONLY.indexOf(z) === -1 || only.indexOf(z) !== -1).concat(only.filter(z => b.z.indexOf(z) === -1)); return;
+  }
+  if (!prime.length && !sec.length) { dr.muscles = null; dr.zones = only; return; }
+  const before = zOf(b.m.prime.concat(b.m.sec)), now = zOf(prime.concat(sec));
+  const zs = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1 || now.indexOf(z) !== -1 || before.indexOf(z) === -1);
+  const had = b.m.prime.concat(b.m.sec);
+  prime.concat(sec).forEach(r => { const z = MUSCLE_ZONE[r]; if (had.indexOf(r) === -1 && zs.indexOf(z) === -1) zs.push(z); });
+  const p0 = zOf(prime), z0 = zs[0];
+  if (z0 && ZONE_ONLY.indexOf(z0) === -1 && p0.length && p0.indexOf(z0) === -1 && zOf(b.m.prime).indexOf(z0) !== -1) { zs.splice(zs.indexOf(p0[0]), zs.indexOf(p0[0]) === -1 ? 0 : 1); zs.unshift(p0[0]); }
+  dr.muscles = { prime, sec }; dr.zones = zs;
 }
 function daysPicker(action, id, days){
   days = days || [];
