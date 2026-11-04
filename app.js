@@ -329,6 +329,13 @@ let cleanFixes = 0;   // how many values the last checks had to drop or convert
 function cleanVal(k, v, depth){
   const drop = () => { cleanFixes++; return undefined; };
   if (v == null || depth > 12) return depth > 12 ? drop() : v;
+  // 1.8: an exercise's muscles { prime: [region ids], sec: [region ids] } (its 'sec' is not a dose's seconds)
+  if (k === 'muscles') {
+    if (!isPlainObj(v)) return drop();
+    const o = {}; if (Object.keys(v).some(q => q !== 'prime' && q !== 'sec')) cleanFixes++;
+    ['prime', 'sec'].forEach(q => { if (v[q] === undefined) return; if (!Array.isArray(v[q])) { cleanFixes++; return; } const a = v[q].filter(x => typeof x === 'string' && !badKey(x)); if (a.length !== v[q].length) cleanFixes++; o[q] = a; });
+    return o;
+  }
   if (CLEAN_NUMS[k]) {
     if (typeof v === 'number') return isFinite(v) ? v : drop();
     if (typeof v === 'string' && /^-?\d+([.,]\d+)?$/.test(v.trim())) { cleanFixes++; return +v.trim().replace(',', '.'); }
@@ -1271,9 +1278,9 @@ function exCardsHtml(e){
   const vids = !SHOW_SOURCES ? '' : (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
   const card = (k, i, title, body, right) => '<article class="swc" id="swc-'+k+'" data-card="'+k+'" aria-label="'+title+', '+(i + 1)+' od 3"><div class="swh"><h2>'+title+'</h2>'+(right || '')+'</div><div class="swb">'+body+'</div></article>';
   const c1 = '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
-  const m = exMuscles(e), fig = bodyFig(m, { size: 150, cls: 'exfig' });
-  const c2 = '<div class="tgt"><div class="tl">' + (m.prime.length + m.sec.length ? '<span class="lb">Ciljana područja</span><div class="tcol">' + muscleTags(m) + '</div>' : '') +
-      (e.feel ? '<span class="lb">Osjećaj</span><span class="fe">'+esc(e.feel)+'</span>' : '') + '</div>' + (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>' +
+  const m = exMuscles(e), fig = m.prime.length + m.sec.length ? bodyFig(m, { size: 150, cls: 'exfig' }) : '';
+  const c2 = (m.prime.length + m.sec.length === 0 && !e.feel ? '' : '<div class="tgt"><div class="tl">' + (m.prime.length + m.sec.length ? '<span class="lb">Ciljana područja</span><div class="tcol">' + muscleTags(m) + '</div>' : '') +
+      (e.feel ? '<span class="lb">Osjećaj</span><span class="fe">'+esc(e.feel)+'</span>' : '') + '</div>' + (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>') +
     (e.note ? '<p class="cn">'+esc(e.note)+'</p>' : (m.prime.length || e.feel ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
     (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '');
   const h = historyOf(e.id), rg = LOAD_RANGES.find(r => r[0] === S.loadRange) || LOAD_RANGES[0];

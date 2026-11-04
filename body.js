@@ -3,7 +3,8 @@
    BODY.regions = { id: { label_hr, view } }      BODY.ids = region ids in figure order
    BODY.svg({ on:[ids], prime:[ids], size:px tall, view:'both'|'front'|'back', tappable:bool, stroke:px, cls:'' })
    Colours: outline var(--body-line, #C9CED8) at 70 %, prime var(--accent) at .9, secondary ('on') at .45.
-   Tappable regions get class "body-tap" + data-region + role/aria-label; BODY.css holds optional hover/press styles. */
+   Every region carries data-region (its id); tappable ones also get class "body-tap" + role/aria-label/aria-pressed (1.8: the
+   app reads data-region on the exercise page too). BODY.css holds optional hover/press styles. */
 (function (root) {
   'use strict';
   var G = { W: 480, H: 1096, GAP: 40 };
@@ -62,7 +63,7 @@
         var st = prime[id] ? 'prime' : on[id] ? 'on' : '';
         var op = st === 'prime' ? '.9' : st === 'on' ? '.45' : '0';
         out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (st ? ' is-' + st : '') + '"' +
-          (tap ? ' data-region="' + id + '" role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + (st ? 'true' : 'false') + '"' : '') +
+          ' data-region="' + id + '"' + (tap ? ' role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + (st ? 'true' : 'false') + '"' : '') +
           ' style="fill:var(--accent,#5789E8)" fill-opacity="' + op + '" d="' + R[id][2] + '"/>';
       });
       // outline group stays above the regions and never takes taps

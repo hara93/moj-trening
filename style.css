@@ -582,12 +582,11 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .view.exv{display:flex;flex-direction:column}
 .view.exv > *{flex:none}
 .view.exv .ttl{margin-top:12px}
-.view.exv .media.two{aspect-ratio:16/10}   /* 17 px lower than elsewhere: the cards get the room */
-.exswipe{flex:1 1 auto !important;min-height:210px;display:flex;flex-direction:column;margin-top:12px}
+.exswipe{flex:1 1 auto !important;min-height:220px;display:flex;flex-direction:column;margin-top:12px}
 .swrow{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 max(16px, env(safe-area-inset-left, 0px));padding:0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));scrollbar-width:none;overscroll-behavior-x:contain}
 .swrow::-webkit-scrollbar{display:none}
 .swrow::after{content:"";flex:0 0 6px}
-.swc{flex:0 0 calc(100% - 28px);scroll-snap-align:start;box-sizing:border-box;min-width:0;min-height:0;display:flex;flex-direction:column;border-radius:22px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.swc{flex:0 0 calc(100% - 12px);scroll-snap-align:start;box-sizing:border-box;min-width:0;min-height:0;display:flex;flex-direction:column;border-radius:22px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
 .swc:last-of-type{scroll-snap-align:end}
 .swh{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;padding:10px 14px 0 16px}
 .swh h2{margin:0;font-size:15px;font-weight:600}
@@ -617,7 +616,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .swb .lmlast{margin:0}
 .swb .howc{align-self:flex-start;margin:-4px 0 -10px -10px}
 .swdots{flex:none;padding:0}
-.swdots .dot{position:relative;width:32px;height:26px}
+.swdots .dot{position:relative;width:44px;height:26px}
 .swdots .dot::before{content:"";position:absolute;inset:-18px 0 0}   /* 44 px to tap (18 px of it over the card's bottom padding), 26 px in the row: nothing sticks out below, so the page never scrolls for it */
 .swdots .dot i{width:6px;height:6px}
 .swdots .dot[aria-current="true"] i{width:14px}
