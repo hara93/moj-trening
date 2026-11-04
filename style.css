@@ -713,3 +713,21 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .zsh{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px}
 .zsh .chip{padding:0 6px;min-width:0;font-size:13.5px}
 .zsh .chip[aria-pressed="true"]{background:var(--tag-bg);color:var(--accent-text)}
+/* 1.8.1 review: nothing on the exercise page is cropped (own videos and pictures letterboxed on the page colour, like the two-panel
+   ones); the "Lijeva i desna" badge stands upright in the right band beside the 3:2 picture (band = 12.5 % of the width), off the
+   athlete */
+.view.exv .media video,.view.exv .media img{object-fit:contain}
+.view.exv .media:has(video),.view.exv .media:has(img){background:transparent}
+.view.exv .media.two .badge{left:auto;right:calc(6.25% - 13px);top:50%;bottom:auto;transform:translateY(-50%);writing-mode:vertical-rl;white-space:nowrap;width:auto;max-width:none;padding:10px 4px;font-size:12px;line-height:18px;background:var(--surface-2);color:var(--text-body)}
+/* Ciljana područja: the chips on one line (the column takes their width, up to all but 128 px), the figure shrinks to the rest */
+.tgt{display:grid;grid-template-columns:fit-content(calc(100% - 128px)) minmax(0,1fr);column-gap:10px;align-items:start}
+.tgt .tl{min-width:0}
+.tgt .tf{justify-self:end;min-width:0;max-width:100%}
+.tgt .tf .body-fig{max-width:100%;height:auto}
+.tgt .tcol .tag{font-size:13.5px;padding:5px 9px}
+/* short phones (SE 375 × 667): a lower picture and figure, so the cards show more before they scroll */
+@media (max-height:700px){
+  .view.exv .media,.view.exv .media.two{aspect-ratio:16/7}
+  .view.exv .media.two .badge{right:calc(8.59% - 13px)}   /* band = (1 − 1.5 × 7/16) / 2 = 17.2 % of the width */
+  .tgt .tf .body-fig{width:auto;height:136px}
+}
