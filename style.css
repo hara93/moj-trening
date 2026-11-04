@@ -514,3 +514,54 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 /* 1.6.1: the player's card carries the exercise page's tabs (1.6.2: Upute | Cilj) */
 .icard.pinfo{gap:0;min-height:0}
 .icard.pinfo .expanel{padding-bottom:0}
+
+/* 1.7: the load model. "Koliko si još mogao?" after a set (one compact row), the session RPE slider and the load card on the
+   done screen, the last session's points on the exercise page. One accent colour, the app's surfaces. */
+.rir{margin:12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));padding:10px 12px 12px;border-radius:18px;background:var(--surface)}
+.rirlast .rir{margin:14px 0 0}
+.rirh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
+.rirh b{flex:none;font-size:14px;font-weight:600}
+.rirh span{min-width:0;font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rirn{margin-top:1px;font-size:13px;color:var(--text-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rirb{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px}
+.rirb button{height:44px;min-width:0;padding:0;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-body);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rirb button.tg{border-style:dashed;border-color:var(--accent)}
+.rirb button[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
+.riru{display:block;margin-top:4px;font-size:12px;color:var(--text-2);text-align:right}
+.rpe{margin-top:16px}
+.rpeh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 2px}
+.rpeh b{font-size:17px;font-weight:600}
+.rpeh span{font-size:13px;color:var(--text-2)}
+.rng{-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:2px 0 0;padding:0;background:transparent;--p:44.4%}
+.rng::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--p),var(--track) var(--p))}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-11px;border:0;border-radius:14px;background:#fff;box-shadow:0 0 0 4px var(--accent)}
+.rng::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--p),var(--track) var(--p))}
+.rng::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:14px;background:#fff;box-shadow:0 0 0 4px var(--accent)}
+.rng:not(.set)::-webkit-slider-runnable-track{background:var(--track)}
+.rng:not(.set)::-webkit-slider-thumb{background:var(--text-2);box-shadow:0 0 0 4px var(--surface-2)}
+.rng:not(.set)::-moz-range-track{background:var(--track)}
+.rng:not(.set)::-moz-range-thumb{background:var(--text-2);box-shadow:0 0 0 4px var(--surface-2)}
+.rpes{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 4px;font-size:12px;color:var(--text-2)}
+.rpes b{font-size:15px;font-weight:600;color:var(--accent-text);text-align:center}
+.rng:not(.set) + .rpes b{font-weight:500;color:var(--text-2)}
+.lmc{margin-top:12px;padding:14px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border)}
+.lmh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lmh > span:first-child{font-size:13px;font-weight:500;color:var(--text-2)}
+.lmv{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin-top:6px}
+.lmv b{font-size:30px;line-height:36px;font-weight:700;font-variant-numeric:tabular-nums}
+.lmv .pm{padding:2px 7px;border-radius:8px;background:var(--surface-2);font-size:13px;font-weight:600;color:var(--text-body)}
+.lmv .vs{font-size:13px;color:var(--text-2)}
+.lmau{margin:4px 0 0;font-size:13px;line-height:18px;color:var(--text-body)}
+.lmau b{color:var(--text)}
+.lmt{margin-top:10px;font-size:12px;font-weight:500;color:var(--text-2)}
+.lmhs{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;margin-top:4px}
+.lmhs span{display:flex;justify-content:space-between;gap:8px;min-width:0;font-size:14px;line-height:22px}
+.lmhs i{font-style:normal;color:var(--text-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmhs b{font-weight:600;font-variant-numeric:tabular-nums}
+.lmx{margin:8px 0 0;font-size:13px;color:var(--text-body)}
+.lmx b{color:var(--text);font-weight:600}
+.lmlast{margin:-2px 0 12px 15px;font-size:13px;color:var(--text-2)}
+.lmlast b{color:var(--text);font-weight:600}
+.done.compact{gap:8px;padding-top:4px}
+.done.compact .ck{width:60px;height:60px;border-radius:30px}
+.done.compact .ck svg{width:30px;height:30px}

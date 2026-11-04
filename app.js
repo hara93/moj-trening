@@ -238,8 +238,8 @@ function storedItem(coll, id){
 /* ---------- shape checks: data from a file (backup, pack) or an older version is cleaned before use ---------- */
 const isPlainObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
 const badKey = k => typeof k !== 'string' || !k || k in Object.prototype;   // "__proto__", "constructor"… break lookups
-const CLEAN_NUMS = { sets:1, reps:1, sec:1, rest:1, kg:1, ok:1, fail:1, snoozeOk:1, up:1, easy:1, r0:1, r1:1, cap:1, at:1, secs:1, week:1, total_min:1, order:1, updatedAt:1, lastReps:1, setsDone:1, value:1, phase:1, work_s:1, rest_s:1, set_rest_s:1, distance_m:1 };
-const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1 };
+const CLEAN_NUMS = { srpe:1, sets:1, reps:1, sec:1, rest:1, kg:1, ok:1, fail:1, snoozeOk:1, up:1, easy:1, r0:1, r1:1, cap:1, at:1, secs:1, week:1, total_min:1, order:1, updatedAt:1, lastReps:1, setsDone:1, value:1, phase:1, work_s:1, rest_s:1, set_rest_s:1, distance_m:1 };
+const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1, rirList:1, sirList:1 };
 const CLEAN_WORDS = { steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1 };
 const CLEAN_LINKS = { video:1, source:1, source_url:1 };
 let cleanFixes = 0;   // how many values the last checks had to drop or convert
@@ -256,6 +256,7 @@ function cleanVal(k, v, depth){
     if (!Array.isArray(v)) return drop();
     let a;
     if (k === 'days') a = Array.from(new Set(v.filter(i => Number.isInteger(i) && i >= 0 && i < 7))).sort();
+    else if (k === 'rirList' || k === 'sirList') a = v.map(x => typeof x === 'number' && isFinite(x) && x >= 0 && x <= 40 ? x : null);   // reserve per set, null = not tapped (stays aligned with the sets)
     else if (k === 'repsList') a = v.map(x => cleanVal('reps', x, depth + 1)).filter(x => typeof x === 'number' && x >= 0);   // 0 = a set with no reps (history)
     else if (k === 'zones' && v.length === 4 && v.every(x => typeof x === 'number' && isFinite(x) && x >= 0)) a = v.slice();   // a field log entry's load: metres per intensity zone
     else if (CLEAN_WORDS[k]) a = v.filter(x => typeof x === 'string' && !((k === 'zones' || k === 'equip') && badKey(x)));
@@ -1153,7 +1154,8 @@ function exOptHtml(e){
   const head = '<div class="opthd"><span>'+(h.length ? 'Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b>' : '')+'</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
   if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
     '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
-  return head + exLoadCard(e, S.loadRange) + exHistHtml(e, h);
+  const lp = exLastPts(e.id);
+  return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Zadnje: <b>≈ ' + lmPts(lp.B) + ' ' + (lp.B < 20 ? 'bodova' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b> · ' + esc(shortDate(lp.at)) + '</div>' : '') + exHistHtml(e, h);
 }
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
@@ -2135,7 +2137,7 @@ function savePlay(){
   if (!P) return;
   lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
-    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, at: Date.now() });
+    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null, at: Date.now() });
 }
 function clearPlay(){ try { localStorage.removeItem(PLAY_KEY); } catch(e){} }
 // on the next start: an unfinished session (up to 12 h old) can be continued; a finished one that never reached the history can be saved
@@ -2159,6 +2161,7 @@ function restorePlay(s){
   P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined, dose: f && s.dose === 'season' ? 'season' : f ? 'full' : undefined,
     steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
   if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
+  if (isPlainObj(s.rir)) P.rir = s.rir; if (s.srpe >= 1 && s.srpe <= 10) P.srpe = s.srpe;
   S.stack.push({ v:'play' }); S.sheet = null;
   if (!P.done) {   // back at the same step; a timed one waits, paused, with the time that was left
     P.i = Math.max(0, Math.min(s.i || 0, P.steps.length - 1));
@@ -2191,8 +2194,8 @@ function trimLog(){
   // 'zapisa': the history also holds test results and exercises tried from the library
   return 'Povijest ima ' + LOG_MAX + ' zapisa, pa ' + (n === 1 ? 'je najstariji uklonjen' : plural(n, 'je uklonjen ' + n + ' najstariji', 'su uklonjena ' + n + ' najstarija', 'je uklonjeno ' + n + ' najstarijih')) + '. Stariji ostaju samo u kopijama koje si izvezao.';
 }
-// writes the session (also a partly done one) to the history and counts progression
-function logSession(){
+// the history entry of the session as it stands (the done screen shows its load before it is saved)
+function sessionEntry(){
   const entry = { name: P.title, kind: P.ref ? P.ref.kind : 'protocol', refId: P.ref ? P.ref.id : null, at: P.finishedAt || Date.now(), secs: P.secs || 0 };
   if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => {
     const a = P.answers && P.answers[j] != null ? P.answers[j] : autoAnswer(j), n = it.sets || 1, did = setsDoneOf(j);
@@ -2201,9 +2204,18 @@ function logSession(){
     if (a === 'skip') { x.skipped = true; x.setsDone = 0; }
     else if (a !== true && did < n) x.setsDone = did;
     if (a === false && it.measure !== 'time') x.lastReps = lastRepsOf(j);
+    const rl = rirLists(j, it); if (rl) x[it.measure === 'time' ? 'sirList' : 'rirList'] = rl;   // "Koliko si još mogao?" per set
     return x;
   });
   if (P.mode === 'field' && P.f) entry.load = fieldDoneLoad();   // what was run: metres, fast running, sprint, zones, the dose
+  return entry;
+}
+// writes the session (also a partly done one) to the history and counts progression
+function logSession(){
+  const entry = sessionEntry();
+  // the session's load (model LM1) as computed now, and his rating of the whole session (1–10) when he gave one
+  if (P.srpe >= 1 && P.srpe <= 10) entry.srpe = P.srpe;
+  entry.load2 = computeSession(entry); if (entry.srpe) entry.load2.au = entry.srpe * Math.round(entry.load2.min);
   const news = applyProgress();
   S.log.unshift(entry); const test = masFromPlay(); if (test) S.log.splice(1, 0, test); const cut = trimLog();
   const saved = persist(); if (saved) clearPlay();   // a refused save keeps the snapshot: the next start offers the session again
@@ -3140,6 +3152,86 @@ VIEWS.progress = function(){
     '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
     '<div style="height:20px"></div></div>';
 };
+/* ---------- the load model on screen: "Koliko si još mogao?" after a set, the session's RPE slider and its load card ---------- */
+// points: one decimal below 20 ("≈ 15,9 b"), whole numbers above ("≈ 64 b", "≈ 1.240")
+const lmPts = v => v < 20 ? String(Math.round(v * 10) / 10).replace('.', ',') : thou(v);
+const lmHs = v => String(Math.round(v * 10) / 10).replace('.', ',');
+// the work step that closes a set: a timed hold done per side closes on its right side
+const setEnd = st => isWork(st) && st.side !== 'Lijeva strana';
+const stepFx = st => st && st.it ? loadFx(S.ex[st.it.exId] || { id: st.it.exId }) : null;
+// the set the row asks about: the last work step before this one, done, closing its set, of an exercise that asks (not
+// activation/mobility, jumps or running). On a work step only when no rest came between (a superset without rests).
+function rirStep(){
+  if (!P || P.mode !== 'ex' || !Array.isArray(P.steps)) return -1;
+  const i = P.done ? P.steps.length : P.i; let k = i - 1, rest = false;
+  while (k >= 0 && !isWork(P.steps[k])) { if (P.steps[k].kind === 'rest') rest = true; k--; }
+  if (k < 0 || !P.doneSteps[k] || !setEnd(P.steps[k]) || (!P.done && isWork(P.steps[i]) && rest)) return -1;
+  const fx = stepFx(P.steps[k]); return fx && LM.ASK[fx.pat] ? k : -1;
+}
+// the points of the set at step k with the tap (or the exercise's default reserve)
+function rirSetPts(k){
+  const st = P.steps[k], it = st.it, e = S.ex[it.exId] || { id: it.exId }, fx = Object.assign({}, loadFx(e), { uni: !!it.sides });
+  const v = P.rir && P.rir[k] != null ? P.rir[k] : null;
+  return setLoad(e, fx, it.measure === 'time' ? { t: +it.sec || 0, sir: v } : { n: repsOf(it, st.set), rir: v }, { k: lmNovelty(it.exId, Date.now(), S.log) }).B;
+}
+function rirRowHtml(k, other){
+  const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
+  const def = time ? fx.rir * LM.HOLD_S : fx.rir, v = P.rir && P.rir[k] != null ? P.rir[k] : null;
+  let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
+  const q = time ? 'Koliko si još mogao držati?' : 'Koliko si još mogao?', what = 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' b';
+  // another exercise than the one on screen (a rest before the next one, a superset, the done screen): its name on a line of its own
+  return '<section class="rir" aria-label="' + esc(q + ' ' + (other ? st.e.name + ', ' : '') + what) + '"><div class="rirh"><b>' + q + '</b><span>' + esc(what) + '</span></div>' +
+    (other ? '<div class="rirn">' + esc(st.e.name) + '</div>' : '') +
+    '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
+      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '" class="' + (x === tg ? 'tg' : '') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
+    '</div>' + (time ? '<span class="riru">sekundi u rezervi</span>' : '') + '</section>';
+}
+// per logged item: the taps of its sets, aligned with the sets (null = not tapped); null when nothing was tapped
+function rirLists(j, it){
+  const n = it.sets || 1, a = []; let any = false; for (let s = 0; s < n; s++) a.push(null);
+  P.steps.forEach((st, i) => { if (st.g === j && setEnd(st) && P.rir && P.rir[i] != null && st.set >= 1 && st.set <= n) { a[st.set - 1] = P.rir[i]; any = true; } });
+  return any ? a : null;
+}
+// session RPE (CR-10 words in Croatian) on a slider; the label under it changes while sliding
+const RPE_WORDS = ['', 'Vrlo lagano', 'Vrlo lagano', 'Lagano', 'Lagano', 'Srednje', 'Srednje', 'Teško', 'Teško', 'Vrlo teško', 'Maksimalno'];
+const rpeTxt = v => v >= 1 && v <= 10 ? v + ' · ' + RPE_WORDS[v] : '';
+const rpePct = v => ((v - 1) / 9 * 100).toFixed(1) + '%';
+function rpeHtml(){
+  const v = P.srpe || 0;
+  return '<section class="rpe"><div class="rpeh"><b id="rpeq">Koliko je bilo teško?</b><span>cijeli trening</span></div>' +
+    '<input type="range" id="srpe" class="rng' + (v ? ' set' : '') + '" min="1" max="10" step="1" value="' + (v || 5) + '" style="--p:' + rpePct(v || 5) + '" aria-labelledby="rpeq" aria-valuetext="' + (v ? rpeTxt(v) : 'nije ocijenjeno') + '">' +
+    '<div class="rpes"><span>1</span><b id="rpelab" aria-live="polite">' + (v ? esc(rpeTxt(v)) : 'povuci za ocjenu') + '</b><span>10</span></div></section>';
+}
+const auHtml = (v, min) => v ? 'Tvoj osjećaj: ' + v + ' × ' + Math.round(min) + ' min = <b>' + thou(v * Math.round(min)) + '</b>' : 'Ocijeni težinu: iz toga se uče tvoji bodovi.';
+function rpeSet(t){
+  if (!P || !P.done) return;
+  const v = Math.max(1, Math.min(10, Math.round(+t.value) || 5)); P.srpe = v;
+  t.classList.add('set'); t.style.setProperty('--p', rpePct(v)); t.setAttribute('aria-valuetext', rpeTxt(v));
+  const l = document.getElementById('rpelab'); if (l) l.textContent = rpeTxt(v);
+  const a = document.getElementById('lmau'); if (a && P._lm) a.innerHTML = auHtml(v, P._lm.min);
+  savePlay();
+}
+// the done screen's load card: ≈ points ± band, hard sets per region, landings and metres
+function lmCardHtml(o){
+  const hs = Object.keys(LM.TREG).filter(T => o.HS[T] > 0).map(T => '<span><i>' + esc(T) + '</i><b>' + lmHs(o.HS[T]) + '</b></span>');
+  const more = [o.CE > 0 ? 'Doskoci (CMJ-ekv.) <b>' + thou(o.CE) + '</b>' : '', o.m > 0 ? 'Trčanje <b>' + esc(loadFmt('m', o.m)) + '</b>' : ''].filter(Boolean);
+  return '<section class="lmc" aria-label="Opterećenje treninga"><div class="lmh"><span>Opterećenje · bodovi</span><span class="tag">Procjena</span></div>' +
+    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">predviđeno · ' + Math.round(o.min) + ' min</span></div>' +
+    '<p class="lmau" id="lmau">' + auHtml(P.srpe, o.min) + '</p>' +
+    (hs.length ? '<div class="lmt">Tvrde serije</div><div class="lmhs">' + hs.join('') + '</div>' : '') +
+    (more.length ? '<p class="lmx">' + more.join(' · ') + '</p>' : '') + '</section>';
+}
+// the exercise page (Opterećenje): the points of its last session, from the stored snapshot (recomputed for older entries)
+function exLastPts(exId){
+  for (const l of S.log) {
+    if (!l || !Array.isArray(l.items)) continue;
+    let B = 0, hit = false;
+    l.items.forEach((x, i) => { if (!x || x.exId !== exId || x.skipped) return; hit = true;
+      const s = l.load2 && l.load2.v === LM.MV && Array.isArray(l.load2.ex) && lmNum(l.load2.ex[i]) ? l.load2.ex[i] : itemPts(x, { at: l.at }).B; B += s; });
+    if (hit) return { B, at: l.at };
+  }
+  return null;
+}
 function ringSvg(frac, color){
   const C = 2 * Math.PI * 35;
   return '<svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--track)" stroke-width="3.5"/><circle id="ringArc" cx="38" cy="38" r="35" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(C*Math.max(0,Math.min(1,frac))).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 38 38)"/></svg>';
@@ -3150,10 +3242,13 @@ VIEWS.play = function(){
     const cands = progCandidates(), any = anyCredit();
     const willCount = any && P.ref && weekPlan(weekStart(Date.now())).some(s => slotHit(s, { kind: P.ref.kind, refId: P.ref.id }));
     const wk = willCount ? weekAfter() : { planned: 0 };
+    // the load of what was done (recomputed with every answer on this screen); the last set's reserve can still be tapped here
+    const lm = any ? computeSession(sessionEntry()) : null, rk = any ? rirStep() : -1; P._lm = lm;
     return '<div class="view gut stack">' + topbar('', '') +
-      '<div class="done'+(cands.length ? ' compact' : '')+'">'+(any ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 style="margin:10px 0 0;font-size:30px;font-weight:600">'+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
+      '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 style="margin:10px 0 0;font-size:30px;font-weight:600">'+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
+      (rk >= 0 ? '<div class="rirlast">' + rirRowHtml(rk, true) + '</div>' : '') + (lm ? rpeHtml() + lmCardHtml(lm) : '') +
       (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
         '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
           // pre-marked from what the player saw: all sets, some sets ('partial') or none ('skip'); the last two don't count
@@ -3172,7 +3267,7 @@ VIEWS.play = function(){
   }
   // the demo video of the screen being replaced; after() puts it back when the exercise stays the same
   keepMedia = app.dataset.key === 'play:' ? app.querySelector('.view .media video, .view .media img') : null;
-  const v = curView();
+  const v = curView(), rk = rirStep();
   const prog = (P.i + (v.st.dur ? 1 - remaining()/v.st.dur : 0)) / P.steps.length;
   let media = P.mode === 'field'
     ? '<div class="media"><div class="fblock '+v.fieldPanel.cls+'" id="fpanel"><span class="ph1">'+v.fieldPanel.ph+'</span><span class="big" id="fbig">'+esc(v.big)+'</span>' + (v.fieldPanel.dist ? '<span class="sm" style="font-size:20px;font-weight:600;color:var(--text)">'+esc(v.fieldPanel.dist)+'</span>' : '') + '<span class="sm">'+esc(v.fieldPanel.sm)+'</span></div></div>'
@@ -3194,7 +3289,7 @@ VIEWS.play = function(){
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
     media +
     '<div class="ttl gut">' + esc(v.title) + '</div><div class="meta gut">' + esc(v.meta) + '</div><div class="hint gut" id="phint">' + esc(v.hint) + '</div>' +
-    card + '<div style="height:12px"></div></div>' +
+    (rk >= 0 ? rirRowHtml(rk, P.steps[rk].e !== v.e) : '') + card + '<div style="height:12px"></div></div>' +
     '<div class="ctrl gut">' +
       '<button class="ib" data-a="toggleSound" aria-label="'+(S.settings.sound?'Isključi zvuk':'Uključi zvuk')+'">'+(S.settings.sound?I.sound:I.mute)+'</button>' +
       '<button class="ib" data-a="jump" data-d="-1" aria-label="Prethodna vježba">'+I.prev+'</button>' +
@@ -3640,6 +3735,10 @@ const A = {
     leavePlay();
     if (r.cut) toast(r.cut); else if (r.news.length) toast(newsMsg(r.news));
   },
+  // "Koliko si još mogao?": a tap stores the reserve of that set, the same tap again takes it back
+  rir: d => { const k = +d.k, st = P && P.steps[k]; if (!st || !st.it) return; const taps = st.it.measure === 'time' ? LM.SIR_TAPS : LM.RIR_TAPS, v = taps[+d.v]; if (v == null) return;
+    P.rir = P.rir || {}; if (P.rir[k] === v) delete P.rir[k]; else P.rir[k] = v; savePlay();
+    const w = app.querySelector('.view'), y = w ? w.scrollTop : 0; render(); const w2 = app.querySelector('.view'); if (w2) w2.scrollTop = y; },
   lrep: d => { const j = +d.j, it = P.items[j] || {}; P.lastReps = P.lastReps || {}; P.lastReps[j] = Math.max(0, Math.min(repsOf(it, it.sets || 1), lastRepsOf(j) + (+d.d))); savePlay(); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progTab: d => { S.progTab = d.v; render(); },
   setGoal: d => { S.settings.goal = S.settings.goal === d.v ? null : d.v; lsSet('mt.settings', S.settings); render(); },
@@ -3738,6 +3837,7 @@ const A = {
 
 app.addEventListener('click', ev => {
   actionSeq++;
+  if (ev.target && ev.target.id === 'srpe') { rpeSet(ev.target); return; }   // a tap on the slider without moving it rates too
   const el = ev.target.closest('[data-a]');
   if (!el || !app.contains(el)) return;
   if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } S.sheet = null; render(); return; }   // the quit sheet always closes as 'Nastavi trening'
@@ -3747,6 +3847,7 @@ app.addEventListener('click', ev => {
 });
 app.addEventListener('input', ev => {
   const t = ev.target;
+  if (t.id === 'srpe') { rpeSet(t); return; }   // the screen is not rebuilt while sliding
   if (t.id === 'libq') { S.lib.q = t.value; const l = document.getElementById('liblist'); if (l) l.innerHTML = libListHtml(); return; }
   if (t.id === 'masdist') { masTyped(t); return; }
   if (t.dataset && t.dataset.bind && S.draft) S.draft[t.dataset.bind] = t.value;
