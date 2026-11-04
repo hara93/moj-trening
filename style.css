@@ -920,3 +920,13 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
   .field-programme>.progtop>div{min-width:130px}
   .field-programme>.progtop>.bt{margin-left:auto}
 }
+
+/* Keep the three destinations recognisable on a first visit. */
+.tabbar .tab{width:100%;max-width:112px;flex-direction:column;gap:3px}
+.tabbar .tab span{font:600 10px/13px var(--font)}
+.home-heading{display:flex;align-items:center;justify-content:space-between;padding-right:21px}
+.home-heading .ib{color:var(--text-2)}
+.home-guide{display:grid;gap:8px;margin:14px 0}
+.home-guide>div{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--surface-2)}
+.home-guide svg{width:23px;height:23px;color:var(--accent-text)}
+.home-guide p{font-size:14px;line-height:1.45;margin:4px 0 0;color:var(--text-2)}

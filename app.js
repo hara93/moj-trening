@@ -183,7 +183,7 @@ const contentHash = window.mtContentHash;
 const HASH_SKIP = window.mtHashSkip;
 // (an older hash.js, e.g. from the saved copy on a weak signal, has none of these: updates then wait for the next start)
 const mtStructHash = window.mtStructHash || (() => ''), mtDoseHash = window.mtDoseHash || (() => ''), mtCanon = window.mtCanon || (o => JSON.stringify(o));
-const DOSE_KEYS = window.mtDoseKeys || ['measure', 'sets', 'reps', 'repsList', 'sec', 'kg', 'rest', 'sides', 'r0', 'r1'];
+const DOSE_KEYS = window.mtDoseKeys || ['measure', 'sets', 'reps', 'repsList', 'sec', 'secList', 'kg', 'kgList', 'startingKgKnown', 'rest', 'sides', 'r0', 'r1'];
 
 function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
@@ -234,7 +234,7 @@ function recordedDoseLabel(x) {
   if (rows.length>3) shown.push('još '+(rows.length-3));
   return shown.join(' · ');
 }
-function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0 }; }
+function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0, ...(e.startingKgKnown===true?{startingKgKnown:true}:{}) }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
 function exMeta(e){ return (e.zones && e.zones.length ? e.zones.slice(0,2).map(exZoneLabel).join(' • ') : e.cat) ; }
 // Sources hidden for now (Tomislav asked on 4 Nov 2026): with false the app shows no source, author or licence anywhere (the
@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.14.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -888,9 +888,9 @@ function toast(msg, err){
 function tabbar(){
   const t = S.tab;
   return '<nav class="tabbar gut" aria-label="Glavna navigacija">' +
-    '<button class="tab" data-a="tab" data-tab="dashboard" aria-label="Moj pregled"' + (t==='dashboard'?' aria-current="page"':'') + '>' + I.tabGrid + '</button>' +
-    '<button class="tab" data-a="tab" data-tab="home" aria-label="Početna"' + (t==='home'?' aria-current="page"':'') + '>' + I.tabPlay + '</button>' +
-    '<button class="tab" data-a="tab" data-tab="library" aria-label="Knjižnica vježbi"' + (t==='library'?' aria-current="page"':'') + '>' + I.tabLib + '</button>' +
+    '<button class="tab" data-a="tab" data-tab="dashboard" aria-label="Moj pregled"' + (t==='dashboard'?' aria-current="page"':'') + '>' + I.tabGrid + '<span>Moj pregled</span></button>' +
+    '<button class="tab" data-a="tab" data-tab="home" aria-label="Početna"' + (t==='home'?' aria-current="page"':'') + '>' + I.tabPlay + '<span>Početna</span></button>' +
+    '<button class="tab" data-a="tab" data-tab="library" aria-label="Knjižnica vježbi"' + (t==='library'?' aria-current="page"':'') + '>' + I.tabLib + '<span>Knjižnica</span></button>' +
   '</nav>';
 }
 function topbar(left, right, center){
@@ -1213,7 +1213,7 @@ VIEWS.home = function(){
   const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" onerror="this.remove()" src="' + esc(covers[c.k]) + '">' : '';
   return '<div class="view home" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
     topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
-    '<h1 class="greet">Bok, Tomislav</h1>' +
+    '<div class="home-heading"><h1 class="greet">Odaberi trening</h1><button type="button" class="ib" data-a="homeGuide" aria-label="Kako koristiti aplikaciju">'+I.info+'</button></div>' +
     weekHtml() + dataHint() +
     '<div class="carousel" id="car" aria-label="Kategorije treninga">' +
       cards.map(c => '<button class="hcard' + (cover(c) ? ' cv' : '') + '" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span>' + cover(c) + '<span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
@@ -1700,14 +1700,75 @@ function exOptHtml(e){
   const lp = exLastPts(e.id);
   return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
 }
-// 1.8: the exercise page's Upute | Cilj | Opterećenje as one row of cards that swipes sideways (scroll-snap, the next card peeks
-// in, the dots jump); the page itself does not scroll on a 393 × 852 phone, a long card scrolls inside. The card you were on
-// stays for every exercise while the app is open (S.exTab). The player keeps its compact Upute | Cilj tabs (exInfoHtml).
-// 1.8.1: like GOWOD, no card titles: Upute = small grey "Podražaj" + the feel line, "Upute" + at most 3 dot bullets (Oprema stays in
-// the editor and the filter); Cilj = "Ciljana područja" (the main muscles as stacked chips left, the figure right) + "Zašto" + the
-// note; Opterećenje = a small grey label with the period chips, Zadnje, the volume, a lower chart, the last points, the last 3 sessions.
-const EX_CARDS = ['upute', 'cilj', 'opt'];
-function exCardsHtml(e){
+const SET_STATUS = {
+  planned:['○','Planirana'], waiting:['○','Slijedi'], active:['●','U tijeku'],
+  done:['✓','Odrađena'], partial:['◐','Djelomično'], skipped:['–','Preskočena']
+};
+function viewDoseSource(t) {
+  if (t.v === 'pr') return S.pr[t.id]?.items || [];
+  const exercise = S.ex[t.id];
+  return exercise ? [doseOptions(exercise)[t.dose || 0]?.it || exItem(exercise)] : [];
+}
+function viewDoseItems(t, original = viewDoseSource(t)) {
+  return t.runDose && t.runDose.base === mtCanon(original) ? t.runDose.items : original;
+}
+function checklistRow(item, row, index, heading, round, weightKind, live) {
+  const [icon,status] = SET_STATUS[row.state];
+  const timed = item.measure === 'time';
+  const label = (round ? 'Krug ' : 'Serija ') + row.set;
+  const quantity = timed ? row.dose.sec+' s' : row.dose.reps+' pon.';
+  let weight = 'Bez dodatne težine';
+  if (row.dose.kg > 0) weight = fmtKg(row.dose.kg);
+  else if (StartingLoad.missingSet(item,row.set-1,weightKind)) weight = 'Početna težina nije upisana';
+  else if (item.startingKgKnown || item.kgList?.some(v => v > 0)) weight = '0 kg';
+  const info = [quantity + (item.sides ? ' po strani' : ''), weight];
+  if (row.reserve != null) {
+    const taps = timed ? LM.SIR_TAPS : LM.RIR_TAPS, labels = timed ? LM.SIR_TXT : LM.RIR_TXT;
+    const value = labels[taps.indexOf(row.reserve)] || row.reserve.toLocaleString('hr-HR');
+    info.push(timed ? 'SIR '+value+' s' : 'RIR '+value);
+  }
+  const sides = live && timed && item.sides ? '<span class="set-sides">'+
+    (row.left ? '✓ Lijeva' : '○ Lijeva')+' · '+(row.right ? '✓ Desna' : '○ Desna')+'</span>' : '';
+  const marker = row.step == null ? '<span class="set-mark" aria-hidden="true">'+icon+'</span>' :
+    '<button type="button" class="set-mark" data-a="checklistDone" data-j="'+index+'" data-set="'+row.set+'" data-step="'+row.step+
+    '" aria-label="'+esc('Označi kao odrađeno: '+heading+', '+label)+'"><span aria-hidden="true"></span></button>';
+  return '<li class="set-item" data-state="'+row.state+'"'+(row.current ? ' aria-current="step"' : '')+'>'+marker+
+    '<span class="set-info"><b>'+esc(label)+'</b><span>'+esc(info.join(' · '))+'</span>'+sides+'</span>'+
+    '<small class="set-state">'+(row.step != null ? 'Potvrdi' : status)+'</small></li>';
+}
+function checklistHtml(items, player, editable, libraryLinks = false) {
+  const rounds = ssLetters(items);
+  const blocks = items.map((item,j) => {
+    const exercise = S.ex[item.exId], group = rounds[j];
+    const rows = PlayerDose.checklist(item,player,j);
+    const heading = (group ? group.L+group.k+' · ' : '') + (exercise?.name || 'Obrisana vježba');
+    const edit = editable ? '<button class="set-edit" type="button" data-a="'+(player ? 'playDoseEdit' : 'previewDoseEdit')+
+      '" data-j="'+j+'" aria-label="'+esc('Uredi serije: '+heading)+'">Uredi</button>' : '';
+    const unit = group ? groupWord(group.size)+' '+group.L : 'Vježba '+(j+1);
+    const title = '<small>'+esc(unit)+'</small><strong>'+esc(heading)+'</strong>';
+    const updated = item.up && Date.now()-item.up < 21*DAY_MS ? '<small class="set-new">↑ Napredak</small>' : '';
+    const name = libraryLinks && exercise ? '<button type="button" class="set-ex-link" data-a="openEx" data-id="'+esc(item.exId)+'">'+
+      (exMedia(exercise) ? '<span class="thumb">'+thumbHtml(exercise)+'</span>' : '')+'<span>'+title+updated+'</span>'+I.chev+'</button>' : '<div>'+title+'</div>';
+    const weightKind=startLoadDescription(item.exId)?.kind;
+    const count = player ? rows.filter(row => row.state==='done').length+' / '+rows.length+' odrađeno' :
+      rows.length+' '+plural(rows.length,'planirana serija','planirane serije','planiranih serija');
+    return '<section class="set-block"><header>'+name+edit+'</header><div class="set-count">'+count+
+      (item.rest ? ' <span>· odmor '+esc(item.rest)+' s</span>' : '')+'</div><ol class="set-list">'+
+      rows.map(row => checklistRow(item,row,j,heading,group,weightKind,player)).join('')+'</ol></section>';
+  });
+  if (!libraryLinks) return blocks.join('');
+  let section;
+  return groupsOf(items).map(g => {
+    const heading = items[g.idx[0]].section;
+    const title = heading && heading!==section ? '<div class="sechead">'+esc(heading)+'</div>' : '';
+    if (heading) section = heading;
+    return title+(g.ss ? groupHead(items,g,rounds[g.idx[0]].L) : '')+g.idx.map(j => blocks[j]).join('');
+  }).join('');
+}
+
+// The third library card previews the dose that the Play button starts.
+const EX_CARDS = ['upute', 'cilj', 'dose'];
+function exCardsHtml(e,t){
   const steps = e.steps || [], a = (href, t, ti) => '<a href="'+esc(href)+'" target="_blank" rel="noopener"'+(ti ? ' title="'+esc(ti)+'"' : '')+'>'+esc(t)+' ↗</a>';
   const lb = t => '<span class="lb">'+t+'</span>';
   const cues = steps.length ? '<div class="cues">' + steps.map(s => '<div class="bul">'+esc(s)+'</div>').join('') + '</div>' : '<p class="none">Dodaj upute u uređivanju.</p>';
@@ -1720,16 +1781,10 @@ function exCardsHtml(e){
       (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>' : '') +
     (e.note ? '<div class="sec">' + lb('Zašto') + '<p class="cn">'+esc(e.note)+'</p></div>' : (chips.length ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
     (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '');
-  const h = historyOf(e.id), rg = LOAD_RANGES.find(r => r[0] === S.loadRange) || LOAD_RANGES[0];
-  const per = h.length ? '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>' : '';
-  const lp = h.length && exLastPts(e.id), sr = h.length && exLoadSeries(e.id, rg[2]), tbl = sr && sr.pts.length > 1 ? exLoadTable(sr.kind, sr.pts, v => loadFmt(sr.kind, v)) : '';
-  const c3 = (h.length ? '<div class="opthd"><span>Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + recordedDoseLabel(h[0]))+'</b></span></div>' + exLoadCard(e, S.loadRange, false, true) +
-      (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h, 2)
-    : '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
-      '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>') +
-    '<div class="c3f">' + (tbl || '') + '<button class="txtbtn lnk howc" data-a="loadInfo">Kako se računa?</button></div>';
-  return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute', 0, 'Upute', c1) + card('cilj', 1, 'Cilj', c2) + card('opt', 2, 'Opterećenje', c3, lb('Opterećenje') + per) + '</div>' +
-    '<div class="dots swdots" id="swdots">' + ['Upute', 'Cilj', 'Opterećenje'].map((t, i) => '<button class="dot" data-a="swGo" data-i="'+i+'" aria-label="'+t+'" aria-current="'+(EX_CARDS[i] === exTabOf(S.exTab))+'"><i></i></button>').join('') + '</div></section>';
+  const c3 = checklistHtml(viewDoseItems(t),null,true)+
+    '<button class="set-load-link" type="button" data-a="exerciseLoad" data-id="'+esc(e.id)+'">Opterećenje i povijest vježbe</button>';
+  return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute',0,'Upute',c1) + card('cilj',1,'Cilj',c2) + card('dose',2,'Doziranje',c3,lb('Doziranje')) + '</div>'+
+    '<div class="dots swdots" id="swdots">'+['Upute','Cilj','Doziranje'].map((title,i)=>'<button class="dot" data-a="swGo" data-i="'+i+'" aria-label="'+title+'" aria-current="'+(EX_CARDS[i]===S.exTab)+'"><i></i></button>').join('')+'</div></section>';
 }
 // the scroll position of each card (the row is rebuilt on every render)
 const swPos = (r, i) => { const c = r.children[i]; return c ? Math.min(c.offsetLeft - r.firstElementChild.offsetLeft, r.scrollWidth - r.clientWidth) : 0; };
@@ -1746,7 +1801,7 @@ VIEWS.ex = function(t){
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips center dz" role="group" aria-label="Doziranje">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
     // 1.8: everything about the exercise sits in the three swipe cards (1.6.2's tabs; nothing below them)
-    exCardsHtml(e) +
+    exCardsHtml(e,t) +
     '</div>' +
     '<div class="ctrl gut">' +
       '<button class="small" data-a="editEx" data-id="'+esc(e.id)+'">Uredi</button><span></span>' +
@@ -1780,7 +1835,7 @@ function stepper(label, key, val, shown, o){ return stepRow('dstep', label, key,
 // unsaved changes: everything in the draft except the screen's own keys (_open, _uploading …); no plan days = none chosen
 const draftSig = d => JSON.stringify(d, (k, v) => k.charAt(0) === '_' || (k === 'days' && Array.isArray(v) && !v.length) ? undefined : v);
 // the dose of a protocol item; when you change it by hand its "sessions in a row" start again
-const doseSig = it => JSON.stringify([it.measure || 'sets', it.sets || 1, it.reps || 10, it.repsList || null, it.sec || 30, it.kg || 0, !!it.sides]);
+const doseSig = it => JSON.stringify([it.measure || 'sets', it.sets || 1, it.reps || 10, it.repsList || null, it.sec || 30, it.secList || null, it.kg || 0, it.kgList || null, !!it.startingKgKnown, !!it.sides]);
 const PROG_STATE = ['ok', 'fail', 'snoozeOk', 'prev', 'up', 'easy'];
 // a video still reading its file is stopped first, so releasing the file's address is never an error
 const unload = root => (root || document).querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e){} });
@@ -1901,18 +1956,6 @@ const groupWord = n => n === 2 ? 'Superset' : n === 3 ? 'Triset' : 'Kružni tren
 function groupHead(items, g, L){
   const R = Math.max.apply(null, g.idx.map(i => items[i].sets || 1)), last = items[g.idx[g.idx.length - 1]];
   return '<div class="ghead"><b>' + groupWord(g.idx.length) + ' ' + L + '</b><span>' + R + ' ' + plural(R, 'krug', 'kruga', 'krugova') + (last.rest ? ' • odmor ' + esc(last.rest) + ' s nakon kruga' : '') + '</span></div>';
-}
-function itemRowsHtml(items, lab){
-  let sec = null;
-  return groupsOf(items).map(g => {
-    const s0 = items[g.idx[0]].section; const head = s0 && s0 !== sec ? '<div class="sechead">' + esc(s0) + '</div>' : ''; if (s0) sec = s0;
-    const rows = g.idx.map(i => {
-      const it = items[i], e = S.ex[it.exId], l = lab[i];
-      const fresh = it.up && Date.now() - it.up < 21 * DAY_MS;
-      return '<button class="row'+(l ? ' inss' : '')+'" data-a="openEx" data-id="'+esc(it.exId)+'" style="min-height:72px"><span class="thumb" style="width:62px;height:62px">'+(exMedia(e) ? thumbHtml(e) : (l ? l.L + l.k : i + 1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span>'+esc(dose(it))+'</span>'+(fresh ? '<span class="tag">↑ napredak</span>' : '')+'</span></span>'+I.chev+'</button>';
-    }).join('');
-    return head + (g.ss ? '<div class="sgroup">' + groupHead(items, g, lab[g.idx[0]].L) + rows + '</div>' : rows);
-  }).join('');
 }
 /* ---------- programmes: fixed weekly order of sessions, e.g. a purchased 6-week plan from your private pack ---------- */
 function progSessions(g){ const out = []; (g.weeks || []).forEach(w => (w.sessions || []).forEach((x, k) => out.push({ week: w.week, k, label: x.label, short: w.week + '. tj. · ' + x.label, pr: x.pr }))); return out; }
@@ -2035,7 +2078,7 @@ VIEWS.pr = function(t){
   if (!p) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj protokol više ne postoji.</div></div>';
   const first = p.items && p.items[0] && S.ex[p.items[0].exId];
   const fm = exMedia(first, true);
-  const lab = ssLetters(p.items || []);
+  const showDose=t.showDose!==false;
   return '<div class="view" style="position:relative">' +
     heroHtml(p, fm) +
     '<div class="over gut">' + topbar(backBtn(), '<button class="ib" data-a="editPr" data-id="'+esc(p.id)+'" aria-label="Uredi protokol">'+I.edit+'</button>') + '</div>' +
@@ -2047,9 +2090,16 @@ VIEWS.pr = function(t){
       protocolMusclePreview(p) +
       (p.program ? '' : daysPicker('prDays', p.id, p.days)) +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2>' + (p.program ? '' : '<button class="txtbtn" data-a="progInfo" style="font-size:14px;padding:0">Kako napredujem?</button>') + '</div>' +
-      '<div class="list">' + itemRowsHtml(p.items || [], lab) + '</div>' +
+      (p.items?.length ? '<section class="pre-sets"><button type="button" class="set-preview-toggle" data-a="toggleDosePlan" aria-expanded="'+showDose+'"><span><b>Serije i doziranje</b><small>'+nVj(p.items.length)+'</small></span><span aria-hidden="true">'+(showDose?'−':'+')+'</span></button>'+
+        (showDose?checklistHtml(viewDoseItems(t,p.items),null,!p.program,true):'')+'</section>' : '')+
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"' + ((p.items||[]).length ? '' : ' disabled') + '>Krenimo!</button></div>';
+};
+
+VIEWS.exerciseLoad = function(t) {
+  const e=S.ex[t.id];
+  return '<div class="view gut">'+topbar(backBtn())+'<h1 class="h1">Opterećenje i povijest</h1>'+
+    (e ? '<p class="sub">'+esc(e.name)+'</p>'+exOptHtml(e) : '<p class="empty">Vježba više nije u knjižnici.</p>')+'</div>';
 };
 
 VIEWS.build = function(){
@@ -2139,8 +2189,21 @@ function regroup(items, op){
   return items;
 }
 function dropItems(items, pred){ const eff = secOf(items); regroup(items, () => { for (let k = items.length - 1; k >= 0; k--) if (pred(items[k], k)) { items.splice(k, 1); eff.splice(k, 1); } }); return eff.some(Boolean) ? secSet(items, eff) : items; }
-// per-set reps follow the number of sets: a new set repeats the last one
-function fitReps(it){ if (!Array.isArray(it.repsList)) return; const n = it.sets || 1; while (it.repsList.length < n) it.repsList.push(it.repsList.length ? it.repsList[it.repsList.length - 1] : (it.reps || 10)); it.repsList.length = n; }
+// A new round inherits the last row, including an unknown weight.
+function fitSetLists(it) {
+  for (const [key,fallback] of [['repsList',it.reps || 10],['secList',it.sec ?? 30],['kgList',it.kg || null]]) {
+    const list=it[key]; if (!Array.isArray(list)) continue;
+    const n=it.sets || 1, last=list.length ? list[list.length-1] : fallback;
+    while (list.length<n) list.push(last);
+    list.length=n;
+  }
+}
+function builderWeight(it,kg,explicit) {
+  it.kg=kg;
+  delete it.kgList;
+  if (explicit && kg===0 && startLoadDescription(it.exId)?.kind==='lm') it.startingKgKnown=true;
+  else delete it.startingKgKnown;
+}
 // an exercise added to a protocol starts from the weight you last lifted on it, else the library value. When the reps differ, a
 // barbell, landmine or dumbbell load is converted to the real load for the new reps; any other load (kettlebell, medicine ball,
 // an own exercise without a weight tag) is kept as it was, since roundLoad only knows bar, plate and dumbbell steps
@@ -2666,12 +2729,70 @@ function stepsFromField(f){
   });
   return steps;
 }
+function startLoadDescription(id){
+  const e=S.ex[id];
+  return e && {name:e.name,kind:isBw(e)?'':StartingLoad.kind(e,exEquip(e),loadKind(e))};
+}
+function startSource(cfg){
+  return cfg.ref.kind==='protocol'?S.pr[cfg.ref.id]:S.ex[cfg.ref.id];
+}
+function openStartingLoad(cfg,repeating){
+  const rows=StartingLoad.requests(cfg.items,startLoadDescription);
+  if (!rows.length) return false;
+  const source=startSource(cfg);
+  if (!source) {toast('Vježba ili protokol više nisu dostupni.',true);return true;}
+  S.sheet={kind:'startingLoad',cfg,repeating,rows,values:{},sourceKey:mtCanon(source),proposal:top().v==='today'?top().proposalKey:null};
+  render();return true;
+}
+function startingLoadHtml(s){
+  return '<small class="sl-overline">Prije pokretanja</small><h3>Unesi početnu težinu</h3>'+
+    '<p>Za sljedeće vježbe nedostaje kilaža. Unesi težinu koju ćeš koristiti.</p><form id="starting-load-form" class="sl-form" novalidate>'+
+    s.rows.map(row=>'<label class="sl-row"><span><strong>'+esc(row.name)+'</strong><small>'+esc(StartingLoad.labels[row.kind])+
+      (row.kind==='lm'?' · 0 za praznu šipku':'')+'</small></span><input type="text" inputmode="decimal" autocomplete="off" name="kg-'+row.index+
+      '" data-start-kg="'+row.index+'" value="'+esc(s.values[row.index] || '')+'" placeholder="kg"></label>').join('')+
+    '<p id="start-weight-error" class="sl-error" role="alert">'+esc(s.error || '')+'</p><button type="submit" class="btn">Spremi i kreni</button>'+
+    '<button type="button" class="btn sec" data-a="sheetDone">Natrag</button></form>';
+}
+function confirmStartingLoad(){
+  const s=S.sheet, form=document.getElementById('starting-load-form');
+  if (!form || s?.kind!=='startingLoad' || P) return;
+  const error=message=>{s.error=message;document.getElementById('start-weight-error').textContent=message;};
+  const kgByIndex=new Map();
+  for (const row of s.rows) {
+    const field=form.elements.namedItem('kg-'+row.index);
+    s.values[row.index]=field.value;
+    const kg=StartingLoad.parse(field.value,row.kind);
+    if (kg===null) {error('Provjeri unos za '+row.name+'. Upiši '+(row.kind==='lm'?'0 ili više':'više od 0')+' kg, najviše 300 kg.');field.focus();return;}
+    kgByIndex.set(row.index,kg);
+  }
+  let raw;
+  try {raw=localStorage.getItem(STORE_KEY);} catch(e){error('Težina nije spremljena. Pokušaj ponovno.');return;}
+  if (raw!==savedJson) {
+    if (!raw || !mergeOtherCopy(raw)) {error('Podaci su se promijenili. Vrati se i ponovno otvori trening.');return;}
+    savedJson=raw; pendingExt=null;
+  }
+  const cfg=s.cfg, source=startSource(cfg);
+  const fill=(it,i)=>kgByIndex.has(i)?StartingLoad.fill(it,kgByIndex.get(i)):it;
+  const stale=!source || mtCanon(source)!==s.sourceKey || s.rows.some(row=>startLoadDescription(row.exId)?.kind!==row.kind);
+  const vm=s.proposal && dailyInput(Date.now());
+  if (stale || (vm && s.proposal!==mtCanon([vm.date,vm.recommendation]))) {
+    S.sheet=null;render();toast('Trening ili prijedlog se promijenio. Provjeri ga prije pokretanja.',true);return;
+  }
+  const protocol=cfg.ref.kind==='protocol', map=protocol?S.pr:S.ex;
+  const updated=protocol?{...source,items:source.items.map(fill)}:StartingLoad.fill(source,kgByIndex.get(0));
+  map[source.id]=updated;
+  if (!persist()) {map[source.id]=source;error('Početna težina nije spremljena. Tvoj je unos još otvoren.');return;}
+  const items=cfg.items.map(fill), baseline=(cfg.originalItems || cfg.items).map(fill);
+  S.sheet=null;
+  startPlayer({...cfg,items,originalItems:baseline},s.repeating);
+}
 function startPlayer(cfg, repeating=false){
   if (P) return;
   if (!repeating && lsGet(PLAY_KEY,null)) {
     playResume();
     if (S.sheet?.kind==='resume') return;
   }
+  if (cfg.mode==='ex' && openStartingLoad(cfg,repeating)) return;
   audioMode(true); ensureAudio();
   P = Object.assign({ i:0, paused:false, done:false, endAt:0, left:0, startedAt: Date.now(), lastBeep:null, doneSteps:{} }, cfg);
   if (P.mode === 'ex') {
@@ -2732,7 +2853,12 @@ function setsDoneOf(j){
 }
 // every set done -> "Sve odrađeno"; some -> 'partial'; none (skipped or never reached) -> 'skip'. The last two don't count for progression.
 function autoAnswer(j){ if (!workOf(j).some(i => P.doneSteps[i])) return 'skip'; return setsDoneOf(j) >= ((P.items[j] || {}).sets || 1) ? true : 'partial'; }
-function lrDefault(j){ const it = P.items[j] || {}; return Math.max(0, repsOf(it, it.sets || 1) - 2); }
+function lastAttemptDose(j){
+  const steps=workOf(j).filter(k=>P.doneSteps[k]);
+  const st=P.steps[steps[steps.length-1]], it=P.items[j] || {};
+  return PlayerDose.at(st && st.it || it,st && st.set || 1);
+}
+function lrDefault(j){ return Math.max(0,lastAttemptDose(j).reps-2); }
 function lastRepsOf(j){ return P.lastReps && P.lastReps[j] != null ? Math.max(0, +P.lastReps[j] || 0) : lrDefault(j); }
 function finish(){
   P.done = true; P.finishedAt = Date.now(); clearInterval(ticker); keepAwake(false);
@@ -2855,6 +2981,16 @@ function savePlay(){
   try { localStorage.setItem(PLAY_KEY,JSON.stringify(snapshot)); return true; } catch(e) { return false; }
 }
 function clearPlay(){ try { localStorage.removeItem(PLAY_KEY); } catch(e){} }
+// Rating/answer controls follow the same checkpoint rule as the live dose editor:
+// a rejected write keeps the previous choice visible and available after reload.
+function savePlayerChoice(keys,change){
+  const before=keys.map(k=>({k,exists:Object.prototype.hasOwnProperty.call(P,k),value:P[k]===undefined?undefined:clone(P[k])}));
+  change();
+  if (savePlay()) return true;
+  before.forEach(x=>{if(x.exists)P[x.k]=x.value;else delete P[x.k];});
+  toast('Promjena nije spremljena na uređaj. Pokušaj ponovno prije zatvaranja treninga.',true);
+  return false;
+}
 // on the next start: an unfinished session (up to 12 h old) can be continued; a finished one that never reached the history can be saved
 function playResume(){
   const s = lsGet(PLAY_KEY, null);
@@ -2911,13 +3047,12 @@ function restorePlay(s){
 }
 // leaves the player without saving anything more
 function leavePlay(){ clearInterval(ticker); keepAwake(false); audioMode(false); P = null; if (top().v === 'play') S.stack.pop(); render(); }
-// "Spremi odrađeno": the part you did goes to the history. With exercises to ask about, the done screen comes first.
+// Every partial session gets the same review/rating step; progression eligibility
+// does not decide whether actual work can be reviewed before it is saved.
 function saveSoFar(){
   S.sheet = null;
   if (!anyDone()) { clearPlay(); leavePlay(); toast('Trening nije spremljen: još ništa nije odrađeno do kraja.'); return; }
   P.quit = true; P.paused = false; finish();
-  if (P.mode === 'ex' && progCandidates().length) return;
-  const r = logSession(); if (!r.saved) { render(); return; } leavePlay(); toast(r.cut || 'Spremljeno je ono što si odradio.');
 }
 // Keep exercise details independent of age. The existing 2000-record limit is reported when reached.
 const LOG_MAX = 2000;
@@ -3244,31 +3379,31 @@ function matchDatesHtml(){
     '<div class="madd"><input id="matchadd" class="input" type="date" min="' + today + '" aria-label="Datum dodatne utakmice"><button class="chip" data-a="matchAdd">Dodaj</button></div>' +
     '<p class="sub" style="margin:8px 2px 0;font-size:13px;line-height:19px">Utakmicu u ovom tjednu označiš i dodirom na dan na početnom zaslonu.</p>';
 }
-function dosingHtml(){
+function progressDosingSections(){
   const g = GOALS[S.settings.goal] ? S.settings.goal : null, b = ballN(), m = matchDay(), pk = plateKg();
   const lifts = Object.values(S.ex).filter(e => loaded(e) && loadKind(e) !== 'kb').map(e => ({ e, v: bestE1(e.id) })).filter(x => x.v > 0).sort((a, b2) => b2.v - a.v).slice(0, 8);
   const kgs = v => String(v).replace('.', ','), nbk = v => fmtKg(v).replace(' ', '&nbsp;');
   const rng = (e, v, k) => { const G = GOALS[k];
     if (G.rir) return e.cat === 'Snaga' && loadKind(e) !== 'db' ? kgs(goalDose(e, v, G).kg) : '—';
     const lo = loadFor(e, v, G.reps[1]), hi = loadFor(e, v, G.reps[0]); return lo === hi ? kgs(lo) : kgs(lo) + '–' + kgs(hi); };
-  return '<div class="psec"><h2>Cilj ovog razdoblja</h2><span>za vježbe s opterećenjem</span></div><div class="goal">' +
+  return [{ title:'Cilj ovog razdoblja', hint:'Snaga, mišićna masa, izdržljivost ili eksplozivnost', html:'<div class="goal">' +
     Object.keys(GOALS).map(k => '<button class="'+(g === k ? 'on' : '')+'" data-a="setGoal" data-v="'+k+'" aria-pressed="'+(g === k)+'"><b>'+GOALS[k].name+'</b><span>'+goalDesc(k).map(nwNum).join(' · ')+'</span></button>').join('') + '</div>' +
-    (g ? '<p class="sub" style="margin:10px 17px 0;line-height:19px">Otvori protokol za teretanu (npr. Trening A): dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”. Ništa se ne mijenja dok prijedlog ne potvrdiš.'+(GOALS[g].rir ? ' Mijenjaju se samo glavne vježbe sa šipkom i landmine; bučice, girja i skokovi ostaju kako jesu.' : '')+'</p>' : '') +
-    '<div class="psec"><h2>Nogometni tjedan</h2><span>tvoj uobičajeni tjedan</span></div><div class="chart">' +
+    (g ? '<p class="sub" style="margin:10px 17px 0;line-height:19px">Otvori protokol za teretanu (npr. Trening A): dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”. Ništa se ne mijenja dok prijedlog ne potvrdiš.'+(GOALS[g].rir ? ' Mijenjaju se samo glavne vježbe sa šipkom i landmine; bučice, girja i skokovi ostaju kako jesu.' : '')+'</p>' : '') },
+    { title:'Nogometni tjedan', hint:'Treninzi s loptom i datumi utakmica', html:'<div class="chart">' +
       '<div class="prow" style="border:0;min-height:52px"><span class="k">Treninzi s loptom</span><div class="step"><button class="sbtn" data-a="setBall" data-d="-1" aria-label="Treninzi s loptom: smanji">−</button><b>'+b+'</b><button class="sbtn" data-a="setBall" data-d="1" aria-label="Treninzi s loptom: povećaj">+</button></div></div>' +
       // "Nema utakmice" sits beside the label, so the seven day buttons share the whole row (44 px tall, about 40 px wide)
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px"><span class="label" style="padding:0">Utakmica</span><button class="chip" data-a="setMatch" data-v="-1" aria-pressed="'+(m < 0)+'">Nema utakmice</button></div><div class="drow" role="group" aria-label="Dan utakmice">' + DAYS.map((L, i) => '<button class="dchip" data-a="setMatch" data-v="'+i+'" aria-pressed="'+(m === i)+'" aria-label="'+DAYNAMES[i]+'">'+L+'</button>').join('') + '</div>' +
       matchDatesHtml() +
-      '<div class="advice">'+esc(weekAdvice())+'</div></div>' +
-    '<div class="psec"><h2>Teren</h2><span>za treninge na terenu</span></div><div class="chart">' +
+      '<div class="advice">'+esc(weekAdvice())+'</div></div>' },
+    { title:'Teren', hint:'Tvoja najveća brzina', html:'<div class="chart">' +
       '<div class="prow" style="border:0;min-height:52px"><label class="k" for="topkmh" style="display:flex;align-items:center;min-height:44px">Najveća brzina (km/h)</label><input id="topkmh" class="input tkm" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="' + kmhTxt(topKmh()) + '" placeholder="28,8"></div>' +
-      '<p class="sub" style="margin:4px 0 0;font-size:13px;line-height:19px">Postotak brzine u treninzima na terenu (npr. 90&nbsp;% brzine) računa se od nje. Zadano 28,8&nbsp;km/h (8&nbsp;m/s); upiši svoju najveću brzinu iz STATSportsa, od 20 do 40&nbsp;km/h.</p></div>' +
-    '<div class="psec"><h2>Moje težine</h2><span>kg, iz serija zadnjih 8 tjedana</span></div>' +
+      '<p class="sub" style="margin:4px 0 0;font-size:13px;line-height:19px">Postotak brzine u treninzima na terenu (npr. 90&nbsp;% brzine) računa se od nje. Zadano 28,8&nbsp;km/h (8&nbsp;m/s); upiši svoju najveću brzinu iz STATSportsa, od 20 do 40&nbsp;km/h.</p></div>' },
+    { title:'Moje težine', hint:'Procjena iz zadnjih osam tjedana', html:
     (lifts.length ? '<div class="chart" style="padding-top:8px;padding-bottom:4px;overflow-x:auto"><table class="kg"><tr><th>Vježba</th>' + ['Snaga', 'Hipertr.', 'Izdrž.', 'Ekspl.'].map(t => '<th style="padding-left:8px">' + t + '</th>').join('') + '</tr>' +
       lifts.map(x => '<tr><td><b>'+esc(x.e.name)+'</b><span>max ≈ '+esc(fmtKg(Math.round(x.v * 2) / 2))+(loadKind(x.e) === 'db' ? ' po bučici' : '')+'</span></td>' + Object.keys(GOALS).map(k => '<td class="'+(g === k ? 'on' : '')+'">'+rng(x.e, x.v, k)+'</td>').join('') + '</tr>').join('') + '</table></div>'
       : '<p class="sub" style="margin:0 17px;line-height:20px">Kad odradiš trening s upisanim kilogramima, ovdje se iz tvojih serija procijeni maksimum i kilogrami za svaki cilj.</p>') +
     '<span class="label" style="display:block;padding:14px 2px 8px 17px">Najmanje ploče na šipki</span><div class="chips" style="margin-top:0">' + PLATES.map(v => '<button class="chip" data-a="setPlate" data-v="'+v+'" aria-pressed="'+(pk === v)+'">'+fmtKg(v)+'</button>').join('') + '</div>' +
-    '<p class="sub" style="margin:12px 17px 0;line-height:19px">Postotak je udio tvog procijenjenog maksimuma, težine koju možeš podići jednom. Maksimum se procjenjuje Epleyjevom formulom iz tvojih serija: serija s više od 10&nbsp;ponavljanja računa se kao 10, a skokovi se ne računaju. Kilogrami se zaokružuju na ono što možeš složiti – šipka: 20&nbsp;kg i parovi ploča od '+nbk(pk)+' (korak najmanje '+nbk(2 * pk)+'); landmine: ploče na slobodnom kraju šipke; bučice: tvoji parovi, kg po bučici; girja: 20&nbsp;kg. Ekspl.: 3&nbsp;brza ponavljanja s težinom za 5, za vježbe snage sa šipkom i landmine (bučice, girja i skokovi ne).</p>';
+    '<p class="sub" style="margin:12px 17px 0;line-height:19px">Postotak je udio tvog procijenjenog maksimuma, težine koju možeš podići jednom. Maksimum se procjenjuje Epleyjevom formulom iz tvojih serija: serija s više od 10&nbsp;ponavljanja računa se kao 10, a skokovi se ne računaju. Kilogrami se zaokružuju na ono što možeš složiti – šipka: 20&nbsp;kg i parovi ploča od '+nbk(pk)+' (korak najmanje '+nbk(2 * pk)+'); landmine: ploče na slobodnom kraju šipke; bučice: tvoji parovi, kg po bučici; girja: 20&nbsp;kg. Ekspl.: 3&nbsp;brza ponavljanja s težinom za 5, za vježbe snage sa šipkom i landmine (bučice, girja i skokovi ne).</p>' }];
 }
 // what a chart draws for one exercise (h oldest first; the last n points): with kilograms only the sessions that had them
 // (the shipped 0 kg or a first try would read as progress); while the load stays the same, the reps you did, so reps
@@ -3816,10 +3951,10 @@ function exHistHtml(e, h, max){
     return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(recordedDoseLabel(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
 }
 // Napredak → "Tjedno opterećenje": strength volume load and field metres per calendar week, the last 8 weeks
-function weekLoadHtml(){
+function weekLoadHtml(compact){
   const W = weekLoads(8), cur = W[7], prev4 = W.slice(3, 7), avg = k => prev4.reduce((a, w) => a + w[k], 0) / 4;
   const anyVl = W.some(w => w.vl > 0), anyM = W.some(w => w.m > 0);
-  const head = '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>' +
+  const head = (compact ? '' : '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>') +
     (W.some(w => w.partial) ? '<p class="sub">Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad.</p>' : '');
   if (!anyVl && !anyM) return head + '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad odradiš treninge s kilogramima ili trčanje na terenu, ovdje vidiš koliko si napravio svaki tjedan u zadnjih 8 tjedana.</p>';
   const range = w => shortDate(w.ws) + ' – ' + shortDate(calDay(w.we, -1));
@@ -3911,7 +4046,7 @@ VIEWS.progress = function(){
     const r = time && !moved ? 0 : sr.loaded && !time ? 2 : sr.loaded || e.cat === 'Snaga' || e.cat === 'Trup' ? 1 : 0;
     if (r) { series[id] = sr; rank[id] = r; } });
   const lifts = Object.keys(series).sort((a, b) => rank[b] - rank[a] || hist[b].length - hist[a].length || hist[b][hist[b].length - 1].at - hist[a][hist[a].length - 1].at).slice(0, 4);
-  const charts = lifts.map(id => exLoadCard(S.ex[id], 'sve', true)).join('');   // the same load card as the exercise page
+  const exerciseCharts = lifts.map(id => ({ id, name:S.ex[id].name, html:exLoadCard(S.ex[id], 'sve', true) })); // same calculator and card as the exercise page
   // records: a best estimated max that beat an earlier best, set in the last 30 days (your first weight is not a record);
   // reps of a set count up to 10 like in Doziranje; no timed carries, jumps or throws
   const prs = Object.keys(hist).filter(id => S.ex[id] && S.ex[id].cat !== 'Eksplozivnost').map(id => { let best = null, beaten = false;
@@ -3923,21 +4058,25 @@ VIEWS.progress = function(){
   const days = {}; S.log.forEach(l => { if (!isTraining(l)) return; const t = calDay(l.at); days[t] = (days[t] || 0) + 1; });
   const start = calDay(ws, -77); let heat = '';
   for (let d = 0; d < 7; d++) for (let w = 0; w < 12; w++) { const t = calDay(start, w * 7 + d); const n = days[t] || 0; heat += '<i class="'+(t > Date.now() ? 'fut' : n >= 2 ? 'l3' : n === 1 ? 'l2' : '')+'"></i>'; }
-  const head = '<div class="view gut">' + topbar(backBtn(), '', 'NAPREDAK') +
-    '<h1 class="h1">Napredak</h1>' +
-    '<div class="seg" style="margin-top:16px"><button class="chip" data-a="progTab" data-v="pregled" aria-pressed="'+(S.progTab !== 'doziranje')+'" style="height:44px">Pregled</button><button class="chip" data-a="progTab" data-v="doziranje" aria-pressed="'+(S.progTab === 'doziranje')+'" style="height:44px">Doziranje</button></div>';
-  if (S.progTab === 'doziranje') return head + dosingHtml() + '<div style="height:20px"></div></div>';
-  return head +
-    '<div class="stats"><div class="stat"><b>'+(wk.planned ? wk.done + '/' + wk.planned : thisWeek)+'</b><span>'+(wk.planned ? 'treninga ovaj tjedan po planu' : plural(thisWeek, 'trening', 'treninga', 'treninga') + ' ovaj tjedan')+'</span></div><div class="stat"><b>'+sk+'</b><span>'+plural(sk, 'tjedan', 'tjedna', 'tjedana')+(plan.length ? ' zaredom po planu' : ' zaredom s treningom')+'</span></div><div class="stat"><b>'+total+'</b><span>'+plural(total, 'trening', 'treninga', 'treninga')+' ukupno</span></div></div>' +
-    weekLoadHtml() +
-    '<div class="psec"><h2>Prijedlozi</h2><span>ti odlučuješ</span></div>' +
-    (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
-    (way.length ? '<div class="psec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
-    (charts ? '<div class="psec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
-    (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
-    '<div class="psec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat" role="img" aria-label="'+heatLabel(heat)+'">'+heat+'</div></div>' +
-    '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
-    '<div style="height:20px"></div></div>';
+  const weeks = weekLoads(8), current = weeks[weeks.length-1];
+  const loadParts = [current.vl > 0 ? loadFmt('vl',current.vl) + ' tereta' : '', current.m > 0 ? loadFmt('m',current.m) + ' trčanja' : ''].filter(Boolean);
+  const recordsHtml = prs.length ? '<div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '';
+  return ProgressView.render({
+    topbarHtml:topbar(backBtn(), '', 'NAPREDAK'), tab:S.progTab,
+    dosingSections:S.progTab === 'doziranje' ? progressDosingSections() : [],
+    zero:total === 0,
+    stats:[
+      { value:wk.planned ? wk.done + '/' + wk.planned : thisWeek, label:wk.planned ? 'po planu ovaj tjedan' : 'treninga ovaj tjedan', note:wk.planned && thisWeek !== wk.done ? thisWeek + ' odrađeno ukupno' : '' },
+      { value:sk, label:plural(sk,'tjedan','tjedna','tjedana') + ' zaredom', note:hasPlan ? 'po planu' : 's treningom' },
+      { value:total, label:'treninga ukupno' }
+    ],
+    counts:{ready:act.length, missing:Object.keys(nokg).length, way:way.length, records:prs.length},
+    suggestionsHtml:act.map(sugCard).join(''), missingWeightsHtml:nokgHtml, wayHtml:way.map(sugCard).join(''),
+    weeklyHtml:weekLoadHtml(true), hasWeeklyData:weeks.some(w=>w.vl > 0 || w.m > 0),
+    loadHint:loadParts.length ? 'Ovaj tjedan · ' + loadParts.join(' · ') : 'Kilogrami i poznati metri · zadnjih 8 tjedana',
+    exercises:exerciseCharts, recordsHtml, heatHtml:heat, heatLabel:heatLabel(heat),
+    consistencyHint:heatLabel(heat), ruleN:progN()
+  });
 };
 /* ---------- the load model on screen: "Koliko si još mogao?" after a set, the session's RPE slider and its load card ---------- */
 // points: one decimal below 20 ("≈ 15,9 b"), whole numbers above ("≈ 64 b", "≈ 1.240")
@@ -3951,29 +4090,42 @@ const stepFx = st => st && st.it ? loadFx(S.ex[st.it.exId] || { id: st.it.exId }
 // never while a timed hold runs (kind 'work'): the row would vanish at its side switch and the card would jump mid-hold
 function rirStep(){
   if (!P || P.mode !== 'ex' || !Array.isArray(P.steps)) return -1;
+  if (P.done) {
+    for (let k=P.steps.length-1;k>=0;k--) {
+      if (!P.doneSteps[k] || !setEnd(P.steps[k]) || P.answers && P.answers[P.steps[k].g] === 'skip') continue;
+      const fx=stepFx(P.steps[k]); if (fx && LM.ASK[fx.pat]) return k;
+    }
+    return -1;
+  }
   const i = P.done ? P.steps.length : P.i; let k = i - 1, rest = false;
   if (!P.done && P.steps[i] && P.steps[i].kind === 'work') return -1;
   while (k >= 0 && !isWork(P.steps[k])) { if (P.steps[k].kind === 'rest') rest = true; k--; }
   if (k < 0 || !P.doneSteps[k] || !setEnd(P.steps[k]) || (!P.done && isWork(P.steps[i]) && rest)) return -1;
   const fx = stepFx(P.steps[k]); return fx && LM.ASK[fx.pat] ? k : -1;
 }
+function failedReserveStep(k){
+  const st=P && P.steps[k];
+  if (!st || !P.done || !P.answers || P.answers[st.g] !== false || !st.it || st.it.measure === 'time') return false;
+  const actual=workOf(st.g).filter(i=>P.doneSteps[i] && setEnd(P.steps[i]));
+  return actual[actual.length-1] === k;
+}
 // the points of the set at step k with the tap (or the exercise's default reserve)
 function rirSetPts(k){
   const st = P.steps[k], it = st.it, e = S.ex[it.exId] || { id: it.exId }, fx = Object.assign({}, loadFx(e), { uni: !!it.sides });
-  const v = P.rir && P.rir[k] != null ? P.rir[k] : null;
-  return setLoad(e, fx, it.measure === 'time' ? { t: +it.sec || 0, sir: v } : { n: repsOf(it, st.set), rir: v }, { k: lmNovelty(it.exId, Date.now(), S.log) }).B;
+  const failed=failedReserveStep(k), v=failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null, dose=PlayerDose.at(it,st.set);
+  return setLoad(e, fx, it.measure === 'time' ? { t:dose.sec, sir:v } : { n:failed?lastRepsOf(st.g):dose.reps, rir:v }, { k: lmNovelty(it.exId, Date.now(), S.log) }).B;
 }
 function rirRowHtml(k, other){
   const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
-  const def = time ? fx.rir * LM.HOLD_S : fx.rir, v = P.rir && P.rir[k] != null ? P.rir[k] : null;
+  const failed=failedReserveStep(k), def = time ? fx.rir * LM.HOLD_S : fx.rir, v = failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null;
   let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
-  const q = time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', what = 'S' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' b';
+  const q = failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', what = 'S' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' b';
   // one header line: the question; on the right the set and its points, after another exercise's name (a rest before the next
   // one, a superset, the done screen), which shortens first; the full text is in the aria-label
   return '<section class="rir" aria-label="' + esc((time ? 'Koliko si još mogao držati, u sekundama?' : q) + ' ' + (other ? st.e.name + ', ' : '') + 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova') + '"><div class="rirh"><b>' + q + '</b><span>' +
     (other ? '<i>' + esc(st.e.name) + '</i><i class="sep"> · </i>' : '') + '<em>' + esc(what) + '</em></span></div>' +
     '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
-      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '" class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
+      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '"'+(failed?' disabled':'')+' class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
     '</div></section>';
 }
 // per logged item: the taps of the sets he did, in order (null = not tapped), so the list lines up with setsDone (lmSets reads the
@@ -4002,11 +4154,12 @@ function rpeTap(t, ev){
 }
 function rpeSet(t){
   if (!P || !P.done) return;
-  const v = Math.max(1, Math.min(10, Math.round(+t.value) || 5)); P.srpe = v;
-  t.classList.add('set'); t.style.setProperty('--p', rpePct(v)); t.setAttribute('aria-valuetext', rpeTxt(v));
-  const l = document.getElementById('rpelab'); if (l) l.textContent = rpeTxt(v);
+  const wanted = Math.max(1, Math.min(10, Math.round(+t.value) || 5));
+  savePlayerChoice(['srpe'],()=>{P.srpe=wanted;});
+  const v=P.srpe || 0;
+  t.value=String(v || 5);t.classList.toggle('set',!!v); t.style.setProperty('--p', rpePct(v || 5)); t.setAttribute('aria-valuetext', v?rpeTxt(v):'nije ocijenjeno');
+  const l = document.getElementById('rpelab'); if (l) l.textContent = v?rpeTxt(v):'povuci za ocjenu';
   const a = document.getElementById('lmau'); if (a && P._lm) a.innerHTML = auHtml(v, P._lm.min);
-  savePlay();
 }
 // the done screen's load card: ≈ points ± band, hard sets per region, landings and metres
 function lmCardHtml(o){
@@ -4040,27 +4193,21 @@ function playDoseCardsHtml(e){
   const cues = e && (e.steps || []).length ? e.steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p>Bez uputa.</p>';
   const muscles = e && exMuscles(e), tags = muscles ? muscleTags({ prime:muscles.prime.length ? muscles.prime : muscles.sec, sec:[] }) : '';
   const target = (tags ? '<div class="tagrow">'+tags+'</div>' : '') + (e && e.feel ? '<p><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</p>' : '') + (e && e.note ? '<p>'+esc(firstSentence(e.note))+'</p>' : '');
-  const doseRows = P.items.map((it,j) => {
-    const ex = S.ex[it.exId], d = PlayerDose.at(it,1), full = PlayerDose.completeSets(P,j), guard = PlayerDose.locks(P,j);
-    const quantity = it.measure === 'time' ? d.sec+' s' : d.reps+' pon.';
-    const varying = ['repsList','kgList','secList'].some(k => Array.isArray(it[k]) && it[k].some(v => v !== it[k][0]));
-    const assignments = varying ? Array.from({length:it.sets},(_,i) => {
-      const set = PlayerDose.at(it,i+1), amount = it.measure === 'time' ? set.sec+' s' : set.reps+' pon.';
-      return esc((i+1)+'. '+amount+' · '+fmtKg(set.kg));
-    }).join('<br>') : esc(quantity)+(d.kg ? ' · '+esc(fmtKg(d.kg)) : '');
-    return '<button type="button" class="play-dose-row" data-a="playDoseEdit" data-j="'+j+'"><span><b>'+esc((j+1)+'. '+(ex ? ex.name : 'Vježba'))+'</b><small>'+it.sets+' ser.'+(varying ? ' · po seriji' : '')+'</small><small class="play-dose-values">'+assignments+'</small></span><em>'+full+'/'+it.sets+(guard.closed ? ' · pregled' : ' · uredi')+'</em></button>';
-  }).join('');
-  const contents = [cues,target || '<p>Bez dodatnog opisa.</p>','<p class="play-dose-note">Promjene vrijede za ovaj trening. Odrađene serije ostaju sačuvane.</p>'+doseRows];
-  return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" aria-label="'+name+'"><h3>'+name+'</h3><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
+  const doseRows=checklistHtml(P.items,P,true);
+  const contents = [cues,target || '<p>Bez dodatnog opisa.</p>',doseRows];
+  const info = '<button type="button" class="dose-info" data-a="playDoseHelp" aria-label="Kako se bilježe serije" aria-haspopup="dialog"><span aria-hidden="true">i</span></button>';
+  return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row'+(on===2?' show-sets':'')+'" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" aria-label="'+name+'"><div class="play-card-heading"><h3>'+name+'</h3>'+(i===2?info:'')+'</div><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
 }
 function playDoseEditorHtml(s){
-  const it = s.draft, guard = PlayerDose.locks(P,s.j), ex = S.ex[it.exId], unit = it.measure === 'time' ? 'sec' : 'reps';
+  const it = s.draft, guard = s.kind==='previewDose'?{locked:[],minSets:1}:PlayerDose.locks(P,s.j), ex = S.ex[it.exId], unit = it.measure === 'time' ? 'sec' : 'reps';
   const rows = Array.from({length:it.sets},(_,i) => {
     const set = i+1, d = PlayerDose.at(it,set), locked = guard.closed || guard.locked.includes(set), raw = s.rawForm && s.rawForm.rows.find(r => r.set === set);
-    const quantity = raw && raw[unit] != null ? raw[unit] : String(d[unit]), kilograms = raw && raw.kg != null ? raw.kg : String(d.kg).replace('.',',');
-    return '<div data-dose-set="'+set+'"><label>'+set+'.'+(locked ? '<small>zaključano</small>' : '')+'</label><input type="text" inputmode="numeric" data-dose-value="'+unit+'" aria-label="'+set+'. serija '+(unit==='sec'?'sekunde':'ponavljanja')+'" value="'+esc(quantity)+'"'+(locked?' disabled':'')+'><input type="text" inputmode="decimal" data-dose-value="kg" aria-label="'+set+'. serija kilogrami" value="'+esc(kilograms)+'"'+(locked?' disabled':'')+'></div>';
+    const unknown = s.kind==='previewDose' && StartingLoad.missingSet(it,i,startLoadDescription(it.exId)?.kind);
+    const quantity = raw && raw[unit] != null ? raw[unit] : String(d[unit]);
+    const kilograms = raw && raw.kg != null ? raw.kg : unknown ? '' : String(d.kg).replace('.',',');
+    return '<div data-dose-set="'+set+'"><label>'+set+'.'+(locked ? '<small>zaključano</small>' : '')+'</label><input type="text" inputmode="numeric" data-dose-value="'+unit+'" aria-label="'+set+'. serija '+(unit==='sec'?'sekunde':'ponavljanja')+'" value="'+esc(quantity)+'"'+(locked?' disabled':'')+'><input type="text" inputmode="decimal" data-dose-value="kg"'+(unknown?' data-unknown-kg="true" placeholder="Pri pokretanju"':'')+' aria-label="'+set+'. serija kilogrami" value="'+esc(kilograms)+'"'+(locked?' disabled':'')+'></div>';
   }).join('');
-  return '<h3>Doziranje · '+esc(ex ? ex.name : 'Vježba')+'</h3><p class="play-dose-note">Trening je pauziran dok uređuješ serije. Promjene vrijede za ovu izvedbu.</p><form id="play-dose-form" class="play-dose-editor"><div class="play-dose-count"><label for="play-dose-sets">Serije</label><input id="play-dose-sets" name="sets" type="number" min="'+guard.minSets+'" max="20" value="'+esc(s.rawForm ? s.rawForm.sets : String(it.sets))+'"'+(guard.closed?' disabled':'')+'><button type="button" class="txtbtn" data-a="playDoseResize"'+(guard.closed?' disabled':'')+'>Prikaži</button></div><div class="play-dose-table"><div class="play-dose-head"><span>Serija</span><span>'+(unit==='sec'?'Sekunde':'Ponavljanja')+'</span><span>kg</span></div>'+rows+'</div>'+(s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button type="button" class="btn" data-a="playDoseApply"'+(guard.closed?' disabled':'')+'>Primijeni na ovaj trening</button><button type="button" class="btn sec" data-a="playDoseCancel">'+(guard.closed?'Zatvori':'Odustani')+'</button></form>';
+  return '<h3>Doziranje · '+esc(ex ? ex.name : 'Vježba')+'</h3><p class="play-dose-note">'+(s.kind==='previewDose'?'Odaberi serije za sljedeće pokretanje.':'Trening je pauziran dok uređuješ serije.')+' Promjene vrijede za ovu izvedbu.</p><form id="play-dose-form" class="play-dose-editor"><div class="play-dose-count"><label for="play-dose-sets">Serije</label><input id="play-dose-sets" name="sets" type="number" min="'+guard.minSets+'" max="20" value="'+esc(s.rawForm ? s.rawForm.sets : String(it.sets))+'"'+(guard.closed?' disabled':'')+'><button type="button" class="txtbtn" data-a="playDoseResize"'+(guard.closed?' disabled':'')+'>Prikaži</button></div><div class="play-dose-table"><div class="play-dose-head"><span>Serija</span><span>'+(unit==='sec'?'Sekunde':'Ponavljanja')+'</span><span>kg</span></div>'+rows+'</div>'+(s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button type="button" class="btn" data-a="playDoseApply"'+(guard.closed?' disabled':'')+'>Primijeni na ovaj trening</button><button type="button" class="btn sec" data-a="playDoseCancel">'+(guard.closed?'Zatvori':'Odustani')+'</button></form>';
 }
 function playDoseReadForm(s,form){
   s.rawForm={sets:form.querySelector('[name="sets"]').value,rows:Array.from(form.querySelectorAll('[data-dose-set]')).map(el => {
@@ -4068,11 +4215,18 @@ function playDoseReadForm(s,form){
   })};
   return PlayerDose.readForm(form);
 }
+function openPlayDoseSheet(sheet) {
+  const left=remaining();
+  P.dosePause={wasPaused:P.paused,left}; P.left=left; P.paused=true;
+  S.sheet=sheet; savePlay(); render();
+}
 function playDoseResumeEditing(){
   if (!P) return;
-  const pause = P.dosePause; delete P.dosePause; S.sheet = null;
+  const help=S.sheet?.kind==='playDoseHelp', pause=P.dosePause;
+  delete P.dosePause; S.sheet = null;
   if (pause) { P.paused = pause.wasPaused; P.left = pause.left; if (!P.paused && (P.steps[P.i] || {}).dur) P.endAt = Date.now()+pause.left*1000; }
   savePlay(); render();
+  if (help) app.querySelector('[data-a="playDoseHelp"]')?.focus({preventScroll:true});
 }
 VIEWS.play = function(){
   if (!P) return VIEWS.home();
@@ -4097,7 +4251,7 @@ VIEWS.play = function(){
             : a === 'partial' ? (did ? 'Odrađeno: ' + did + ' od ' + n + ' ' + plural(n, 'serije', 'serije', 'serija') : 'Djelomično odrađeno') + (c.prog ? '' : ' · ne računa se u napredak')
             : doneMsg(c);
           const lr = lastRepsOf(c.j);
-          return '<div class="xrow"><div class="tx"><b>' + esc(c.e.name) + ' · ' + nwNum(dose(c.it)) + '</b>' +   // a number stays with its unit ('7,5 kg')
+          return '<div class="xrow"><div class="tx"><b>' + esc(c.e.name) + (entry?.items?.[c.j] ? ' · ' + nwNum(recordedDoseLabel(entry.items[c.j])) : '') + '</b>' +   // a number stays with its unit ('7,5 kg')
             '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
             (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
@@ -4161,6 +4315,7 @@ function playAfter(){
     row.addEventListener('scroll',() => {
       if (!P) return;
       let nearest=0; for(let i=1;i<row.children.length;i++) if(Math.abs(row.scrollLeft-pos(i))<Math.abs(row.scrollLeft-pos(nearest)))nearest=i;
+      row.classList.toggle('show-sets',nearest===2);
       if (P.cardIndex===nearest) return; P.cardIndex=nearest;
       app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===nearest)));
       app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===nearest)));
@@ -4173,7 +4328,16 @@ function playAfter(){
 function sheetHtml(){
   const s = S.sheet;
   let body = s.kind === 'credit' ? creditSheet(s) : '';
-  if (s.kind === 'addTo') {
+  if (s.kind === 'startingLoad') body=startingLoadHtml(s);
+  else if (s.kind === 'homeGuide') {
+    body='<h3>Gdje krenuti?</h3><div class="home-guide">'+
+      [[I.tabGrid,'Moj pregled','Otvori Danas za prijedlog prema povijesti i utakmicama. Ovdje su i planer i napredak.'],
+       [I.tabPlay,'Početna','Odaberi trening. Prije pokretanja možeš pregledati vježbe i serije.'],
+       [I.tabLib,'Knjižnica','Pronađi vježbu, pogledaj izvedbu ili je dodaj u svoj protokol.']].map(([icon,title,hint])=>
+        '<div><span aria-hidden="true">'+icon+'</span><div><b>'+title+'</b><p>'+hint+'</p></div></div>').join('')+
+      '</div><button class="btn sec" data-a="sheetDone">U redu</button>';
+  }
+  else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
     body = '<h3>Dodaj u protokol</h3>' + list.map(p => '<button class="opt" data-a="addToPick" data-id="'+esc(p.id)+'"><span>'+esc(p.name)+'</span><span style="color:var(--text-2);font-size:14px">'+nVj((p.items||[]).length)+'</span></button>').join('') +
@@ -4277,7 +4441,7 @@ function sheetHtml(){
     const any = P && anyDone();
     body = '<h3>Prekinuti trening?</h3>' +
       '<p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">' + (any ? 'Ono što si dosad odradio možeš spremiti u povijest.' + (P.mode === 'ex' ? ' Vježbe koje nisi odradio ne računaju se u napredak.' : '') : 'Još ništa nije odrađeno do kraja, pa nema što spremiti.') + '</p>' +
-      (any ? '<button class="btn" data-a="quitSave">Spremi odrađeno i izađi</button>' : '') +
+      (any ? '<button class="btn" data-a="quitSave">Pregledaj i spremi odrađeno</button>' : '') +
       '<button class="btn danger" data-a="quitDiscard" style="margin-top:10px">Izađi bez spremanja</button>' +
       '<button class="btn sec" data-a="quitResume" style="margin-top:10px;height:48px">Nastavi trening</button>';
   } else if (s.kind === 'resume') {
@@ -4287,9 +4451,16 @@ function sheetHtml(){
       ? '<h3>Trening nije spremljen</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">„' + esc(r.title) + '” od ' + d.getDate() + '. ' + (d.getMonth() + 1) + '. je završen, ali nije spremljen u povijest.</p>' +
         '<button class="btn" data-a="resumeGo">Pregledaj i spremi</button><button class="btn danger" data-a="resumeDrop" style="margin-top:10px">Odbaci</button>'
       : '<h3>Nastaviti trening?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">„' + esc(r.title) + '” je ostao nedovršen (' + (m < 1 ? 'maloprije' : m < 60 ? 'prije ' + m + ' min' : 'prije ' + Math.round(m / 60) + ' h') + ').</p>' +
-        '<button class="btn" data-a="resumeGo">Nastavi trening</button>' + (any ? '<button class="btn sec" data-a="resumeSave" style="margin-top:10px;height:48px">Spremi odrađeno</button>' : '') +
+        '<button class="btn" data-a="resumeGo">Nastavi trening</button>' + (any ? '<button class="btn sec" data-a="resumeSave" style="margin-top:10px;height:48px">Pregledaj i spremi odrađeno</button>' : '') +
         '<button class="btn danger" data-a="resumeDrop" style="margin-top:10px">Odbaci</button>';
-  } else if (s.kind === 'playDose') {
+  } else if (s.kind === 'playDoseHelp') {
+    const states=[['planned','Serija još čeka na red.'],['active','Sada je na redu ova serija.'],
+      ['done','Završena je cijela serija.'],['partial','Odrađen je samo dio, primjerice jedna strana.'],
+      ['skipped','Ova je serija preskočena.']];
+    body='<h3>Kako se bilježe serije</h3><p>Aktivnu seriju na ponavljanja potvrdi kvačicom kad završiš. Vremensku seriju bilježi brojač. Kod obostrane vježbe vidiš svaku odrađenu stranu.</p>'+
+      '<ul class="set-legend">'+states.map(([key,description])=>'<li data-state="'+key+'"><span aria-hidden="true">'+SET_STATUS[key][0]+'</span><div><strong>'+SET_STATUS[key][1]+'</strong><small>'+description+'</small></div></li>').join('')+
+      '</ul><button type="button" class="btn sec" data-a="playDoseCancel">Zatvori</button>';
+  } else if (s.kind === 'playDose' || s.kind === 'previewDose') {
     body = playDoseEditorHtml(s);
   } else if (s.kind === 'playList') {
     const groups = [];
@@ -4317,7 +4488,7 @@ function after(t){
     // the card you were on comes back (no animation), the dots and S.exTab follow the swipe; a card scrolled inside keeps its place
     const r = document.getElementById('swrow'), dots = document.getElementById('swdots');
     if (r && dots && r.children.length) {
-      const k = Math.max(0, EX_CARDS.indexOf(exTabOf(S.exTab)));
+      const k = Math.max(0, EX_CARDS.indexOf(S.exTab));
       if (k) r.scrollLeft = swPos(r, k);
       if (swMem.id !== t.id) swMem = { id: t.id, tops: [] };
       // (review) a card with more below its bottom edge fades out there (.swb.more), so cut-off text reads as "scroll on"
@@ -4337,6 +4508,7 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
+  homeGuide: () => {S.sheet={kind:'homeGuide'};render();},
   todayOpen: () => go({v:'today'}),
   morningOpen: (d={}) => {
     const date=MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
@@ -4484,7 +4656,7 @@ const A = {
   openPr: d => go({ v:'pr', id:d.id }),
   openProg: d => go({ v:'program', id:d.id }),
   openEx: d => go({ v:'ex', id:d.id, dose:0 }),
-  dose: d => { top().dose = +d.i; render(); },
+  dose: d => { top().dose = +d.i; delete top().runDose; S.exTab='dose'; render(); },
   // the tab row stays where it was on the screen (a row above the top comes back to 12 px under it): a shorter tab gets a panel
   // tall enough for that, so the page never bottoms out and drops the row under the finger; the next render lets it go
   exTab: d => { S.exTab = exTabOf(d.v); const v = app.querySelector('.view'), tl = v && v.querySelector('.extabs');
@@ -4572,15 +4744,16 @@ const A = {
   iset: d => { const it = S.draft.items[S.draft._open]; it[d.k] = d.v; render(); },
   istep: d => {
     const items = S.draft.items, it = items[+d.i], k = d.k, dir = +d.d; if (!it) return;
-    if (k === 'kg') { it.kg = kgStep(S.ex[it.exId], it.kg, dir); render(); return; }
+    if (k === 'kg') { builderWeight(it,kgStep(S.ex[it.exId],it.kg,dir),true);render();return; }
     const step = { sec:5, sets:1, reps:1, rest:15 }[k]; const min = { sec:5, sets:1, reps:1, rest:0 }[k]; const max = { sec:600, sets:10, reps:60, rest:300 }[k];
     const before = +it[k] || (k === 'sets' ? 1 : 0);
     it[k] = Math.min(max, Math.max(min, Math.round(((+it[k]||0) + dir*step) * 100) / 100));
+    if (k === 'sec' && it[k]!==before) delete it.secList;
     if (k === 'reps') { delete it.r0; delete it.r1; if (Array.isArray(it.repsList)) it.repsList = it.repsList.map(r => Math.min(60, Math.max(1, r + dir))); }
     if (k === 'sets') {
       // a superset shares its rounds only while all its exercises have the same number of sets (Hip thrust 3 + Nordic 2 stay apart)
       if (it.ss && it.sets !== before && items.every(x => x === it || x.ss !== it.ss || (x.sets || 1) === before)) items.forEach(x => { if (x.ss === it.ss) x.sets = it.sets; });
-      items.forEach(x => { if (x === it || (it.ss && x.ss === it.ss)) fitReps(x); });
+      items.forEach(x => { if (x === it || (it.ss && x.ss === it.ss)) fitSetLists(x); });
     }
     render();
   },
@@ -4628,7 +4801,7 @@ const A = {
     const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
     // a new protocol (also a copy) and every dose you changed by hand start counting "sessions in a row" from zero
     const fresh = (o, it) => { if (isNew || it._d0 !== doseSig(it)) PROG_STATE.forEach(k => { delete o[k]; }); return o; };
-    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => fresh(keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','repSec','ok','fail','prev','snoozeOk']), it)), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
+    const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => fresh(keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0 }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','kgList','secList','startingKgKnown','repSec','ok','fail','prev','snoozeOk']), it)), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
     ['program','week','slot','pack','goal','goalSkip','kgSkip'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     if (body.program) delete body.days;   // a programme session is planned by the programme's days
     const ok = await save('protocols', dr.id, body); if (!ok) return;
@@ -4643,15 +4816,38 @@ const A = {
     if (!(await remove('protocols', d.id))) return;
     delete S.pr[d.id]; S.draft = null; S.draftSig = null; S.stack = [{ v: S.tab }]; render(); toast('Protokol je obrisan.');
   },
-  startPr: d => { const p = S.pr[d.id]; if (!p || !(p.items||[]).length) return; startPlayer({ mode:'ex', title: p.name, items: p.items, steps: stepsFromItems(p.items), ref: { kind:'protocol', id: p.id } }); },
-  playEx: d => { const e = S.ex[d.id]; if (!e) return; const o = doseOptions(e)[top().dose || 0]; const items = [o ? o.it : exItem(e)]; startPlayer({ mode:'ex', title: e.name, items, steps: stepsFromItems(items), ref: { kind:'exercise', id: e.id } }); },
+  startPr: d => {
+    const p=S.pr[d.id]; if (!p?.items?.length) return;
+    const t=top(), items=t.v==='pr' && t.id===p.id && !p.program ? viewDoseItems(t,p.items) : p.items;
+    startPlayer({mode:'ex',title:p.name,items,originalItems:p.items,ref:{kind:'protocol',id:p.id}});
+  },
+  playEx: d => {
+    const e=S.ex[d.id], t=top(); if (!e || t.v!=='ex' || t.id!==e.id) return;
+    const originalItems=viewDoseSource(t);
+    startPlayer({mode:'ex',title:e.name,items:viewDoseItems(t,originalItems),originalItems,ref:{kind:'exercise',id:e.id}});
+  },
   // dose 'season': about 2/3 of the sets (fieldDose), the steps built the same way
   startField: d => { const f = S.field[d.id]; if (!f) return; const sz = d.dose === 'season' && fieldLoad(f).type !== 'test';
     startPlayer({ mode:'field', title: f.name_hr, f, dose: sz ? 'season' : 'full', steps: stepsFromField(sz ? fieldDose(f) : f), ref: { kind:'field', id: f.id } }); },
+  exerciseLoad: d => { if (S.ex[d.id]) go({v:'exerciseLoad',id:d.id}); },
+  toggleDosePlan: () => { const t=top(); if (t.v==='pr') {t.showDose=t.showDose===false;render();} },
+  checklistDone: d => {
+    if (!P || top().v!=='play' || S.sheet || P.done || P.paused) return;
+    const step=P.steps[P.i];
+    if (step?.kind==='manual' && P.i===Number(d.step) && step.g===Number(d.j) &&
+      step.set===Number(d.set) && !P.doneSteps[P.i]) tapRing();
+  },
+  previewDoseEdit: d => {
+    const t=top(), j=Number(d.j);
+    if (!['ex','pr'].includes(t.v) || (t.v==='pr' && S.pr[t.id]?.program)) return;
+    const source=viewDoseSource(t), item=viewDoseItems(t,source)[j]; if (!item) return;
+    S.sheet={kind:'previewDose',j,draft:clone(item),base:mtCanon(source)};render();
+  },
   playDoseCard: d => {
     if (!P || P.mode !== 'ex' || P.done || ![0,1,2].includes(+d.i)) return;
     P.cardIndex=+d.i;
     const row=document.getElementById('play-card-row');
+    if (row) row.classList.toggle('show-sets',P.cardIndex===2);
     if (row) row.scrollTo({left:row.children[P.cardIndex].offsetLeft-row.children[0].offsetLeft,behavior:stillMotion()?'auto':'smooth'});
     app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===P.cardIndex)));
     app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===P.cardIndex)));
@@ -4659,27 +4855,39 @@ const A = {
   },
   playDoseEdit: d => {
     if (!P || P.mode !== 'ex' || P.done || !P.items[+d.j]) return;
-    const left=remaining(); P.dosePause={wasPaused:P.paused,left}; P.left=left; P.paused=true;
-    S.sheet={kind:'playDose',j:+d.j,draft:clone(P.items[+d.j])}; savePlay(); render();
+    if (!S.sheet) openPlayDoseSheet({kind:'playDose',j:+d.j,draft:clone(P.items[+d.j])});
+  },
+  playDoseHelp: () => {
+    if (!S.sheet && P?.mode==='ex' && !P.done && top().v==='play') openPlayDoseSheet({kind:'playDoseHelp'});
   },
   playDoseResize: () => {
     const s=S.sheet, form=document.getElementById('play-dose-form');
-    if (!P || !s || s.kind!=='playDose' || !form) return;
-    const parsed=playDoseReadForm(s,form), result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,PlayerDose.locks(P,s.j)):parsed;
+    if (!form || !s || (s.kind!=='previewDose' && !(s.kind==='playDose' && P))) return;
+    const parsed=playDoseReadForm(s,form), guard=s.kind==='previewDose'?{allowMissingWeight:true}:PlayerDose.locks(P,s.j);
+    const result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,guard):parsed;
     if (!result.ok) s.error=result.error; else {s.draft=result.item;delete s.error;delete s.rawForm;}
     render();
   },
   playDoseApply: () => {
     const s=S.sheet, form=document.getElementById('play-dose-form');
-    if (!P || !s || s.kind!=='playDose' || !form) return;
-    const parsed=playDoseReadForm(s,form), result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,PlayerDose.locks(P,s.j)):parsed;
+    if (!form || !s || (s.kind!=='previewDose' && !(s.kind==='playDose' && P))) return;
+    const parsed=playDoseReadForm(s,form), guard=s.kind==='previewDose'?{allowMissingWeight:true}:PlayerDose.locks(P,s.j);
+    const result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,guard):parsed;
     if (!result.ok) {s.error=result.error;render();return;}
+    if (s.kind==='previewDose') {
+      const t=top(), source=viewDoseSource(t);
+      if (mtCanon(source)!==s.base || source[s.j]?.exId!==result.item.exId) {
+        s.error='Izvorna doza se promijenila. Zatvori uređivanje i ponovno otvori serije.';render();return;
+      }
+      const items=viewDoseItems(t,source).slice();items[s.j]=result.item;
+      t.runDose={base:s.base,items};S.sheet=null;render();return;
+    }
     const before=P, items=P.items.slice(); items[s.j]=result.item;
     P={...P,...PlayerDose.rebuild(P,items,stepsFromItems)};
     if (!savePlay()) {P=before;s.error='Promjena nije spremljena na uređaj. Oslobodi prostor i pokušaj ponovno.';render();return;}
     playDoseResumeEditing();toast('Doziranje je promijenjeno za ovaj trening.');
   },
-  playDoseCancel: () => playDoseResumeEditing(),
+  playDoseCancel: () => { if (S.sheet?.kind==='previewDose') {S.sheet=null;render();} else playDoseResumeEditing(); },
   ring: () => tapRing(),
   jump: d => jump(+d.d),
   jumpTo: d => { S.sheet = null; ensureAudio(); enterStep(landAt(+d.k)); P.paused = false; render(); },
@@ -4767,14 +4975,14 @@ const A = {
   resumeDrop: () => { S.sheet = null; clearPlay(); render(); },
   // "Spremi i ponovi": the finished session is saved first, then the same session starts again (rebuilt, so new settings apply)
   restartPlay: () => {
-    const ref = P.ref, cfg = { mode:P.mode, title:P.title, items:P.items, f:P.f, ref };
+    const ref = P.ref, cfg = { mode:P.mode, title:P.title, items:P.items, f:P.f, dose:P.mode==='field'?(P.dose==='season'?'season':'full'):undefined, ref };
     const saved = anyCredit(), r = saved ? logSession() : { news: [], cut: '', saved: true };
     // Keep the finished player in memory too if storage rejected its checkpoint.
     if (!r.saved) { render(); return; }
     const p = ref && ref.kind === 'protocol' && S.pr[ref.id], f = ref && ref.kind === 'field' && S.field[ref.id];
     if (p && (p.items || []).length) { cfg.items = p.items; cfg.title = p.name; }
     if (f) { cfg.f = f; cfg.title = f.name_hr; }
-    cfg.steps = cfg.mode === 'field' ? stepsFromField(cfg.f) : stepsFromItems(cfg.items);
+    cfg.steps = cfg.mode === 'field' ? stepsFromField(cfg.dose==='season'?fieldDose(cfg.f):cfg.f) : stepsFromItems(cfg.items);
     P = null; S.stack.pop(); startPlayer(cfg,true);
     toast(r.cut || (r.news.length ? newsMsg(r.news) : saved ? 'Trening je spremljen. Krećeš ispočetka.' : 'Krećeš ispočetka.'));
   },
@@ -4786,11 +4994,15 @@ const A = {
     if (r.cut) toast(r.cut); else if (r.news.length) toast(newsMsg(r.news));
   },
   // "Koliko si još mogao?": a tap stores the reserve of that set, the same tap again takes it back
-  rir: d => { const k = +d.k, st = P && P.steps[k]; if (!st || !st.it) return; const taps = st.it.measure === 'time' ? LM.SIR_TAPS : LM.RIR_TAPS, v = taps[+d.v]; if (v == null) return;
-    P.rir = P.rir || {}; if (P.rir[k] === v) delete P.rir[k]; else P.rir[k] = v; savePlay();
+  rir: d => { const k = +d.k, st = P && P.steps[k]; if (!st || !st.it || !P.doneSteps[k] || !setEnd(st) || failedReserveStep(k)) return; const taps = st.it.measure === 'time' ? LM.SIR_TAPS : LM.RIR_TAPS, v = taps[+d.v]; if (v == null) return;
+    savePlayerChoice(['rir'],()=>{P.rir = P.rir || {}; if (P.rir[k] === v) delete P.rir[k]; else P.rir[k] = v;});
     const w = app.querySelector('.view'), y = w ? w.scrollTop : 0; render(); const w2 = app.querySelector('.view'); if (w2) w2.scrollTop = y; },
-  lrep: d => { const j = +d.j, it = P.items[j] || {}; P.lastReps = P.lastReps || {}; P.lastReps[j] = Math.max(0, Math.min(repsOf(it, it.sets || 1), lastRepsOf(j) + (+d.d))); savePlay(); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  lrep: d => { const j = +d.j; if (!P || !P.done || !P.items[j]) return;
+    savePlayerChoice(['lastReps'],()=>{P.lastReps = P.lastReps || {}; P.lastReps[j] = Math.max(0, Math.min(lastAttemptDose(j).reps, lastRepsOf(j) + (+d.d)));});
+    const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progTab: d => { S.progTab = d.v; render(); },
+  progressInfo: (d,el) => ProgressView.showInfo(d.topic,el),
+  progressInfoClose: () => ProgressView.closeInfo(),
   setGoal: d => { if (!writeSetting('goal',S.settings.goal===d.v?null:d.v)) return; render(); },
   setBall: d => { const v = ballN() + (+d.d); if (!writeSetting('ballN',Math.max(0,Math.min(7,v)))) return; render(); },
   setMatch: d => { if (!writeSetting('matchDay',+d.v)) return; render(); },
@@ -4822,11 +5034,14 @@ const A = {
   sugRetry: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; n.items[+d.j].fail = 0; S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); },
   // tapping the chosen answer again goes back to what the player recorded (partly done or skipped);
   // "Nisam uspio" keeps the shown last-set reps even if the stepper is never touched
-  answer: d => { const j = +d.j, val = d.v !== '0'; P.answers = P.answers || {}; P.lastReps = P.lastReps || {};
-    const rec = P.auto && (P.auto[j] === 'partial' || P.auto[j] === 'skip') ? P.auto[j] : null;
-    P.answers[j] = P.answers[j] === val && rec ? rec : val;
-    if (P.answers[j] === false && P.lastReps[j] == null) P.lastReps[j] = lrDefault(j);
-    savePlay(); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
+  answer: d => { const j = +d.j, val = d.v !== '0'; if (!P || !P.done || !P.items[j]) return;
+    savePlayerChoice(['answers','lastReps'],()=>{
+      P.answers = P.answers || {}; P.lastReps = P.lastReps || {};
+      const rec = P.auto && (P.auto[j] === 'partial' || P.auto[j] === 'skip') ? P.auto[j] : null;
+      P.answers[j] = P.answers[j] === val && rec ? rec : val;
+      if (P.answers[j] === false && P.lastReps[j] == null) P.lastReps[j] = lrDefault(j);
+    });
+    const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progInfo: () => { S.sheet = { kind:'progInfo' }; render(); },
   loadInfo: () => go({ v:'loadInfo' }),
   loadRange: d => { S.loadRange = d.v; render(); },   // the period of the exercise chart stays while the app is open
@@ -4917,18 +5132,20 @@ app.addEventListener('click', ev => {
   if (ev.target && ev.target.id === 'srpe') { rpeTap(ev.target, ev); return; }   // a tap on the slider rates where it was tapped
   const el = ev.target.closest('[data-a]');
   if (!el || !app.contains(el)) return;
-  if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } if(S.sheet&&S.sheet.kind==='playDose'){A.playDoseCancel();return;} S.sheet = null; render(); return; }   // player editing restores its exact pause state
+  if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } if(['playDose','playDoseHelp'].includes(S.sheet?.kind)){A.playDoseCancel();return;} S.sheet = null; render(); return; }   // player editing restores its exact pause state
   if (el.disabled) return;
   const fn = A[el.dataset.a];
   if (fn) { ev.preventDefault(); fn(Object.assign({}, el.dataset), el, ev); }
 });
 app.addEventListener('submit', ev => {
+  if (ev.target.id==='starting-load-form') {ev.preventDefault();confirmStartingLoad();return;}
   if (ev.target.id==='morning-form') {ev.preventDefault();A.morningSave();return;}
   if (ev.target.id === 'history-edit-form') { ev.preventDefault(); A.historySave(); }
   if (ev.target.id === 'play-dose-form') { ev.preventDefault(); A.playDoseApply(); }
 });
 app.addEventListener('input', ev => {
   const t = ev.target;
+  if (t.dataset.startKg!=null && S.sheet?.kind==='startingLoad') {S.sheet.values[t.dataset.startKg]=t.value;return;}
   if (t.id === 'history-query') {
     const pos = t.selectionStart;
     top().query = t.value; top().page = 1; render();
@@ -4945,7 +5162,7 @@ app.addEventListener('input', ev => {
   // typed kilograms (62,5 or 62.5) go straight into the draft; the screen is not rebuilt under the keyboard
   if (t.dataset.ikg != null || t.dataset.dkg != null) {
     const it = t.dataset.ikg != null ? S.draft.items[+t.dataset.ikg] : S.draft, v = kgVal(t.value);
-    if (it && v != null) { it.kg = v; const el = t.dataset.ikg != null && document.getElementById('dose-' + t.dataset.ikg); if (el) el.textContent = dose(it); }
+    if (it && v != null) { if (t.dataset.ikg!=null) builderWeight(it,v,t.value.trim()!==''); else it.kg=v; const el = t.dataset.ikg != null && document.getElementById('dose-' + t.dataset.ikg); if (el) el.textContent = dose(it); }
   }
   // a part title: renames the part that starts here, or starts a new part here; empty = this part joins the one above
   if (t.dataset.isec != null) {
@@ -5009,7 +5226,7 @@ app.addEventListener('change', async ev => {
   dr._uploading = false;
   if (S.draft === dr) paintMedia(dr);
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet) { if (S.sheet.kind === 'quit') { A.quitResume(); return; } if(S.sheet.kind==='playDose'){A.playDoseCancel();return;} S.sheet = null; render(); } });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet) { if (S.sheet.kind === 'quit') { A.quitResume(); return; } if(['playDose','playDoseHelp'].includes(S.sheet.kind)){A.playDoseCancel();return;} S.sheet = null; render(); } });
 
 /* ---------- another open copy, coming back to the app, a new version ---------- */
 // a second copy (another Safari tab) saved: its data shows here as soon as nothing is open

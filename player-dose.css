@@ -15,10 +15,38 @@
 .play-card-dots i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4}
 .play-card-dots button[aria-current=true]{color:var(--accent-text)}
 .play-card-dots button[aria-current=true] i{opacity:1;width:15px;border-radius:3px}
-.play-dose-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 0;min-height:48px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit}
-.play-dose-row b{display:block;font-size:13px;font-weight:600}.play-dose-row small{display:block;color:var(--text-2);font-size:11px;margin-top:3px}
-.play-dose-row em{font-size:11px;color:var(--accent-text);font-style:normal;white-space:nowrap}
-.play-dose-row .play-dose-values{line-height:1.5;color:var(--text-body);white-space:normal}
+/* A single set list appears before and during the workout. Live rows grow with
+   the workout so the page can scroll continuously through every exercise. */
+.play-card-row.show-sets{align-items:flex-start}
+.play-card-row.show-sets #play-card-2 .play-card-content{height:auto;overflow:visible}
+.set-block{min-width:0}
+.set-block+.set-block{margin-top:20px}
+.set-block header,.set-preview-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.set-block header div{min-width:0}
+.set-block header small,.set-count,.set-preview-toggle small{display:block;color:var(--text-2);font-size:12px;line-height:1.45}
+.set-block header strong{display:block;color:var(--text);font-size:16px;line-height:1.3;overflow-wrap:anywhere}
+.set-edit,.set-load-link{border:0;border-radius:9px;min-height:42px;padding:6px 11px;background:var(--tag-bg);color:var(--accent-text);font:600 13px var(--font)}
+.set-count{margin:3px 0 7px}
+.set-list{padding:0;margin:0;list-style:none;display:grid;gap:4px}
+.set-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:5px;align-items:center;padding:3px 7px 3px 0;border:1px solid var(--border);border-radius:11px;background:var(--bg);min-height:43px;box-sizing:border-box}
+.set-item[aria-current=step]{border-color:var(--accent-text)}
+.set-info{min-width:0;display:grid;gap:2px;line-height:1.3}
+.set-info>b{font-size:13px;font-weight:650}.set-info>span,.set-state{font-size:12px;color:var(--text-body);overflow-wrap:anywhere}
+.set-item .set-sides{color:var(--text-2);font-size:11px}
+.set-state{font-size:11px;color:var(--text-2);text-align:right}
+.set-mark{display:grid;place-items:center;font-size:20px;color:var(--text-2)}
+button.set-mark{border:0;background:none;min-width:44px;min-height:44px;padding:0;cursor:pointer}
+button.set-mark span{width:20px;height:20px;border:2px solid var(--accent-text);border-radius:6px}
+button.set-mark:focus-visible,.set-edit:focus-visible,.set-load-link:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+.set-item[data-state=done]{border-color:#3c6861}.set-item[data-state=done] .set-mark,.set-item[data-state=done] .set-state{color:#8cdec7}
+.set-item[data-state=partial] .set-mark,.set-item[data-state=partial] .set-state{color:var(--amber,#ffd385)}
+.set-item[data-state=active] .set-state{color:var(--accent-text)}
+.set-load-link{display:block;width:100%;margin-top:8px}
+.pre-sets{margin:0 17px;border:1px solid var(--border);border-radius:17px;background:var(--surface);padding:0 13px}
+.pre-sets .set-block{margin:0 0 14px}
+.set-preview-toggle{width:100%;min-height:58px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left}
+.set-preview-toggle>b,.set-preview-toggle b{font-size:16px}
+.set-preview-toggle>span:last-child{font-size:22px;color:var(--accent-text)}
 .play-dose-note{color:var(--text-2);font-size:12px!important}
 .play-dose-editor{display:grid;gap:10px}.play-dose-editor .play-dose-count{display:flex;align-items:center;gap:10px}
 .play-dose-editor input{box-sizing:border-box;min-width:0;width:100%;height:42px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);padding:6px 9px;font:16px var(--font)}
@@ -29,3 +57,17 @@
 .play-dose-table label{font-size:13px}.play-dose-table label small{display:block;font-size:10px;color:var(--text-2)}
 .play-dose-error{color:var(--amber,#FFC861);font-size:13px;line-height:1.4}
 @media(max-height:700px){.play-card-content{height:148px}.play-card h3{padding-top:8px}.play-cards{margin-top:9px}}
+.set-ex-link{display:flex;align-items:center;gap:9px;min-width:0;min-height:48px;flex:1;padding:0;border:0;background:none;text-align:left;font:inherit;color:var(--text)}
+.set-ex-link .thumb{width:41px;height:41px;border-radius:9px;flex:0 0 41px}.set-ex-link .chev{width:13px;flex-shrink:0}
+.set-ex-link>span:not(.thumb){min-width:0}.set-ex-link .set-new{color:#8cdec7}
+.pre-sets .ghead,.pre-sets .sechead{margin:10px 0}.pre-sets .ghead b{white-space:nowrap}
+
+.play-card-heading{display:flex;align-items:center;justify-content:space-between}
+.dose-info{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none;color:var(--accent-text);cursor:pointer}
+.dose-info span{width:18px;height:18px;line-height:18px;border:1px solid currentColor;border-radius:50%;font:600 13px/18px var(--font)}
+.dose-info:focus-visible{outline:2px solid currentColor;outline-offset:-5px;border-radius:10px}
+.set-legend{display:grid;gap:9px;list-style:none;padding:0;margin:15px 0 20px}
+.set-legend li{display:flex;align-items:center;gap:10px}
+.set-legend li>span{width:28px;text-align:center;font-size:20px;color:var(--text-2)}
+.set-legend strong,.set-legend small{display:block}.set-legend small{color:var(--text-2);font-size:13px}
+.set-legend [data-state=active]>span{color:var(--accent-text)}.set-legend [data-state=done]>span{color:#8cdec7}.set-legend [data-state=partial]>span{color:var(--amber,#ffd385)}

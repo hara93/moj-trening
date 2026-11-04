@@ -116,6 +116,7 @@
       }
       for (var k of ['reps', 'kg', 'sec']) {
         if (row[k] == null) {
+          if (k === 'kg' && row.kg === null && guard.allowMissingWeight) out.kgList[row.set-1]=null;
           continue;
         }
         var v = row[k],
@@ -236,6 +237,44 @@
       return row;
     });
   }
+  // Derive every row from the same work steps that feed history. A position in
+  // the schedule is not evidence of completion (skips and both sides matter).
+  function checklist(item, player, group) {
+    const count = Number.isInteger(item.sets) && item.sets > 0 ? item.sets : 1;
+    const result = Array.from({length:count}, (_,index) => ({
+      set:index + 1, dose:at(item,index + 1), state:player ? 'waiting' : 'planned',
+      current:false, step:null, left:false, right:false, reserve:null
+    }));
+    if (!player) return result;
+    const seen = new Map();
+    player.steps.forEach((step,index) => {
+      const row = result[step.set - 1];
+      if (step.g !== group || !work(step) || !row) return;
+      let summary = seen.get(row.set);
+      if (!summary) { summary = {last:index, done:false}; seen.set(row.set,summary); }
+      summary.last = index;
+      const done = !!player.doneSteps?.[index];
+      if (done || index === player.i) row.dose = at(step.it || item,row.set);
+      if (index === player.i && !player.done) {
+        row.current = true;
+        if (step.kind === 'manual' && !done && !player.paused) row.step = index;
+      }
+      if (!done) return;
+      summary.done = true;
+      if (item.sides) {
+        if (step.kind === 'manual' || step.side === 'Lijeva strana') row.left = true;
+        if (step.kind === 'manual' || step.side === 'Desna strana') row.right = true;
+      }
+      if (step.side !== 'Lijeva strana' && finite(player.rir?.[index])) row.reserve = player.rir[index];
+    });
+    for (const row of result) {
+      const entry = seen.get(row.set);
+      if (entry?.done) row.state = !item.sides || (row.left && row.right) ? 'done' : 'partial';
+      else if (row.current) row.state = 'active';
+      else if (entry && (entry.last < player.i || player.done)) row.state = 'skipped';
+    }
+    return result;
+  }
   function completeSets(p, j) {
     var expected = p.items[j].sides ? 2 : 1;
     return rows(p, j, false).filter(r => r.sides === expected).length;
@@ -351,6 +390,10 @@
         set: Number(el.dataset.doseSet)
       };
       for (var input of el.querySelectorAll('[data-dose-value]')) {
+        if (input.dataset.unknownKg === 'true' && input.value.trim() === '') {
+          row.kg=null;
+          continue;
+        }
         var n = number(input.value);
         if (n === null) {
           return {
@@ -380,6 +423,7 @@
     rebuild: rebuild,
     rows: rows,
     completeSets: completeSets,
+    checklist: checklist,
     logDose: logDose,
     packSteps: packSteps,
     restoreSteps: restoreSteps,

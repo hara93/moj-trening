@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.14.0 — 4. 11. 2026.
+
+- **Doziranje** prikazuje svaku seriju u svojem retku, u knjižnici prije pokretanja i u aktivnom treningu. U protokolu možeš odmah pregledati cijeli popis. Kvačica potvrđuje aktivnu seriju, a jednostrani dio izdržaja ostaje označen kao djelomična izvedba.
+- Prije početka treninga aplikacija traži početnu kilažu za vježbe s vanjskim opterećenjem. Vrijednosti možeš upisati decimalnim zarezom. Spremljena početna težina dostupna je pri sljedećem pokretanju.
+- Pri ranom završetku rezerva ponavljanja ili sekundi i unos izvedenih ponavljanja koriste stvarno pokušanu seriju. Ako uređaj odbije spremanje ocjene, aplikacija prikazuje pogrešku i omogućuje ponovni unos.
+- Nakon djelomične izvedbe možeš pregledati odrađeno i spremiti trening bez ocjene. Ponovljeni terenski trening zadržava odabranu sezonsku dozu.
+- **Napredak** ima sažetak tjedna, odjeljke s trendovima, vježbama i rekordima te kratka objašnjenja na dodir. Tri odredišta u donjoj navigaciji dobila su nazive, a na početnoj stranici dostupan je kratki vodič.
+
 ## 1.13.0 — 4. 11. 2026.
 
 - Kartica **Danas** u **Moj pregled** spaja današnji plan, prethodne izvedbe, dnevnik kluba i termine utakmica. Uz prijedlog možeš otvoriti zapise koji su utjecali na njega.

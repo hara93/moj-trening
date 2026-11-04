@@ -14,11 +14,15 @@ Vježbe i doze za rehabilitaciju su opće smjernice iz javnih materijala; prije 
 
 Na početnoj stranici **Kondicija** otvara terenski katalog. Filtriraj po **Brzina**, **Agilnost**, **Izdržljivost** ili **Testovi**. Predsezonski plan ima zaseban prikaz s izvornim redoslijedom termina.
 
-Tijekom treninga s vježbama otvori treću karticu **Doziranje** i odaberi vježbu. Možeš promijeniti broj preostalih serija te ponavljanja, kilograme ili trajanje buduće serije. Uređivač za to vrijeme pauzira trening. Promjene vrijede za tu izvedbu. Povijest prikazuje odrađene serije s njihovim stvarnim dozama.
+U protokolu se odmah vide pojedinačne serije. Treća kartica **Doziranje** dostupna je i u knjižnici vježbi i tijekom treninga. Kvačica uz aktivnu seriju na ponavljanja potvrđuje izvedbu. Kod izdržaja oznake prate odrađeno vrijeme i strane. Možeš promijeniti broj preostalih serija te ponavljanja, kilograme ili trajanje buduće serije. Uređivač za to vrijeme pauzira trening. Promjene vrijede za tu izvedbu. Povijest prikazuje odrađene serije s njihovim stvarnim dozama.
+
+Ako vježba zahtijeva težinu koja još nije upisana, prije prve izvedbe unesi kilograme. Za bučice se upisuje težina jedne bučice, za šipku ukupna masa, a za landmine masa ploča. Spremljena težina odnosi se na taj protokol ili pojedinačnu vježbu.
+
+U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **ⓘ** za objašnjenje.
 
 ## Nadogradnje
 
-Trenutna verzija je 1.13.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.14.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 U **Jutarnjoj provjeri** ocijeni energiju (1–5), težinu nogu (1–5) ili bol (0–10). Neodgovorena polja ostaju nepoznata. **Ekipni dnevnik** prima trening ili odigranu utakmicu, vrijeme završetka, stvarne minute te opcionalnu ocjenu napora (0–10). Uz 80 minuta i napor 7 zapis pokazuje 560 jedinica procijenjenog opterećenja. Ekipni zapis ostaje odvojen od planirane utakmice i od rada po mišićima. Dnevni prijedlog izrađuju pravila na uređaju. Jutarnji i ekipni zapisi ulaze u tvoju sigurnosnu kopiju.
 
