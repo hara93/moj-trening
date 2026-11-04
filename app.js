@@ -3187,11 +3187,12 @@ function rirRowHtml(k, other){
       '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '" class="' + (x === tg ? 'tg' : '') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
     '</div>' + (time ? '<span class="riru">sekundi u rezervi</span>' : '') + '</section>';
 }
-// per logged item: the taps of its sets, aligned with the sets (null = not tapped); null when nothing was tapped
+// per logged item: the taps of the sets he did, in order (null = not tapped), so the list lines up with setsDone (lmSets reads the
+// first setsDone values: a round of a superset he skipped must not shift his taps); null when nothing was tapped
 function rirLists(j, it){
-  const n = it.sets || 1, a = []; let any = false; for (let s = 0; s < n; s++) a.push(null);
-  P.steps.forEach((st, i) => { if (st.g === j && setEnd(st) && P.rir && P.rir[i] != null && st.set >= 1 && st.set <= n) { a[st.set - 1] = P.rir[i]; any = true; } });
-  return any ? a : null;
+  const n = it.sets || 1, by = []; let any = false;
+  P.steps.forEach((st, i) => { if (st.g === j && setEnd(st) && P.doneSteps[i] && st.set >= 1 && st.set <= n) { const v = P.rir && P.rir[i] != null ? P.rir[i] : null; by[st.set] = v; if (v != null) any = true; } });
+  return any ? by.filter(v => v !== undefined) : null;
 }
 // session RPE (CR-10 words in Croatian) on a slider; the label under it changes while sliding
 const RPE_WORDS = ['', 'Vrlo lagano', 'Vrlo lagano', 'Lagano', 'Lagano', 'Srednje', 'Srednje', 'Teško', 'Teško', 'Vrlo teško', 'Maksimalno'];
