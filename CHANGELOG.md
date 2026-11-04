@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.8.1 — 4. 11. 2026.
+
+- **Kartice kao kod GOWOD-a:** prva ima „Podražaj” (jedan redak) i „Upute” (najviše 3 točke), druga ciljana područja, figuru i kratko „Zašto”, treća opterećenje. Kod svih vježbi svaka kartica stane bez skrolanja.
+- **Kraći tekstovi** za svih 153 vježbi; upozorenja na bol i ključne upute ostaju.
+- **Više mjesta:** niža slika vježbe, manji gumbi doze, gornja traka više, manji „Bok, Tomislav”; početne kartice su više.
+- **Početni zaslon:** Teretana je uvijek tu (otvara današnji ili sljedeći trening snage), prva kartica se zove Rehabilitacija.
+- **Filter:** prečaci Cijelo tijelo, Gornji dio i Donji dio iznad figure.
+
 ## 1.8.0 — 4. 11. 2026.
 
 - **Stranica vježbe u tri kartice koje kližeš:** Upute, Cilj i Opterećenje bez gumba gore; stranica stane na ekran bez skrolanja, duži tekst skrola se unutar kartice.
