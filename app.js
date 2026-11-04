@@ -1155,7 +1155,7 @@ function exOptHtml(e){
   if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
     '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
   const lp = exLastPts(e.id);
-  return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Zadnje: <b>≈ ' + lmPts(lp.B) + ' ' + (lp.B < 20 ? 'bodova' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b> · ' + esc(shortDate(lp.at)) + '</div>' : '') + exHistHtml(e, h);
+  return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lp.B < 20 ? 'bodova' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
 }
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
