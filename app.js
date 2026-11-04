@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -440,6 +440,7 @@ function cleanSettings(s){
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
+  if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
   if ('planDates' in s) o.planDates = MonthPlan.clean(s.planDates);
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
@@ -477,7 +478,7 @@ function loadOwnMedia(id){
 // a clip read from the phone appears on the screen that asked for it, also in the player and the editor (unless you are typing)
 function mediaShown(){
   const v = top().v, a = document.activeElement;
-  if (v === 'historyEdit') return;
+  if (v === 'historyEdit' || v === 'morning' || v === 'teamEntry') return;
   if (v === 'play' || (FORM_VIEWS[v] && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))) { if (!renderQueued) { renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); } }
   else softRender();
 }
@@ -752,10 +753,10 @@ const lostText = lost => { const t = nTrainings(lost), r = lost.filter(l => l.ki
 // nothing of yours on the phone yet (a fresh start: no history or programme, nothing created, changed or deleted): an import
 // then keeps no way back, since going back would only empty the app
 const nothingOwn = () => !S.log.length && !(S._deleted || []).length && !Object.keys(S.prog).length &&
-  !Object.keys(S.settings.planDates || {}).length && !Object.keys(S.settings.matchDates || {}).length &&
+  !Object.keys(S.settings.morningChecks || {}).length && !Object.keys(S.settings.planDates || {}).length && !Object.keys(S.settings.matchDates || {}).length &&
   ['exercises', 'protocols', 'field'].every(c => Object.values(collMap(c)).every(x => { const f = ((window.SEED || {})[c] || {})[x.id]; return !!f && contentHash(x) === contentHash(f); }));
-const dataCounts = d => { const nPr = Object.values(d.protocols || {}).filter(p => !(p && p.program)).length, nG = Object.keys(d.programs || {}).length, nT = nTrainings(d.log);
-  return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'protokol', 'protokola', 'protokola') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti'; };
+const dataCounts = (d, settings) => { const nPr = Object.values(d.protocols || {}).filter(p => !(p && p.program)).length, nG = Object.keys(d.programs || {}).length, nT = nTrainings(d.log), nM=Object.keys(settings?.morningChecks || {}).length;
+  return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'protokol', 'protokola', 'protokola') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti' + (nM?' • '+nM+' '+plural(nM,'jutarnja provjera','jutarnje provjere','jutarnjih provjera'):''); };
 const backupObject = () => ({ kind: BACKUP_KIND, v: 1, app: APP_VERSION, exportedAt: new Date().toISOString(), exercises: S.ex, protocols: S.pr, field: S.field, programs: S.prog, log: S.log, _deleted: S._deleted || [], settings: S.settings });
 // a backup is recognised by its content; the photo pack (also a .json file) is sent to its own row
 function backupProblem(d){
@@ -796,7 +797,7 @@ function dataHint(){
 /* ---------- render core ---------- */
 const app = document.getElementById('app');
 const scrollMem = {};
-const FORM_VIEWS = { exEdit:1, build:1, play:1, historyEdit:1 };
+const FORM_VIEWS = { exEdit:1, build:1, play:1, historyEdit:1, morning:1, teamEntry:1 };
 let renderQueued = false;
 function softRender(){
   if (FORM_VIEWS[top().v]) return; // never clobber an open form or the running player
@@ -1270,6 +1271,95 @@ function sessionMuscleComparison(entry, plan) {
   return '<details class="protocol-muscles"><summary>Odrađeno prema planu</summary><p>Odrađene / planirane procijenjene serije po mišiću u ovom treningu.</p>'+rows+'</details>';
 }
 
+function nextScheduledMatch(date, now) {
+  const overrides=matchDates(), weekday=matchDay();
+  const upcoming=Object.keys(overrides).filter(day=>MonthPlan.valid(day) && day>=date && overrides[day]===1);
+  if (weekday>=0) {
+    let next=MonthPlan.shift(date,(weekday-dayIdx(now)+7)%7);
+    while (overrides[next]===0) next=MonthPlan.shift(next,7);
+    upcoming.push(next);
+  }
+  return upcoming.sort()[0] || null;
+}
+function dailyInput(now, week) {
+  const date=dateKey(now), start=weekStart(now);
+  const checks=S.settings.morningChecks || {};
+  const protocols=Object.values(S.pr).filter(p=>Array.isArray(p.items) && p.items.length &&
+    p.items.every(it=>it && S.ex[it.exId] && (it.sets==null || (Number.isInteger(it.sets) && it.sets>0 && it.sets<=20))));
+  const candidates=protocols.map(p=>({kind:'protocol',id:p.id,name:p.name,items:p.items,
+    frozen:!!p.program,heavyLegs:heavyLegs(p) || undefined,tag:p.tag || '',home:p.home || ''}));
+  for (const f of Object.values(S.field)) {
+    if (!Array.isArray(f.blocks) || !f.blocks.length) continue;
+    const info=fieldLoad(f);
+    candidates.push({kind:'field',id:f.id,name:f.name_hr,intensity:info.li,category:fieldCategoryKey(f)});
+  }
+  const planned=[];
+  const tomorrow=calDay(now,1), nextWeek=weekStart(tomorrow);
+  const weeks=[[start,week || weekStatus(start)]];
+  if (nextWeek!==start) weeks.push([nextWeek,weekStatus(nextWeek)]);
+  for (const [weekOf,status] of weeks) {
+    for (const slot of status.slots) {
+      const id=slot.kind==='program'?slot.pr:slot.id, kind=slot.kind==='field'?'field':'protocol';
+      const item=candidates.find(c=>c.id===id && c.kind===kind);
+      if (item) planned.push({...item,date:dateKey(calDay(weekOf,slot.day)),done:!!slot.done,skip:!!(slot.skip||slot.gone),frozen:item.frozen||slot.kind==='program'});
+    }
+  }
+  // MonthPlan removes skipped and moved occurrences from its calendar grid. Keep
+  // the original date as a veto on unsolicited suggestions from the catalogue.
+  for (const change of (S.settings.planDates?.[date] || [])) {
+    if (change.to!==date) planned.push({id:change.id,kind:change.kind,date,skip:true});
+  }
+  const recommendation=TodayModel.suggest({now,settings:{matchDay:matchDay(),matchDates:matchDates()},
+    logs:S.log,planned,candidates,exercises:S.ex,checkin:checks[date] || null});
+  return {date,checks,checkin:checks[date],recommendation,exercises:S.ex,nextMatch:nextScheduledMatch(date,now),
+    team:S.log.filter(l=>l.kind==='team' && l.at<=now).slice(0,3)};
+}
+
+VIEWS.today = function(t) {
+  const vm=dailyInput(Date.now());
+  t.proposalKey=mtCanon([vm.date,vm.recommendation]);
+  return TodayView.view(vm);
+};
+VIEWS.morning = t=>TodayView.formView(t);
+
+function morningError(text) {
+  const el=document.getElementById('morning-error');
+  if (el) { el.textContent=text; el.scrollIntoView({block:'nearest'}); }
+}
+
+function writeMorning(entry) {
+  const t=top();
+  if (t.v!=='morning' || !MonthPlan.valid(t.date)) return false;
+  try {
+    const raw=localStorage.getItem('mt.settings');
+    const latest=raw?{...SETTINGS_BASE,...cleanSettings(JSON.parse(raw))}:{...SETTINGS_BASE};
+    const checks={...(latest.morningChecks || {})};
+    if (mtCanon(checks[t.date] || null)!==mtCanon(t.original || null)) {
+      S.settings=latest;
+      morningError('Provjera je promijenjena u drugoj kartici. Vrati se i ponovno je otvori.');
+      return false;
+    }
+    if (entry) checks[t.date]=entry; else delete checks[t.date];
+    const next={...latest,morningChecks:checks};
+    localStorage.setItem('mt.settings',JSON.stringify(next));
+    S.settings=next;
+  } catch(e) { morningError('Provjera nije spremljena na uređaj. Tvoj unos je još otvoren.'); return false; }
+  back();
+  toast(entry?'Jutarnja provjera je spremljena.':'Jutarnja provjera je izbrisana.');
+  return true;
+}
+
+let dailyTimer=null;
+function refreshDailyAtMidnight(t) {
+  clearTimeout(dailyTimer);
+  if (!['today','dashboard'].includes(t.v)) return;
+  const now=Date.now();
+  t.dailyDate=dateKey(now);
+  dailyTimer=setTimeout(()=>{
+    if (top()===t && !appBusy()) render();
+  },calDay(now,1)-now+100);
+}
+
 VIEWS.dashboard = function(t) {
   if (S.dbState !== 'ready') return TrainingDashboard.render({ loading:true });
   const now = Date.now(), start = weekStart(now), end = calDay(start, 7), weekday = dayIdx(now);
@@ -1312,6 +1402,7 @@ VIEWS.dashboard = function(t) {
     planned:remaining.filter(slot => slot.day === index).length }));
   const todaysSlots = status.slots.filter(slot => slot.day === weekday && slotCounts(slot));
   return TrainingDashboard.render({
+    daily:dailyInput(now,status),
     range:{ start:dateKey(start), end:dateKey(calDay(start,6)), label:shortDate(start) + ' – ' + shortDate(calDay(start,6)), isCurrent:true },
     today:dateKey(now), forecast:!!t.forecast, selectedGroup:t.selectedGroup, groups, sessions, days, quality,
     summary:{ done:status.done, planned:status.planned, todayDone:todaysSlots.filter(s => s.done).length, todayPlanned:todaysSlots.length },
@@ -1320,7 +1411,7 @@ VIEWS.dashboard = function(t) {
   });
 };
 
-const historyWorkout = l => l && (l.kind == null || ['protocol','exercise','field'].includes(l.kind));
+const historyWorkout = l => l && (l.kind == null || ['protocol','exercise','field','team'].includes(l.kind));
 const historyRecord = id => S.log.find(l => historyWorkout(l) && l.historyId === id);
 const pairedMas = (l,test) => l.kind === 'field' && l.refId === 'mas-test-5-min' &&
   test.kind === 'test' && test.test === 'mas' && test.parentSessionId === l.historyId;
@@ -1335,7 +1426,7 @@ function historyDisplay(l) {
       nameSource:saved ? 'snapshot' : current ? 'library' : 'id' };
   });
   return { ...l, id:l.historyId, title:l.name, items:items || undefined,
-    archived:l.kind !== 'field' && !items,
+    archived:l.kind !== 'field' && l.kind !== 'team' && !items,
     linkedMas:S.log.find(x => pairedMas(l,x)) };
 }
 
@@ -1344,13 +1435,21 @@ VIEWS.history = function(t) {
   const matches = query ? all.filter(l => norm(l.name).includes(query)) : all;
   const pageSize = 15, page = Math.min(Math.max(1,t.page || 1), Math.max(1, Math.ceil(matches.length/pageSize)));
   const entries = matches.slice((page-1)*pageSize, page*pageSize).map(l => ({
-    id:l.historyId, historyId:l.historyId, title:l.name, name:l.name, at:l.at, kind:l.kind, secs:l.secs, srpe:l.srpe,
-    archived:l.kind !== 'field' && !Array.isArray(l.items)
+    id:l.historyId, historyId:l.historyId, title:l.name, name:l.name, at:l.at, kind:l.kind, secs:l.secs, srpe:l.srpe, teamType:l.teamType,
+    archived:l.kind !== 'field' && l.kind !== 'team' && !Array.isArray(l.items)
   }));
   return TrainingHistory.render({ mode:'list', query:t.query || '', page, pageSize, total:all.length, filteredTotal:matches.length, entries });
 };
 VIEWS.historyDetail = t => TrainingHistory.render({ mode:'detail', entry:historyDisplay(historyRecord(t.id)), deleteConfirm:!!t.original });
 VIEWS.historyEdit = t => TrainingHistory.render({ mode:'edit', entry:historyDisplay(t.original) });
+VIEWS.teamEntry = t => TeamDiary.render({ now:Date.now(), date:t.date, type:t.type });
+
+function teamError(message){
+  const error = document.getElementById('team-entry-error');
+  if (!error) { toast(message,true); return; }
+  error.textContent = message; error.tabIndex = -1;
+  error.focus({ preventScroll:true }); error.scrollIntoView({ block:'nearest' });
+}
 
 function historyError(message) {
   const error = document.getElementById('history-edit-error');
@@ -2567,11 +2666,16 @@ function stepsFromField(f){
   });
   return steps;
 }
-function startPlayer(cfg){
+function startPlayer(cfg, repeating=false){
+  if (P) return;
+  if (!repeating && lsGet(PLAY_KEY,null)) {
+    playResume();
+    if (S.sheet?.kind==='resume') return;
+  }
   audioMode(true); ensureAudio();
   P = Object.assign({ i:0, paused:false, done:false, endAt:0, left:0, startedAt: Date.now(), lastBeep:null, doneSteps:{} }, cfg);
   if (P.mode === 'ex') {
-    P.originalItems = clone(P.items);
+    P.originalItems = clone(cfg.originalItems || P.items);
     P.items = PlayerDose.items(P.items);
     P.steps = stepsFromItems(P.items);
     P.liveDoseVersion = 1; P.cardIndex = 0;
@@ -4144,15 +4248,15 @@ function sheetHtml(){
           '<div class="acts"><button class="bt amber" data-a="packRemove">Ukloni paket</button><button class="bt ghost" data-a="packKeep">Odustani</button></div></div>'
         : pk ? '<button class="opt" data-a="packRemove" style="color:var(--danger)"><span>' + (hasProg ? 'Ukloni TAE paket (slike i program)' : 'Ukloni paket slika') + '</span></button>' : '') +
       (bad ? '<button class="opt" data-a="exportBad"><span>Spremi oštećene podatke' + small('Nisu se mogli pročitati ' + shortDate(bad.at)) + '</span></button>' : '') +
-      '<p style="margin:14px 0 0;font-size:13px;color:var(--text-2)">' + esc(dataCounts(storeObj())) + '</p>' +
+      '<p style="margin:14px 0 0;font-size:13px;color:var(--text-2)">' + esc(dataCounts(storeObj(),S.settings)) + '</p>' +
       '<p style="margin:6px 0 0;font-size:13px;color:var(--text-2)">Verzija ' + APP_VERSION + '</p>';
   } else if (s.kind === 'restore') {
     // what a backup (or the data from before the last import) would replace, side by side, before anything changes
     const d = s.d, when = s.undo ? s.at : Date.parse(d.exportedAt) || 0;
     const lost = lostEntries(S.log, d.log), none = !s.undo && nothingOwn();
-    const box = (title, x) => '<div class="opt" style="flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:10px 4px;box-sizing:border-box"><b style="font-size:15px">' + esc(title) + '</b><span style="font-size:14px;color:var(--text-2)">' + esc(dataCounts(x)) + '</span></div>';
+    const box = (title, x, settings) => '<div class="opt" style="flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:10px 4px;box-sizing:border-box"><b style="font-size:15px">' + esc(title) + '</b><span style="font-size:14px;color:var(--text-2)">' + esc(dataCounts(x,settings)) + '</span></div>';
     body = '<h3>' + (s.undo ? 'Vratiti podatke od prije uvoza?' : 'Vratiti podatke iz kopije?') + '</h3>' +
-      box(s.undo ? 'Podaci od prije uvoza' + (when ? ' (' + shortDate(when) + ')' : '') : 'Kopija' + (when ? ' od ' + shortDate(when, true) : ''), d) + box('Sada na mobitelu', storeObj()) +
+      box(s.undo ? 'Podaci od prije uvoza' + (when ? ' (' + shortDate(when) + ')' : '') : 'Kopija' + (when ? ' od ' + shortDate(when, true) : ''), d, s.undo?s.settings:d.settings) + box('Sada na mobitelu', storeObj(),S.settings) +
       (lost.length ? '<div class="lift warn" style="margin:12px 0 0"><div class="why" style="color:var(--text-body)">' + esc((s.undo ? 'Ovo nije u podacima od prije uvoza' : 'Ovo nije u kopiji') + ' i nestat će iz povijesti ako zamijeniš podatke: ' + lostText(lost) + '.') + '</div></div>' : '') +
       '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.undo ? 'Sve na mobitelu zamijenit će se podacima od prije uvoza.' : 'Sve na mobitelu (vježbe, protokoli, plan, povijest i postavke) zamijenit će se kopijom. Slike i videi ostaju.' + (none ? '' : ' Sadašnje podatke možeš vratiti u Mojim podacima dok ne uvezeš sljedeću kopiju.')) + '</p>' +
       (s.noUndo ? '<p style="margin:0 0 14px;font-size:14px;line-height:20px;color:var(--danger)">Sadašnje podatke nije moguće sačuvati za povratak. Ako ih zamijeniš, ne možeš ih vratiti.</p>' : '') +
@@ -4200,6 +4304,7 @@ function sheetHtml(){
 
 /* ---------- after-render hooks ---------- */
 function after(t){
+  refreshDailyAtMidnight(t);
   if (t.v === 'home') {
     const car = document.getElementById('car'), dots = document.getElementById('dots');
     if (car && dots) car.addEventListener('scroll', () => {
@@ -4232,7 +4337,81 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
+  todayOpen: () => go({v:'today'}),
+  morningOpen: (d={}) => {
+    const date=MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
+    if (date>dateKey(Date.now())) return;
+    go({v:'morning',date,original:S.settings.morningChecks?.[date] || null});
+  },
+  morningSave: () => {
+    const form=document.getElementById('morning-form');
+    if (!form || top().v!=='morning') return;
+    const result=TodayView.readForm(form,top().date);
+    if (result.error) {morningError(result.error); return;}
+    writeMorning(result.entry);
+  },
+  morningDeleteAsk: () => {
+    const box=document.getElementById('morning-confirm');
+    if (box) {box.hidden=false;box.querySelector('button')?.focus();}
+  },
+  morningDeleteCancel: () => {const box=document.getElementById('morning-confirm');if(box)box.hidden=true;},
+  morningDeleteConfirm: () => {
+    const box=document.getElementById('morning-confirm');
+    if (top().original && box && !box.hidden) writeMorning(null);
+  },
+  todayEvidence: d => {
+    if (d.type==='history' && historyRecord(d.id)) A.historyOpen({id:d.id});
+    else if (d.type==='checkin') A.morningOpen(d);
+    else if (['match','plan'].includes(d.type) && MonthPlan.valid(d.date)) A.monthOpen({date:d.date});
+    else if (d.type==='protocol' && S.pr[d.id]) A.openPr({id:d.id});
+    else if (d.type==='field' && S.field[d.id]) A.openField({id:d.id});
+  },
+  todayAct: () => {
+    if (top().v!=='today' || P) return;
+    if (pendingExt && !appBusy()) takeOtherCopy();
+    const vm=dailyInput(Date.now()), rec=vm.recommendation, action=rec.action || {};
+    if (top().proposalKey!==mtCanon([vm.date,rec])) {render();toast('Prijedlog se promijenio. Pregledaj najnovije podatke.');return;}
+    if (action.type==='checkin') {A.morningOpen();return;}
+    if (action.type==='team') {A.teamNew({date:vm.date});return;}
+    if (action.type==='calendar') {A.monthOpen({date:action.date || vm.date});return;}
+    if (action.type==='history') {if(historyRecord(action.id))A.historyOpen({id:action.id});else A.historyList();return;}
+    if (action.type==='field' && S.field[action.id]) {A.openField({id:action.id});return;}
+    if (action.type!=='protocol') return;
+    const protocol=S.pr[action.id];
+    if (!protocol || !protocol.items?.length) return;
+    const items=protocol.program || !rec.items?.length ? protocol.items : rec.items;
+    if (items.length!==protocol.items.length || items.some((it,i)=>it.exId!==protocol.items[i].exId || !S.ex[it.exId])) {
+      render();toast('Sadržaj protokola se promijenio. Ponovno otvori prijedlog.');return;
+    }
+    startPlayer({mode:'ex',title:protocol.name,items,originalItems:protocol.items,ref:{kind:'protocol',id:protocol.id}});
+  },
   historyList: () => go({ v:'history', page:1 }),
+  teamNew: (d={}) => {
+    if (S.dbState !== 'ready') { toast('Pričekaj da se tvoji podaci učitaju.'); return; }
+    go({ v:'teamEntry', date:MonthPlan.valid(d.date)?d.date:dateKey(Date.now()), type:d.type==='match'?'match':'training', historyId:uid('h') });
+  },
+  teamCancel: () => { if (top().v === 'teamEntry') back(); },
+  teamSave: () => {
+    const t=top(), form=document.getElementById('team-entry-form');
+    if (t.v !== 'teamEntry' || !form || t.saving) return;
+    const fields=TeamDiary.readNew(form);
+    if (!fields.ok) { teamError(fields.error); return; }
+    const result=TeamDiary.create(fields.values,{historyId:t.historyId,now:Date.now()});
+    if (!result.ok) { teamError(result.errors.map(e=>e.message).join(' ')); return; }
+    let raw;
+    try { raw=localStorage.getItem(STORE_KEY); }
+    catch(e) { teamError('Ne mogu pristupiti pohrani. Zapis nije spremljen.'); return; }
+    if (!raw && savedJson || raw && raw !== savedJson && !mergeOtherCopy(raw)) { teamError('Pohrana se u međuvremenu promijenila. Ponovno otvori aplikaciju.'); return; }
+    if (raw && raw !== savedJson) { savedJson=raw; pendingExt=null; }
+    const before=S.log;
+    if (before.some(l=>l.historyId===result.entry.historyId)) { teamError('Ovaj zapis je već spremljen. Otvori ga iz povijesti.'); return; }
+    const cutoff=before.length>=LOG_MAX?before.slice().sort((a,b)=>b.at-a.at)[LOG_MAX-1]:null;
+    if (cutoff && result.entry.at<=cutoff.at) { teamError('Povijest čuva najnovijih '+LOG_MAX+' zapisa. Ovaj datum je stariji ili jednak najstarijem zadržanom zapisu, pa unos nije spremljen. Tvoj obrazac je ostao otvoren.'); return; }
+    t.saving=true; S.log=[result.entry,...before].sort((a,b)=>b.at-a.at);
+    const cut=trimLog();
+    if (!persist()) { S.log=before; t.saving=false; teamError('Zapis nije spremljen. Tvoj unos je sačuvan u obrascu; pokušaj ponovno.'); return; }
+    S.stack.pop(); go({v:'historyDetail',id:result.entry.historyId}); toast(cut || 'Zapis je spremljen u povijesti.');
+  },
   historyOpen: d => go({ v:'historyDetail', id:d.id }),
   historyPage: d => { const t = top(); t.page = Number(d.page) || 1; render(); app.querySelector('.history')?.scrollTo(0,0); },
   historyEdit: () => {
@@ -4545,7 +4724,7 @@ const A = {
     const settings0 = S.settings;
     applyData(d); S._deleted = (d._deleted || []).slice(); mergeSeed(window.SEED || {}); repairCopies();
     if (s.undo) S.settings = Object.assign({}, SETTINGS_BASE, cleanSettings(s.settings));
-    else S.settings = Object.assign({}, S.settings, {planDates:{}}, d.settings || {});
+    else S.settings = Object.assign({}, S.settings, {planDates:{}, morningChecks:{}}, d.settings || {});
     let previousSettings, settingsSaved = false;
     try {
       previousSettings = localStorage.getItem('mt.settings');
@@ -4596,7 +4775,7 @@ const A = {
     if (p && (p.items || []).length) { cfg.items = p.items; cfg.title = p.name; }
     if (f) { cfg.f = f; cfg.title = f.name_hr; }
     cfg.steps = cfg.mode === 'field' ? stepsFromField(cfg.f) : stepsFromItems(cfg.items);
-    P = null; S.stack.pop(); startPlayer(cfg);
+    P = null; S.stack.pop(); startPlayer(cfg,true);
     toast(r.cut || (r.news.length ? newsMsg(r.news) : saved ? 'Trening je spremljen. Krećeš ispočetka.' : 'Krećeš ispočetka.'));
   },
   finishPlay: () => {
@@ -4744,6 +4923,7 @@ app.addEventListener('click', ev => {
   if (fn) { ev.preventDefault(); fn(Object.assign({}, el.dataset), el, ev); }
 });
 app.addEventListener('submit', ev => {
+  if (ev.target.id==='morning-form') {ev.preventDefault();A.morningSave();return;}
   if (ev.target.id === 'history-edit-form') { ev.preventDefault(); A.historySave(); }
   if (ev.target.id === 'play-dose-form') { ev.preventDefault(); A.playDoseApply(); }
 });
@@ -4853,6 +5033,7 @@ if (swContainer) {
 // iPhone: a home-screen app comes back from the background without reloading
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
+  if (['today','dashboard'].includes(top().v) && top().dailyDate!==dateKey(Date.now()) && !appBusy()) render();
   let cur = null; try { cur = localStorage.getItem(STORE_KEY); } catch(e){}
   if (cur && savedJson != null && cur !== savedJson) { pendingExt = cur; if (!appBusy()) render(); }
   maybeReload();

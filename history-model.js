@@ -3,10 +3,11 @@
 (function(root,factory){
   'use strict';
   var mw = typeof module === 'object' && module.exports ? require('./muscle-work.js') : root.MuscleWork;
-  var api = factory(mw);
+  var td = typeof module === 'object' && module.exports ? require('./team.js') : root.TeamDiary;
+  var api = factory(mw,td);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.HistoryModel = api;
-})(typeof window !== 'undefined' ? window : null,function(M){
+})(typeof window !== 'undefined' ? window : null,function(M,T){
   'use strict';
   var has = function(o,k){return Object.prototype.hasOwnProperty.call(o,k);};
   var plain = function(o){return !!o && typeof o === 'object' && !Array.isArray(o);};
@@ -67,7 +68,7 @@
     return freeze(out);
   }
   function effortStatus(entry){return entry && entry.load2Status==='needsProfile'?'needsProfile':entry && plain(entry.load2)?'recorded':'missing';}
-  function sessionAU(entry){return entry && finite(entry.srpe) && entry.srpe>=1 && entry.srpe<=10 && finite(entry.secs) && entry.secs>=0 ? entry.srpe*Math.round(round(entry.secs/60)) : null;}
+  function sessionAU(entry){return entry&&entry.kind==='team'?T.sessionAU(entry):entry && finite(entry.srpe) && entry.srpe>=1 && entry.srpe<=10 && finite(entry.secs) && entry.secs>=0 ? entry.srpe*Math.round(round(entry.secs/60)) : null;}
   function failure(errors){return freeze({ok:false,errors:errors});}
   function transaction(entry,patch,kind){
     var errors=[],changes=[],warnings=[];
@@ -242,7 +243,8 @@
   }
   function editProtocol(entry,patch){return transaction(entry,patch,'protocol');}
   function editField(entry,patch){return transaction(entry,patch,'field');}
-  function edit(entry,patch){return entry&&entry.kind==='field'?editField(entry,patch):editProtocol(entry,patch);}
-  return freeze({version:1,edit:edit,editProtocol:editProtocol,editField:editField,performedSets:performedSets,recordedRows:recordedRows,
+  function editTeam(entry,patch){return freeze(T.edit(entry,patch));}
+  function edit(entry,patch){return entry&&entry.kind==='team'?editTeam(entry,patch):entry&&entry.kind==='field'?editField(entry,patch):editProtocol(entry,patch);}
+  return freeze({version:1,edit:edit,editProtocol:editProtocol,editField:editField,editTeam:editTeam,performedSets:performedSets,recordedRows:recordedRows,
     repetitionTotal:repetitionTotal,timeTotal:timeTotal,fieldSummary:fieldSummary,effortStatus:effortStatus,sessionAU:sessionAU});
 });

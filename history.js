@@ -3,6 +3,7 @@
    pagination, atomic validation, persistence and derived totals. */
 (function(root) {
   'use strict';
+  const Team=root.TeamDiary||(typeof module==='object'&&module.exports?require('./team.js'):null);
   const own=(o,k)=>!!o&&Object.prototype.hasOwnProperty.call(o,k);
   const array=v=>Array.isArray(v)?v:[];
   const number=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0?v:null;
@@ -11,7 +12,7 @@
   const plural=(n,one,few,many)=>n%10===1&&n%100!==11?one:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?few:many;
   const inputNumber=v=>number(v)==null?'':String(v).replace('.',',');
   const title=e=>String(e&&(e.title||e.name)||'Trening bez naziva');
-  const kind=e=>e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?'Trening po protokolu':'Stariji zapis';
+  const kind=e=>e.kind==='team'?Team.label(e.teamType):e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?'Trening po protokolu':'Stariji zapis';
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+({
     back:'<path d="m14 5-7 7 7 7"/>',search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',arrow:'<path d="m9 5 7 7-7 7"/>',
@@ -108,10 +109,10 @@
     const computedAu=root.HistoryModel&&typeof root.HistoryModel.sessionAU==='function'?root.HistoryModel.sessionAU(entry):null;
     const au=computedAu!=null?computedAu:lm?number(lm.au):null;
     const score=lm&&entry.load2Status!=='needsProfile'?number(lm.B):null,band=lm?number(lm.band):null;
-    return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric('Trajanje',duration(entry.secs))+metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno')+
+    return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric(entry.kind==='team'&&entry.teamType==='match'?'Odigrano':'Trajanje',duration(entry.secs))+metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno')+
       (score!=null?metric(lm.v==='LM1'?'Procjena napora LM1':'Spremljena procjena napora',fmt(score)+(band!=null?' ± '+fmt(band):'')+' bodova'):'')+(au!=null?metric(computedAu!=null?'Napor × trajanje':'Spremljene jedinice napora',fmt(au)):'')+'</dl>'+
       (entry.load2Status==='needsProfile'?'<p class="hy-footnote">Nakon izmjene izvedbe bodovi napora čekaju izvorni profil. Ne preuzimaju se iz današnje knjižnice.</p>':'')+
-      (computedAu!=null?'<p class="hy-footnote">Jedinice napora: prijavljena ocjena cijelog treninga × trajanje zaokruženo na minute.</p>':'')+(entry.editedAt?'<p class="hy-footnote">Zapis je naknadno uređen.</p>':'')+'</section>';
+      (computedAu!=null?'<p class="hy-footnote">Jedinice napora: prijavljena ocjena cijelog treninga × '+(entry.kind==='team'?'stvarno trajanje u minutama.':'trajanje zaokruženo na minute.')+'</p>':'')+(entry.editedAt?'<p class="hy-footnote">Zapis je naknadno uređen.</p>':'')+'</section>';
   }
   function linkedMas(entry) {
     if(!entry.linkedMas)return '';
@@ -122,7 +123,7 @@
     const entry=vm.entry;
     const confirm=vm.deleteConfirm?'<section class="hy-delete-confirm" role="alert"><h2>Izbrisati ovaj zapis?</h2><p>Trening „'+esc(title(entry))+'” uklonit će se iz povijesti i povezanih pregleda.'+(entry.linkedMas?' Uklonit će se i povezani rezultat MAS testa.':'')+'</p><div class="hy-actions"><button type="button" data-a="historyDeleteCancel"'+(vm.busy?' disabled':'')+'>Odustani od brisanja</button><button type="button" class="hy-danger" data-a="historyDeleteConfirm" data-id="'+esc(entry.historyId)+'"'+(vm.busy?' disabled':'')+'>Potvrdi brisanje</button></div></section>':'<div class="hy-actions hy-record-actions"><button type="button" class="hy-primary" data-a="historyEdit">'+icon('edit')+'Uredi zapis</button><button type="button" class="hy-delete-link" data-a="historyDeleteAsk">'+icon('trash')+'Izbriši zapis</button></div>';
     return header('Detalji treninga')+(vm.error?note(vm.error,'hy-error'):'')+metadata(entry)+
-      (entry.kind==='field'?fieldDetails(entry):array(entry.items).length?entry.items.map(itemDetails).join(''):archivedDetails(entry))+linkedMas(entry)+confirm;
+      (entry.kind==='team'?Team.details(entry):entry.kind==='field'?fieldDetails(entry):array(entry.items).length?entry.items.map(itemDetails).join(''):archivedDetails(entry))+linkedMas(entry)+confirm;
   }
   function field(label,value,attrs,help='') {
     return '<label class="hy-field"><span>'+esc(label)+'</span><input '+attrs+' value="'+esc(value)+'" data-history-initial="'+esc(value)+'" autocomplete="off">'+(help?'<small>'+esc(help)+'</small>':'')+'</label>';
@@ -156,11 +157,11 @@
   }
   function editView(vm) {
     const entry=vm.entry,minutes=number(entry.secs)==null?null:Math.round(entry.secs/60*1e6)/1e6;
-    return header('Uredi zapis','Mijenja se spremljena izvedba, bez promjene protokola.')+'<form id="history-edit-form" novalidate><div id="history-edit-error" class="hy-form-error" role="alert" aria-live="polite">'+esc(vm.error||'')+'</div><fieldset class="hy-card"><legend>Osnovni podaci</legend>'+
+    return header('Uredi zapis',entry.kind==='team'?'Ispravi podatke odrađene sesije.':'Mijenja se spremljena izvedba, bez promjene protokola.')+'<form id="history-edit-form" novalidate><div id="history-edit-error" class="hy-form-error" role="alert" aria-live="polite">'+esc(vm.error||'')+'</div><fieldset class="hy-card"><legend>Osnovni podaci</legend>'+
       field('Naziv treninga',entry.name||'','type="text" id="history-title" data-history-meta="name" maxlength="200"')+
-      field('Datum i vrijeme',localInput(entry.at),'type="datetime-local" step="0.001" id="history-at" data-history-meta="at"','Lokalno vrijeme na ovom uređaju.')+
-      '<div class="hy-form-grid">'+numericField('Trajanje (min)',minutes,'id="history-minutes" data-history-meta="secs"')+numericField('Ocjena napora (1–10)',entry.srpe,'id="history-srpe" data-history-meta="srpe"','Prazno uklanja ocjenu.')+'</div></fieldset>'+
-      (entry.kind==='field'?editFieldLoad(entry):array(entry.items).length?entry.items.map(editItem).join(''):archivedDetails(entry))+
+      field(entry.kind==='team'?'Datum i vrijeme završetka':'Datum i vrijeme',localInput(entry.at),'type="datetime-local" step="0.001" id="history-at" data-history-meta="at"',entry.kind==='team'?'Lokalno vrijeme; za sesiju preko ponoći odaberi dan završetka.':'Lokalno vrijeme na ovom uređaju.')+
+      '<div class="hy-form-grid">'+numericField(entry.kind==='team'?'Stvarno trajanje (min)':'Trajanje (min)',minutes,'id="history-minutes" data-history-meta="secs"')+numericField(entry.kind==='team'?'Ocjena napora (0–10)':'Ocjena napora (1–10)',entry.srpe,'id="history-srpe" data-history-meta="srpe"','Prazno uklanja ocjenu.')+'</div></fieldset>'+
+      (entry.kind==='team'?Team.extras(entry):entry.kind==='field'?editFieldLoad(entry):array(entry.items).length?entry.items.map(editItem).join(''):archivedDetails(entry))+
       '<p class="hy-editor-note">Prazna vrijednost nije nula. Nepromijenjeni podaci čuvaju izvornu preciznost. Spremljene izmjene osvježit će povijest i povezane preglede.</p><div class="hy-actions hy-editor-actions"><button type="button" data-a="historyCancelEdit"'+(vm.busy?' disabled':'')+'>Odustani</button><button type="button" class="hy-primary" data-a="historySave"'+(vm.busy?' disabled':'')+'>'+icon('check')+(vm.busy?'Spremam…':'Spremi izmjene')+'</button></div></form>';
   }
   function listView(vm) {
@@ -174,7 +175,7 @@
       rows+='<'+tag+' class="hy-row"'+(tag==='button'?' type="button" data-a="historyOpen" data-id="'+esc(id)+'"':'')+'><span class="hy-row-icon">'+icon(entry.kind==='field'?'clock':'check')+'</span><span class="hy-row-text"><b>'+esc(title(entry))+'</b><small>'+esc(timeLabel(entry.at))+(timeLabel(entry.at)?' · ':'')+esc(duration(entry.secs))+'</small><span>'+esc(kind(entry))+(entry.archived?' · Sažeti zapis':'')+'</span></span>'+icon('arrow')+'</'+tag+'>';
     });
     if(group!==null)rows+='</div></section>';
-    return header('Povijest treninga','Spremljeni treninzi i samostalne vježbe, od najnovijeg.')+'<div class="hy-search">'+icon('search')+'<label class="hy-visually-hidden" for="history-query">Pretraži treninge</label><input type="search" id="history-query" placeholder="Pretraži po nazivu" value="'+esc(query)+'" autocomplete="off"></div>'+
+    return header('Povijest treninga','Spremljeni treninzi i samostalne vježbe, od najnovijeg.')+'<button type="button" class="hy-team-new" data-a="teamNew">+ Zabilježi klub ili utakmicu</button><div class="hy-search">'+icon('search')+'<label class="hy-visually-hidden" for="history-query">Pretraži treninge</label><input type="search" id="history-query" placeholder="Pretraži po nazivu" value="'+esc(query)+'" autocomplete="off"></div>'+
       '<p class="hy-list-count" aria-live="polite">'+fmt(total,0)+' '+(query?plural(total,'rezultat pretrage','rezultata pretrage','rezultata pretrage'):plural(total,'spremljen zapis','spremljena zapisa','spremljenih zapisa'))+'</p>'+(vm.error?note(vm.error,'hy-error'):'')+
       (rows||'<section class="hy-empty">'+icon('clock')+'<h2>'+(query?'Nema rezultata pretrage':'Povijest je još prazna')+'</h2><p>'+(query?'Pokušaj upisati dio naziva treninga.':'Spremljeni trening ili vježba iz knjižnice pojavit će se ovdje. Rezultati testova imaju zasebnu evidenciju.')+'</p></section>')+
       (pages>1?'<nav class="hy-pagination" aria-label="Stranice povijesti"><button type="button" data-a="historyPage" data-page="'+(page-1)+'"'+(page<=1?' disabled':'')+'>Prethodna</button><span>Stranica '+page+' od '+pages+'</span><button type="button" data-a="historyPage" data-page="'+(page+1)+'"'+(page>=pages?' disabled':'')+'>Sljedeća</button></nav>':'');
@@ -213,7 +214,7 @@
             if(!parts||Number.isNaN(d.getTime())||d.getFullYear()!==+parts[1]||d.getMonth()!==+parts[2]-1||d.getDate()!==+parts[3]||d.getHours()!==+parts[4]||d.getMinutes()!==+parts[5]||d.getSeconds()!==+(parts[6]||0))throw new Error('Upiši valjan lokalni datum i vrijeme.');
             if(d.getTime()!==entry.at)patch.at=d.getTime();
           } else if(field==='secs') {const value=numeric(raw,'Trajanje',{max:2880});const secs=value===null?null:Math.round(value*60);if(secs!==entry.secs)patch.secs=secs;}
-          else if(field==='srpe') {const value=numeric(raw,'Ocjena napora',{integer:true,min:1,max:10});if(value!==entry.srpe)patch.srpe=value;}
+          else if(field==='srpe') {const value=numeric(raw,'Ocjena napora',{integer:true,min:entry.kind==='team'?0:1,max:10});if(value!==entry.srpe)patch.srpe=value;}
           continue;
         }
         if(data.historyItem!=null) {
@@ -255,6 +256,7 @@
       }
       if(items.size)patch.items=Array.from(items.values()).sort((a,b)=>a.index-b.index);
       if(load&&Object.keys(load).length)patch.load=load;
+      if(entry.kind==='team')Object.assign(patch,Team.readExtras(form,entry).patch);
       return {ok:true,patch};
     } catch(error) {return {ok:false,error:error.message||'Provjeri unesene podatke.'};}
   }

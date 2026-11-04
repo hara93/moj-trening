@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.13.0 — 4. 11. 2026.
+
+- Kartica **Danas** u **Moj pregled** spaja današnji plan, prethodne izvedbe, dnevnik kluba i termine utakmica. Uz prijedlog možeš otvoriti zapise koji su utjecali na njega.
+- U **Jutarnjoj provjeri** možeš zabilježiti energiju, osjećaj u nogama i bol. Dovoljan je jedan odgovor. Spremljenu provjeru možeš ispraviti ili izbrisati.
+- **Ekipni dnevnik** bilježi trening s klubom ili odigranu utakmicu. Trajanje i osobna ocjena napora ulaze u pregled opterećenja. Zapis možeš urediti ili izbrisati iz povijesti.
+- Predloženu dozu pokrećeš u postojećem prikazu treninga. U povijest ulaze izvedene serije. Provjere i ekipni zapisi rade bez mreže i uključeni su u sigurnosnu kopiju.
+
 ## 1.12.0 — 4. 11. 2026.
 
 - Donja traka ima tri odredišta. Mjesečni planer otvara se ikonom kalendara u **Moj pregled**, a **Napredak** je dostupan iz istog zaslona.
