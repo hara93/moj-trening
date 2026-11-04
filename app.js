@@ -82,6 +82,17 @@ const ZONE_ONLY = ['Kuk', 'Cijelo tijelo'];   // zones no region stands for: the
 // "Cijelo tijelo" in the filter: exercises that work the upper body and the legs together (or your own tagged so)
 const UPPER_M = ['front_chest','front_shoulders','back_rear_shoulders','front_biceps','back_triceps','front_forearms','back_upper_back_trapezius','back_latissimus'];
 const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves'];
+// 1.8.1: the filter's shortcuts like GOWOD: "Gornji dio" (arms, shoulders, chest, back and the trunk) and "Donji dio" (the legs and
+// hips) select their whole region set; a set selected in full shows as ONE chip that removes it. "Cijelo tijelo" keeps its 1.8 meaning
+// (exercises that work the upper body and the legs together).
+const MUS_SETS = [['gornji', 'Gornji dio', UPPER_M.concat(['front_abs', 'front_obliques', 'back_lower_back'])], ['donji', 'Donji dio', LEG_M]];
+const musSet = k => (MUS_SETS.find(x => x[0] === k) || [])[2];
+const musSetOn = (mu, k) => { const set = musSet(k); return !!set && set.every(r => (mu || []).indexOf(r) !== -1); };
+// the chips of the selected muscles: [value, label]; a full set as one chip
+function musChips(mu){
+  mu = mu || []; const full = MUS_SETS.filter(x => musSetOn(mu, x[0])), inSet = r => full.some(x => x[2].indexOf(r) !== -1);
+  return full.map(x => [x[0], x[1]]).concat(mu.filter(r => !inSet(r)).map(r => [r, r === 'cijelo' ? 'Cijelo tijelo' : muscleLabel(r)]));
+}
 const muscleLabel = r => window.BODY && BODY.regions && BODY.regions[r] ? BODY.regions[r].label_hr : r;
 const okMuscles = a => Array.isArray(a) ? Array.from(new Set(a.filter(r => MUSCLE_ZONE[r]))) : [];
 function exMuscles(e){
@@ -1134,7 +1145,7 @@ function activeFiltersHtml(){
   const chip = (k, v, t) => '<button class="afc" data-a="filtDrop" data-k="'+k+'" data-v="'+esc(v)+'" aria-label="Ukloni filter: '+esc(t)+'">'+esc(t)+x+'</button>';
   const n = libFiltered().length;
   return '<div class="chips afil" role="group" aria-label="Aktivni filteri">' + (S.lib.cat !== 'Sve' ? chip('libcat', S.lib.cat, S.lib.cat) : '') + (S.lib.cats || []).map(c => chip('cat', c, c)).join('') +
-    EQ_TILES.filter(tileOn).map(t => chip('eq', t[0], t[0])).join('') + (S.lib.mus || []).map(r => chip('mus', r, r === 'cijelo' ? 'Cijelo tijelo' : muscleLabel(r))).join('') + '</div>' +
+    EQ_TILES.filter(tileOn).map(t => chip('eq', t[0], t[0])).join('') + musChips(S.lib.mus).map(c => chip('mus', c[0], c[1])).join('') + '</div>' +
     '<div class="afn"><span id="afcount">' + n + ' ' + plural(n, 'vježba', 'vježbe', 'vježbi') + '</span><button class="txtbtn lnk" data-a="filtClear">Očisti filtere</button></div>';
 }
 function libListHtml(){
@@ -3544,9 +3555,10 @@ function sheetHtml(){
         (S.lib.q ? '<button class="afc" data-a="filtDrop" data-k="q" data-v="" aria-label="Ukloni pretragu: '+esc(S.lib.q)+'">„'+esc(S.lib.q)+'“'+x+'</button>' : '') + '</div>' : '') +
       '<div class="fsec"><div class="fl" id="fl-cat">Kategorija</div><div class="chips wrap fcats" role="group" aria-labelledby="fl-cat">' + CATS.map(c => '<button class="chip sm" data-a="catToggle" data-v="'+esc(c)+'" aria-pressed="'+(cs.indexOf(c) !== -1)+'">'+esc(c)+'</button>').join('') + '</div></div>' +
       '<div class="fsec"><div class="fl" id="fl-eq">Oprema</div><div class="eqgrid" role="group" aria-labelledby="fl-eq">' + EQ_TILES.map(t => '<button class="eqt" data-a="eqTile" data-v="'+esc(t[0])+'" aria-pressed="'+tileOn(t)+'"><span class="bx">'+t[2]+'</span><span class="tx">'+esc(t[0])+'</span></button>').join('') + '</div></div>' +
-      '<div class="fsec" id="fzona"><div class="fl"><span id="fl-z">Zona</span><button class="chip sm" data-a="musTap" data-v="cijelo" aria-pressed="'+whole+'">Cijelo tijelo</button></div>' +
+      '<div class="fsec" id="fzona"><div class="fl"><span id="fl-z">Zona</span></div>' +
+        '<div class="zsh" role="group" aria-label="Prečaci"><button class="chip sm" data-a="musTap" data-v="cijelo" aria-pressed="'+whole+'">Cijelo tijelo</button>' + MUS_SETS.map(x => '<button class="chip sm" data-a="musTap" data-v="'+x[0]+'" aria-pressed="'+musSetOn(mu, x[0])+'">'+x[1]+'</button>').join('') + '</div>' +
         (fig ? '<div class="figs" role="group" aria-labelledby="fl-z">' + fig + '<div class="figl"><span>Sprijeda</span><span>Straga</span></div></div>' : '') +
-        '<div class="zch">' + (mu.length ? mu.map(r => { const t = r === 'cijelo' ? 'Cijelo tijelo' : muscleLabel(r); return '<button class="afc" data-a="musTap" data-v="'+r+'" aria-label="Ukloni: '+esc(t)+'">'+esc(t)+x+'</button>'; }).join('') : '<span class="zhint">Dodirni mišić na tijelu.</span>') + '</div></div>' +
+        '<div class="zch">' + (mu.length ? musChips(mu).map(c => '<button class="afc" data-a="musTap" data-v="'+c[0]+'" aria-label="Ukloni: '+esc(c[1])+'">'+esc(c[1])+x+'</button>').join('') : '<span class="zhint">Dodirni mišić na tijelu.</span>') + '</div></div>' +
       '<div class="fft"><button class="btn sec" data-a="filtClear">Očisti</button><button class="btn" data-a="sheetDone">Prikaži ' + n + ' ' + plural(n, 'vježbu', 'vježbe', 'vježbi') + '</button></div>';
   } else if (s.kind === 'day') {
     const ws = weekStart(Date.now()), st = weekStatus(ws, weekPlan(ws)), i = s.i, today = dayIdx(Date.now()), m = matchDay();
@@ -4018,12 +4030,15 @@ const A = {
   // 1.8: the filter sheet (Kategorija, Oprema tiles, Zona on the figure) and the chip row of the filters in use
   catToggle: d => { const a = S.lib.cats = (S.lib.cats || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libcats', a); render(); },
   eqTile: d => { const t = EQ_TILES.find(x => x[0] === d.v); if (!t) return; const on = tileOn(t); S.lib.eq = (S.lib.eq || []).filter(x => t[1].indexOf(x) === -1).concat(on ? [] : t[1]); lsSet('mt.libeq', S.lib.eq); render(); },
-  musTap: d => { if (d.v !== 'cijelo' && !MUSCLE_ZONE[d.v]) return; const a = S.lib.mus = (S.lib.mus || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libmus', a); render(); },
+  musTap: d => { const set = musSet(d.v); if (d.v !== 'cijelo' && !MUSCLE_ZONE[d.v] && !set) return; let a = (S.lib.mus || []).slice();
+    if (set) a = musSetOn(a, d.v) ? a.filter(r => set.indexOf(r) === -1) : a.concat(set.filter(r => a.indexOf(r) === -1));   // 1.8.1: a shortcut toggles its whole set
+    else { const i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); }
+    S.lib.mus = a; lsSet('mt.libmus', a); render(); },
   filtDrop: d => {
     if (d.k === 'libcat') { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); }
     else if (d.k === 'q') S.lib.q = '';
     else if (d.k === 'cat') { S.lib.cats = (S.lib.cats || []).filter(x => x !== d.v); lsSet('mt.libcats', S.lib.cats); }
-    else if (d.k === 'mus') { S.lib.mus = (S.lib.mus || []).filter(x => x !== d.v); lsSet('mt.libmus', S.lib.mus); }
+    else if (d.k === 'mus') { const set = musSet(d.v) || [d.v]; S.lib.mus = (S.lib.mus || []).filter(x => set.indexOf(x) === -1); lsSet('mt.libmus', S.lib.mus); }
     else { const t = EQ_TILES.find(x => x[0] === d.v); S.lib.eq = (S.lib.eq || []).filter(x => !t || t[1].indexOf(x) === -1); lsSet('mt.libeq', S.lib.eq); }
     render(); },
   filtClear: () => { S.lib.eq = []; S.lib.cats = []; S.lib.mus = []; ['mt.libeq', 'mt.libcats', 'mt.libmus'].forEach(k => lsSet(k, [])); S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); if (S.sheet) S.lib.q = ''; render(); },
