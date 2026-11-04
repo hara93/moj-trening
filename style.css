@@ -764,3 +764,12 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 #swc-opt .swb{gap:4px}
 .swb .lc.hist .hrow{padding:3px 0}
 #swc-opt .swb .opthd{min-height:18px;line-height:18px}
+/* 1.8.2: the make-up offer on the home screen (Nadoknadi danas | Preskoči) and a missed / skipped slot in the day sheet */
+.lift.mku{margin:0;padding:11px 14px 12px;gap:8px}
+.lift.mku .top{align-items:baseline}
+.lift.mku .top b{min-width:0}
+.lift.mku .top span{flex:none}
+.lift.mku .acts{grid-template-columns:1fr 1fr}
+.dslot{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.dslot .opt{flex:1;min-width:0;border-bottom:0 !important}
+.dslot .bt{flex:none;padding:0 14px}
