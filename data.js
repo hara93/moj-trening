@@ -43,7 +43,18 @@ window.SEED = {
    "order": 101,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors",
+     "back_hamstrings",
+     "front_adductors"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_glutes"
+    ]
+   }
   },
   "adductor-squeeze": {
    "name": "Adductor squeeze",
@@ -86,7 +97,15 @@ window.SEED = {
    "order": 102,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "front_abs"
+    ]
+   }
   },
   "banded-glute-bridge": {
    "name": "Glute bridge s mini gumom",
@@ -130,7 +149,16 @@ window.SEED = {
    "order": 103,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings"
+    ]
+   }
   },
   "monster-walk": {
    "name": "Monster walk",
@@ -172,7 +200,16 @@ window.SEED = {
    "order": 104,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_quadriceps"
+    ]
+   }
   },
   "knee-control-band": {
    "name": "Kontrola koljena s mini gumom",
@@ -215,7 +252,17 @@ window.SEED = {
    "order": 105,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_quadriceps",
+     "front_knees"
+    ]
+   }
   },
   "banded-march": {
    "name": "Marširanje s mini gumom",
@@ -258,7 +305,16 @@ window.SEED = {
    "order": 106,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_abs"
+    ]
+   }
   },
   "high-knees": {
    "name": "High knees",
@@ -302,7 +358,18 @@ window.SEED = {
    "order": 107,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors",
+     "back_calves"
+    ],
+    "sec": [
+     "front_abs",
+     "back_glutes",
+     "front_quadriceps"
+    ]
+   }
   },
   "a-skip": {
    "name": "A-skip",
@@ -345,7 +412,18 @@ window.SEED = {
    "order": 108,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors",
+     "back_calves"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_hamstrings",
+     "front_abs"
+    ]
+   }
   },
   "b-skip": {
    "name": "B-skip",
@@ -388,7 +466,18 @@ window.SEED = {
    "order": 109,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors",
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_calves",
+     "back_glutes",
+     "front_abs"
+    ]
+   }
   },
   "uze-fleksija": {
    "name": "Fleksija kuka s užetom",
@@ -431,7 +520,17 @@ window.SEED = {
    "order": 111,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "back_gluteus_medius",
+     "front_abs"
+    ]
+   }
   },
   "uze-ekstenzija": {
    "name": "Ekstenzija kuka s užetom",
@@ -474,7 +573,15 @@ window.SEED = {
    "order": 112,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings"
+    ]
+   }
   },
   "uze-abdukcija": {
    "name": "Abdukcija kuka s užetom",
@@ -517,7 +624,13 @@ window.SEED = {
    "order": 113,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": []
+   }
   },
   "uze-addukcija": {
    "name": "Adukcija kuka s užetom",
@@ -559,7 +672,16 @@ window.SEED = {
    "order": 114,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_hip_flexors"
+    ]
+   }
   },
   "uze-koljeno": {
    "name": "Visoko koljeno s užetom",
@@ -602,7 +724,16 @@ window.SEED = {
    "order": 115,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_abs",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "uze-kruzenje": {
    "name": "Kruženje kukom s užetom",
@@ -645,7 +776,17 @@ window.SEED = {
    "order": 116,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_adductors"
+    ]
+   }
   },
   "uze-njihanje": {
    "name": "Bočno njihanje noge s užetom",
@@ -688,7 +829,15 @@ window.SEED = {
    "order": 117,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "back_gluteus_medius"
+    ]
+   }
   },
   "dead-bug": {
    "name": "Dead bug",
@@ -729,7 +878,16 @@ window.SEED = {
    "order": 118,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_hip_flexors"
+    ]
+   }
   },
   "band-pull-apart": {
    "name": "Band pull-apart",
@@ -771,7 +929,14 @@ window.SEED = {
    "order": 119,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_rear_shoulders",
+     "back_upper_back_trapezius"
+    ],
+    "sec": []
+   }
   },
   "trx-squat": {
    "name": "TRX Squat",
@@ -815,7 +980,16 @@ window.SEED = {
    "order": 120,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors"
+    ]
+   }
   },
   "trx-reverse-lunge": {
    "name": "TRX Reverse Lunge",
@@ -859,7 +1033,17 @@ window.SEED = {
    "order": 121,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_adductors"
+    ]
+   }
   },
   "trx-lateral-lunge": {
    "name": "TRX Lateral Lunge",
@@ -904,7 +1088,18 @@ window.SEED = {
    "order": 122,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps",
+     "front_adductors"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings"
+    ]
+   }
   },
   "trap-bar": {
    "name": "Trap bar deadlift",
@@ -947,7 +1142,19 @@ window.SEED = {
    "order": 207.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_lower_back",
+     "back_upper_back_trapezius",
+     "front_forearms"
+    ]
+   }
   },
   "bugarski": {
    "name": "Bulgarian split squat",
@@ -990,7 +1197,17 @@ window.SEED = {
    "order": 202,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "hip-thrust": {
    "name": "Hip thrust",
@@ -1033,7 +1250,17 @@ window.SEED = {
    "order": 203,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "front_adductors",
+     "front_quadriceps"
+    ]
+   }
   },
   "back-squat": {
    "name": "Back squat",
@@ -1079,7 +1306,18 @@ window.SEED = {
    "order": 204,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_lower_back",
+     "front_abs"
+    ]
+   }
   },
   "front-squat": {
    "name": "Front squat",
@@ -1125,7 +1363,18 @@ window.SEED = {
    "order": 205,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_upper_back_trapezius",
+     "front_abs"
+    ]
+   }
   },
   "goblet-squat": {
    "name": "Goblet squat",
@@ -1170,7 +1419,18 @@ window.SEED = {
    "order": 206,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "front_abs",
+     "back_lower_back"
+    ]
+   }
   },
   "deadlift": {
    "name": "Deadlift",
@@ -1215,7 +1475,20 @@ window.SEED = {
    "order": 207,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "back_hamstrings",
+     "back_lower_back"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "back_upper_back_trapezius",
+     "front_forearms",
+     "back_latissimus"
+    ]
+   }
   },
   "rdl": {
    "name": "RDL",
@@ -1259,7 +1532,18 @@ window.SEED = {
    "order": 208,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_lower_back",
+     "back_upper_back_trapezius",
+     "front_forearms"
+    ]
+   }
   },
   "rdl-bucice": {
    "name": "RDL s bučicama",
@@ -1302,7 +1586,18 @@ window.SEED = {
    "order": 209,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_lower_back",
+     "front_adductors",
+     "front_forearms"
+    ]
+   }
   },
   "single-leg-hip-thrust": {
    "name": "Single-leg hip thrust",
@@ -1346,7 +1641,17 @@ window.SEED = {
    "order": 210,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings",
+     "front_quadriceps"
+    ]
+   }
   },
   "db-reverse-lunge": {
    "name": "Iskorak unatrag s bučicama",
@@ -1390,7 +1695,18 @@ window.SEED = {
    "order": 211,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius",
+     "back_hamstrings"
+    ]
+   }
   },
   "db-lateral-lunge": {
    "name": "Bočni iskorak s bučicom uz prsa",
@@ -1434,7 +1750,18 @@ window.SEED = {
    "order": 212,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors",
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_abs"
+    ]
+   }
   },
   "step-up": {
    "name": "Step-up s bučicama",
@@ -1478,7 +1805,17 @@ window.SEED = {
    "order": 213,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings"
+    ]
+   }
   },
   "landmine-squat": {
    "name": "Landmine squat",
@@ -1522,7 +1859,18 @@ window.SEED = {
    "order": 214,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "front_abs",
+     "back_lower_back"
+    ]
+   }
   },
   "landmine-reverse-lunge": {
    "name": "Landmine iskorak unatrag",
@@ -1566,7 +1914,18 @@ window.SEED = {
    "order": 215,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius",
+     "front_abs"
+    ]
+   }
   },
   "nordic-curl": {
    "name": "Nordic hamstring curl",
@@ -1609,7 +1968,16 @@ window.SEED = {
    "order": 216,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_calves"
+    ]
+   }
   },
   "ball-hamstring-curl": {
    "name": "Pregib nogu na pilates lopti",
@@ -1653,7 +2021,17 @@ window.SEED = {
    "order": 217,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_lower_back",
+     "front_abs"
+    ]
+   }
   },
   "single-leg-calf-raise": {
    "name": "Jednonožno podizanje na prste s bučicom",
@@ -1697,7 +2075,13 @@ window.SEED = {
    "order": 218,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_calves"
+    ],
+    "sec": []
+   }
   },
   "soleus-raise": {
    "name": "Podizanje na prste u sjedu (soleus)",
@@ -1740,7 +2124,13 @@ window.SEED = {
    "order": 219,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_calves"
+    ],
+    "sec": []
+   }
   },
   "tibialis-raise": {
    "name": "Tibialis raise",
@@ -1781,7 +2171,13 @@ window.SEED = {
    "order": 220,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_shins_ankles"
+    ],
+    "sec": []
+   }
   },
   "bench-press": {
    "name": "Bench press",
@@ -1827,7 +2223,16 @@ window.SEED = {
    "order": 221,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps"
+    ]
+   }
   },
   "db-bench-press": {
    "name": "Potisak bučicama s ravne klupe",
@@ -1871,7 +2276,16 @@ window.SEED = {
    "order": 222,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps"
+    ]
+   }
   },
   "single-arm-db-press": {
    "name": "Jednoručni potisak bučicom s ravne klupe",
@@ -1916,7 +2330,17 @@ window.SEED = {
    "order": 223,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_obliques"
+    ]
+   }
   },
   "incline-db-press": {
    "name": "Kosi potisak bučicama",
@@ -1960,7 +2384,16 @@ window.SEED = {
    "order": 224,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest",
+     "front_shoulders"
+    ],
+    "sec": [
+     "back_triceps"
+    ]
+   }
   },
   "push-up": {
    "name": "Sklek",
@@ -2005,7 +2438,17 @@ window.SEED = {
    "order": 225,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_abs"
+    ]
+   }
   },
   "db-overhead-press": {
    "name": "Potisak bučicama iznad glave",
@@ -2048,7 +2491,17 @@ window.SEED = {
    "order": 226,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_shoulders"
+    ],
+    "sec": [
+     "back_triceps",
+     "back_upper_back_trapezius",
+     "front_abs"
+    ]
+   }
   },
   "half-kneeling-db-press": {
    "name": "Potisak bučicom iznad glave iz polukleka",
@@ -2092,7 +2545,18 @@ window.SEED = {
    "order": 227,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_shoulders",
+     "back_triceps"
+    ],
+    "sec": [
+     "back_upper_back_trapezius",
+     "front_obliques",
+     "front_abs"
+    ]
+   }
   },
   "half-kneeling-landmine-press": {
    "name": "Landmine press iz polukleka",
@@ -2138,7 +2602,18 @@ window.SEED = {
    "order": 228,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_shoulders"
+    ],
+    "sec": [
+     "back_triceps",
+     "front_chest",
+     "front_abs",
+     "front_obliques"
+    ]
+   }
   },
   "pull-up": {
    "name": "Zgib nathvatom",
@@ -2180,7 +2655,17 @@ window.SEED = {
    "order": 229,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus"
+    ],
+    "sec": [
+     "front_biceps",
+     "back_upper_back_trapezius",
+     "front_forearms"
+    ]
+   }
   },
   "chin-up": {
    "name": "Zgib pothvatom",
@@ -2222,7 +2707,17 @@ window.SEED = {
    "order": 230,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus",
+     "front_biceps"
+    ],
+    "sec": [
+     "back_upper_back_trapezius",
+     "front_forearms"
+    ]
+   }
   },
   "inverted-row": {
    "name": "Australski zgib",
@@ -2266,7 +2761,19 @@ window.SEED = {
    "order": 231,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_upper_back_trapezius",
+     "back_latissimus"
+    ],
+    "sec": [
+     "back_rear_shoulders",
+     "front_biceps",
+     "front_abs",
+     "back_glutes"
+    ]
+   }
   },
   "bb-row": {
    "name": "Veslanje šipkom u pretklonu",
@@ -2310,7 +2817,19 @@ window.SEED = {
    "order": 232,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "back_rear_shoulders",
+     "front_biceps",
+     "back_lower_back",
+     "front_forearms"
+    ]
+   }
   },
   "db-row": {
    "name": "Jednoručno veslanje bučicom uz oslonac",
@@ -2354,7 +2873,18 @@ window.SEED = {
    "order": 233,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "back_rear_shoulders",
+     "front_biceps",
+     "front_forearms"
+    ]
+   }
   },
   "landmine-row": {
    "name": "Meadows row",
@@ -2399,7 +2929,19 @@ window.SEED = {
    "order": 234,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_upper_back_trapezius",
+     "back_latissimus"
+    ],
+    "sec": [
+     "back_rear_shoulders",
+     "front_biceps",
+     "back_lower_back",
+     "front_forearms"
+    ]
+   }
   },
   "renegade-row": {
    "name": "Renegade row",
@@ -2443,7 +2985,19 @@ window.SEED = {
    "order": 235,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_abs",
+     "front_shoulders",
+     "front_biceps"
+    ]
+   }
   },
   "face-pull-cord": {
    "name": "Face pull",
@@ -2487,7 +3041,14 @@ window.SEED = {
    "order": 236,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_rear_shoulders",
+     "back_upper_back_trapezius"
+    ],
+    "sec": []
+   }
   },
   "farmers-walk": {
    "name": "Farmer's walk",
@@ -2531,7 +3092,18 @@ window.SEED = {
    "order": 237,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_forearms",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "front_abs",
+     "front_obliques",
+     "back_lower_back"
+    ]
+   }
   },
   "trx-row": {
    "name": "TRX Row",
@@ -2577,7 +3149,19 @@ window.SEED = {
    "order": 238,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_upper_back_trapezius",
+     "back_latissimus"
+    ],
+    "sec": [
+     "back_rear_shoulders",
+     "front_biceps",
+     "front_abs",
+     "back_glutes"
+    ]
+   }
   },
   "trx-high-row": {
    "name": "TRX High Row",
@@ -2621,7 +3205,17 @@ window.SEED = {
    "order": 239,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_rear_shoulders",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "front_biceps",
+     "front_abs"
+    ]
+   }
   },
   "trx-reverse-fly": {
    "name": "TRX Reverse Fly",
@@ -2665,7 +3259,16 @@ window.SEED = {
    "order": 240,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_rear_shoulders",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "front_abs"
+    ]
+   }
   },
   "trx-y-fly": {
    "name": "TRX Y-Fly",
@@ -2712,7 +3315,16 @@ window.SEED = {
    "order": 241,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_upper_back_trapezius",
+     "back_rear_shoulders"
+    ],
+    "sec": [
+     "front_abs"
+    ]
+   }
   },
   "trx-chest-press": {
    "name": "TRX Chest Press",
@@ -2759,7 +3371,17 @@ window.SEED = {
    "order": 242,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_abs"
+    ]
+   }
   },
   "trx-push-up": {
    "name": "TRX Push-up",
@@ -2805,7 +3427,17 @@ window.SEED = {
    "order": 243,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_abs"
+    ]
+   }
   },
   "trx-pec-fly": {
    "name": "TRX Pec Fly",
@@ -2849,7 +3481,16 @@ window.SEED = {
    "order": 244,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_abs"
+    ]
+   }
   },
   "trx-hamstring-curl": {
    "name": "TRX Hamstring Curl",
@@ -2897,7 +3538,17 @@ window.SEED = {
    "order": 245,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_lower_back",
+     "front_abs"
+    ]
+   }
   },
   "trx-hip-press": {
    "name": "TRX Hip Press",
@@ -2942,7 +3593,16 @@ window.SEED = {
    "order": 246,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "front_abs"
+    ]
+   }
   },
   "trx-single-leg-squat": {
    "name": "TRX Single-leg Squat",
@@ -2988,7 +3648,17 @@ window.SEED = {
    "order": 247,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_adductors"
+    ]
+   }
   },
   "trx-suspended-lunge": {
    "name": "TRX Suspended Lunge",
@@ -3033,7 +3703,19 @@ window.SEED = {
    "order": 248,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_adductors",
+     "front_hip_flexors",
+     "front_abs"
+    ]
+   }
   },
   "trx-power-pull": {
    "name": "TRX Power Pull",
@@ -3077,7 +3759,18 @@ window.SEED = {
    "order": 249,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_latissimus",
+     "front_obliques"
+    ],
+    "sec": [
+     "back_upper_back_trapezius",
+     "back_rear_shoulders",
+     "front_biceps"
+    ]
+   }
   },
   "trx-hamstring-runner": {
    "name": "TRX Hamstring Runner",
@@ -3122,7 +3815,16 @@ window.SEED = {
    "order": 250,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_abs"
+    ]
+   }
   },
   "trx-sprinter-start": {
    "name": "TRX Sprinter Start",
@@ -3169,7 +3871,19 @@ window.SEED = {
    "order": 401,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "back_calves",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "front_abs",
+     "back_hamstrings"
+    ]
+   }
   },
   "pogo-jumps": {
    "name": "Pogo jumps",
@@ -3210,7 +3924,15 @@ window.SEED = {
    "order": 402,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_calves"
+    ],
+    "sec": [
+     "front_shins_ankles"
+    ]
+   }
   },
   "squat-jump": {
    "name": "Squat jump",
@@ -3255,7 +3977,17 @@ window.SEED = {
    "order": 403,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_calves",
+     "back_hamstrings"
+    ]
+   }
   },
   "split-squat-jump": {
    "name": "Split squat jump",
@@ -3299,7 +4031,18 @@ window.SEED = {
    "order": 404,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_calves",
+     "front_hip_flexors",
+     "front_adductors"
+    ]
+   }
   },
   "box-jump": {
    "name": "Box jump",
@@ -3345,7 +4088,17 @@ window.SEED = {
    "order": 405,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_calves",
+     "back_hamstrings"
+    ]
+   }
   },
   "broad-jump": {
    "name": "Broad jump",
@@ -3391,7 +4144,17 @@ window.SEED = {
    "order": 406,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "lateral-bound": {
    "name": "Lateral bound",
@@ -3438,7 +4201,18 @@ window.SEED = {
    "order": 407,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "front_quadriceps",
+     "back_calves"
+    ]
+   }
   },
   "single-leg-hop": {
    "name": "Jednonožni skok sa zadržanim doskokom",
@@ -3485,7 +4259,18 @@ window.SEED = {
    "order": 408,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "depth-jump": {
    "name": "Depth jump",
@@ -3532,7 +4317,17 @@ window.SEED = {
    "order": 409,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_calves"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_hamstrings"
+    ]
+   }
   },
   "bb-squat-jump": {
    "name": "Barbell squat jump",
@@ -3577,7 +4372,18 @@ window.SEED = {
    "order": 410,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_calves",
+     "back_hamstrings",
+     "back_lower_back"
+    ]
+   }
   },
   "med-ball-broad-jump": {
    "name": "Med ball broad jump",
@@ -3621,7 +4427,18 @@ window.SEED = {
    "order": 411,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_calves",
+     "front_abs"
+    ]
+   }
   },
   "kb-swing": {
    "name": "Kettlebell swing",
@@ -3666,7 +4483,18 @@ window.SEED = {
    "order": 412,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes",
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_lower_back",
+     "front_abs",
+     "front_forearms"
+    ]
+   }
   },
   "med-ball-chest-pass": {
    "name": "Med ball chest pass",
@@ -3711,7 +4539,17 @@ window.SEED = {
    "order": 413,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_chest"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_abs"
+    ]
+   }
   },
   "med-ball-rotational-throw": {
    "name": "Med ball rotational throw",
@@ -3755,7 +4593,18 @@ window.SEED = {
    "order": 414,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_abs",
+     "front_shoulders",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "med-ball-slam": {
    "name": "Med ball slam",
@@ -3799,7 +4648,18 @@ window.SEED = {
    "order": 415,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "back_latissimus"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "back_glutes"
+    ]
+   }
   },
   "trx-atomic-push-up": {
    "name": "TRX Atomic Push-up",
@@ -3847,7 +4707,19 @@ window.SEED = {
    "order": 501,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_chest",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_triceps",
+     "front_obliques"
+    ]
+   }
   },
   "trx-body-saw": {
    "name": "TRX Body Saw",
@@ -3891,7 +4763,17 @@ window.SEED = {
    "order": 502,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_obliques",
+     "back_latissimus"
+    ]
+   }
   },
   "trx-pike": {
    "name": "TRX Pike",
@@ -3936,7 +4818,17 @@ window.SEED = {
    "order": 503,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_hip_flexors",
+     "back_triceps"
+    ]
+   }
   },
   "trx-mountain-climber": {
    "name": "TRX Mountain Climber",
@@ -3983,7 +4875,17 @@ window.SEED = {
    "order": 504,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_obliques"
+    ]
+   }
   },
   "trx-plank": {
    "name": "TRX Plank",
@@ -4030,7 +4932,18 @@ window.SEED = {
    "order": 505,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_shoulders",
+     "back_glutes",
+     "front_quadriceps"
+    ]
+   }
   },
   "trx-side-plank": {
    "name": "TRX Side Plank",
@@ -4075,7 +4988,18 @@ window.SEED = {
    "order": 506,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_abs",
+     "back_lower_back",
+     "front_shoulders"
+    ]
+   }
   },
   "trx-fallout": {
    "name": "TRX Fallout",
@@ -4118,7 +5042,17 @@ window.SEED = {
    "order": 507,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_latissimus",
+     "front_obliques"
+    ]
+   }
   },
   "landmine-rotation": {
    "name": "Landmine rotation",
@@ -4163,7 +5097,17 @@ window.SEED = {
    "order": 508,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques"
+    ],
+    "sec": [
+     "front_abs",
+     "front_shoulders",
+     "back_glutes"
+    ]
+   }
   },
   "bird-dog": {
    "name": "Bird dog",
@@ -4206,7 +5150,17 @@ window.SEED = {
    "order": 509,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "back_lower_back"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_obliques"
+    ]
+   }
   },
   "plank": {
    "name": "Plank",
@@ -4248,7 +5202,17 @@ window.SEED = {
    "order": 510,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_shoulders",
+     "back_glutes"
+    ]
+   }
   },
   "side-plank": {
    "name": "Bočni plank",
@@ -4290,7 +5254,18 @@ window.SEED = {
    "order": 511,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_abs",
+     "back_lower_back",
+     "front_shoulders"
+    ]
+   }
   },
   "shoulder-taps": {
    "name": "Shoulder taps",
@@ -4332,7 +5307,18 @@ window.SEED = {
    "order": 512,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_obliques"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_chest",
+     "back_glutes"
+    ]
+   }
   },
   "hollow-hold": {
    "name": "Hollow hold",
@@ -4373,7 +5359,16 @@ window.SEED = {
    "order": 513,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_hip_flexors",
+     "front_obliques"
+    ]
+   }
   },
   "pallof-press": {
    "name": "Pallof press",
@@ -4416,7 +5411,17 @@ window.SEED = {
    "order": 514,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques",
+     "front_abs"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_glutes"
+    ]
+   }
   },
   "cord-chop": {
    "name": "Chop s užetom iz polukleka",
@@ -4460,7 +5465,17 @@ window.SEED = {
    "order": 515,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques"
+    ],
+    "sec": [
+     "front_abs",
+     "back_latissimus",
+     "front_shoulders"
+    ]
+   }
   },
   "cord-lift": {
    "name": "Lift s užetom iz polukleka",
@@ -4505,7 +5520,17 @@ window.SEED = {
    "order": 516,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques"
+    ],
+    "sec": [
+     "front_abs",
+     "front_shoulders",
+     "back_glutes"
+    ]
+   }
   },
   "suitcase-carry": {
    "name": "Suitcase carry",
@@ -4548,7 +5573,18 @@ window.SEED = {
    "order": 517,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_obliques",
+     "back_lower_back"
+    ],
+    "sec": [
+     "front_forearms",
+     "back_upper_back_trapezius",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "ball-rollout": {
    "name": "Rollout na velikoj lopti",
@@ -4591,7 +5627,17 @@ window.SEED = {
    "order": 518,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_shoulders",
+     "back_latissimus"
+    ]
+   }
   },
   "stir-the-pot": {
    "name": "Stir the pot",
@@ -4634,7 +5680,17 @@ window.SEED = {
    "order": 519,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_obliques"
+    ],
+    "sec": [
+     "front_shoulders",
+     "back_latissimus"
+    ]
+   }
   },
   "ab-wheel-rollout": {
    "name": "Ab wheel rollout",
@@ -4677,7 +5733,17 @@ window.SEED = {
    "order": 520,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs"
+    ],
+    "sec": [
+     "back_latissimus",
+     "front_shoulders",
+     "front_obliques"
+    ]
+   }
   },
   "hanging-knee-raise": {
    "name": "Podizanje koljena u visu",
@@ -4720,7 +5786,18 @@ window.SEED = {
    "order": 521,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_forearms",
+     "back_latissimus"
+    ]
+   }
   },
   "worlds-greatest-stretch": {
    "name": "World's greatest stretch",
@@ -4764,7 +5841,19 @@ window.SEED = {
    "order": 601,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors",
+     "front_adductors",
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_glutes",
+     "front_obliques"
+    ]
+   }
   },
   "inverted-hamstring": {
    "name": "Inverted hamstring",
@@ -4807,7 +5896,17 @@ window.SEED = {
    "order": 602,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_gluteus_medius",
+     "back_lower_back"
+    ]
+   }
   },
   "leg-cradle": {
    "name": "Leg cradle",
@@ -4849,7 +5948,15 @@ window.SEED = {
    "order": 603,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius"
+    ]
+   }
   },
   "quad-stretch": {
    "name": "Istezanje kvadricepsa u stojećem",
@@ -4891,7 +5998,15 @@ window.SEED = {
    "order": 604,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps"
+    ],
+    "sec": [
+     "front_hip_flexors"
+    ]
+   }
   },
   "knee-to-wall": {
    "name": "Koljeno prema zidu",
@@ -4933,7 +6048,14 @@ window.SEED = {
    "order": 605,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_calves",
+     "front_shins_ankles"
+    ],
+    "sec": []
+   }
   },
   "open-book": {
    "name": "Open book",
@@ -4977,7 +6099,17 @@ window.SEED = {
    "order": 606,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_upper_back_trapezius"
+    ],
+    "sec": [
+     "front_chest",
+     "front_shoulders",
+     "front_obliques"
+    ]
+   }
   },
   "klizanje-pete": {
    "name": "Klizanje pete na leđima",
@@ -5019,7 +6151,16 @@ window.SEED = {
    "order": 607,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "front_abs"
+    ]
+   }
   },
   "90-90": {
    "name": "90/90 hip switch",
@@ -5061,7 +6202,16 @@ window.SEED = {
    "order": 608,
    "fav": true,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "front_adductors"
+    ]
+   }
   },
   "njihanje-unatrag": {
    "name": "Quadruped rock-back",
@@ -5102,7 +6252,16 @@ window.SEED = {
    "order": 609,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_lower_back",
+     "front_adductors"
+    ]
+   }
   },
   "istezanje-pregibaca": {
    "name": "Istezanje pregibača kuka u polukleku",
@@ -5143,7 +6302,16 @@ window.SEED = {
    "order": 610,
    "fav": true,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "back_glutes"
+    ]
+   }
   },
   "figure-4": {
    "name": "Figure-4 stretch",
@@ -5185,7 +6353,15 @@ window.SEED = {
    "order": 611,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius"
+    ]
+   }
   },
   "njihanje-aduktora": {
    "name": "Adductor rock-back",
@@ -5227,7 +6403,15 @@ window.SEED = {
    "order": 612,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "back_hamstrings"
+    ]
+   }
   },
   "iso-abdukcija": {
    "name": "Izometrijska abdukcija kuka uz zid",
@@ -5271,7 +6455,15 @@ window.SEED = {
    "order": 701,
    "fav": true,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes"
+    ]
+   }
   },
   "stezanje-straznjice": {
    "name": "Stezanje stražnjice",
@@ -5311,7 +6503,13 @@ window.SEED = {
    "order": 702,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": []
+   }
   },
   "skoljka": {
    "name": "Clamshell",
@@ -5356,7 +6554,15 @@ window.SEED = {
    "order": 703,
    "fav": true,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes"
+    ]
+   }
   },
   "bocno-podizanje": {
    "name": "Bočno podizanje noge u ležanju",
@@ -5400,7 +6606,13 @@ window.SEED = {
    "order": 704,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": []
+   }
   },
   "most": {
    "name": "Glute bridge",
@@ -5444,7 +6656,16 @@ window.SEED = {
    "order": 705,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "front_adductors"
+    ]
+   }
   },
   "jednonozni-most": {
    "name": "Single-leg glute bridge",
@@ -5488,7 +6709,16 @@ window.SEED = {
    "order": 706,
    "fav": true,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "bocni-plank": {
    "name": "Bočni plank s podizanjem noge",
@@ -5530,7 +6760,18 @@ window.SEED = {
    "order": 707,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "front_obliques"
+    ],
+    "sec": [
+     "front_abs",
+     "back_lower_back",
+     "front_shoulders"
+    ]
+   }
   },
   "abdukcija-stojeci": {
    "name": "Abdukcija kuka u stojećem s mini gumom",
@@ -5573,7 +6814,15 @@ window.SEED = {
    "order": 708,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes"
+    ]
+   }
   },
   "bocno-hodanje": {
    "name": "Lateral band walk",
@@ -5616,7 +6865,16 @@ window.SEED = {
    "order": 709,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_quadriceps"
+    ]
+   }
   },
   "kopenhagen-kratka": {
    "name": "Copenhagen plank – kratka poluga",
@@ -5658,7 +6916,16 @@ window.SEED = {
    "order": 710,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_abs"
+    ]
+   }
   },
   "jednonozni-rdl": {
    "name": "Single-leg RDL",
@@ -5701,7 +6968,18 @@ window.SEED = {
    "order": 711,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_lower_back",
+     "front_adductors"
+    ]
+   }
   },
   "spustanje-stepenica": {
    "name": "Forward step-down",
@@ -5745,7 +7023,17 @@ window.SEED = {
    "order": 712,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_knees"
+    ]
+   }
   },
   "split-cucanj": {
    "name": "Split squat",
@@ -5787,7 +7075,17 @@ window.SEED = {
    "order": 713,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "ravnoteza-dosezanje": {
    "name": "Single-leg balance reach",
@@ -5832,7 +7130,18 @@ window.SEED = {
    "order": 714,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_quadriceps",
+     "front_shins_ankles",
+     "back_calves"
+    ]
+   }
   },
   "bocni-step-up": {
    "name": "Lateral step-up",
@@ -5876,7 +7185,17 @@ window.SEED = {
    "order": 715,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_knees"
+    ]
+   }
   },
   "kopenhagen-duga": {
    "name": "Copenhagen plank – duga poluga",
@@ -5919,7 +7238,16 @@ window.SEED = {
    "order": 716,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": [
+     "front_obliques",
+     "front_abs"
+    ]
+   }
   },
   "bicikl-intervali": {
    "name": "Intervali na sobnom biciklu",
@@ -5962,7 +7290,17 @@ window.SEED = {
    "order": 801.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "lateral-shuffle": {
    "name": "Lateral shuffle",
@@ -6006,7 +7344,18 @@ window.SEED = {
    "order": 802,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "front_adductors"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "back_glutes",
+     "back_calves"
+    ]
+   }
   },
   "pro-agility-5-10-5": {
    "name": "5-10-5 shuttle (20 m)",
@@ -6050,7 +7399,19 @@ window.SEED = {
    "order": 803,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "arrowhead-agility": {
    "name": "Arrowhead agility",
@@ -6094,7 +7455,19 @@ window.SEED = {
    "order": 804,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "zigzag-sprint": {
    "name": "Zigzag sprint",
@@ -6138,7 +7511,19 @@ window.SEED = {
    "order": 805,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes",
+     "front_adductors"
+    ],
+    "sec": [
+     "back_gluteus_medius",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "sprint-backpedal-sprint": {
    "name": "Sprint-backpedal-sprint",
@@ -6182,7 +7567,18 @@ window.SEED = {
    "order": 806,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_hamstrings",
+     "back_calves"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_hip_flexors"
+    ]
+   }
   },
   "t-test": {
    "name": "T-test",
@@ -6226,7 +7622,19 @@ window.SEED = {
    "order": 807,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "front_adductors",
+     "back_gluteus_medius"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "four-cone-drill": {
    "name": "4 cone drill",
@@ -6270,7 +7678,19 @@ window.SEED = {
    "order": 808,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_adductors",
+     "back_gluteus_medius",
+     "back_calves",
+     "back_hamstrings"
+    ]
+   }
   },
   "mountain-climbers": {
    "name": "Mountain climbers",
@@ -6313,7 +7733,17 @@ window.SEED = {
    "order": 809,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_abs",
+     "front_hip_flexors"
+    ],
+    "sec": [
+     "front_shoulders",
+     "front_obliques"
+    ]
+   }
   },
   "intervali-30-30": {
    "name": "Intervali 30/30",
@@ -6354,7 +7784,18 @@ window.SEED = {
    "order": 801.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_hamstrings",
+     "back_calves"
+    ],
+    "sec": [
+     "back_glutes",
+     "front_hip_flexors"
+    ]
+   }
   },
   "depth-drop": {
    "name": "Depth drop",
@@ -6399,7 +7840,17 @@ window.SEED = {
    "order": 408.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_calves"
+    ]
+   }
   },
   "hip-airplane": {
    "name": "Avion na jednoj nozi",
@@ -6443,7 +7894,17 @@ window.SEED = {
    "order": 717,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_gluteus_medius",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "front_adductors"
+    ]
+   }
   },
   "adukcija-na-boku": {
    "name": "Adukcija kuka na boku",
@@ -6485,7 +7946,13 @@ window.SEED = {
    "order": 709.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_adductors"
+    ],
+    "sec": []
+   }
   },
   "jednonozni-most-kutija": {
    "name": "Jednonožni most s petom na kutiji",
@@ -6529,7 +7996,16 @@ window.SEED = {
    "order": 216.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings"
+    ],
+    "sec": [
+     "back_glutes",
+     "back_gluteus_medius"
+    ]
+   }
   },
   "ubrzanje-zaustavljanje": {
    "name": "Ubrzanje i zaustavljanje",
@@ -6573,7 +8049,18 @@ window.SEED = {
    "order": 802.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "front_quadriceps",
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_calves",
+     "front_knees"
+    ]
+   }
   },
   "lagano-trcanje": {
    "name": "Lagano trčanje",
@@ -6615,7 +8102,18 @@ window.SEED = {
    "order": 100.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_calves",
+     "front_quadriceps"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_glutes",
+     "front_hip_flexors"
+    ]
+   }
   },
   "progresivna-ubrzanja": {
    "name": "Progresivna ubrzanja",
@@ -6658,7 +8156,19 @@ window.SEED = {
    "order": 109.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_hamstrings",
+     "front_hip_flexors",
+     "back_glutes"
+    ],
+    "sec": [
+     "front_quadriceps",
+     "back_calves",
+     "front_adductors"
+    ]
+   }
   },
   "landmine-single-leg-hip-thrust": {
    "name": "Landmine Single-Leg Hip Thrust",
@@ -6698,7 +8208,17 @@ window.SEED = {
    "order": 210.5,
    "fav": false,
    "media": null,
-   "mediaType": null
+   "mediaType": null,
+   "muscles": {
+    "prime": [
+     "back_glutes"
+    ],
+    "sec": [
+     "back_hamstrings",
+     "back_gluteus_medius",
+     "front_abs"
+    ]
+   }
   }
  },
  "protocols": {
