@@ -1519,9 +1519,24 @@ function newItem(e){
 }
 
 const FIELD_GROUPS = [
-  { key:'pre', title:'Predsezonski plan · 4 tjedna', sub:'STATSports Pre-Season Training Program: trčanja za pripreme, po tjednima' },
-  { key:'web', title:'Treninzi sa statsports.com', sub:'Treninzi trčanja koje je STATSports objavio na svojim stranicama' }
+  { key:'pre', title:'Predsezonski plan · 4 tjedna', sub: SHOW_SOURCES ? 'STATSports Pre-Season Training Program: trčanja za pripreme, po tjednima' : 'Trčanja za pripreme, po tjednima' },
+  { key:'web', title: SHOW_SOURCES ? 'Treninzi sa statsports.com' : 'Ostali treninzi', sub: SHOW_SOURCES ? 'Treninzi trčanja koje je STATSports objavio na svojim stranicama' : 'Pojedinačni treninzi trčanja i brzine' }
 ];
+// SHOW_SOURCES false: the field sessions' own notes about their source (data.js, pitch.js captions; kept as they are) are shown
+// without it, sentence by sentence: "Izvor ne navodi zagrijavanje." goes, "Izvor: 2–3 serije …" reads "Obično 2–3 serije …"
+const FIELD_SRC_TXT = [
+  [/^Vlastiti prikaz prema STATSports Pre-Season Training Program \(PDF\)\.\s*/, ''], [/^Vlastiti prikaz prema savjetima K3 Performance\.\s*/, ''],
+  [/Točan raspored staza izvor ne propisuje\.\s*/, ''], [/^Prema izvoru: /, ''], [/ Udaljenosti su prema izvoru, a raspored na terenu je vlastiti\./, ''],
+  [/: izvor ga ne navodi\./, '.'], [/; original nije u mjerilu\./, '.'],
+  [/^Izvor ne navodi zagrijavanje\.\s*/, ''], [/^Izvor ne navodi zasebno; /, ''], [/^Izvor ne navodi\. Prijedlog: /, ''], [/^Izvor ne navodi\.\s*/, ''],
+  [/ \(izvor navodi [^,()]*, zbroj je ([^()]*)\)/, ' (ukupno $1)'], [/Izvor: (?=\d)/g, 'Obično '],
+  [/Izvor koristi gumu za trčanje s otporom i partnera;/, 'Inače se radi s gumom za trčanje s otporom i s partnerom;'],
+  [/, izvor ne navodi start\)/, ')'], [/ \(izvor\)/, ''], [/Izvor navodi ukupno/, 'Ukupno'], [/; izvor ne navodi odmor\)/, ')'],
+  [/Izvor piše '40 rest' bez jedinice; uzeto kao 40 s\./, 'Odmor 40 s.'], [/ \(tumačenje izvora\)/, ''], [/ Izvor ne navodi odmor između blokova\./, ''],
+  [/ \(izvor ne navodi\)/, ''], [/^pretpostavka: PDF ne navodi odmor nakon Run 3$/, 'pretpostavka'],
+  [/ PDF ne navodi broj krugova ni odmor nakon Run 3; ovdje je /, ' Ovdje je '], [/Broj krugova i odmor nakon Run 3 PDF ne navodi: ako/, 'Ako']
+];
+const fieldTxt = s => SHOW_SOURCES || !s ? s : FIELD_SRC_TXT.reduce((t, [re, to]) => t.replace(re, to), s);
 // field texts: "16,5 m"; times as "15 s", "3 min" or "1:30"
 const fieldM = m => String(Math.round(m * 10) / 10).replace('.', ',') + ' m';
 const fieldDur = s => s < 60 ? s + ' s' : s % 60 ? fmt(s) : s / 60 + ' min';
@@ -1800,7 +1815,7 @@ function blockLine(b, f){
   if (b.distance_m && b.work_s) parts.push((f && f.group === 'pre' ? 'cilj ' : 'oko ') + fieldDur(b.work_s));
   if (b.intensity_hr) parts.push(b.intensity_hr);
   if (mas) parts.push('za tebe ' + (b.lap_m ? 'krug za ~' + Math.round(b.lap_m * 100 / (mas * b.mas_pct)) + ' s' : masM(b.mas_pct, b.work_s) + ' m' + (b.rest_mas_pct ? ', oporavak ' + masM(b.rest_mas_pct, b.rest_s) + ' m' : '')));
-  if (b.rest_s) parts.push((b.rest_mas_pct ? 'oporavak ' : 'odmor ') + fieldDur(b.rest_s) + (b.rest_type_hr && b.rest_type_hr !== 'odmor' ? ' – ' + b.rest_type_hr : ''));
+  if (b.rest_s) parts.push((b.rest_mas_pct ? 'oporavak ' : 'odmor ') + fieldDur(b.rest_s) + (b.rest_type_hr && b.rest_type_hr !== 'odmor' ? ' – ' + fieldTxt(b.rest_type_hr) : ''));
   if (b.sets > 1 && b.set_rest_s) parts.push('između serija ' + fieldDur(b.set_rest_s));
   return parts.join(' • ');
 }
@@ -1814,20 +1829,20 @@ VIEWS.field = function(t){
     '<h1 class="h1">' + esc(f.name_hr) + '</h1>' +
     '<div style="display:flex;gap:8px;margin:12px 17px 0;flex-wrap:wrap">' + fieldTagsHtml(ld) + '<span class="tag">'+esc(f.goal_hr)+'</span>' + (f.week ? '<span class="tag">'+esc(f.week)+'. tjedan'+(f.dayHr ? ' · ' + esc(f.dayHr) : '')+'</span>' : '') + '</div>' +
     fieldLoadHtml(f, ld) +
-    (spec ? '<figure class="pitch">' + pitchSvg(spec) + '<figcaption><div class="lgrow">' + pitchLegend(spec) + '</div>' + (spec.caption ? '<span>' + esc(spec.caption) + '</span>' : '') + '</figcaption></figure>' : '') +
-    (f.summary_hr ? '<p style="margin:16px 17px 0;font-size:16px;line-height:24px;color:var(--text-body)">'+esc(f.summary_hr)+'</p>' : '') +
+    (spec ? '<figure class="pitch">' + pitchSvg(spec) + '<figcaption><div class="lgrow">' + pitchLegend(spec) + '</div>' + (fieldTxt(spec.caption) ? '<span>' + esc(fieldTxt(spec.caption)) + '</span>' : '') + '</figcaption></figure>' : '') +
+    (f.summary_hr ? '<p style="margin:16px 17px 0;font-size:16px;line-height:24px;color:var(--text-body)">'+esc(fieldTxt(f.summary_hr))+'</p>' : '') +
     (f.when_hr ? '<p class="sub" style="margin-top:10px">U predsezonskom planu: '+esc(f.when_hr)+'</p>' : '') +
-    (f.how_hr && f.how_hr.length ? '<div class="stack" style="gap:8px;margin:14px 17px 0">' + f.how_hr.map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(s)+'</span></div>').join('') + '</div>' : '') +
+    (f.how_hr && f.how_hr.length ? '<div class="stack" style="gap:8px;margin:14px 17px 0">' + f.how_hr.map((s, i) => '<div class="bul num"><i>'+(i+1)+'</i><span>'+esc(fieldTxt(s))+'</span></div>').join('') + '</div>' : '') +
     (mas ? masCard(f) : '') +
     '<div style="margin-top:18px">' + daysPicker('fieldDays', f.id, f.days) + '</div>' +
     '<div class="stack" style="gap:16px;margin:20px 17px 0">' +
       (f.equipment_hr ? '<div class="feat">'+I.bars+'<span>'+esc(f.equipment_hr)+'</span></div>' : '') +
-      (f.warmup_hr ? '<div class="feat">'+I.clock+'<span>Zagrijavanje: '+esc(f.warmup_hr)+'</span></div>' : '') +
+      (f.warmup_hr ? '<div class="feat">'+I.clock+'<span>Zagrijavanje: '+esc(fieldTxt(f.warmup_hr))+'</span></div>' : '') +
     '</div>' +
     (akt ? '<div class="list" style="margin-top:18px"><button class="row" data-a="openPr" data-id="'+esc(akt.id)+'" style="min-height:64px"><span class="thumb" style="width:56px;height:56px">'+pathIcon(I.run,24)+'</span><span class="tx"><span class="t">Prvo zagrijavanje: '+esc(akt.name)+'</span><span class="m"><span>'+protoMin(akt)+' min</span></span></span>'+I.chev+'</button></div>' : '') +
     '<h2 class="h2">Blokovi</h2>' +
-    '<div class="list" style="margin-top:14px">' + (f.blocks||[]).map((b,i) => '<div class="blk"><span class="no">'+(i+1)+'</span><span class="bt"><b>'+esc(b.label_hr)+'</b><span>'+esc(blockLine(b, f))+'</span>'+(b.cue_hr?'<span style="color:var(--text-2)">'+esc(b.cue_hr)+'</span>':'')+'</span></div>').join('') + '</div>' +
-    (f.cooldown_hr ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Hlađenje: '+esc(f.cooldown_hr)+'</p>' : '') +
+    '<div class="list" style="margin-top:14px">' + (f.blocks||[]).map((b,i) => '<div class="blk"><span class="no">'+(i+1)+'</span><span class="bt"><b>'+esc(b.label_hr)+'</b><span>'+esc(blockLine(b, f))+'</span>'+(b.cue_hr?'<span style="color:var(--text-2)">'+esc(fieldTxt(b.cue_hr))+'</span>':'')+'</span></div>').join('') + '</div>' +
+    (f.cooldown_hr ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Hlađenje: '+esc(fieldTxt(f.cooldown_hr))+'</p>' : '') +
     (SHOW_SOURCES ? '<p style="margin:18px 17px 0;font-size:14px;line-height:21px;color:var(--text-2)">Izvor: ' + (f.source_url ? '<a href="'+esc(f.source_url)+'" target="_blank" rel="noopener">'+esc(f.source_title || 'STATSports')+'</a>' : esc(f.source_title || 'STATSports')) + (spec ? ' · nacrt je vlastiti prikaz prema izvoru' : '') + '</p>' : '') +
     '<div style="height:20px"></div></div>' +
     fieldStartHtml(f, ld);
@@ -1951,7 +1966,7 @@ function stepsFromField(f){
   const blocks = f.blocks || [];
   blocks.forEach((b, g) => {
     const sets = b.sets||1, reps = b.reps||1, jog = !!(b.rest_mas_pct && b.rest_s);
-    const restLabel = jog ? 'Lagano trčanje · ' + b.rest_mas_pct + ' % MAS' : 'Odmor' + (b.rest_type_hr && b.rest_type_hr !== 'odmor' ? ' · ' + b.rest_type_hr : '');
+    const restLabel = jog ? 'Lagano trčanje · ' + b.rest_mas_pct + ' % MAS' : 'Odmor' + (b.rest_type_hr && b.rest_type_hr !== 'odmor' ? ' · ' + fieldTxt(b.rest_type_hr) : '');
     for (let s = 1; s <= sets; s++) for (let r = 1; r <= reps; r++) {
       steps.push({ kind:'work', dur: b.work_s || 30, g, b, set:s, rep:r, sets, reps });
       const lastRep = r === reps, lastSet = s === sets, lastBlock = g === blocks.length - 1;
@@ -2079,7 +2094,7 @@ function curView(){
     v.fieldPanel = { cls: work ? 'work' : 'rest', ph: st.kind === 'prep' ? 'PRIPREMI SE' : work ? 'RAD' : jog ? 'LAGANO TRČANJE' : 'ODMOR',
       dist: work && b ? fieldDist(b) : jog && masNow() ? masM(st.b.rest_mas_pct, st.b.rest_s) + ' m' : '',
       sm: work && b ? (b.intensity_hr || '') : jog ? st.b.rest_mas_pct + ' % MAS' + (nxt ? ' • sljedeće: ' + nxt : '') : (nb ? 'Sljedeće: ' + nxt + (nb.intensity_hr ? ' • ' + nb.intensity_hr : '') : '') };
-    v.hint = work && b && b.cue_hr ? b.cue_hr : (st.kind === 'rest' ? (st.label || 'Odmor') : '');
+    v.hint = work && b && b.cue_hr ? fieldTxt(b.cue_hr) : (st.kind === 'rest' ? (st.label || 'Odmor') : '');
   } else {
     // a rest before another exercise shows that exercise: its name, video, set and load, so you can set it up
     const ahead = st.trans || (st.kind === 'rest' && nextWork && nextWork.e !== st.e) ? nextWork : null;
@@ -2964,7 +2979,7 @@ VIEWS.play = function(){
   const card = P.mode === 'field'
     ? '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">' +
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
-        '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(P.f.summary_hr)+'</p>' : '') +
+        '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(fieldTxt(P.f.summary_hr))+'</p>' : '') +
         (SHOW_SOURCES ? '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p>' : '') + '</section>'
     : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the exercise page's Upute | Cilj tabs, shorter (no Opterećenje)
     : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Upute</span><p style="color:var(--text-2)">Bez uputa.</p></section>';
