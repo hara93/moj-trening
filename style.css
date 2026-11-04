@@ -582,7 +582,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .view.exv{display:flex;flex-direction:column}
 .view.exv > *{flex:none}
 .view.exv .ttl{margin-top:12px}
-.exswipe{flex:1 1 auto !important;min-height:220px;display:flex;flex-direction:column;margin-top:12px}
+.exswipe{flex:1 1 auto !important;min-height:230px;display:flex;flex-direction:column;margin-top:12px}
 .swrow{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 max(16px, env(safe-area-inset-left, 0px));padding:0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));scrollbar-width:none;overscroll-behavior-x:contain}
 .swrow::-webkit-scrollbar{display:none}
 .swrow::after{content:"";flex:0 0 6px}
