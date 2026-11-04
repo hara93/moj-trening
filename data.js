@@ -6659,6 +6659,46 @@ window.SEED = {
    "fav": false,
    "media": null,
    "mediaType": null
+  },
+  "landmine-single-leg-hip-thrust": {
+   "name": "Landmine Single-Leg Hip Thrust",
+   "alt": "Jednonožni potisak kuka s landmine šipkom",
+   "cat": "Snaga",
+   "phase": null,
+   "cord": "",
+   "zones": [
+    "Gluteus",
+    "Stražnja loža",
+    "Core"
+   ],
+   "equip": [
+    "Šipka",
+    "Landmine",
+    "Klupa"
+   ],
+   "equipment": "Olimpijska šipka s pločom od 5 kg u landmine nastavku, stabilna klupa",
+   "measure": "sets",
+   "sets": 3,
+   "reps": 8,
+   "sec": 30,
+   "rest": 90,
+   "kg": 0,
+   "sides": true,
+   "feel": "Gluteus radne noge, stražnja loža",
+   "steps": [
+    "Osloni donji rub lopatica na klupu; radno stopalo postavi cijelom površinom na pod.",
+    "Drugu nogu drži podignutu; šipku bočno pridržavaj na kuku radne strane.",
+    "Odgurni pod i podigni kukove do ravne linije ramena, kuka i koljena.",
+    "Zadrži sekundu, zatim spuštaj dvije sekunde; zdjelicu drži ravno i ponovi."
+   ],
+   "mistakes": [],
+   "note": "Jača gluteus i kontrolu opružanja kuka na jednoj nozi uz stabilnu zdjelicu. Nogometašu pomaže razvijati potisak i kontrolu oslonca pri ubrzanju te promjeni smjera.",
+   "source": null,
+   "sourceTitle": null,
+   "order": 210.5,
+   "fav": false,
+   "media": null,
+   "mediaType": null
   }
  },
  "protocols": {

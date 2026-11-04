@@ -7,7 +7,7 @@ Jedna uputa za svaku vježbu, da u aplikaciji svuda bude isti sportaš. Lik i st
 3. Provjeri sliku: ista kamera u oba panela, glava i vrat u liniji s trupom, pogled nikad u kameru, stopala i oprema kao u uputi. Ako nešto ne valja, napiši ChatGPT-u što da ispravi.
 4. Spremi sliku pod nazivom datoteke koji piše uz vježbu (npr. `goblet-squat.jpg`) i pošalji mi je, pa je ugradim u aplikaciju za sve uređaje.
 
-Pregled: 0 za ponoviti, 0 novih, 152 dobre (ukupno 152 vježbe) i 5 naslovnih slika.
+Pregled: 0 za ponoviti, 1 nova, 152 dobre (ukupno 153 vježbe) i 5 naslovnih slika.
 
 ## Naslovne slike za slajdere
 
@@ -61,6 +61,21 @@ Accent colour electric lime #B8F500. Sunny green football pitch, white goal and 
 ```text
 Premium sports-app cover photograph, ONE single full-bleed PORTRAIT image, 1024 × 1536 (2:3). Same approved athlete and style as the exercise images (the project holds them). Real, bright, vibrant sports photography, natural colours, crisp athlete, realistic full limb lengths, normal hands and grips, safe equipment. Eyes follow the activity, never look at the lens, not at the camera. Composition: athlete centred horizontally, head in the upper third but not above 15 % of the height, nothing important within 80 px of the top or bottom edge. Keep the lower 30 % calm and uncluttered (floor or grass), no faces, hands or equipment details there: the app writes the title there. Graphics: a small solid corner wedge in the accent colour in the TOP-RIGHT corner and three thin diagonal stripes in the same accent colour in the BOTTOM-LEFT corner, each within about 200 px of its corner. NO text, NO letters, NO title, NO logos or brand names anywhere in the image.
 Accent colour rich violet #8C39F0. Bright, tidy home gym with a hexagonal dumbbell rack, kettlebell, medicine ball, TRX straps and soft window light. The athlete sits relaxed on a bench holding ONE hexagonal dumbbell naturally in one hand and looking at it, the other hand resting on his thigh; medium editorial framing, normal grip and fingers, good neck. Warm, bright premium photograph, no equipment labels.
+```
+
+## Nove (1)
+
+Ove vježbe još nemaju sliku tvog sportaša (sad pokazuju preuzetu fotografiju ili video, ili nemaju sliku).
+
+### Snaga
+
+#### Landmine Single-Leg Hip Thrust (Jednonožni potisak kuka s landmine šipkom)
+
+- Datoteka: `landmine-single-leg-hip-thrust.jpg`
+- Kamera: level side-oblique view from the working leg side at bench height
+
+```text
+Two panels, identical camera in both: level side-oblique view from the working right-leg side at bench height, about 20 degrees from a strict side view, full body in frame. LEFT (start): the athlete's head is toward image right and feet toward image left, upper back just below the shoulder blades supported across a stable flat bench on image right; hips lowered, right foot planted flat, right knee bent, left hip and knee bent with the left foot clearly off the floor; the loaded end of the landmine bar rests at the crease of the working right hip and both hands steady it. RIGHT (end): keep the same bench contact and right foot position; extend the right hip until shoulder, hip and right knee form a straight line, right shin nearly vertical, pelvis level, left leg still raised and bent; the loaded bar end rises with the working hip along its natural arc. Form: neutral head and neck following the upper torso, chin gently tucked without pressing into the chest, gaze diagonally forward-up, not at the camera; ribs down and abdomen braced, no lumbar overextension or pelvic rotation; working knee tracks the toes, whole right foot flat, heel down, free foot never assists; full natural femur and tibia lengths, normal hands and grips; the landmine approaches LATERALLY from the athlete's right side, with the floor pivot beside the right hip at approximately the same head-to-foot station as that hip, not near the feet; the bar's ground projection is approximately perpendicular to the athlete's head-to-foot axis, never parallel to the legs or trunk; from this side camera the shaft extends from a foreground floor pivot in depth toward the working right hip, with natural foreshortening and the plate face visible; same fixed pivot and one continuous rigid bar of unchanged real length in both panels, plate perpendicular to sleeve, shaft clear of legs and bench; bench and planted foot do not slide; the central shaft is visibly slender, about 28–29 mm, with thicker 50 mm loading sleeves and a clear shoulder/collar near the plate; show the unloaded sleeve end securely entering the distinct open rim of the hinged landmine receiver, with visible connection and pivot pin, not fused metal; no towel, mat or padding beneath the plate. Equipment: standard Olympic bar with one unmarked 5 kg rubber plate, securely fixed floor-level landmine pivot with a visible hinged receiver socket, flat bench.
 ```
 
 ## Dobre slike (152)
