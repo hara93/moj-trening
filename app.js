@@ -3256,10 +3256,11 @@ VIEWS.play = function(){
     // the load of what was done (recomputed with every answer on this screen); the last set's reserve can still be tapped here
     const lm = any ? computeSession(sessionEntry()) : null, rk = any ? rirStep() : -1; P._lm = lm;
     return '<div class="view gut stack">' + topbar('', '') +
-      '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 style="margin:10px 0 0;font-size:30px;font-weight:600">'+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
+      '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
-      (rk >= 0 ? '<div class="rirlast">' + rirRowHtml(rk, true) + '</div>' : '') + (lm ? rpeHtml() + lmCardHtml(lm) : '') +
+      // the decisions first (fits a 375 × 812 iPhone): the session rating, the last set, "Kako je išlo?"; the load card after them
+      (lm ? rpeHtml() : '') + (rk >= 0 ? '<div class="rirlast">' + rirRowHtml(rk, true) + '</div>' : '') +
       (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
         '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
           // pre-marked from what the player saw: all sets, some sets ('partial') or none ('skip'); the last two don't count
@@ -3272,7 +3273,7 @@ VIEWS.play = function(){
             '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
             (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
-        }).join('') + '</div>' : '') +
+        }).join('') + '</div>' : '') + (lm ? lmCardHtml(lm) : '') +
       masDoneHtml() + '<div style="height:12px"></div></div>' +
       '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">'+(!any ? 'Izađi' : P.quit ? 'Spremi i izađi' : 'Završi')+'</button>' + (P.quit || !any ? '' : '<button class="txtbtn" data-a="restartPlay" style="align-self:center">Spremi i ponovi</button>') + '</div>';
   }
