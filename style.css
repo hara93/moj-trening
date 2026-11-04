@@ -517,17 +517,19 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 
 /* 1.7: the load model. "Koliko si još mogao?" after a set (one compact row), the session RPE slider and the load card on the
    done screen, the last session's points on the exercise page. One accent colour, the app's surfaces. */
-.rir{margin:12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));padding:10px 12px 12px;border-radius:18px;background:var(--surface)}
+.rir{margin:12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));padding:8px 10px 10px;border-radius:18px;background:var(--surface)}
 .rirlast .rir{margin:14px 0 0}
 .rirh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
 .rirh b{flex:none;font-size:14px;font-weight:600}
-.rirh span{min-width:0;font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rirn{margin-top:1px;font-size:13px;color:var(--text-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rirh span{display:flex;min-width:0;font-size:13px;color:var(--text-2);white-space:nowrap}
+.rirh i{min-width:0;font-style:normal;color:var(--text-body);overflow:hidden;text-overflow:ellipsis}
+.rirh i.sep{flex:none;color:var(--text-2);white-space:pre}
+.rirh em{flex:none;font-style:normal}
 .rirb{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:8px}
 .rirb button{height:44px;min-width:0;padding:0;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-body);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rirb button.lg{font-size:13px;letter-spacing:-0.2px}
 .rirb button.tg{border-style:dashed;border-color:var(--accent)}
 .rirb button[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
-.riru{display:block;margin-top:4px;font-size:12px;color:var(--text-2);text-align:right}
 .rpe{margin-top:16px}
 .rpeh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 2px}
 .rpeh b{font-size:17px;font-weight:600}

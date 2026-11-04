@@ -3181,13 +3181,14 @@ function rirRowHtml(k, other){
   const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
   const def = time ? fx.rir * LM.HOLD_S : fx.rir, v = P.rir && P.rir[k] != null ? P.rir[k] : null;
   let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
-  const q = time ? 'Koliko si još mogao držati?' : 'Koliko si još mogao?', what = 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' b';
-  // another exercise than the one on screen (a rest before the next one, a superset, the done screen): its name on a line of its own
-  return '<section class="rir" aria-label="' + esc(q + ' ' + (other ? st.e.name + ', ' : '') + what) + '"><div class="rirh"><b>' + q + '</b><span>' + esc(what) + '</span></div>' +
-    (other ? '<div class="rirn">' + esc(st.e.name) + '</div>' : '') +
+  const q = time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', what = 'S' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' b';
+  // one header line: the question; on the right the set and its points, after another exercise's name (a rest before the next
+  // one, a superset, the done screen), which shortens first; the full text is in the aria-label
+  return '<section class="rir" aria-label="' + esc((time ? 'Koliko si još mogao držati, u sekundama?' : q) + ' ' + (other ? st.e.name + ', ' : '') + 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova') + '"><div class="rirh"><b>' + q + '</b><span>' +
+    (other ? '<i>' + esc(st.e.name) + '</i><i class="sep"> · </i>' : '') + '<em>' + esc(what) + '</em></span></div>' +
     '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
-      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '" class="' + (x === tg ? 'tg' : '') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
-    '</div>' + (time ? '<span class="riru">sekundi u rezervi</span>' : '') + '</section>';
+      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '" class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
+    '</div></section>';
 }
 // per logged item: the taps of the sets he did, in order (null = not tapped), so the list lines up with setsDone (lmSets reads the
 // first setsDone values: a round of a superset he skipped must not shift his taps); null when nothing was tapped
