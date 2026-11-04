@@ -1550,7 +1550,7 @@ window.SEED = {
     "Pokret prelazi u čučanj – drži koljena blago savijena i guraj kukove unatrag.",
     "Glava se zabacuje prema gore – pogled drži na podu ispred sebe."
    ],
-   "note": "Jača stražnju ložu i stražnjicu u izduženom položaju. Dobar za lakše dane ili uvod u RDL sa šipkom.",
+   "note": "Jača stražnju ložu i stražnjicu u izduženom položaju, uvod u RDL sa šipkom. Teške serije najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/dumbbell-romanian-deadlift/",
    "sourceTitle": "How to Do Dumbbell Romanian Deadlift: Muscles Worked & Proper Form – StrengthLog",
    "order": 209,
@@ -1765,7 +1765,7 @@ window.SEED = {
     "Padanje pri spuštanju – spuštaj se kontrolirano 2–3 sekunde.",
     "Previsoka kutija pa se leđa zaobljuju ili kuk štipa – odaberi nižu visinu."
    ],
-   "note": "Gradi snagu jedne noge kao u trčanju i odrazu, uz malo opterećenje leđa. Kutija najviše 40 cm, da kuk ne savijaš preduboko.",
+   "note": "Gradi snagu jedne noge kao u trčanju i odrazu, uz malo opterećenje leđa. Kutija do 40 cm; teške serije najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/step-up/",
    "sourceTitle": "How to Do Step Up: Muscles Worked & Proper Form – StrengthLog",
    "order": 213,
@@ -1818,7 +1818,7 @@ window.SEED = {
     "Pete se odižu – stani malo dalje od sidrišta i drži težinu na cijelom stopalu.",
     "Leđa se izvijaju pri ustajanju – učvrsti trup i završi uspravno, bez guranja kukova naprijed."
    ],
-   "note": "Stabilan čučanj koji malo opterećuje leđa i drži trup uspravnim. Koristan je u sezoni i pri povratku nakon problema s kukom ili leđima.",
+   "note": "Stabilan čučanj koji malo opterećuje leđa, za sezonu i povratak nakon problema s kukom ili leđima. Teške serije najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/landmine-squat/",
    "sourceTitle": "How to Do Landmine Squat: Muscles Worked & Proper Form – StrengthLog",
    "order": 214,
@@ -1977,7 +1977,7 @@ window.SEED = {
     "Lopta bježi u stranu – drži pete na sredini lopte i pritisni dlanove u pod (za veću stabilnost malo raširi ruke).",
     "Pretjerano izvijanje donjeg dijela leđa – zategni trbuh i lagano podvuci zdjelicu."
    ],
-   "note": "Jača stražnju ložu kroz savijanje koljena, a lopta tjera trup da drži zdjelicu. Dobar je korak prije Nordica.",
+   "note": "Jača stražnju ložu, a lopta tjera trup da drži zdjelicu; korak prije Nordica. Serije do otkaza najkasnije 4 dana prije utakmice.",
    "source": "https://www.strengthlog.com/leg-curl-on-ball/",
    "sourceTitle": "How to Do Leg Curl on Ball: Muscles Worked & Proper Form – StrengthLog",
    "order": 217,
@@ -5403,7 +5403,7 @@ window.SEED = {
    "sides": true,
    "feel": "Snaga kosih trbušnih mišića, stabilnost trupa",
    "steps": [
-    "Uže zaveži nisko za kavez, ne kroz kolotur.",
+    "Zaveži elastično uže nisko za kavez, ne kroz kolotur.",
     "Poluklek, koljeno bliže sidru na podu, ručka uz kuk.",
     "Gurni ručku dijagonalno iznad suprotnog ramena; trup miran."
    ],
@@ -5719,7 +5719,7 @@ window.SEED = {
    "sides": true,
    "feel": "Mobilnost kuka, unutarnjeg bedra i gornjih leđa",
    "steps": [
-    "Iz dugog iskoraka spusti suprotni dlan uz prednje stopalo.",
+    "Iskorak lijevom nogom, desni dlan spusti uz lijevo stopalo.",
     "Lakat spusti prema stopalu, bez štipanja u preponi.",
     "Tu ruku podigni prema stropu, okreni prsa i prati šaku."
    ],
@@ -5920,7 +5920,7 @@ window.SEED = {
    "rest": 20,
    "kg": 0,
    "sides": true,
-   "feel": "Pokretljivost gležnja, istezanje donjeg dijela lista",
+   "feel": "Pokretljivost gležnja, istezanje donjeg lista (soleus)",
    "steps": [
     "Prednje stopalo nekoliko centimetara od zida, prsti prema zidu.",
     "Guraj koljeno prema zidu, peta ostaje na podu.",
@@ -6321,7 +6321,7 @@ window.SEED = {
    "steps": [
     "Stani bočno uz zid, težina na vanjskoj nozi.",
     "Savij unutarnju nogu, natkoljenicom pritisni zid s 50–70 % snage.",
-    "Zadrži; zdjelica vodoravna, stajno koljeno blago savijeno."
+    "Zadrži; zdjelica vodoravna, stajno koljeno blago savijeno, izmjenjuj strane."
    ],
    "mistakes": [
     "Trup se naginje prema zidu ili od njega – drži ramena iznad kukova.",
@@ -6836,7 +6836,7 @@ window.SEED = {
     "Stajno koljeno se potpuno ispruži ili jako savije – drži ga blago savijenog.",
     "Gubiš ravnotežu – gledaj u točku na podu i počni bez utega ili uz dodir prstima o zid."
    ],
-   "note": "Jača stražnju ložu u izduženom položaju i kontrolu kuka, za prevenciju ozljede i stabilnost pri promjeni smjera.",
+   "note": "Jača stražnju ložu i kontrolu kuka, za prevenciju ozljede i promjenu smjera. Teške serije najkasnije 4 dana prije utakmice.",
    "source": "https://www.acefitness.org/resources/everyone/exercise-library/127/single-arm-single-leg-romanian-dead-lift/",
    "sourceTitle": "Single-Arm Single-Leg Romanian Deadlift | Exercise Library | ACE",
    "order": 711,
@@ -6941,7 +6941,7 @@ window.SEED = {
     "Trup se naginje naprijed – drži prsa gore i spuštaj se okomito.",
     "Stražnje koljeno udara u pod – kontroliraj spuštanje i samo lagano dotakni pod."
    ],
-   "note": "Gradi snagu jedne noge i stabilnost kuka u položaju iskoraka i promjene smjera. Za kasniju rehabilitaciju, predsezonu i sezonu.",
+   "note": "Gradi snagu jedne noge i stabilnost kuka za iskorak i promjenu smjera. Teške serije najkasnije 4 dana prije utakmice.",
    "source": "https://www.catalystathletics.com/exercise/174/Split-Squat/",
    "sourceTitle": "Split Squat - Olympic Weightlifting Exercise Library: Demo Videos, Information & More - Catalyst Athletics",
    "order": 713,
@@ -7049,7 +7049,7 @@ window.SEED = {
     "Zdjelica pada na strani slobodne noge – zategni bok stajne noge i smanji visinu.",
     "Prebrzo se spuštaš – kontroliraj spuštanje 2–3 s."
    ],
-   "note": "Jača kuk i koljeno na jednoj nozi za doskoke, zaustavljanja i promjene smjera. Počni na niskoj stubi od 15–30 cm.",
+   "note": "Jača kuk i koljeno na jednoj nozi za doskoke i promjene smjera. Kreni sa stubom 15–30 cm, pa plyo box na strani od 40 cm.",
    "source": "https://www.massgeneralbrigham.org/content/dam/unified-xwalk/pdf/patient-education/english/mass-general-hip-exercises.pdf",
    "sourceTitle": "Hip Exercises – Mass General Brigham (PDF)",
    "order": 715,
@@ -7152,7 +7152,7 @@ window.SEED = {
     "U odmoru potpuno staneš – nastavi lagano okretati da se brže oporaviš.",
     "Trup i kukovi se ljuljaju – smanji otpor i drži trup mirnim."
    ],
-   "note": "Gradi kondiciju uz manje udaraca od trčanja, pa je zamjena kad koljeno ili kuk ne podnose trčanje. Najviše 1–2 puta tjedno, ne dan prije utakmice.",
+   "note": "Kondicija kad koljeno ili kuk ne podnose trčanje. Naporno, a ne lagani dan oporavka: 1–2 puta tjedno, ne dan prije utakmice.",
    "source": "https://pubmed.ncbi.nlm.nih.gov/23539308/",
    "sourceTitle": "High-intensity interval training, solutions to the programming puzzle: Part I: cardiopulmonary emphasis - PubMed",
    "order": 801.5,
