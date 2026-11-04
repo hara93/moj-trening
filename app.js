@@ -1058,12 +1058,15 @@ VIEWS.home = function(){
   const rehab = Object.values(S.pr).find(p => p.home === 'rehab');
   const akt = Object.values(S.pr).find(p => p.home === 'aktivacija');
   const last = S.log.find(isTraining);
-  // the gym card while your week plan has no gym session (a planned one is opened from the "Danas" row and the day sheet)
-  // (a programme finished this week keeps the days it filled in the plan, but has nothing left to open: it does not count here)
-  const gym = planSlots().some(s => (s.kind === 'program' && !!S.prog[s.id] && !!progStatus(S.prog[s.id]).next) || (s.kind === 'protocol' && !!S.pr[s.id] && gymSession(S.pr[s.id]))) ? false : nextGym();
+  // the gym card is always there (1.8.1, Tomislav): it opens this week's planned gym session that is not done yet (today's first,
+  // then the days to come, then a missed one), otherwise the gym session trained longest ago
+  const today = dayIdx(Date.now()), rank = s => s.day === today ? 0 : s.day > today ? 1 : 2;
+  const planned = weekStatus(weekStart(Date.now())).slots.filter(s => !s.done && ((s.kind === 'protocol' && !!S.pr[s.id] && gymSession(S.pr[s.id])) || (s.kind === 'program' && !!S.prog[s.id] && !!s.pr)))
+    .sort((a, b) => rank(a) - rank(b) || a.day - b.day)[0];
+  const gym = planned ? { name: planned.name, a: { a:'openPr', id: planned.kind === 'program' ? planned.pr : planned.id } } : (g => g && { name: g.name, a: { a:'openPr', id: g.id } })(nextGym());
   const cards = [
-    { k:'rehab', t:'Rehab kuka', s: rehab ? 'Moj protokol · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
-    gym === false ? null : { k:'teretana', t:'Teretana', s: gym ? 'Sljedeći: ' + gym.name : 'Treninzi snage', bg:'#38425A', ic:I.dumb, a: gym ? {a:'openPr', id: gym.id} : {a:'tab', tab:'protocols'} },
+    { k:'rehab', t:'Rehabilitacija', s: rehab ? 'Moj protokol · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
+    { k:'teretana', t:'Teretana', s: gym ? (planned ? (planned.day === today ? 'Danas: ' : 'Sljedeći: ') : 'Sljedeći: ') + gym.name : 'Treninzi snage', bg:'#38425A', ic:I.dumb, a: gym ? gym.a : {a:'tab', tab:'protocols'} },
     { k:'aktivacija', t:'Aktivacija', s:'Uže i kolotur · prije treninga', bg:'#3A3F47', ic:I.rope, a: akt ? {a:'openPr', id: akt.id} : {a:'libCat', cat:'Uže i kolotur'} },
     { k:'kondicija', t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
     { k:'knjiznica', t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }

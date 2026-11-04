@@ -13,7 +13,7 @@ Pregled: 0 za ponoviti, 0 novih, 153 dobre (ukupno 153 vježbe) i 5 naslovnih sl
 
 Pet uspravnih slika 1024 × 1536 (2 : 3) za kartice na početnom zaslonu. Ista uputa kao gore: zalijepi blok u isti ChatGPT projekt i spremi sliku pod navedenim nazivom.
 
-### Rehab kuka
+### Rehabilitacija
 
 - Datoteka: `cover-rehab.jpg`
 - Veličina: 1024 × 1536, uspravno
