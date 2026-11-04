@@ -32,7 +32,6 @@ const I = {
   tabLib:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="18" rx="1.5"/><rect x="9.5" y="3" width="5" height="18" rx="1.5"/><path d="M16.2 4.6l3.3-.9 3 15.5-3.3.9z"/></svg>',
   filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
   medal:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm-4 1.6L6.5 22l5.5-2.5 5.5 2.5L16 16.6a8 8 0 0 1-8 0z"/></svg>',
-  tabProg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/></svg>',
   trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
@@ -187,7 +186,7 @@ const mtStructHash = window.mtStructHash || (() => ''), mtDoseHash = window.mtDo
 const DOSE_KEYS = window.mtDoseKeys || ['measure', 'sets', 'reps', 'repsList', 'sec', 'kg', 'rest', 'sides', 'r0', 'r1'];
 
 function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
-function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 
 /* ---------- state ---------- */
 const S = {
@@ -223,6 +222,17 @@ function doseBase(it){
   if (it.measure === 'time') return ((it.sets||1) > 1 ? it.sets + ' × ' : '') + (it.sec||30) + ' s' + (it.sides ? ' po strani' : '');
   if (Array.isArray(it.repsList) && it.repsList.some(r => r !== it.repsList[0])) return it.repsList.length + ' × ' + it.repsList.join('/') + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
   return (it.sets||1) + ' × ' + (it.reps||10) + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
+}
+function recordedDoseLabel(x) {
+  if (!x.kgList && !x.secList && !x.setNumbers) return dose(x);
+  const rows=HistoryModel.recordedRows(x) || [], timed=x.measure==='time';
+  if (!rows.length) return x.skipped?'Preskočeno':'Nema zabilježenih serija';
+  const shown=rows.slice(0,3).map(r=>{
+    const value=timed?r.sec:r.reps;
+    return (value==null?'—':String(value)+(timed?' s':' pon.'))+(r.kg>0?' × '+fmtKg(r.kg):'')+(x.sides && r.sides===1?' (jedna strana)':'');
+  });
+  if (rows.length>3) shown.push('još '+(rows.length-3));
+  return shown.join(' · ');
 }
 function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0 }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
@@ -261,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.12.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -333,7 +343,7 @@ function storedItem(coll, id){
 const isPlainObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
 const badKey = k => typeof k !== 'string' || !k || k in Object.prototype;   // "__proto__", "constructor"… break lookups
 const CLEAN_NUMS = { srpe:1, sets:1, reps:1, sec:1, rest:1, kg:1, ok:1, fail:1, snoozeOk:1, up:1, easy:1, r0:1, r1:1, cap:1, at:1, secs:1, week:1, total_min:1, order:1, updatedAt:1, lastReps:1, setsDone:1, value:1, phase:1, work_s:1, rest_s:1, set_rest_s:1, distance_m:1 };
-const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1, rirList:1, sirList:1 };
+const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1, rirList:1, sirList:1, kgList:1, secList:1, sideCounts:1, setNumbers:1 };
 const CLEAN_WORDS = { steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1 };
 const CLEAN_LINKS = { video:1, source:1, source_url:1 };
 let cleanFixes = 0;   // how many values the last checks had to drop or convert
@@ -368,6 +378,15 @@ function cleanVal(k, v, depth){
     let a;
     if (k === 'days') a = Array.from(new Set(v.filter(i => Number.isInteger(i) && i >= 0 && i < 7))).sort();
     else if (k === 'rirList' || k === 'sirList') a = v.map(x => typeof x === 'number' && isFinite(x) && x >= 0 && x <= 40 ? x : null);   // reserve per set, null = not tapped (stays aligned with the sets)
+    else if (['kgList','secList','sideCounts','setNumbers'].includes(k)) {
+      const limit = { kgList:10000, secList:86400, sideCounts:2, setNumbers:1000 }[k];
+      a = v.slice(0,1000).map(n => {
+        if (n === null) return null;
+        if (typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= limit &&
+            (!['sideCounts','setNumbers'].includes(k) || Number.isInteger(n) && n >= 1)) return n;
+        cleanFixes++; return null;
+      });
+    }
     else if (k === 'repsList') a = v.map(x => cleanVal('reps', x, depth + 1)).filter(x => typeof x === 'number' && x >= 0);   // 0 = a set with no reps (history)
     else if (k === 'zones' && v.length === 4 && v.every(x => typeof x === 'number' && isFinite(x) && x >= 0)) a = v.slice();   // a field log entry's load: metres per intensity zone
     else if (CLEAN_WORDS[k]) a = v.filter(x => typeof x === 'string' && !((k === 'zones' || k === 'equip') && badKey(x)));
@@ -481,49 +500,72 @@ async function importPack(file){
   });
   if (broken) throw packError('Paket je oštećen: ' + broken + ' ' + plural(broken, 'slika se ne može', 'slike se ne mogu', 'slika se ne može') + ' pročitati. Ništa nije uvezeno.');
   const c = cleanData({ exercises: d.exercises, protocols: d.protocols, programs: d.programs });
-  const packId = typeof d.id === 'string' && !badKey(d.id) ? d.id : 'pack', old = (S.pack && S.pack.ids) || [];
-  // every photo in one transaction: all of them are stored or none
-  try { await IDB.tx('readwrite', st => { photos.forEach(p => st.put({ type: p.type, buf: p.buf.buffer }, 'pack:' + p.ex)); }); }
-  catch(e){ console.error('pack photos not stored', e); throw packError('Slike se ne mogu spremiti na mobitel (nema mjesta?). Paket nije uvezen.'); }
-  // a newer version of the same pack (d.prev = fingerprints of its earlier versions): drills and sessions you never
-  // changed follow it, with your progress in them; the ones you changed stay yours
-  const prev = isPlainObj(d.prev) ? d.prev : {}, swapped = [];
-  ['exercises', 'protocols'].forEach(cl => Object.keys(c[cl]).forEach(id => {
-    const map = collMap(cl), local = map[id], olds = isPlainObj(prev[cl]) && Array.isArray(prev[cl][id]) ? prev[cl][id] : [];
-    // a drill whose link an older editor dropped (saved unchanged or with only your photo) is the pack's while it matches an earlier version
-    if (!local || local.pack !== packId && (cl !== 'exercises' || local.pack)) return;
-    const next = Object.assign({}, c[cl][id], { id, pack: packId }), h = contentHash(Object.assign({}, local, { pack: packId }));
-    if (h === contentHash(next) || olds.indexOf(h) === -1) return;
-    Object.keys(HASH_SKIP).forEach(k => { if (k !== 'id' && local[k] !== undefined) next[k] = local[k]; });
-    if (cl === 'protocols') { next.items = carryItems(c[cl][id], local, []); if (local.goal != null) next.goal = local.goal; }
-    swapped.push([map, id, local]); map[id] = next;
-  }));
-  // exercises, sessions and programmes in the pack join your data; ones already on the phone stay as they are
-  const added = [], progBefore = {}; let exN = 0, prN = 0;
-  Object.keys(c.exercises).forEach(id => { if (!S.ex[id]) { S.ex[id] = Object.assign({}, c.exercises[id], { id, pack: packId }); added.push(S.ex, id); exN++; } });
-  Object.keys(c.protocols).forEach(id => { if (!S.pr[id]) { S.pr[id] = Object.assign({}, c.protocols[id], { id, pack: packId }); added.push(S.pr, id); prN++; } });
-  Object.keys(c.programs).forEach(id => { progBefore[id] = S.prog[id]; S.prog[id] = Object.assign({}, c.programs[id], { id, pack: packId }, S.prog[id] && S.prog[id].days ? { days: S.prog[id].days } : {}); });   // your training days stay
-  const ids = Array.from(new Set(photos.map(p => p.ex)));
-  const pack = { id: packId, title: typeof d.title === 'string' && d.title || 'Paket slika', credit: typeof d.credit === 'string' && d.credit || 'Privatni paket slika', at: Date.now(),
-    ids: old.concat(ids.filter(id => old.indexOf(id) === -1)), videos: Object.assign({}, (S.pack && S.pack.videos) || {}, cleanPackVideos(d.videos)),
-    members: Array.from(new Set(((S.pack && S.pack.members) || []).concat((Array.isArray(d.members) ? d.members : []).filter(x => typeof x === 'string' && !badKey(x))))) };
-  let ok = exN || prN || swapped.length || Object.keys(c.programs).length ? persist() : true;
-  if (ok) try { localStorage.setItem('mt.pack', JSON.stringify(pack)); } catch(e){ ok = false; }
-  if (!ok) {
-    for (let i = 0; i < added.length; i += 2) delete added[i][added[i + 1]];
-    swapped.forEach(([map, id, was]) => { map[id] = was; });
-    Object.keys(progBefore).forEach(id => { if (progBefore[id]) S.prog[id] = progBefore[id]; else delete S.prog[id]; });
-    if (persist()) S.saveFailed = false;
-    const fresh = ids.filter(id => old.indexOf(id) === -1);
-    try { await IDB.tx('readwrite', st => { fresh.forEach(id => st.delete('pack:' + id)); }); } catch(e){}
-    throw packError('Paket nije uvezen: memorija aplikacije je puna. Na mobitelu je sve ostalo kao prije.');
+  const packId = typeof d.id === 'string' && !badKey(d.id) ? d.id : 'pack', ids = Array.from(new Set(photos.map(p => p.ex)));
+  let rollback = null, staged = null, failure = null;
+  try {
+    await IDB.tx('readwrite', st => {
+      photos.forEach(p => st.put({ type:p.type, buf:p.buf.buffer }, 'pack:' + p.ex));
+      // This request runs after every photo put. Its callback still owns the transaction, so a refused
+      // metadata/data write aborts ALL photos, including overwritten ones. Concurrent imports queue here.
+      const ready = st.get('pack:');
+      ready.onsuccess = () => {
+        try {
+          const current = localStorage.getItem(STORE_KEY);
+          if (savedJson != null && current && current !== savedJson) mergeOtherCopy(current);
+          const packRaw = localStorage.getItem('mt.pack');
+          let base = S.pack; try { base = packRaw ? JSON.parse(packRaw) : null; } catch(e){}
+          const old = base && Array.isArray(base.ids) ? base.ids : [];
+          rollback = { data:JSON.stringify(storeObj()), packRaw, nextPack:null, dataWritten:false, saveFailed:!!S.saveFailed };
+          // An unchanged older pack item follows the update; personal changes and progress stay.
+          const prev = isPlainObj(d.prev) ? d.prev : {}, swapped = [];
+          ['exercises', 'protocols'].forEach(cl => Object.keys(c[cl]).forEach(id => {
+            const map = collMap(cl), local = map[id], olds = isPlainObj(prev[cl]) && Array.isArray(prev[cl][id]) ? prev[cl][id] : [];
+            if (!local || local.pack !== packId && (cl !== 'exercises' || local.pack)) return;
+            const next = Object.assign({}, c[cl][id], { id, pack:packId }), h = contentHash(Object.assign({}, local, { pack:packId }));
+            if (h === contentHash(next) || olds.indexOf(h) === -1) return;
+            Object.keys(HASH_SKIP).forEach(k => { if (k !== 'id' && local[k] !== undefined) next[k] = local[k]; });
+            if (cl === 'protocols') { next.items = carryItems(c[cl][id], local, []); if (local.goal != null) next.goal = local.goal; }
+            swapped.push(cl); map[id] = next;
+          }));
+          const progBefore = {}; let exN = 0, prN = 0;
+          Object.keys(c.exercises).forEach(id => { if (!S.ex[id]) { S.ex[id] = Object.assign({}, c.exercises[id], { id, pack:packId }); exN++; } });
+          Object.keys(c.protocols).forEach(id => { if (!S.pr[id]) { S.pr[id] = Object.assign({}, c.protocols[id], { id, pack:packId }); prN++; } });
+          Object.keys(c.programs).forEach(id => { progBefore[id] = S.prog[id]; S.prog[id] = Object.assign({}, c.programs[id], { id, pack:packId }, S.prog[id] && S.prog[id].days ? { days:S.prog[id].days } : {}); });
+          const pack = { id:packId, title:typeof d.title === 'string' && d.title || 'Paket slika', credit:typeof d.credit === 'string' && d.credit || 'Privatni paket slika', at:Date.now(),
+            ids:old.concat(ids.filter(id => old.indexOf(id) === -1)), videos:Object.assign({}, (base && base.videos) || {}, cleanPackVideos(d.videos)),
+            members:Array.from(new Set(((base && base.members) || []).concat((Array.isArray(d.members) ? d.members : []).filter(x => typeof x === 'string' && !badKey(x))))) };
+          const progs = Object.keys(c.programs);
+          staged = { pack, result:{ photos:ids.filter(id => old.indexOf(id) === -1).length, exercises:exN, sessions:prN, programs:progs.filter(id => !progBefore[id]).length,
+            updEx:swapped.filter(cl => cl === 'exercises').length, updPr:swapped.filter(cl => cl === 'protocols').length,
+            updPg:progs.filter(id => progBefore[id] && mtCanon(progBefore[id]) !== mtCanon(S.prog[id])).length } };
+          const nextPack = JSON.stringify(pack);
+          localStorage.setItem('mt.pack', nextPack); rollback.nextPack = nextPack;
+          if (exN || prN || swapped.length || progs.length) {
+            if (!persist()) throw packError('Podaci paketa nisu spremljeni.');
+            rollback.dataWritten = true;
+          }
+        } catch(e){ failure = e; st.transaction.abort(); }
+      };
+      return ready;
+    });
+  } catch(e){
+    let restored = true;
+    if (rollback) {
+      const before = JSON.parse(rollback.data); applyData(before); S._deleted = before._deleted || [];
+      if (rollback.dataWritten && !persist()) restored = false;
+      try { if (rollback.nextPack && localStorage.getItem('mt.pack') === rollback.nextPack) {
+        if (rollback.packRaw === null) localStorage.removeItem('mt.pack'); else localStorage.setItem('mt.pack', rollback.packRaw);
+      } } catch(err){ restored = false; }
+      if (restored) S.saveFailed = rollback.saveFailed;
+    }
+    console.error('pack import not stored', failure || e);
+    throw packError(restored ? 'Paket nije uvezen: memorija aplikacije je puna ili spremanje nije dostupno. Na mobitelu je sve ostalo kao prije.'
+      : 'Uvoz nije završen, a prethodni podaci nisu se mogli potpuno vratiti. Izvezi sigurnosnu kopiju prije zatvaranja aplikacije.');
   }
+  // Publish only after transactioncomplete: a refused import never replaces a currently displayed image.
   photos.forEach(p => { const k = 'pack:' + p.ex; if (MEDIA_URLS[k]) URL.revokeObjectURL(MEDIA_URLS[k]); MEDIA_URLS[k] = URL.createObjectURL(new Blob([p.buf], { type: p.type })); });
-  S.pack = pack; try { localStorage.removeItem('mt.packOld'); } catch(e){}
-  const upd = cl => swapped.filter(s => s[0] === collMap(cl)).length, progs = Object.keys(c.programs);
-  // only what is new counts as added (the same file again adds nothing); a programme already here counts as updated when the pack changed it
-  return { photos: ids.filter(id => old.indexOf(id) === -1).length, exercises: exN, sessions: prN, programs: progs.filter(id => !progBefore[id]).length,
-    updEx: upd('exercises'), updPr: upd('protocols'), updPg: progs.filter(id => progBefore[id] && mtCanon(progBefore[id]) !== mtCanon(S.prog[id])).length };
+  S.pack = staged.pack; try { localStorage.removeItem('mt.packOld'); } catch(e){}
+  return staged.result;
 }
 // what removing the pack takes away (for the confirmation); your history and your copies of its sessions stay
 function packParts(pk){
@@ -848,7 +890,6 @@ function tabbar(){
     '<button class="tab" data-a="tab" data-tab="dashboard" aria-label="Moj pregled"' + (t==='dashboard'?' aria-current="page"':'') + '>' + I.tabGrid + '</button>' +
     '<button class="tab" data-a="tab" data-tab="home" aria-label="Početna"' + (t==='home'?' aria-current="page"':'') + '>' + I.tabPlay + '</button>' +
     '<button class="tab" data-a="tab" data-tab="library" aria-label="Knjižnica vježbi"' + (t==='library'?' aria-current="page"':'') + '>' + I.tabLib + '</button>' +
-    '<button class="tab" data-a="tab" data-tab="progress" aria-label="Napredak"' + (t==='progress'?' aria-current="page"':'') + '>' + I.tabProg + '</button>' +
   '</nav>';
 }
 function topbar(left, right, center){
@@ -951,7 +992,8 @@ function setSkip(ws, key, on){
   if (on) l.push(key);
   if (l.length) m[ws] = l; else delete m[ws];
   const old = calDay(ws, -7 * 105); Object.keys(m).forEach(k => { if (!(+k >= old)) delete m[k]; });
-  lsSet(SKIP_KEY, m);
+  if (lsSet(SKIP_KEY, m)) return true;
+  toast('Promjena tjednog plana nije spremljena.',true); return false;
 }
 // this week's plan (1.8.2, Tomislav): a past day counts only while it is in the plan as it is now and was planned before that
 // day ended (this week's snapshot, or before the first one, the last earlier week's: a weekly plan repeats; a phone with no
@@ -1021,16 +1063,16 @@ const gymLike = p => p.tag === 'Teretana' || (p.items || []).some(it => { const 
 // matches: the standing match day (Doziranje) every week, plus dates marked in the day sheet or in Doziranje. settings.matchDates
 // is a flat map 'YYYY-MM-DD' → 1 (a match that day) or 0 (no match on the standing day that week); it goes into backups.
 const dateKey = MonthPlan.key;
-// Both endpoints of a move are one record, written only after the latest settings are checked.
-function writeCalendarSetting(key, value){
+// Apply a setting in memory only after the latest saved copy accepts the change.
+function writeSetting(key, value){
   try {
     const raw = localStorage.getItem('mt.settings');
-    const latest = raw ? cleanSettings(JSON.parse(raw)) : S.settings;
-    if (JSON.stringify(latest[key] || {}) !== JSON.stringify(S.settings[key] || {})) {
+    const latest = raw ? { ...SETTINGS_BASE, ...cleanSettings(JSON.parse(raw)) } : S.settings;
+    if (mtCanon(latest[key]) !== mtCanon(S.settings[key])) {
       S.settings = { ...SETTINGS_BASE, ...latest }; render();
-      toast('Raspored se promijenio u drugoj kartici. Pogledaj novi raspored i pokušaj ponovno.', true); return false;
+      toast('Postavka je promijenjena u drugoj kartici. Pogledaj novu vrijednost i pokušaj ponovno.', true); return false;
     }
-    const next = { ...S.settings, ...latest, [key]:value };
+    const next = { ...latest, [key]:value };
     localStorage.setItem('mt.settings', JSON.stringify(next)); S.settings = next;
     return true;
   } catch(e) { toast('Promjena nije spremljena na uređaj. Provjeri slobodan prostor.', true); return false; }
@@ -1041,7 +1083,7 @@ function setMatchDate(t, on){
   const m = Object.assign({}, matchDates()), k = dateKey(t), old = dateKey(calDay(Date.now(), -56));
   if (on === (dayIdx(t) === matchDay())) delete m[k]; else m[k] = on ? 1 : 0;
   Object.keys(m).forEach(x => { if (x < old) delete m[x]; });
-  return writeCalendarSetting('matchDates', m);
+  return writeSetting('matchDates', m);
 }
 // the days (0 = Monday) of the week that starts at ws with a match
 const weekMatches = ws => [0, 1, 2, 3, 4, 5, 6].filter(i => matchOn(calDay(ws, i)));
@@ -1133,7 +1175,7 @@ function weekHtml(){
   const line = st.planned || st.slots.length
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today && s.done) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
-  return strip + '<div class="month-entry"><span>' + esc(st.slots.length ? line : 'Ovaj tjedan') + '</span><button data-a="monthOpen" aria-label="Otvori mjesečni planer">Mjesec</button></div>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
+  return strip + '<p class="week-summary">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
 }
 
 /* ---------- views ---------- */
@@ -1553,7 +1595,7 @@ function exInfoHtml(e, wrap){
 // nothing logged yet: one row that says what to do (no period chips)
 function exOptHtml(e){
   const h = historyOf(e.id);
-  const head = '<div class="opthd"><span>'+(h.length ? 'Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b>' : '')+'</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
+  const head = '<div class="opthd"><span>'+(h.length ? 'Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + recordedDoseLabel(h[0]))+'</b>' : '')+'</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
   if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
     '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
   const lp = exLastPts(e.id);
@@ -1582,7 +1624,7 @@ function exCardsHtml(e){
   const h = historyOf(e.id), rg = LOAD_RANGES.find(r => r[0] === S.loadRange) || LOAD_RANGES[0];
   const per = h.length ? '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>' : '';
   const lp = h.length && exLastPts(e.id), sr = h.length && exLoadSeries(e.id, rg[2]), tbl = sr && sr.pts.length > 1 ? exLoadTable(sr.kind, sr.pts, v => loadFmt(sr.kind, v)) : '';
-  const c3 = (h.length ? '<div class="opthd"><span>Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b></span></div>' + exLoadCard(e, S.loadRange, false, true) +
+  const c3 = (h.length ? '<div class="opthd"><span>Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + recordedDoseLabel(h[0]))+'</b></span></div>' + exLoadCard(e, S.loadRange, false, true) +
       (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h, 2)
     : '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
       '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>') +
@@ -1779,9 +1821,13 @@ function progSessions(g){ const out = []; (g.weeks || []).forEach(w => (w.sessio
 // (S.settings.progFrom, so it is in backups and survives a new import of the pack); the history stays as it is
 const progFrom = g => +((S.settings.progFrom || {})[g.id]) || 0;
 function progStatus(g){
-  const all = progSessions(g), doneIds = {}, from = progFrom(g);
+  const all = progSessions(g), doneIds = Object.create(null), from = progFrom(g);
   S.log.forEach(l => { if (l.kind === 'protocol' && l.refId && l.at >= from) doneIds[l.refId] = (doneIds[l.refId] || 0) + 1; });
-  const items = all.map(x => Object.assign({ done: !!doneIds[x.pr] }, x));
+  const items = all.map(x => {
+    const done = doneIds[x.pr] > 0;
+    if (done) doneIds[x.pr]--;
+    return { ...x, done };
+  });
   return { items, total: items.length, done: items.filter(x => x.done).length, next: items.find(x => !x.done && S.pr[x.pr]), from };
 }
 function progCover(g){ for (const x of progSessions(g)) { const p = S.pr[x.pr]; const it = p && (p.items || []).find(i => exMedia(S.ex[i.exId])); if (it) return S.ex[it.exId]; } return null; }
@@ -1846,12 +1892,13 @@ VIEWS.program = function(t){
   const st = progStatus(g), pct = st.total ? st.done / st.total : 0, C = 2 * Math.PI * 30;
   const gone = st.items.filter(x => !x.done && !S.pr[x.pr]).length;   // sessions deleted from the phone: never 'next', so the programme can end without them
   const cols = Math.max.apply(null, (g.weeks || []).map(w => (w.sessions || []).length).concat([1]));
+  let occurrence = 0;
   return '<div class="view gut">' + topbar(backBtn()) +
     '<h1 class="h1">' + esc(g.name) + '</h1>' + (g.desc ? '<p class="sub" style="margin-right:17px;line-height:20px">' + esc(g.desc) + '</p>' : '') +
     '<div class="progtop"><svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--track)" stroke-width="6"/>' + (st.done ? '<circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 36 36)"/>' : '') + '</svg>' +
       '<div><b>' + st.done + ' od ' + st.total + '</b><span>' + (st.next ? 'Sljedeće: ' + esc(st.next.short) : gone ? 'Nema više treninga: ' + gone + ' ' + plural(gone, 'trening programa je obrisan', 'treninga programa su obrisana', 'treninga programa je obrisano') + '.' : 'Program je završen. Bravo!') + (st.from ? ' · ispočetka od ' + esc(shortDate(st.from)) : '') + '</span></div></div>' +
     '<div class="pgrid" style="grid-template-columns:44px repeat('+cols+',1fr)">' + (g.weeks || []).map(w => '<span class="pw">' + esc(w.week) + '. tj.</span>' + (w.sessions || []).map(x => {
-      const it = st.items.find(y => y.pr === x.pr) || {}; const cls = it.done ? 'done' : (st.next && st.next.pr === x.pr) ? 'next' : '';
+      const it = st.items[occurrence++]; const cls = it.done ? 'done' : st.next === it ? 'next' : '';
       return '<button class="pcell ' + cls + '" data-a="openPr" data-id="'+esc(x.pr)+'" aria-label="'+esc(w.week + '. tjedan, ' + x.label + (it.done ? ', odrađeno' : ''))+'">'+esc(x.label)+'</button>'; }).join('')).join('') + '</div>' +
     progTestsHtml(g) +
     ((g.notes || []).length ? '<h2 class="h2">Kako ga raditi</h2><div class="stack" style="gap:8px;margin:12px 17px 0">' + g.notes.map(n => '<div class="bul">'+esc(n)+'</div>').join('') + '</div>' : '') +
@@ -2000,15 +2047,48 @@ function fitReps(it){ if (!Array.isArray(it.repsList)) return; const n = it.sets
 // an own exercise without a weight tag) is kept as it was, since roundLoad only knows bar, plate and dumbbell steps
 function newItem(e){
   const it = exItem(e); if (it.measure === 'time') return it;
-  const last = historyOf(e.id).find(x => x.kg > 0 && x.measure === it.measure && x.done !== false && !x.skipped);
-  if (last) it.kg = (last.reps || it.reps) === it.reps || ['bar', 'lm', 'db'].indexOf(loadKind(e)) === -1 ? last.kg : roundLoad(e, e1rm(last.kg, last.reps || it.reps) * pctFor(it.reps));
+  for (const x of historyOf(e.id)) {
+    if (x.measure !== it.measure || x.done === false) continue;
+    const rows = HistoryModel.recordedRows(x) || [];
+    const last = rows.slice().reverse().find(r => r.kg > 0 && r.reps > 0);
+    if (!last) continue;
+    it.kg = last.reps === it.reps || !['bar','lm','db'].includes(loadKind(e)) ? last.kg : roundLoad(e, e1rm(last.kg,last.reps)*pctFor(it.reps));
+    break;
+  }
   return it;
 }
 
-const FIELD_GROUPS = [
-  { key:'pre', title:'Predsezonski plan · 4 tjedna', sub: SHOW_SOURCES ? 'STATSports Pre-Season Training Program: trčanja za pripreme, po tjednima' : 'Trčanja za pripreme, po tjednima' },
-  { key:'web', title: SHOW_SOURCES ? 'Treninzi sa statsports.com' : 'Ostali treninzi', sub: SHOW_SOURCES ? 'Treninzi trčanja koje je STATSports objavio na svojim stranicama' : 'Pojedinačni treninzi trčanja i brzine' }
+/* ---------- field catalogue: editorial categories, independent of load estimates ---------- */
+const FIELD_CATEGORIES = [
+  { key:'speed', title:'Brzina', sub:'Ubrzanje, tehnika trčanja i izlaganje velikoj brzini.' },
+  { key:'agility', title:'Agilnost', sub:'Promjene smjera, kočenje i ponovno ubrzanje.' },
+  { key:'endurance', title:'Izdržljivost', sub:'Aerobno trčanje, intervali i brzinska izdržljivost.' },
+  { key:'tests', title:'Testovi', sub:'Zabilježi rezultat i koristi ga za osobni tempo MAS intervala.' },
+  { key:'other', title:'Ostalo', sub:'Dodatni treninzi koji još nemaju odabranu kategoriju.' }
 ];
+// Reviewed from the sessions' stated goals and blocks, never guessed from their names.
+// Speed endurance in the 4-week plan remains endurance; this does not change its prescribed order or dose.
+const FIELD_CATEGORY_IDS = {
+  'box-to-box-aerobno':'endurance', 'brzina-i-brzinska-izdrzljivost':'speed',
+  'intervali-15-15':'endurance', 'intervali-3-2-1':'endurance',
+  'izlozenost-maksimalnoj-brzini':'speed', 'k3-predsezonska-brzina':'speed',
+  'maksimalna-brzina-40-20':'speed', 'mas-mreze-15-15':'endurance',
+  'mas-test-5-min':'tests', 'mendo-solo-ubrzanje':'agility',
+  'ss-pre-1a':'endurance', 'ss-pre-1b':'endurance', 'ss-pre-1c':'endurance',
+  'ss-pre-2a':'endurance', 'ss-pre-2b':'endurance', 'ss-pre-2c':'endurance',
+  'ss-pre-2d':'endurance', 'ss-pre-3a':'endurance', 'ss-pre-3b':'endurance',
+  'ss-pre-3c':'endurance', 'ss-pre-3d':'endurance'
+};
+function fieldCategoryKey(f){
+  const explicit = f && f.catalogueCategory;
+  if (FIELD_CATEGORIES.some(c => c.key === explicit)) return explicit;
+  return f && Object.prototype.hasOwnProperty.call(FIELD_CATEGORY_IDS, f.id) ? FIELD_CATEGORY_IDS[f.id] : 'other';
+}
+function fieldCatalogueItems(field){
+  return Object.values(field || {}).filter(f => f && typeof f === 'object').slice().sort((a,b) =>
+    (Number.isFinite(a.order) ? a.order : 99) - (Number.isFinite(b.order) ? b.order : 99));
+}
+/* ---------- end field catalogue data ---------- */
 // SHOW_SOURCES false: the field sessions' own notes about their source (data.js, pitch.js captions; kept as they are) are shown
 // without it, sentence by sentence: "Izvor ne navodi zagrijavanje." goes, "Izvor: 2–3 serije …" reads "Obično 2–3 serije …"
 const FIELD_SRC_TXT = [
@@ -2108,22 +2188,42 @@ function fieldPlanHtml(){
 }
 function fieldRow(f){
   const spec = fieldSpec(f);
-  const when = f.when_hr || (f.week ? f.week + '. tjedan' + (f.dayHr ? ' · ' + f.dayHr : '') : '');
-  return '<button class="row" data-a="openField" data-id="'+esc(f.id)+'"><span class="thumb pthumb">'+(spec ? pitchSvg(spec, { thumb:true }) : pathIcon(I.run,28))+'</span><span class="tx"><span class="t">'+esc(f.name_hr)+'</span><span class="m"><span>'+esc(fieldMin(f))+' min</span><span class="tag">'+esc(when || f.goal_hr)+'</span></span></span>'+I.chev+'</button>';
+  const category = FIELD_CATEGORIES.find(c => c.key === fieldCategoryKey(f));
+  const when = f.group === 'pre' && (f.when_hr || (f.week ? f.week+'. tjedan'+(f.dayHr ? ' · '+f.dayHr : '') : ''));
+  return '<button class="row field-catalogue-row" data-a="openField" data-id="'+esc(f.id)+'"><span class="thumb pthumb" aria-hidden="true">'+(spec ? pitchSvg(spec, { thumb:true }) : pathIcon(I.run,28))+'</span><span class="tx"><span class="t">'+esc(f.name_hr || 'Trening na terenu')+'</span><span class="m"><span>'+esc(fieldMin(f))+' min</span><span class="tag" data-category="'+category.key+'">'+esc(category.title)+'</span>'+(f.group === 'pre' ? '<span class="field-plan-tag">Iz plana</span>' : '')+'</span>'+(f.goal_hr ? '<span class="field-row-goal">'+esc(f.goal_hr)+'</span>' : '')+(when ? '<span class="field-row-when">'+esc(when)+'</span>' : '')+'</span>'+I.chev+'</button>';
 }
-VIEWS.fieldList = function(){
-  const all = Object.values(S.field).sort((a,b) => (a.order||99) - (b.order||99));
+function fieldCataloguePlanCard(){
+  const ps = prePlanState(); if (!ps || !ps.cells.some(c => c.f)) return '';
+  return '<button class="field-plan-card" data-a="fieldMode" data-mode="plan"><span class="field-plan-card-icon" aria-hidden="true">'+I.cal+'</span><span><b>Predsezonski plan</b><span>4 tjedna · '+ps.done+' od '+ps.cells.length+' termina odrađeno</span><small>Otvori raspored i nastavi redom</small></span>'+I.chev+'</button>';
+}
+function fieldCatalogueSection(category, list, selected){
+  if (!list.length) return '';
+  const single = list.filter(f => f.group !== 'pre'), planned = list.filter(f => f.group === 'pre');
+  return '<section class="field-catalogue-section" aria-labelledby="field-heading-'+category.key+'"><h2 id="field-heading-'+category.key+'">'+esc(category.title)+'<span>'+list.length+'</span></h2>'+(!selected ? '<p>'+esc(category.sub)+'</p>' : '')+
+    (single.length ? '<div class="list">'+single.map(fieldRow).join('')+'</div>' : '')+
+    (planned.length ? '<details class="field-plan-sessions"'+(selected ? ' open' : '')+'><summary>Iz predsezonskog plana <span>'+planned.length+' '+plural(planned.length,'trening','treninga','treninga')+'</span></summary><p>Možeš otvoriti pojedini trening. Za raspored po tjednima odaberi Predsezonski plan.</p><div class="list">'+planned.map(fieldRow).join('')+'</div></details>' : '')+'</section>';
+}
+VIEWS.fieldList = function(t){
+  const all = fieldCatalogueItems(S.field), planned = all.filter(f => f.group === 'pre');
+  const mode = t.fieldMode === 'plan' ? 'plan' : 'catalogue';
+  const cat = FIELD_CATEGORIES.some(c => c.key === t.fieldCat) ? t.fieldCat : 'all';
+  const selected = FIELD_CATEGORIES.find(c => c.key === cat);
   let body;
   if (S.dbState !== 'ready') body = stateNote();
-  else if (!all.length) body = '<div class="empty">Treninzi na terenu se pripremaju. Uskoro će se pojaviti ovdje.</div>';
-  else body = FIELD_GROUPS.map(g => {
-    const list = all.filter(f => (f.group || 'web') === g.key);
-    return list.length ? '<h2 class="h2">'+esc(g.title)+'</h2><p class="sub">'+esc(g.sub)+'</p>' + (g.key === 'pre' ? fieldPlanHtml() : '') + '<div class="list" style="margin-top:14px">' + list.map(fieldRow).join('') + '</div>' : '';
-  }).join('');
-  return '<div class="view gut">' + topbar(backBtn()) +
-    '<h1 class="h1">Kondicija na terenu</h1>' +
-    '<p class="sub">Nacrt terena pokazuje odakle i kamo trčiš</p>' +
-    body + '<div style="height:20px"></div></div>';
+  else if (!all.length) body = '<div class="empty">Još nema dostupnih treninga na terenu. Ako si ih spremio u sigurnosnu kopiju, možeš je vratiti kroz Moji podaci.<button class="txtbtn" data-a="dataSheet">Moji podaci</button></div>';
+  else {
+    const modes = '<div class="field-modes" role="group" aria-label="Prikaz terenskih treninga"><button data-a="fieldMode" data-mode="catalogue" aria-pressed="'+(mode === 'catalogue')+'"><b>Treninzi</b><span>'+all.length+' u katalogu</span></button><button data-a="fieldMode" data-mode="plan" aria-pressed="'+(mode === 'plan')+'"><b>Predsezonski plan</b><span>Raspored · 4 tjedna</span></button></div>';
+    if (mode === 'plan') body = modes + '<section class="field-programme"><h2>Predsezonski plan · 4 tjedna</h2><p>'+(SHOW_SOURCES ? 'STATSports Pre-Season Training Program. ' : '')+'Prati raspored po tjednima. Označeni su odrađeni termini i sljedeći trening.</p>'+(planned.length ? fieldPlanHtml()+'<h3>Treninzi u planu</h3><p>Različiti treninzi redom iz programa; isti se trening može ponoviti u rasporedu.</p><div class="list">'+planned.map(fieldRow).join('')+'</div>' : '<div class="empty">Treninzi ovog plana trenutačno nisu dostupni. Ostali treninzi ostaju u katalogu.<button class="txtbtn" data-a="fieldMode" data-mode="catalogue">Otvori katalog</button></div>')+'</section>';
+    else {
+      const counts = {}; FIELD_CATEGORIES.forEach(c => { counts[c.key] = all.filter(f => fieldCategoryKey(f) === c.key).length; });
+      const filters = [{ key:'all', title:'Sve' }].concat(FIELD_CATEGORIES.filter(c => c.key !== 'other' || counts.other || cat === 'other'));
+      const matching = cat === 'all' ? all : all.filter(f => fieldCategoryKey(f) === cat);
+      body = modes+'<div class="field-categories" role="group" aria-label="Cilj terenskog treninga">'+filters.map(c => '<button data-a="fieldCategory" data-cat="'+c.key+'" aria-pressed="'+(cat === c.key)+'" aria-controls="field-results"><span>'+esc(c.title)+'</span><span class="field-category-count">'+(c.key === 'all' ? all.length : counts[c.key])+'</span></button>').join('')+'</div>'+
+        '<p class="field-catalogue-intro" id="field-results-status" role="status">'+(selected ? esc(selected.sub)+' '+matching.length+' '+plural(matching.length,'dostupan trening.','dostupna treninga.','dostupnih treninga.') : 'Odaberi cilj treninga. Katalog uključuje samostalne treninge i treninge iz plana.')+'</p>'+(cat === 'all' ? fieldCataloguePlanCard() : '')+
+        '<div id="field-results" aria-describedby="field-results-status">'+(matching.length ? FIELD_CATEGORIES.filter(c => cat === 'all' || c.key === cat).map(c => fieldCatalogueSection(c, matching.filter(f => fieldCategoryKey(f) === c.key), !!selected)).join('') : '<div class="empty">U ovoj kategoriji još nema treninga.<button class="txtbtn" data-a="fieldCategory" data-cat="all">Prikaži sve treninge</button></div>')+'</div>';
+    }
+  }
+  return '<div class="view gut field-catalogue">'+topbar(backBtn())+'<h1 class="h1">Kondicija na terenu</h1><p class="sub">Odaberi cilj ili nastavi plan. Nacrt terena pokazuje odakle i kamo trčiš.</p>'+body+'<div style="height:24px"></div></div>';
 };
 
 /* ---------- pitch diagrams: geometry in metres lives in pitch.js, drawn here ---------- */
@@ -2390,10 +2490,13 @@ function stepsFromItems(items){
   const lab = ssLetters(items);
   const exOf = it => S.ex[it.exId] || { name:'Vježba', steps:[] };
   const pushSet = (it, base) => {
+    // Each work step owns its dose: later session edits cannot rewrite past sets.
+    const dose = PlayerDose.at(it, base.set), own = { ...it, reps:dose.reps, kg:dose.kg, sec:dose.sec };
+    base = { ...base, it:own };
     if (it.measure === 'time') {
-      if (it.sides) { steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Lijeva strana' })); steps.push(Object.assign({}, base, { kind:'switch', dur:ss, side:'Promjena strane' })); steps.push(Object.assign({}, base, { kind:'work', dur:it.sec, side:'Desna strana' })); }
-      else steps.push(Object.assign({}, base, { kind:'work', dur:it.sec }));
-    } else { const r = repsOf(it, base.set); steps.push(Object.assign({}, base, { kind:'manual', side: r + ' ' + plural(r, 'ponavljanje', 'ponavljanja', 'ponavljanja') + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '') + (it.note ? ' · ' + it.note : '') })); }
+      if (it.sides) { steps.push(Object.assign({}, base, { kind:'work', dur:dose.sec, side:'Lijeva strana' })); steps.push(Object.assign({}, base, { kind:'switch', dur:ss, side:'Promjena strane' })); steps.push(Object.assign({}, base, { kind:'work', dur:dose.sec, side:'Desna strana' })); }
+      else steps.push(Object.assign({}, base, { kind:'work', dur:dose.sec }));
+    } else { const r = dose.reps; steps.push(Object.assign({}, base, { kind:'manual', side: r + ' ' + plural(r, 'ponavljanje', 'ponavljanja', 'ponavljanja') + (it.sides ? ' po strani' : '') + (dose.kg ? ' · ' + fmtKg(dose.kg) : '') + (it.note ? ' · ' + it.note : '') })); }
   };
   steps.push({ kind:'prep', dur:5, g:0, title:'Pripremi se', label:'Kreće za' });
   groupsOf(items).forEach((grp, gi) => {
@@ -2467,6 +2570,12 @@ function stepsFromField(f){
 function startPlayer(cfg){
   audioMode(true); ensureAudio();
   P = Object.assign({ i:0, paused:false, done:false, endAt:0, left:0, startedAt: Date.now(), lastBeep:null, doneSteps:{} }, cfg);
+  if (P.mode === 'ex') {
+    P.originalItems = clone(P.items);
+    P.items = PlayerDose.items(P.items);
+    P.steps = stepsFromItems(P.items);
+    P.liveDoseVersion = 1; P.cardIndex = 0;
+  }
   if (!P.steps.length) return;
   enterStep(0);
   S.stack.push({ v:'play' }); S.sheet = null; render();
@@ -2513,6 +2622,7 @@ function anyDone(){ return Object.keys(P.doneSteps || {}).length > 0; }
 function anyCredit(){ return anyDone() || Object.keys(P.answers || {}).some(j => P.answers[j] === true || P.answers[j] === false); }
 function workOf(j){ const out = []; P.steps.forEach((s, i) => { if (isWork(s) && s.g === j) out.push(i); }); return out; }
 function setsDoneOf(j){
+  if (P.mode === 'ex') return PlayerDose.completeSets(P,j);
   const w = workOf(j), n = (P.items[j] || {}).sets || 1; if (!w.length) return 0;
   return Math.min(n, Math.floor(w.filter(i => P.doneSteps[i]).length * n / w.length + 1e-9));
 }
@@ -2527,7 +2637,10 @@ function finish(){
   P.secs = Math.round((P.finishedAt - P.startedAt)/1000);
   P.answers = P.answers || {}; P.lastReps = P.lastReps || {}; P.auto = {};
   if (P.mode === 'ex') (P.items || []).forEach((it, j) => { P.auto[j] = autoAnswer(j); if (P.answers[j] == null) P.answers[j] = P.auto[j]; });
-  if (P.ref && P.ref.kind === 'protocol' && !P.musclePlan) P.musclePlan = protocolMuscleWork(P).map(MuscleWork.pack);
+  if (P.ref && P.ref.kind === 'protocol' && !P.musclePlan) {
+    P.musclePlan = protocolMuscleWork(P).map(MuscleWork.pack);
+    P.originalMusclePlan = protocolMuscleWork({ items:P.originalItems || P.items }).map(MuscleWork.pack);
+  }
   savePlay();
   if (top().v === 'play') render();
 }
@@ -2593,7 +2706,14 @@ function curView(){
     const groups = P.items.length;
     const lab = src.ss;
     v.title = st.kind === 'prep' ? (e ? e.name : P.title) : (ahead || st.kind === 'ready') ? 'Sljedeće: ' + (e ? e.name : '') : (e ? e.name : '');
-    v.meta = it ? ((lab ? lab.L + lab.k + ' • ' : (src.g + 1) + '/' + groups + ' • ') + dose(it) + (e && e.cat ? ' • ' + e.cat : '')) : '';
+    const displayStep = ['prep','rest','ready'].includes(st.kind) && nextWork ? nextWork : src;
+    const displayItem = displayStep.it || it;
+    if (displayItem) {
+      const set = PlayerDose.at(displayItem,displayStep.set || 1);
+      const quantity = displayItem.measure === 'time' ? set.sec+' s' : set.reps+' pon.';
+      v.meta = (lab ? lab.L+lab.k : (displayStep.g+1)+'/'+groups) + ' • ' + quantity +
+        (displayItem.sides ? ' po strani' : '') + (set.kg ? ' · '+fmtKg(set.kg) : '') + (e && e.cat ? ' • '+e.cat : '');
+    }
     // "krug" is only the round of a superset or circuit; the button in the middle is the "brojač"
     const setTxt = s => s.ss ? groupWord(s.ss.size) + ' ' + s.ss.L + ' • krug ' + s.round + '/' + s.rounds : 'Serija ' + s.set + '/' + ((s.it && s.it.sets) || 1);
     const coming = st.kind === 'rest' && nextWork && (st.trans || (st.ss ? nextWork.ss && nextWork.ss.L === st.ss.L : nextWork.g === st.g)) ? nextWork : null;
@@ -2621,11 +2741,14 @@ function curView(){
 // Session in progress, kept on the phone at every step: a reload or iOS closing the app does not lose it.
 const PLAY_KEY = 'mt.play';
 function savePlay(){
-  if (!P) return;
-  lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
+  if (!P) return false;
+  const snapshot = { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
     answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null,
-    musclePlan:P.musclePlan, historyId:P.historyId, at: Date.now() });
+    musclePlan:P.musclePlan, originalMusclePlan:P.originalMusclePlan, historyId:P.historyId, at: Date.now(),
+    originalItems:P.originalItems, liveDoseVersion:P.liveDoseVersion, cardIndex:P.cardIndex,
+    liveSchedule:P.mode === 'ex' && P.liveDoseVersion === 1 ? PlayerDose.packSteps(P.steps) : undefined };
+  try { localStorage.setItem(PLAY_KEY,JSON.stringify(snapshot)); return true; } catch(e) { return false; }
 }
 function clearPlay(){ try { localStorage.removeItem(PLAY_KEY); } catch(e){} }
 // on the next start: an unfinished session (up to 12 h old) can be continued; a finished one that never reached the history can be saved
@@ -2649,11 +2772,26 @@ function restorePlay(s){
   const now = Date.now(), away = s.done ? 0 : Math.max(0, now - (s.at || now));   // time away is not training time
   P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined, dose: f && s.dose === 'season' ? 'season' : f ? 'full' : undefined,
     steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
+  if (!f) {
+    P.items = PlayerDose.items(s.items);
+    const baseline = Array.isArray(s.originalItems) && s.originalItems.length === P.items.length && s.originalItems.every((it,j) => it && it.exId === P.items[j].exId) ? s.originalItems : s.items;
+    P.originalItems = clone(baseline); P.liveDoseVersion = 1;
+    P.cardIndex = [0,1,2].includes(s.cardIndex) ? s.cardIndex : 0;
+    if (s.liveSchedule) {
+      const timeline = PlayerDose.restoreSteps(s.liveSchedule,P.items,id => S.ex[id] || { id, name:'Vježba', steps:[] });
+      if (!timeline) { P = null; return false; }
+      P.steps = timeline;
+    } else P.steps = stepsFromItems(P.items); // previous versions retained their original item order
+  }
   if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
   if (P.done) P.historyId = typeof s.historyId === 'string' && /^h[a-z0-9]+$/.test(s.historyId) ? s.historyId : uid('h');
   // A finished player saved by an older version has no historical muscle profile.
   if (P.done && P.ref.kind === 'protocol') P.musclePlan = P.items.map((it,j) => {
     const snap = MuscleWork.sanitize(Array.isArray(s.musclePlan) && s.musclePlan[j]);
+    return snap && snap.source === 'planned' && snap.exerciseId === it.exId ? MuscleWork.pack(snap) : null;
+  });
+  if (P.done && P.ref.kind === 'protocol') P.originalMusclePlan = P.items.map((it,j) => {
+    const snap = MuscleWork.sanitize(Array.isArray(s.originalMusclePlan) ? s.originalMusclePlan[j] : Array.isArray(s.musclePlan) && s.musclePlan[j]);
     return snap && snap.source === 'planned' && snap.exerciseId === it.exId ? MuscleWork.pack(snap) : null;
   });
   if (isPlainObj(s.rir)) P.rir = s.rir; if (s.srpe >= 1 && s.srpe <= 10) P.srpe = s.srpe;
@@ -2675,7 +2813,7 @@ function saveSoFar(){
   if (!anyDone()) { clearPlay(); leavePlay(); toast('Trening nije spremljen: još ništa nije odrađeno do kraja.'); return; }
   P.quit = true; P.paused = false; finish();
   if (P.mode === 'ex' && progCandidates().length) return;
-  const r = logSession(); leavePlay(); if (r.saved) toast(r.cut || 'Spremljeno je ono što si odradio.');   // never a silent cap; a refused save has said so itself
+  const r = logSession(); if (!r.saved) { render(); return; } leavePlay(); toast(r.cut || 'Spremljeno je ono što si odradio.');
 }
 // Keep exercise details independent of age. The existing 2000-record limit is reported when reached.
 const LOG_MAX = 2000;
@@ -2695,7 +2833,8 @@ function sessionEntry(){
     if (a === 'skip') { x.skipped = true; x.setsDone = 0; }
     else if (a !== true && did < n) x.setsDone = did;
     if (a === false && it.measure !== 'time') x.lastReps = lastRepsOf(j);
-    const rl = rirLists(j, it); if (rl) x[it.measure === 'time' ? 'sirList' : 'rirList'] = rl;   // "Koliko si još mogao?" per set
+    if (P.liveDoseVersion === 1) Object.assign(x,PlayerDose.logDose(P,j,a).fields);
+    else { const rl = rirLists(j, it); if (rl) x[it.measure === 'time' ? 'sirList' : 'rirList'] = rl; }
     return x;
   });
   if (P.mode === 'field' && P.f) entry.load = fieldDoneLoad();   // what was run: metres, fast running, sprint, zones, the dose
@@ -2847,6 +2986,8 @@ function progCandidates(){
   (p.items || []).forEach((it, j) => {
     const e = S.ex[it.exId]; const was = P.items[j];
     if (!e || !was || was.exId !== it.exId) return;
+    const answer = P.answers[j] != null ? P.answers[j] : autoAnswer(j);
+    if (PlayerDose.logDose(P,j,answer).fields.liveDoseChanged) return;
     if (!PROG_CATS[e.cat] && !(it.kg > 0) && !(e.cat === 'Rehab' && it.measure === 'time' && +e.phase !== 1)) return;
     out.push({ j, e, it, prog: !!p.program, next: nextDose(e, it) });
   });
@@ -2931,9 +3072,9 @@ function bestE1(exId){
   const ex = S.ex[exId]; if (ex && ex.cat === 'Eksplozivnost') return 0;
   let best = 0; const since = Date.now() - 56 * DAY_MS;
   S.log.forEach(l => { if (l.at < since) return; (l.items || []).forEach(x => {
-    if (x.exId !== exId || !(x.kg > 0) || x.measure === 'time' || x.skipped) return;
-    const reps = liftReps(x);
-    if (reps > 0) best = Math.max(best, e1rm(x.kg, Math.min(reps, 10)));
+    if (x.exId !== exId) return;
+    const record=bestRecordedLift(x);
+    if (record) best=Math.max(best,record.v);
   }); });
   return best;
 }
@@ -3028,25 +3169,27 @@ function dosingHtml(){
 // what a chart draws for one exercise (h oldest first; the last n points): with kilograms only the sessions that had them
 // (the shipped 0 kg or a first try would read as progress); while the load stays the same, the reps you did, so reps
 // added at one load show too
+function heaviestSet(x) {
+  return (HistoryModel.recordedRows(x) || []).reduce((max,r)=>r.reps>0?Math.max(max,r.kg||0):max,0);
+}
 function liftSeries(h, n){
   const time = !!h.length && h[h.length - 1].measure === 'time';
   let pts = h.filter(x => (x.measure === 'time') === time && !x.historySetsUnknown && !x.historyRepsUnknown);
-  if (!time && pts.some(x => x.kg > 0)) pts = pts.filter(x => x.kg > 0);
+  if (!time && pts.some(x => heaviestSet(x)>0)) pts = pts.filter(x => heaviestSet(x)>0);
   if (n) pts = pts.slice(-n);
-  const kg = !time && pts.some(x => x.kg !== pts[0].kg);
-  return { pts, unit: time ? ' s' : kg ? ' kg' : ' pon.', loaded: pts.some(x => x.kg > 0), val: x => time ? (x.sec || 0) : kg ? x.kg : repsDone(x) };
+  const kg = !time && pts.some(x => heaviestSet(x) !== heaviestSet(pts[0]));
+  return { pts, unit: time ? ' s' : kg ? ' kg' : ' pon.', loaded: pts.some(x=>heaviestSet(x)>0),
+    val: x => time ? HistoryModel.timeTotal(x) : kg ? heaviestSet(x) : repsDone(x) };
 }
-// reps of the best set of a logged exercise with a load, counted the way Doziranje does (bestE1): the failed last set as you
-// entered it; 0 for timed work, sets without kilograms and skipped exercises
-function liftReps(x){
-  if (!(x.kg > 0) || x.measure === 'time' || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return 0;
-  const n = x.setsDone ?? x.sets ?? 1;
-  if (!(n > 0)) return 0;
-  const fullSets = x.done === false ? n-1 : n;
-  const reps = (x.repsList || []).slice(0,fullSets);
-  let best = reps.reduce((value,r) => Math.max(value,r), 0);
-  if (fullSets > reps.length) best = Math.max(best,x.reps || 0);
-  if (x.done === false) best = Math.max(best,x.lastReps || 0);
+// A record pairs the repetitions and weight of the same performed set.
+function bestRecordedLift(x){
+  if (x.measure==='time') return null;
+  let best=null;
+  for (const row of HistoryModel.recordedRows(x) || []) {
+    if (!(row.kg>0 && row.reps>0)) continue;
+    const v=e1rm(row.kg,Math.min(row.reps,10));
+    if (!best || v>best.v) best={v,kg:row.kg,r:row.reps};
+  }
   return best;
 }
 /* ---------- training load ("Opterećenje"): strength volume, field metres, the season dose ---------- */
@@ -3073,30 +3216,39 @@ function addLoad(a, b, k){ k = k == null ? 1 : k; a.m += b.m * k; a.hsr += b.hsr
 function itemLoad(x){
   const o = { kg: 0, reps: 0, secs: 0, m: 0, hsr: 0, spr: 0, z: [0, 0, 0, 0] };
   if (!x || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return o;
-  const sd = x.sides ? 2 : 1, n = x.setsDone != null ? x.setsDone : (x.sets || 1), e = S.ex[x.exId];
-  if (x.measure === 'time') o.secs = n * (x.sec || 0) * sd;
-  else { o.reps = repsDone(x) * sd; if (x.kg > 0) o.kg = o.reps * x.kg; }
+  const e = S.ex[x.exId], timed=x.measure==='time', rows=HistoryModel.recordedRows(x) || [];
+  for (const r of rows) {
+    if (!r.sides) continue;
+    if (timed) o.secs+=(r.sec||0)*r.sides;
+    else { const reps=(r.reps||0)*r.sides; o.reps+=reps; o.kg+=reps*(r.kg||0); }
+  }
   if (runDrill(e)) {
     const zi = Math.max(0, RUN_INT.indexOf(e.runInt));
-    o.m = (x.measure === 'time' ? n : repsDone(x)) * sd * e.runM; o.z[zi] = o.m;
+    o.m = (timed ? rows.reduce((n,r)=>n+(r.sides||0),0) : o.reps)*e.runM; o.z[zi] = o.m;
     if (zi >= 2) o.hsr = o.m; if (zi === 3) o.spr = o.m;   // visoko and sprint count as fast running (brzo trčanje)
   }
   return o;
 }
 // one exercise over time (oldest first), one point per session: the volume load when sessions in the range had kilograms (the
 // 0 kg ones are left out of that chart), otherwise reps or seconds; metres for an own running drill
+function incompleteRecordedDose(x) {
+  if (x.historySetsUnknown || x.historyRepsUnknown || x.historyKgUnknown || x.historySecUnknown) return true;
+  return (HistoryModel.recordedRows(x) || []).some(r=>r.sides===null || (x.measure==='time'
+    ? r.sec===null : r.reps===null || (Array.isArray(x.kgList) && r.kg===null)));
+}
 function exLoadSeries(exId, days){
   const e = S.ex[exId], from = days ? calDay(Date.now(), -days) : 0;
-  const h = historyOf(exId).filter(x => x.at >= from && !x.historySetsUnknown && !x.historyRepsUnknown).reverse();
-  if (!h.length) return null;
+  const all = historyOf(exId).filter(x=>x.at>=from);
+  const h = all.filter(x=>!x.historySetsUnknown && !x.historyRepsUnknown).reverse();
+  if (!h.length) return all.length?{kind:'reps',pts:[],partial:true}:null;
   const time = h[h.length - 1].measure === 'time';
   let pts = h.filter(x => (x.measure === 'time') === time);
-  const kind = runDrill(e) ? 'm' : time ? 'secs' : pts.some(x => x.kg > 0) ? 'kg' : 'reps';
-  if (kind === 'kg') pts = pts.filter(x => x.kg > 0);
+  const kind = runDrill(e) ? 'm' : time ? 'secs' : pts.some(x => heaviestSet(x) > 0) ? 'kg' : 'reps';
+  if (kind === 'kg') pts = pts.filter(x => heaviestSet(x) > 0);
   const out = [];
   pts.forEach(x => { const v = itemLoad(x)[kind], last = out[out.length - 1];
     if (last && last.t === x.at) { last.v += v; last.xs.push(x); } else out.push({ t: x.at, v, xs: [x] }); });
-  return { kind, pts: out };
+  return { kind, pts: out, partial:all.some(incompleteRecordedDose) };
 }
 const thou = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const dec1 = v => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -3366,7 +3518,7 @@ function setLoad(e, fx, s, ctx){
   ctx = ctx || {};
   const bias = ctx.bias || 0, c = ctx.c || 1, k = ctx.k == null ? 3 : ctx.k;
   const nov = 1 + LM.NOV[fx.ecc] * (k === 0 ? 1 : k === 1 ? 0.5 : 0) * (fx.pat === 'A' ? 0 : 1);
-  const sides = fx.uni ? 2 : 1, out = { B:0, SL:0, imp:0, ecc:0, hs:{}, reps:[], conf: (s.t != null ? s.sir : s.rir) == null ? 'zad' : 'tap' };
+  const sides = s.sides || (fx.uni ? 2 : 1), out = { B:0, SL:0, imp:0, ecc:0, hs:{}, reps:[], conf: (s.t != null ? s.sir : s.rir) == null ? 'zad' : 'tap' };
   if (fx.pat === 'P') {
     const t = LM.TIER[fx.tier || 'srednje'] * (fx.uni ? 1.3 : 1), contacts = (s.n || 0) * sides * (fx.cpr || 1);
     out.imp = contacts * t * nov * c; out.B = LM.K.imp * out.imp; out.ch = 'imp'; return out;
@@ -3383,7 +3535,7 @@ function setLoad(e, fx, s, ctx){
   out.ch = ch; out.B = LM.K[ch] * out.SL; out.ecc = fx.ecc ? out.SL * (fx.ecc === 2 ? 1 : 0.5) : 0;
   // light rehab/activation drills (tag no-hs: hip airplane, iso-abdukcija …) never count toward the hard-set floors, tapped or not
   const h = (fx.pat === 'A' && r > 3) || (Array.isArray(fx.tags) && fx.tags.indexOf('no-hs') !== -1) ? 0 : lmHard(r);
-  Object.keys(LM.TREG).forEach(T => { let v = 0; LM.TREG[T].forEach(z => { if (fx.rw[z]) v = Math.max(v, fx.prime.indexOf(z) !== -1 ? 1 : 0.5); }); if (v && h) out.hs[T] = v * h; });
+  Object.keys(LM.TREG).forEach(T => { let v = 0; LM.TREG[T].forEach(z => { if (fx.rw[z]) v = Math.max(v, fx.prime.indexOf(z) !== -1 ? 1 : 0.5); }); if (v && h) out.hs[T] = v * h * (fx.uni ? sides/2 : 1); });
   out.R = R; out.I = ii; out.r = r;
   return out;
 }
@@ -3391,13 +3543,8 @@ const lmVal = (a, i) => Array.isArray(a) && lmNum(a[i]) && a[i] >= 0 ? a[i] : nu
 // the sets a logged item did: reps (per-set list, a failed last set with its reps and 0 in reserve) or seconds, with the tap
 function lmSets(x){
   if (!lmObj(x) || x.skipped || x.historySetsUnknown || x.historyRepsUnknown) return [];
-  const N = Math.max(1, Math.round(+x.sets) || 1), done = x.setsDone != null ? Math.max(0, Math.min(N, Math.round(+x.setsDone) || 0)) : N, out = [];
-  for (let s = 0; s < done; s++) {
-    if (x.measure === 'time') out.push({ t: +x.sec || 0, sir: lmVal(x.sirList, s) });
-    else out.push({ n: lmVal(x.repsList, s) ?? (+x.reps || 0), rir: lmVal(x.rirList, s) });
-  }
-  if (x.done === false && lmNum(x.lastReps) && out.length && x.measure !== 'time') { out[out.length - 1].n = Math.max(0, x.lastReps); out[out.length - 1].rir = 0; }
-  return out;
+  return (window.HistoryModel.recordedRows(x,true) || []).filter(r=>r.sides>0).map(r=>x.measure==='time'
+    ? {t:r.sec||0,sir:r.sir,sides:r.sides} : {n:r.reps||0,rir:r.rir,sides:r.sides});
 }
 // sessions with this exercise in the 56 days before `at` (novelty: the first and second time cost more)
 function lmNovelty(exId, at, log){
@@ -3407,9 +3554,9 @@ function lmNovelty(exId, at, log){
 }
 // running drills (field channel): metres from the factors' metres per rep, minutes for timed work (the bike)
 function lmRun(x, fx, sets){
-  const sd = x.sides ? 2 : 1, o = { m:0, hsr:0, spr:0, min:0, ex:0, B:0 };
-  if (x.measure === 'time') { o.min = sets.reduce((a, s) => a + s.t, 0) * sd / 60; if (fx.runM) o.m = sets.length * sd * fx.runM; }
-  else if (fx.runM) { const reps = sets.reduce((a, s) => a + s.n, 0) * sd; o.m = reps * fx.runM; if (fx.runInt === 'sprint') o.ex = reps; }
+  const o = { m:0, hsr:0, spr:0, min:0, ex:0, B:0 };
+  if (x.measure === 'time') { o.min = sets.reduce((a,s)=>a+s.t*s.sides,0)/60; if (fx.runM) o.m = sets.reduce((a,s)=>a+s.sides,0)*fx.runM; }
+  else if (fx.runM) { const reps = sets.reduce((a,s)=>a+s.n*s.sides,0); o.m = reps * fx.runM; if (fx.runInt === 'sprint') o.ex = reps; }
   if (fx.runInt === 'visoko' || fx.runInt === 'sprint') o.hsr = o.m; if (fx.runInt === 'sprint') o.spr = o.m;
   o.B = LM.K.fmin * o.min + LM.K.m * o.m / 100 + LM.K.hsr * o.hsr / 100 + LM.K.spr * o.spr / 10;
   return o;
@@ -3467,7 +3614,7 @@ function weekLoads(n){
       if (l.fieldLoadStatus === 'partial') w.partial = true;
       if (fl) { w.m += fl.m || 0; w.hsr += fl.hsr || 0; }
     }
-    if ((l.items || []).some(x => x.historySetsUnknown || x.historyRepsUnknown)) w.partial = true;
+    if ((l.items || []).some(incompleteRecordedDose)) w.partial = true;
     (l.items || []).forEach(x => { const il = itemLoad(x); w.vl += il.kg; w.m += il.m; w.hsr += il.hsr; });
   });
   out.forEach(w => { w.ost = Math.max(0, w.m - w.hsr); });
@@ -3542,18 +3689,19 @@ function exLoadCard(e, range, compact, bare){
   const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2]), all = rg[2] ? exLoadSeries(e.id, 0) : sr;
   const per = bare ? '' : compact ? '<button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button>' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
   const title = compact ? '<b class="t2">'+esc(e.name)+'</b>' : '<span class="t">'+(sr ? LOAD_LABEL[sr.kind] : LOAD_LABEL[all && all.kind] || 'Volumen')+'</span>';
-  if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
+  if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(sr && sr.partial ? 'Nedostaju podaci za prikaz zabilježenog rada.' : all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
   const P2 = sr.pts, k = sr.kind, f = v => loadFmt(k, v), n = P2.length, last = P2[n - 1], tr = loadTrend(P2);
-  const sub = p => p.xs.length === 1 ? doseBase(p.xs[0]) : p.xs.length + ' × u treningu';
+  const sub = p => p.xs.length === 1 ? recordedDoseLabel(p.xs[0]) : p.xs.length + ' × u treningu';
   const pts = P2.map(p => ({ t: p.t, v: p.v, sub: sub(p) }));
   const sum = (compact ? e.name + ': ' : '') + LOAD_LABEL[k] + ', ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' od ' + shortDate(P2[0].t) + ' do ' + shortDate(last.t) + ': od ' + f(P2[0].v) + ' do ' + f(last.v) + (tr ? '. ' + tr.text : '') + '.';
   return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga', n === 1 ? 'prvi trening' : '') +
     (n > 1 ? lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum, bare) : '<p class="none">' + esc(shortDate(last.t) + ' · ' + sub(last) + '. Graf se crta od drugog treninga.') + '</p>') +
     (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
+    (sr.partial ? '<p class="none">U dijelu zapisa nedostaju podaci. Prikazan je poznati dio rada.</p>' : '') +
     (bare ? '' : exLoadTable(k, P2, f)) + '</div>';
 }
 function exLoadTable(k, P2, f){
-  return chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)]));
+  return chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + recordedDoseLabel(p.xs[0]) : ''), f(p.v)]));
 }
 // the history list under the chart: the last sessions, how they went; the label counts every logged session of the exercise
 function exHistHtml(e, h, max){
@@ -3561,7 +3709,7 @@ function exHistHtml(e, h, max){
   const n = new Set(h.map(x => x.at)).size;
   return '<div class="opthd sub"><span>Zadnji treninzi</span><span>'+n+' '+plural(n, 'trening', 'treninga', 'treninga')+'</span></div><div class="lc hist">' + h.slice(0, max || 6).map(x => {
     const tags = (x.done === false ? '<span class="tag">nije išlo' + (x.lastReps != null ? ' · zadnja serija ' + esc(x.lastReps) + ' pon.' : '') + '</span>' : '') + (x.setsDone != null ? '<span class="tag">' + esc(x.setsDone + ' od ' + (x.sets || 1) + ' ' + plural(x.sets || 1, 'serije', 'serije', 'serija')) + '</span>' : '');
-    return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(dose(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
+    return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(recordedDoseLabel(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
 }
 // Napredak → "Tjedno opterećenje": strength volume load and field metres per calendar week, the last 8 weeks
 function weekLoadHtml(){
@@ -3663,13 +3811,15 @@ VIEWS.progress = function(){
   // records: a best estimated max that beat an earlier best, set in the last 30 days (your first weight is not a record);
   // reps of a set count up to 10 like in Doziranje; no timed carries, jumps or throws
   const prs = Object.keys(hist).filter(id => S.ex[id] && S.ex[id].cat !== 'Eksplozivnost').map(id => { let best = null, beaten = false;
-    hist[id].forEach(x => { const r = liftReps(x); if (!r) return; const v = e1rm(x.kg, Math.min(r, 10)); if (!best) best = { v, x, r }; else if (v > best.v + .01) { best = { v, x, r }; beaten = true; } });
+    hist[id].forEach(x => { const lift=bestRecordedLift(x); if (!lift) return;
+      if (!best || lift.v>best.v+.01) { if (best) beaten=true; best={...lift,x}; }
+    });
     return best && beaten && Date.now() - best.x.at < 30 * DAY_MS ? { id, best } : null; }).filter(Boolean).sort((a, b) => b.best.x.at - a.best.x.at).slice(0, 4);
   // consistency: one cell per calendar day (a clock change never shifts the grid)
   const days = {}; S.log.forEach(l => { if (!isTraining(l)) return; const t = calDay(l.at); days[t] = (days[t] || 0) + 1; });
   const start = calDay(ws, -77); let heat = '';
   for (let d = 0; d < 7; d++) for (let w = 0; w < 12; w++) { const t = calDay(start, w * 7 + d); const n = days[t] || 0; heat += '<i class="'+(t > Date.now() ? 'fut' : n >= 2 ? 'l3' : n === 1 ? 'l2' : '')+'"></i>'; }
-  const head = '<div class="view gut">' + topbar('', '', 'NAPREDAK') +
+  const head = '<div class="view gut">' + topbar(backBtn(), '', 'NAPREDAK') +
     '<h1 class="h1">Napredak</h1>' +
     '<div class="seg" style="margin-top:16px"><button class="chip" data-a="progTab" data-v="pregled" aria-pressed="'+(S.progTab !== 'doziranje')+'" style="height:44px">Pregled</button><button class="chip" data-a="progTab" data-v="doziranje" aria-pressed="'+(S.progTab === 'doziranje')+'" style="height:44px">Doziranje</button></div>';
   if (S.progTab === 'doziranje') return head + dosingHtml() + '<div style="height:20px"></div></div>';
@@ -3680,7 +3830,7 @@ VIEWS.progress = function(){
     (act.length ? act.map(sugCard).join('') : '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad '+progN()+' treninga zaredom odradiš sve serije neke vježbe, ovdje dobiješ prijedlog za veće opterećenje.</p>') + nokgHtml +
     (way.length ? '<div class="psec"><h2>Na putu</h2><span>uvjet: '+progN()+' treninga zaredom</span></div>' + way.map(sugCard).join('') : '') +
     (charts ? '<div class="psec"><h2>Glavne vježbe</h2><span>zadnji treninzi</span></div>' + charts : '') +
-    (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.x.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
+    (prs.length ? '<div class="psec"><h2>Rekordi</h2><span>zadnjih 30 dana</span></div><div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '') +
     '<div class="psec"><h2>Dosljednost</h2><span>12 tjedana</span></div><div class="chart"><div class="sub2">Svaki kvadratić je dan, a redovi su dani u tjednu (P–N).</div><div class="heat" role="img" aria-label="'+heatLabel(heat)+'">'+heat+'</div></div>' +
     '<div class="psec"><h2>Pravilo</h2><span>uvjet za prijedlog</span></div><div class="chips" style="margin-top:0">' + [2, 3].map(n => '<button class="chip" data-a="setProgN" data-v="'+n+'" aria-pressed="'+(progN() === n)+'">'+n+' treninga zaredom</button>').join('') + '<button class="chip" data-a="progInfo">Kako to radi?</button></div>' +
     '<div style="height:20px"></div></div>';
@@ -3781,6 +3931,45 @@ function ringSvg(frac, color){
   const C = 2 * Math.PI * 35;
   return '<svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--track)" stroke-width="3.5"/><circle id="ringArc" cx="38" cy="38" r="35" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(C*Math.max(0,Math.min(1,frac))).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 38 38)"/></svg>';
 }
+function playDoseCardsHtml(e){
+  const on = P.cardIndex || 0, names = ['Upute','Cilj','Doziranje'];
+  const cues = e && (e.steps || []).length ? e.steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p>Bez uputa.</p>';
+  const muscles = e && exMuscles(e), tags = muscles ? muscleTags({ prime:muscles.prime.length ? muscles.prime : muscles.sec, sec:[] }) : '';
+  const target = (tags ? '<div class="tagrow">'+tags+'</div>' : '') + (e && e.feel ? '<p><span class="lb">Osjećaj: </span>'+esc(e.feel)+'</p>' : '') + (e && e.note ? '<p>'+esc(firstSentence(e.note))+'</p>' : '');
+  const doseRows = P.items.map((it,j) => {
+    const ex = S.ex[it.exId], d = PlayerDose.at(it,1), full = PlayerDose.completeSets(P,j), guard = PlayerDose.locks(P,j);
+    const quantity = it.measure === 'time' ? d.sec+' s' : d.reps+' pon.';
+    const varying = ['repsList','kgList','secList'].some(k => Array.isArray(it[k]) && it[k].some(v => v !== it[k][0]));
+    const assignments = varying ? Array.from({length:it.sets},(_,i) => {
+      const set = PlayerDose.at(it,i+1), amount = it.measure === 'time' ? set.sec+' s' : set.reps+' pon.';
+      return esc((i+1)+'. '+amount+' · '+fmtKg(set.kg));
+    }).join('<br>') : esc(quantity)+(d.kg ? ' · '+esc(fmtKg(d.kg)) : '');
+    return '<button type="button" class="play-dose-row" data-a="playDoseEdit" data-j="'+j+'"><span><b>'+esc((j+1)+'. '+(ex ? ex.name : 'Vježba'))+'</b><small>'+it.sets+' ser.'+(varying ? ' · po seriji' : '')+'</small><small class="play-dose-values">'+assignments+'</small></span><em>'+full+'/'+it.sets+(guard.closed ? ' · pregled' : ' · uredi')+'</em></button>';
+  }).join('');
+  const contents = [cues,target || '<p>Bez dodatnog opisa.</p>','<p class="play-dose-note">Promjene vrijede za ovaj trening. Odrađene serije ostaju sačuvane.</p>'+doseRows];
+  return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" aria-label="'+name+'"><h3>'+name+'</h3><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
+}
+function playDoseEditorHtml(s){
+  const it = s.draft, guard = PlayerDose.locks(P,s.j), ex = S.ex[it.exId], unit = it.measure === 'time' ? 'sec' : 'reps';
+  const rows = Array.from({length:it.sets},(_,i) => {
+    const set = i+1, d = PlayerDose.at(it,set), locked = guard.closed || guard.locked.includes(set), raw = s.rawForm && s.rawForm.rows.find(r => r.set === set);
+    const quantity = raw && raw[unit] != null ? raw[unit] : String(d[unit]), kilograms = raw && raw.kg != null ? raw.kg : String(d.kg).replace('.',',');
+    return '<div data-dose-set="'+set+'"><label>'+set+'.'+(locked ? '<small>zaključano</small>' : '')+'</label><input type="text" inputmode="numeric" data-dose-value="'+unit+'" aria-label="'+set+'. serija '+(unit==='sec'?'sekunde':'ponavljanja')+'" value="'+esc(quantity)+'"'+(locked?' disabled':'')+'><input type="text" inputmode="decimal" data-dose-value="kg" aria-label="'+set+'. serija kilogrami" value="'+esc(kilograms)+'"'+(locked?' disabled':'')+'></div>';
+  }).join('');
+  return '<h3>Doziranje · '+esc(ex ? ex.name : 'Vježba')+'</h3><p class="play-dose-note">Trening je pauziran dok uređuješ serije. Promjene vrijede za ovu izvedbu.</p><form id="play-dose-form" class="play-dose-editor"><div class="play-dose-count"><label for="play-dose-sets">Serije</label><input id="play-dose-sets" name="sets" type="number" min="'+guard.minSets+'" max="20" value="'+esc(s.rawForm ? s.rawForm.sets : String(it.sets))+'"'+(guard.closed?' disabled':'')+'><button type="button" class="txtbtn" data-a="playDoseResize"'+(guard.closed?' disabled':'')+'>Prikaži</button></div><div class="play-dose-table"><div class="play-dose-head"><span>Serija</span><span>'+(unit==='sec'?'Sekunde':'Ponavljanja')+'</span><span>kg</span></div>'+rows+'</div>'+(s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button type="button" class="btn" data-a="playDoseApply"'+(guard.closed?' disabled':'')+'>Primijeni na ovaj trening</button><button type="button" class="btn sec" data-a="playDoseCancel">'+(guard.closed?'Zatvori':'Odustani')+'</button></form>';
+}
+function playDoseReadForm(s,form){
+  s.rawForm={sets:form.querySelector('[name="sets"]').value,rows:Array.from(form.querySelectorAll('[data-dose-set]')).map(el => {
+    const row={set:Number(el.dataset.doseSet)}; el.querySelectorAll('[data-dose-value]').forEach(input => row[input.dataset.doseValue]=input.value); return row;
+  })};
+  return PlayerDose.readForm(form);
+}
+function playDoseResumeEditing(){
+  if (!P) return;
+  const pause = P.dosePause; delete P.dosePause; S.sheet = null;
+  if (pause) { P.paused = pause.wasPaused; P.left = pause.left; if (!P.paused && (P.steps[P.i] || {}).dur) P.endAt = Date.now()+pause.left*1000; }
+  savePlay(); render();
+}
 VIEWS.play = function(){
   if (!P) return VIEWS.home();
   if (P.done) {
@@ -3808,7 +3997,7 @@ VIEWS.play = function(){
             '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
             (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
-        }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.musclePlan) + (lm ? lmCardHtml(lm) : '') +
+        }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.originalMusclePlan || P.musclePlan) + (lm ? lmCardHtml(lm) : '') +
       masDoneHtml() + '<div style="height:12px"></div></div>' +
       '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">'+(!any ? 'Izađi' : P.quit ? 'Spremi i izađi' : 'Završi')+'</button>' + (P.quit || !any ? '' : '<button class="txtbtn" data-a="restartPlay" style="align-self:center">Spremi i ponovi</button>') + '</div>';
   }
@@ -3829,8 +4018,7 @@ VIEWS.play = function(){
         (fspec ? '<span class="lb">Teren</span><div class="pitch inplay">' + pitchSvg(fspec, { block: v.st.g != null && v.st.kind !== 'prep' ? v.st.g : null }) + '</div><div class="lgrow">' + pitchLegend(fspec) + '</div>' : '') +
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(fieldTxt(P.f.summary_hr))+'</p>' : '') +
         (SHOW_SOURCES ? '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p>' : '') + '</section>'
-    : v.e ? exInfoHtml(v.e, '<section class="icard exinfo pinfo" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0">')   // the exercise page's Upute | Cilj tabs, shorter (no Opterećenje)
-    : '<section class="icard" style="margin:16px max(16px, env(safe-area-inset-left, 0px)) 0"><span class="lb">Upute</span><p style="color:var(--text-2)">Bez uputa.</p></section>';
+    : playDoseCardsHtml(v.e);
   return '<div class="view">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
@@ -3862,6 +4050,19 @@ function playAfter(){
   const slot = document.getElementById('keepmedia');
   if (slot && keepMedia) slot.replaceWith(keepMedia); else if (slot) slot.remove();
   keepMedia = null;
+  const row = document.getElementById('play-card-row');
+  if (row && row.children.length) {
+    const pos = i => row.children[i].offsetLeft-row.children[0].offsetLeft;
+    row.scrollLeft = pos(P.cardIndex || 0);
+    row.addEventListener('scroll',() => {
+      if (!P) return;
+      let nearest=0; for(let i=1;i<row.children.length;i++) if(Math.abs(row.scrollLeft-pos(i))<Math.abs(row.scrollLeft-pos(nearest)))nearest=i;
+      if (P.cardIndex===nearest) return; P.cardIndex=nearest;
+      app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===nearest)));
+      app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===nearest)));
+      savePlay();
+    },{passive:true});
+  }
 }
 
 /* ---------- sheets ---------- */
@@ -3984,6 +4185,8 @@ function sheetHtml(){
       : '<h3>Nastaviti trening?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">„' + esc(r.title) + '” je ostao nedovršen (' + (m < 1 ? 'maloprije' : m < 60 ? 'prije ' + m + ' min' : 'prije ' + Math.round(m / 60) + ' h') + ').</p>' +
         '<button class="btn" data-a="resumeGo">Nastavi trening</button>' + (any ? '<button class="btn sec" data-a="resumeSave" style="margin-top:10px;height:48px">Spremi odrađeno</button>' : '') +
         '<button class="btn danger" data-a="resumeDrop" style="margin-top:10px">Odbaci</button>';
+  } else if (s.kind === 'playDose') {
+    body = playDoseEditorHtml(s);
   } else if (s.kind === 'playList') {
     const groups = [];
     P.steps.forEach((st, k) => { if (!isWork(st)) return; if (!groups.some(g => g.g === st.g)) groups.push({ g: st.g, k, lab: st.ss ? st.ss.L + st.ss.k : String(st.g + 1) + '.', name: P.mode === 'field' ? (st.b ? st.b.label_hr : '') : (st.e ? st.e.name : '') }); });
@@ -4068,7 +4271,7 @@ const A = {
   },
   dashboardCalendar: d => A.monthOpen(d),
   dashboardProtocols: () => go({ v:'protocols' }),
-  dashboardProgress: () => setTab('progress'),
+  dashboardProgress: () => go({ v:'progress' }),
   muscleEligibility: d => {
     if (!S.draft || !['auto','true','false'].includes(d.v)) return;
     if (d.v === 'auto') delete S.draft.muscleWorkEligible;
@@ -4089,10 +4292,14 @@ const A = {
   dot: d => { const car = document.getElementById('car'); const c = car && car.children[+d.i]; if (c) c.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); },
   libCat: d => { S.lib.cat = d.cat; lsSet('mt.libcat', d.cat); if (top().v !== 'library') { S.tab = 'library'; S.stack = [{v:'library'}]; } render(); },
   fieldList: () => { S.planAsk = false; go({ v:'fieldList' }); },   // the inline restart question never waits for a later visit
+  fieldMode: d => { if (top().v !== 'fieldList' || !['catalogue','plan'].includes(d.mode)) return;
+    S.planAsk = false; top().fieldMode = d.mode; render(); const v = app.querySelector('.view'); if (v) v.scrollTop = 0; },
+  fieldCategory: d => { if (top().v !== 'fieldList' || d.cat !== 'all' && !FIELD_CATEGORIES.some(c => c.key === d.cat)) return;
+    S.planAsk = false; top().fieldCat = d.cat; top().fieldMode = 'catalogue'; render(); const v = app.querySelector('.view'); if (v) v.scrollTop = 0; },
   openField: d => go({ v:'field', id:d.id }),
   planAsk: () => { S.planAsk = true; render(); },
   planKeep: () => { S.planAsk = false; render(); },
-  planReset: () => { S.planAsk = false; S.settings.preFrom = Date.now(); lsSet('mt.settings', S.settings); render(); toast('Plan opet kreće od 1. tjedna.'); },
+  planReset: () => { if (!writeSetting('preFrom',Date.now())) return; S.planAsk = false; render(); toast('Plan opet kreće od 1. tjedna.'); },
   masSave: () => { const m = Math.round(+S.masDraft || 0); if (!masOk(m)) { toast('Upiši metre u 5 minuta, od 600 do 2400 m.', true); return; }
     const e = masEntry(m); S.log.unshift(e); if (!persist()) { S.log.splice(S.log.indexOf(e), 1); return; } S.masDraft = 0; render(); toast('Spremljeno: MAS ' + masTxt(e.value) + ' m/s.'); },
   openPr: d => go({ v:'pr', id:d.id }),
@@ -4262,6 +4469,38 @@ const A = {
   // dose 'season': about 2/3 of the sets (fieldDose), the steps built the same way
   startField: d => { const f = S.field[d.id]; if (!f) return; const sz = d.dose === 'season' && fieldLoad(f).type !== 'test';
     startPlayer({ mode:'field', title: f.name_hr, f, dose: sz ? 'season' : 'full', steps: stepsFromField(sz ? fieldDose(f) : f), ref: { kind:'field', id: f.id } }); },
+  playDoseCard: d => {
+    if (!P || P.mode !== 'ex' || P.done || ![0,1,2].includes(+d.i)) return;
+    P.cardIndex=+d.i;
+    const row=document.getElementById('play-card-row');
+    if (row) row.scrollTo({left:row.children[P.cardIndex].offsetLeft-row.children[0].offsetLeft,behavior:stillMotion()?'auto':'smooth'});
+    app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===P.cardIndex)));
+    app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===P.cardIndex)));
+    savePlay();
+  },
+  playDoseEdit: d => {
+    if (!P || P.mode !== 'ex' || P.done || !P.items[+d.j]) return;
+    const left=remaining(); P.dosePause={wasPaused:P.paused,left}; P.left=left; P.paused=true;
+    S.sheet={kind:'playDose',j:+d.j,draft:clone(P.items[+d.j])}; savePlay(); render();
+  },
+  playDoseResize: () => {
+    const s=S.sheet, form=document.getElementById('play-dose-form');
+    if (!P || !s || s.kind!=='playDose' || !form) return;
+    const parsed=playDoseReadForm(s,form), result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,PlayerDose.locks(P,s.j)):parsed;
+    if (!result.ok) s.error=result.error; else {s.draft=result.item;delete s.error;delete s.rawForm;}
+    render();
+  },
+  playDoseApply: () => {
+    const s=S.sheet, form=document.getElementById('play-dose-form');
+    if (!P || !s || s.kind!=='playDose' || !form) return;
+    const parsed=playDoseReadForm(s,form), result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,PlayerDose.locks(P,s.j)):parsed;
+    if (!result.ok) {s.error=result.error;render();return;}
+    const before=P, items=P.items.slice(); items[s.j]=result.item;
+    P={...P,...PlayerDose.rebuild(P,items,stepsFromItems)};
+    if (!savePlay()) {P=before;s.error='Promjena nije spremljena na uređaj. Oslobodi prostor i pokušaj ponovno.';render();return;}
+    playDoseResumeEditing();toast('Doziranje je promijenjeno za ovaj trening.');
+  },
+  playDoseCancel: () => playDoseResumeEditing(),
   ring: () => tapRing(),
   jump: d => jump(+d.d),
   jumpTo: d => { S.sheet = null; ensureAudio(); enterStep(landAt(+d.k)); P.paused = false; render(); },
@@ -4336,9 +4575,9 @@ const A = {
   backupLater: () => { lsSet('mt.backupLater', Date.now()); render(); },
   freshSeen: () => { try { localStorage.removeItem('mt.freshAt'); } catch(e){} render(); },
   badSeen: () => { const b = lsGet('mt.badStore', null); if (b) { b.seen = true; lsSet('mt.badStore', b); } render(); },
-  setSetting: d => { S.settings[d.k] = +d.v; lsSet('mt.settings', S.settings); render(); },
-  toggleSound: () => { S.settings.sound = !S.settings.sound; lsSet('mt.settings', S.settings); ensureAudio(); render(); },
-  toggleSilent: () => { S.settings.silentOk = S.settings.silentOk !== true; lsSet('mt.settings', S.settings); if (P && !P.done) { audioMode(true); ensureAudio(); } render(); },
+  setSetting: d => { if (!writeSetting(d.k,+d.v)) return; render(); },
+  toggleSound: () => { if (!writeSetting('sound',!S.settings.sound)) return; ensureAudio(); render(); },
+  toggleSilent: () => { if (!writeSetting('silentOk',S.settings.silentOk !== true)) return; if (P && !P.done) { audioMode(true); ensureAudio(); } render(); },
   // the arrow asks first (an in-page sheet: confirm() does not work in every view); a timed step waits meanwhile
   quitPlay: () => { if (!P || P.done) return; const st = P.steps[P.i]; if (st && st.dur && !P.paused) { P.left = remaining(); P.paused = true; P.sheetPause = true; } S.sheet = { kind:'quit' }; render(); },
   quitResume: () => { S.sheet = null; if (P && P.sheetPause && P.paused) { P.paused = false; P.endAt = Date.now() + P.left * 1000; } if (P) P.sheetPause = false; render(); },
@@ -4351,9 +4590,8 @@ const A = {
   restartPlay: () => {
     const ref = P.ref, cfg = { mode:P.mode, title:P.title, items:P.items, f:P.f, ref };
     const saved = anyCredit(), r = saved ? logSession() : { news: [], cut: '', saved: true };
-    // a refused save (its message is shown): leave as 'Završi' does, so the finished session stays on the phone for the next
-    // start; a new run would overwrite it before anything is saved
-    if (!r.saved) { leavePlay(); return; }
+    // Keep the finished player in memory too if storage rejected its checkpoint.
+    if (!r.saved) { render(); return; }
     const p = ref && ref.kind === 'protocol' && S.pr[ref.id], f = ref && ref.kind === 'field' && S.field[ref.id];
     if (p && (p.items || []).length) { cfg.items = p.items; cfg.title = p.name; }
     if (f) { cfg.f = f; cfg.title = f.name_hr; }
@@ -4364,6 +4602,7 @@ const A = {
   finishPlay: () => {
     if (!anyCredit()) { clearPlay(); leavePlay(); return; }   // nothing done: nothing to save
     const r = logSession();
+    if (!r.saved) { render(); return; }
     leavePlay();
     if (r.cut) toast(r.cut); else if (r.news.length) toast(newsMsg(r.news));
   },
@@ -4373,16 +4612,16 @@ const A = {
     const w = app.querySelector('.view'), y = w ? w.scrollTop : 0; render(); const w2 = app.querySelector('.view'); if (w2) w2.scrollTop = y; },
   lrep: d => { const j = +d.j, it = P.items[j] || {}; P.lastReps = P.lastReps || {}; P.lastReps[j] = Math.max(0, Math.min(repsOf(it, it.sets || 1), lastRepsOf(j) + (+d.d))); savePlay(); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progTab: d => { S.progTab = d.v; render(); },
-  setGoal: d => { S.settings.goal = S.settings.goal === d.v ? null : d.v; lsSet('mt.settings', S.settings); render(); },
-  setBall: d => { const v = ballN() + (+d.d); S.settings.ballN = Math.max(0, Math.min(7, v)); lsSet('mt.settings', S.settings); render(); },
-  setMatch: d => { S.settings.matchDay = +d.v; lsSet('mt.settings', S.settings); render(); },
+  setGoal: d => { if (!writeSetting('goal',S.settings.goal===d.v?null:d.v)) return; render(); },
+  setBall: d => { const v = ballN() + (+d.d); if (!writeSetting('ballN',Math.max(0,Math.min(7,v)))) return; render(); },
+  setMatch: d => { if (!writeSetting('matchDay',+d.v)) return; render(); },
   toggleMatch: d => { const t = calDay(weekStart(Date.now()), +d.i); setMatchDate(t, !matchOn(t)); render(); },
   matchAdd: () => { const el = document.getElementById('matchadd'), v = el && /^(\d{4})-(\d\d)-(\d\d)$/.exec(el.value || '');
     if (!v) { toast('Odaberi datum utakmice.'); return; }
     const t = new Date(+v[1], +v[2] - 1, +v[3]).getTime();
     if (t < calDay(Date.now())) { toast('Odaberi današnji ili neki kasniji datum.'); return; }
-    setMatchDate(t, true); render(); toast('Utakmica ' + DAYS_IN[dayIdx(t)] + ', ' + shortDate(t) + ' je dodana.'); },
-  matchDel: d => { const m = Object.assign({}, matchDates()); delete m[d.k]; S.settings.matchDates = m; lsSet('mt.settings', S.settings); render(); },
+    if (!setMatchDate(t,true)) return; render(); toast('Utakmica ' + DAYS_IN[dayIdx(t)] + ', ' + shortDate(t) + ' je dodana.'); },
+  matchDel: d => { const m = Object.assign({}, matchDates()); delete m[d.k]; if (!writeSetting('matchDates',m)) return; render(); },
   kgSkip: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; n.kgSkip = kgSig(kgPlan(p)); S.pr[d.id].kgSkip = n.kgSkip; render(); await save('protocols', d.id, n); },
   goalSheet: d => { S.sheet = { kind:'goal', id: d.id }; render(); },
   kgSheet: d => { S.sheet = { kind:'kg', id: d.id }; render(); },
@@ -4391,8 +4630,8 @@ const A = {
     S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Protokol je prilagođen cilju „' + GOALS[n.goal].name + '”.'); },
   kgApply: async d => { const p = S.pr[d.id]; if (!p) return; const plan = kgPlan(p); const n = clone(p); delete n.id; n.items = plan.items;
     S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Kilogrami su upisani.'); },
-  setProgN: d => { S.settings.progN = +d.v; lsSet('mt.settings', S.settings); render(); },
-  setPlate: d => { const v = +d.v; if (PLATES.indexOf(v) === -1) return; S.settings.plateKg = v; lsSet('mt.settings', S.settings); render(); },
+  setProgN: d => { if (!writeSetting('progN',+d.v)) return; render(); },
+  setPlate: d => { const v = +d.v; if (PLATES.indexOf(v) === -1) return; if (!writeSetting('plateKg',v)) return; render(); },
   sugUp: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j], e = S.ex[it.exId], nd = nextDose(e, it); if (!nd.item) return;
     const pv = { measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides }; if (Array.isArray(it.repsList)) pv.repsList = it.repsList.slice();   // "Vrati" restores per-set reps too
     n.items[+d.j] = Object.assign(clone(nd.item), { prev: pv, ok: 0, fail: 0, snoozeOk: 0, up: Date.now() });
@@ -4418,7 +4657,7 @@ const A = {
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { clearToast(); S.sheet = { kind:'day', i: +d.i }; render(); },   // (review) a toast would cover the sheet's rows
   // 1.8.2: a missed session off this week's plan (home make-up offer, day sheet), and back
-  skipSlot: d => { setSkip(weekStart(Date.now()), d.k, true); if (!S.sheet) toast('Preskočeno ovaj tjedan.'); render(); },   // in the day sheet the row's tag says it
+  skipSlot: d => { if (setSkip(weekStart(Date.now()),d.k,true) && !S.sheet) toast('Preskočeno ovaj tjedan.'); render(); },   // in the day sheet the row's tag says it
   unskipSlot: d => { setSkip(weekStart(Date.now()), d.k, false); render(); },
   // (review) the library row's category, when it is one of the data categories, becomes a Kategorija pill of the sheet, so the
   // count never depends on something the sheet does not show; the other row categories (Favoriti, TRX …) and the search text
@@ -4471,7 +4710,7 @@ const A = {
   },
   progTestKeep: () => { const s = S.sheet; if (!s) return; progTyped(s); s._del = false; render(); },
   progRestartAsk: d => { if (!S.prog[d.id]) return; S.sheet = { kind:'progRestart', id: d.id }; render(); },
-  progRestart: d => { const g = S.prog[d.id]; if (!g) return; S.settings.progFrom = Object.assign({}, S.settings.progFrom, { [g.id]: Date.now() }); lsSet('mt.settings', S.settings); S.sheet = null; render(); toast('Program kreće ispočetka.'); },
+  progRestart: d => { const g = S.prog[d.id]; if (!g) return; if (!writeSetting('progFrom',{ ...S.settings.progFrom, [g.id]:Date.now() })) return; S.sheet = null; render(); toast('Program kreće ispočetka.'); },
   prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; planSaved(); render(); await save('protocols', d.id, n); },
   fieldDays: async d => { const f = S.field[d.id]; if (!f) return; const n = clone(f); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.field[d.id].days = ds; planSaved(); render(); await save('field', d.id, n); },
   progDays: async d => { const g = S.prog[d.id]; if (!g) return; const n = clone(g); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.prog[d.id].days = ds; planSaved(); render(); await save('programs', d.id, n); },
@@ -4499,13 +4738,14 @@ app.addEventListener('click', ev => {
   if (ev.target && ev.target.id === 'srpe') { rpeTap(ev.target, ev); return; }   // a tap on the slider rates where it was tapped
   const el = ev.target.closest('[data-a]');
   if (!el || !app.contains(el)) return;
-  if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } S.sheet = null; render(); return; }   // the quit sheet always closes as 'Nastavi trening'
+  if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } if(S.sheet&&S.sheet.kind==='playDose'){A.playDoseCancel();return;} S.sheet = null; render(); return; }   // player editing restores its exact pause state
   if (el.disabled) return;
   const fn = A[el.dataset.a];
   if (fn) { ev.preventDefault(); fn(Object.assign({}, el.dataset), el, ev); }
 });
 app.addEventListener('submit', ev => {
   if (ev.target.id === 'history-edit-form') { ev.preventDefault(); A.historySave(); }
+  if (ev.target.id === 'play-dose-form') { ev.preventDefault(); A.playDoseApply(); }
 });
 app.addEventListener('input', ev => {
   const t = ev.target;
@@ -4552,7 +4792,7 @@ app.addEventListener('change', async ev => {
   if (t.id === 'topkmh') {
     const v = +String(t.value).trim().replace(',', '.');
     if (!(t.value.trim() && isFinite(v) && v >= 20 && v <= 40)) { t.value = kmhTxt(topKmh()); toast('Upiši najveću brzinu od 20 do 40\u00a0km/h.', true); return; }
-    S.settings.topKmh = Math.round(v * 10) / 10; lsSet('mt.settings', S.settings); render(); toast('Najveća brzina: ' + kmhTxt(S.settings.topKmh) + '\u00a0km/h.'); return;
+    if (!writeSetting('topKmh',Math.round(v*10)/10)) return; render(); toast('Najveća brzina: ' + kmhTxt(S.settings.topKmh) + '\u00a0km/h.'); return;
   }
   if (t.id === 'packFile' && t.files && t.files[0]) {
     if (S.sheet) { S.sheet._busy = true; render(); }
@@ -4589,7 +4829,7 @@ app.addEventListener('change', async ev => {
   dr._uploading = false;
   if (S.draft === dr) paintMedia(dr);
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet) { if (S.sheet.kind === 'quit') { A.quitResume(); return; } S.sheet = null; render(); } });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet) { if (S.sheet.kind === 'quit') { A.quitResume(); return; } if(S.sheet.kind==='playDose'){A.playDoseCancel();return;} S.sheet = null; render(); } });
 
 /* ---------- another open copy, coming back to the app, a new version ---------- */
 // a second copy (another Safari tab) saved: its data shows here as soon as nothing is open
@@ -4638,7 +4878,7 @@ function monthChoose(t, date){
 }
 function monthSave(t, map, message){
   const before = calendarMap();
-  if (!writeCalendarSetting('planDates', map)) return false;
+  if (!writeSetting('planDates', map)) return false;
   planSaved();
   t.undo = {key:'planDates',before,after:map,date:t.date,day:dateKey(Date.now())};
   t.message = message;
@@ -4836,7 +5076,7 @@ Object.assign(A,{
   monthUndo: () => {
     const t=top(), undo=t.undo; if (!undo) return;
     if (undo.day!==dateKey(Date.now()) || JSON.stringify(S.settings[undo.key]||{})!==JSON.stringify(undo.after)) { t.undo=null; t.message='Raspored je u međuvremenu izmijenjen.'; render(); return; }
-    if (!writeCalendarSetting(undo.key,undo.before)) return;
+    if (!writeSetting(undo.key,undo.before)) return;
     planSaved();
     monthChoose(t,undo.date); t.undo=null; t.message='Promjena poništena.'; render();
   }

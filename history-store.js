@@ -48,7 +48,7 @@
       if (row.at <= (item.up || 0)) break;
       const x = row.items && row.items[index];
       if (!x || x.exId !== item.exId) break;
-      if (x.skipped || x.historySetsUnknown || x.historyRepsUnknown || (x.done === true && x.setsDone != null && x.setsDone < x.sets)) continue;
+      if (x.skipped || x.liveDoseChanged || x.historySetsUnknown || x.historyRepsUnknown || (x.done === true && x.setsDone != null && x.setsDone < x.sets)) continue;
       if (x.measure !== item.measure || x.sets !== item.sets || (x.kg || 0) !== (item.kg || 0) ||
         !!x.sides !== !!item.sides || (x.measure === 'time' ? x.sec !== item.sec :
           x.reps !== item.reps || JSON.stringify(x.repsList || []) !== JSON.stringify(item.repsList || []))) break;

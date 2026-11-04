@@ -80,9 +80,13 @@
       // Current failed-item logs omit setsDone only when all planned sets were attempted.
       else if (x.done === false && planned !== null && typeof x.lastReps === 'number' && Number.isFinite(x.lastReps) && x.lastReps >= 0) completed = planned;
       if (completed !== null) {
-        // A failed zero-repetition last set is an attempt, not completed work.
-        if (x.done === false && x.lastReps === 0) completed = Math.max(0,completed - 1);
-        completion = x.done === false || planned === null || completed < planned ? 'partial' : 'complete';
+        const slots=completed, expected=x.sides?2:1, failedLast=x.done===false && x.lastReps===0;
+        if (Array.isArray(x.sideCounts)) {
+          const sides=x.sideCounts.slice(0,slots);
+          completed=sides.length===slots && sides.every(n=>Number.isInteger(n)&&n>=1&&n<=expected)
+            ? sides.filter((n,i)=>n===expected && !(failedLast && i===slots-1)).length : null;
+        } else if (failedLast) completed=Math.max(0,slots-1);
+        completion = completed===null ? 'unknown' : x.done === false || planned === null || completed < planned ? 'partial' : 'complete';
       }
     }
     return { plannedSets:planned,completedSets:completed,completion:completion };

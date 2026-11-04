@@ -1,5 +1,14 @@
 # Promjene
 
+## 1.12.0 — 4. 11. 2026.
+
+- Donja traka ima tri odredišta. Mjesečni planer otvara se ikonom kalendara u **Moj pregled**, a **Napredak** je dostupan iz istog zaslona.
+- Terenski treninzi grupirani su po cilju. Katalog uključuje brzinu, agilnost, izdržljivost i testove, uz zaseban pregled četverotjednog predsezonskog plana.
+- Treća kartica **Doziranje** u aktivnom treningu prikazuje vježbe i njihove serije. Promjene ponavljanja, trajanja i kilaže spremaju se za pojedine serije te izvedbe. Povijest, ukupni podignuti teret i rekordi koriste podatke odrađene serije.
+- Kod obostranih izdržaja vrijeme se bilježi po odrađenim stranama, a puna serija tek kad su obje završene u istom krugu.
+- Popravljena su zaglavlja na uskim ekranima i prikaz nepotpunih podataka o opterećenju. Ako uređaj odbije spremanje postavki ili ponovnog početka programa, aplikacija zadržava prethodno stanje i prikazuje poruku.
+- Jedan odrađeni trening popunjava jedan termin u programu, čak i kad se isti protokol ponavlja u više tjedana. Ako ažuriranje paketa slika ne uspije, prethodne fotografije ostaju dostupne.
+
 ## 1.11.0 — 4. 11. 2026.
 
 - U **Moj pregled → Povijest treninga** možeš pretražiti odrađene treninge i pojedinačne vježbe, od najnovijih prema starijima. Dodir na odrađeni trening u tjednom pregledu otvara isti zapis. U detaljima se vide spremljene serije, ponavljanja, težine, rezerva i podaci o trčanju kada su dostupni.

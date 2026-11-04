@@ -26,21 +26,39 @@
     if (planned !== null && (x.done === true || (x.done === false && finite(x.lastReps) && x.lastReps >= 0))) return planned;
     return null;
   }
-  function performedSets(x){var n=recordedSetSlots(x);return n!==null&&x.done===false&&x.lastReps===0?Math.max(0,n-1):n;}
+  function rowValue(x, key, index) {
+    var values = x[key+'List'];
+    var value = Array.isArray(values) && index < values.length ? values[index] : x[key];
+    return finite(value) && value >= 0 ? value : null;
+  }
+  function recordedRows(x, assumePlanned) {
+    var n = recordedSetSlots(x);
+    if (n === null && assumePlanned && x && !x.historySetsUnknown && !has(x,'setsDone') && x.done == null && int(x.sets,1,1000)) n=x.sets;
+    if (n === null) return null;
+    return Array.from({length:n},function(_,i) {
+      var failed = x.done === false && i === n-1 && finite(x.lastReps);
+      var sides = Array.isArray(x.sideCounts) && i<x.sideCounts.length ? x.sideCounts[i] : x.sides?2:1;
+      return { number:Array.isArray(x.setNumbers)?x.setNumbers[i]:i+1,
+        sides:int(sides,1,x.sides?2:1)?sides:null, kg:rowValue(x,'kg',i),
+        reps:x.historyRepsUnknown?null:failed?x.lastReps:rowValue(x,'reps',i), sec:rowValue(x,'sec',i),
+        failed:failed, rir:failed?0:Array.isArray(x.rirList)?x.rirList[i]:null, sir:Array.isArray(x.sirList)?x.sirList[i]:null };
+    });
+  }
+  function performedSets(x) {
+    var rows=recordedRows(x); if(!rows || rows.some(r=>r.sides===null))return null;
+    return rows.filter(r=>r.sides===(x.sides?2:1) && !(r.failed && r.reps===0)).length;
+  }
   function repetitionTotal(x){
     if(x && x.historyRepsUnknown===true)return null;
-    var n = recordedSetSlots(x); if(n === null)return null;if(n === 0)return 0;
-    if (x.measure === 'time') return null;
-    var sum = 0;
-    for(var i=0;i<n;i++){
-      var last = x.done === false && i === n - 1 && finite(x.lastReps);
-      var value = last ? x.lastReps : Array.isArray(x.repsList) && i < x.repsList.length ? x.repsList[i] : x.reps;
-      if(!int(value,0,10000))return null;
-      sum += value;
-    }
-    return sum * (x.sides ? 2 : 1);
+    var rows=recordedRows(x); if(!rows)return null;if(!rows.length)return 0;
+    if(x.measure==='time'||rows.some(r=>r.reps===null||r.sides===null))return null;
+    return rows.reduce((sum,r)=>sum+r.reps*r.sides,0);
   }
-  function timeTotal(x){if(!x||x.measure!=='time')return null;var n=recordedSetSlots(x);return n === null ? null : n === 0 ? 0 : finite(x.sec) && x.sec >= 0 ? n*x.sec*(x.sides?2:1) : null;}
+  function timeTotal(x){
+    if(!x||x.measure!=='time')return null;
+    var rows=recordedRows(x);if(!rows||rows.some(r=>r.sec===null||r.sides===null))return null;
+    return rows.reduce((sum,r)=>sum+r.sec*r.sides,0);
+  }
   function fieldSummary(entry){
     var l=plain(entry) && plain(entry.load)?entry.load:null, out={m:null,hsr:null,spr:null,min:null,zones:null,recorded:!!l,complete:false};
     ['m','hsr','spr','min'].forEach(function(k){if(l && finite(l[k]) && l[k]>=0)out[k]=l[k];});
@@ -90,7 +108,7 @@
           seen[edit.index]=true;
           var index=edit.index,x=out.items[index],base='items.'+index,actualKeys=['sets','setsDone','done','skipped','lastReps'];
           if(!plain(x)){error(base,'Spremljena vježba nije ispravna.');return;}
-          var keys=['index','sets','setsDone','reps','kg','sec','done','skipped','lastReps','repsList','rirList','sirList'];
+          var keys=['index','sets','setsDone','reps','kg','sec','done','skipped','lastReps','repsList','kgList','secList','rirList','sirList'];
           Object.keys(edit).forEach(function(k){if(keys.indexOf(k)===-1)error(base+'.'+k,'Nepodržano polje vježbe.');});
           var before=clone(x),startChanges=changes.length;
           ['sets','setsDone','reps','kg','sec','lastReps','done','skipped'].forEach(function(k){
@@ -112,14 +130,19 @@
               if(!has(edit,'lastReps'))delete x.lastReps;
             }
           }
+          for (const [key,flag] of [['kg','historyKgUnknown'],['sec','historySecUnknown']]) {
+            if (has(edit,key) && !equal(before[key],x[key])) {
+              if (edit[key]===null) x[flag]=true; else delete x[flag];
+            }
+          }
           if(has(edit,'sets') && !has(edit,'setsDone') && int(x.setsDone,0,1000) && x.setsDone>x.sets){x.setsDone=x.sets;changes.push(base+'.setsDone');}
           if(has(x,'setsDone') && int(x.sets,1,1000) && x.setsDone>x.sets)error(base+'.setsDone','Odrađenih serija ne može biti više od spremljenog plana.');
           if(x.skipped===true && has(x,'setsDone') && x.setsDone>0)error(base+'.skipped','Preskočena vježba ne može imati odrađene serije.');
           var count=recordedSetSlots(x),actualChanged=actualKeys.some(function(k){return has(edit,k);})&&actualKeys.some(function(k){return !equal(before[k],x[k]);})||before.historySetsUnknown!==x.historySetsUnknown;
-          ['repsList','rirList','sirList'].forEach(function(k){
+          ['repsList','kgList','secList','rirList','sirList'].forEach(function(k){
             if(has(edit,k)){
-              var a=edit[k],reserves=k!=='repsList';
-              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return reserves&&v===null || (reserves?finite(v)&&v>=0&&v<=40:int(v,0,10000));})))error(base+'.'+k,reserves?'Rezerve po seriji moraju biti od 0 do 40 ili prazne.':'Upiši broj ponavljanja za svaku seriju; prazna mjesta nisu podržana.');
+              var a=edit[k],limit=k==='kgList'?10000:k==='secList'?86400:40;
+              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return k==='repsList'?int(v,0,10000):v===null||finite(v)&&v>=0&&v<=limit;})))error(base+'.'+k,'Provjeri vrijednost za svaku seriju.');
               else if(a!==null && int(x.sets,1,1000) && a.length>x.sets)error(base+'.'+k,'Popis ima više serija od spremljenog plana.');
               else put(x,k,a,base+'.'+k);
             }
@@ -130,6 +153,15 @@
             }
             if(k==='repsList'&&has(edit,'sets')&&Array.isArray(x[k])&&x[k].length>x.sets)x[k]=x[k].slice(0,x.sets);
           });
+          if(has(edit,'setsDone') && Array.isArray(x.sideCounts)) {
+            if(count===null)delete x.sideCounts;
+            else x.sideCounts=Array(count).fill(x.sides?2:1);
+            if(!equal(x.sideCounts,before.sideCounts))actualChanged=true;
+          }
+          if(actualChanged && Array.isArray(x.setNumbers)) {
+            if(count===null)delete x.setNumbers;
+            else { x.setNumbers=x.setNumbers.slice(0,count);while(x.setNumbers.length<count)x.setNumbers.push(null); }
+          }
           if(has(edit,'reps')||has(edit,'repsList')){
             delete x.historyRepsUnknown;
             if(count>0 && repetitionTotal(x)===null && x.measure!=='time')x.historyRepsUnknown=true;else delete x.historyRepsUnknown;
@@ -211,6 +243,6 @@
   function editProtocol(entry,patch){return transaction(entry,patch,'protocol');}
   function editField(entry,patch){return transaction(entry,patch,'field');}
   function edit(entry,patch){return entry&&entry.kind==='field'?editField(entry,patch):editProtocol(entry,patch);}
-  return freeze({version:1,edit:edit,editProtocol:editProtocol,editField:editField,performedSets:performedSets,
+  return freeze({version:1,edit:edit,editProtocol:editProtocol,editField:editField,performedSets:performedSets,recordedRows:recordedRows,
     repetitionTotal:repetitionTotal,timeTotal:timeTotal,fieldSummary:fieldSummary,effortStatus:effortStatus,sessionAU:sessionAU});
 });

@@ -1,0 +1,31 @@
+.play-cards{margin:12px max(16px,env(safe-area-inset-left,0px)) 0;min-width:0}
+.play-card-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:7px}
+.play-card-tabs button{min-height:38px;border:0;border-radius:10px;background:var(--surface-2);color:var(--text-2);font:600 13px var(--font)}
+.play-card-tabs button[aria-selected=true]{color:var(--accent-text);background:var(--tag-bg)}
+.play-card-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 12px 0 0}
+.play-card-row::-webkit-scrollbar{display:none}
+.play-card{flex:0 0 calc(100% - 12px);min-width:0;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.play-card h3{font-size:13px;color:var(--text-2);font-weight:600;margin:0;padding:10px 14px 5px}
+.play-card-content{height:170px;overflow-y:auto;padding:4px 14px 12px;overscroll-behavior-y:contain}
+.play-card .bul{font-size:14px;line-height:19px;margin-bottom:5px;gap:8px}
+.play-card .bul svg{width:15px;height:15px;flex:none;margin-top:1px}
+.play-card-content p{font-size:14px;line-height:1.4;margin:4px 0 8px}
+.play-card-dots{display:flex;justify-content:center;gap:5px;margin:3px 0}
+.play-card-dots button{width:30px;height:28px;display:grid;place-items:center;border:0;background:none;color:var(--text-2)}
+.play-card-dots i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4}
+.play-card-dots button[aria-current=true]{color:var(--accent-text)}
+.play-card-dots button[aria-current=true] i{opacity:1;width:15px;border-radius:3px}
+.play-dose-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 0;min-height:48px;border:0;border-bottom:1px solid var(--border);background:none;color:var(--text);font:inherit}
+.play-dose-row b{display:block;font-size:13px;font-weight:600}.play-dose-row small{display:block;color:var(--text-2);font-size:11px;margin-top:3px}
+.play-dose-row em{font-size:11px;color:var(--accent-text);font-style:normal;white-space:nowrap}
+.play-dose-row .play-dose-values{line-height:1.5;color:var(--text-body);white-space:normal}
+.play-dose-note{color:var(--text-2);font-size:12px!important}
+.play-dose-editor{display:grid;gap:10px}.play-dose-editor .play-dose-count{display:flex;align-items:center;gap:10px}
+.play-dose-editor input{box-sizing:border-box;min-width:0;width:100%;height:42px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);padding:6px 9px;font:16px var(--font)}
+.play-dose-editor input:disabled{opacity:.55}
+.play-dose-count input{width:72px}.play-dose-count button{min-height:44px;font-size:13px}
+.play-dose-table{display:grid;gap:7px}.play-dose-table>div{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:center}
+.play-dose-table .play-dose-head{font-size:12px;color:var(--text-2)}
+.play-dose-table label{font-size:13px}.play-dose-table label small{display:block;font-size:10px;color:var(--text-2)}
+.play-dose-error{color:var(--amber,#FFC861);font-size:13px;line-height:1.4}
+@media(max-height:700px){.play-card-content{height:148px}.play-card h3{padding-top:8px}.play-cards{margin-top:9px}}

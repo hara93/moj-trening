@@ -10,7 +10,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const repo = process.argv[2] || path.join(__dirname, '..', '..');
-global.window = {};
+global.window = { HistoryModel:require(path.resolve(repo,'history-model.js')) };
 const run = f => { const src = fs.readFileSync(path.join(repo, f), 'utf8'); new Function('window', src)(window); };
 const errs = [], info = [];
 const err = m => errs.push(m);

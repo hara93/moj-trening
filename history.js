@@ -74,11 +74,20 @@
     const value=array(item.repsList)[index];
     return number(value)!=null?value:number(item.reps);
   }
+  function rowDose(item,key,i) {
+    const values=item[key+'List'];
+    return Array.isArray(values)&&i<values.length?values[i]:item[key];
+  }
+  function rowLabel(item,i) {
+    const ordinal=Array.isArray(item.setNumbers)?item.setNumbers[i]:i+1;
+    const oneSide=item.sides && Array.isArray(item.sideCounts) && item.sideCounts[i]===1;
+    return (Number.isInteger(ordinal)?String(ordinal):'—')+(oneSide?' · jedna strana':'');
+  }
   function itemDetails(item,index) {
     if(!item||typeof item!=='object')return note('Podaci ove vježbe nisu čitljivi; ostali poznati dijelovi zapisa ostaju dostupni.');
     const timed=item.measure==='time',n=completed(item),count=rowsCount(item),reserve=timed?'sirList':'rirList';
     const state=item.skipped?'Preskočeno':item.done===false?'Nedovršeno':n==null?'Izvedba nije potpuno zabilježena':number(item.sets)!=null&&n<item.sets?'Djelomično odrađeno':'Spremljena izvedba';
-    const row=Array.from({length:count},(_,i)=>'<tr><th scope="row">'+(i+1)+'</th><td>'+esc(fmt(timed?item.sec:rowReps(item,i)))+'</td><td>'+esc(fmt(item.kg))+'</td><td>'+esc(fmt(array(item[reserve])[i]))+'</td></tr>').join('');
+    const row=Array.from({length:count},(_,i)=>'<tr><th scope="row">'+rowLabel(item,i)+'</th><td>'+esc(fmt(timed?rowDose(item,'sec',i):rowReps(item,i)))+'</td><td>'+esc(fmt(rowDose(item,'kg',i)))+'</td><td>'+esc(fmt(array(item[reserve])[i]))+'</td></tr>').join('');
     return '<article class="hy-card hy-exercise"><div class="hy-exercise-title"><span>'+String(index+1).padStart(2,'0')+'</span><div><h2>'+esc(itemName(item))+'</h2>'+(itemNameSource(item)?'<p>'+esc(itemNameSource(item))+'</p>':'')+'</div></div><p class="hy-status">'+esc(state)+(item.sides?' · Po strani':'')+'</p><dl class="hy-metrics hy-item-count">'+metric('Odrađene serije',fmt(n,0))+(attempted(item)!==n?metric('Pokušane serije',fmt(attempted(item),0)):'')+metric('Serije u zapisu',fmt(item.sets,0))+'</dl>'+
       (count?'<div class="hy-table-wrap"><table class="hy-sets"><caption>Podaci po spremljenim serijama</caption><thead><tr><th scope="col">Serija</th><th scope="col">'+(timed?'Vrijeme (s)':'Ponavljanja')+'</th><th scope="col">Teret (kg)</th><th scope="col">'+(timed?'Rezerva (s)':'RIR')+'</th></tr></thead><tbody>'+row+'</tbody></table></div>':'<p class="hy-muted">'+(n===0?'Nema dovršenih serija.':'Nije sačuvan dovoljan zapis za prikaz izvedbe po serijama.')+'</p>')+
       (count===64&&(n>64||array(item.repsList).length>64)?'<p class="hy-muted">Prikazano je prvih 64 serije; izvorni zapis ostaje sačuvan.</p>':'')+
@@ -125,13 +134,15 @@
     const rowFields=Array.from({length:count},(_,i)=>{
       const common=prefix+'data-history-set="'+i+'" ';
       const failedLast=item.done===false&&number(item.lastReps)!=null&&i===attempted(item)-1;
-      return '<div class="hy-set-edit"><b>Serija '+(i+1)+(failedLast?' · zadnja pokušana':'')+'</b><div class="hy-form-grid">'+(!timed?(failedLast?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):numericField('Ponavljanja',rowReps(item,i),common+'data-history-field="reps"')):'')+
+      return '<div class="hy-set-edit"><b>Serija '+rowLabel(item,i)+(failedLast?' · zadnja pokušana':'')+'</b><div class="hy-form-grid">'+(!timed?(failedLast?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):numericField('Ponavljanja',rowReps(item,i),common+'data-history-field="reps"')):'')+
+        (Array.isArray(item.kgList)?numericField('Teret serije (kg)',rowDose(item,'kg',i),common+'data-history-field="kg"'):'')+
+        (timed&&Array.isArray(item.secList)?numericField('Vrijeme serije (s)',rowDose(item,'sec',i),common+'data-history-field="sec"'):'')+
         numericField(timed?'Rezerva u sekundama':'RIR',array(item[timed?'sirList':'rirList'])[i],common+'data-history-field="'+(timed?'sir':'rir')+'"','Prazno znači da nije zabilježeno.')+'</div></div>';
     }).join('');
     return '<fieldset class="hy-card hy-edit-item"><legend>'+esc(itemName(item))+'</legend>'+(itemNameSource(item)?'<p class="hy-footnote">'+esc(itemNameSource(item))+'</p>':'')+'<p class="hy-muted">Serije u izvornom zapisu: '+fmt(item.sets,0)+(item.sides?' · po strani':'')+'</p><div class="hy-form-grid">'+
       numericField('Odrađene serije',completed(item),prefix+'data-history-field="setsDone"','Cijeli broj; 0 znači preskočeno.')+
-      (timed?numericField('Vrijeme po seriji (s)',item.sec,prefix+'data-history-field="sec"'):!bySet?numericField('Ponavljanja po seriji',item.reps,prefix+'data-history-field="reps"'):'')+
-      numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.')+
+      (timed?(Array.isArray(item.secList)?'':numericField('Vrijeme po seriji (s)',item.sec,prefix+'data-history-field="sec"')):!bySet?numericField('Ponavljanja po seriji',item.reps,prefix+'data-history-field="reps"'):'')+
+      (Array.isArray(item.kgList)?'':numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.'))+
       (item.done===false&&!timed&&!count?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):'')+'</div>'+
       (rowFields?'<details class="hy-details"><summary>Podaci po serijama</summary>'+rowFields+(count===64?'<p class="hy-muted">Uređivanje prikazuje prvih 64 serije. Ostale se čuvaju.</p>':'')+'</details>':'')+'</fieldset>';
   }
@@ -209,9 +220,10 @@
           const index=Number(data.historyItem),item=array(entry.items)[index],field=data.historyField;
           if(!Number.isInteger(index)||index<0||!item)throw new Error('Vježba koju uređuješ više nije dostupna.');
           if(data.historySet!=null) {
-            const pos=Number(data.historySet),key={reps:'repsList',rir:'rirList',sir:'sirList'}[field];
+            const pos=Number(data.historySet),key={reps:'repsList',rir:'rirList',sir:'sirList',kg:'kgList',sec:'secList'}[field];
             if(!key||!Number.isInteger(pos)||pos<0||pos>=1000)throw new Error('Serija koju uređuješ nije valjana.');
-            const value=numeric(raw,field==='reps'?'Ponavljanja':field==='rir'?'RIR':'Rezerva u sekundama',{integer:field==='reps',max:field==='reps'?10000:40,optional:field!=='reps'});
+            const label={reps:'Ponavljanja',kg:'Teret serije',sec:'Vrijeme serije',rir:'RIR',sir:'Rezerva u sekundama'}[field];
+            const value=numeric(raw,label,{integer:field==='reps',max:field==='sec'?86400:['reps','kg'].includes(field)?10000:40,optional:field!=='reps'});
             const mapKey=index+':'+key;
             if(!arrayChanges.has(mapKey))arrayChanges.set(mapKey,{index,key,values:Array.isArray(item[key])?item[key].slice():key==='repsList'?Array.from({length:rowsCount(item)},(_,i)=>rowReps(item,i)):[]});
             const change=arrayChanges.get(mapKey);while(change.values.length<=pos)change.values.push(null);change.values[pos]=value;
