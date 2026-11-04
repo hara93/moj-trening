@@ -773,3 +773,22 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .dslot{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
 .dslot .opt{flex:1;min-width:0;border-bottom:0 !important}
 .dslot .bt{flex:none;padding:0 14px}
+/* 1.8.2 review: narrow phones (375 wide): cues and Podražaj 14.5 px on 19 px lines and a little less padding, so card 1 still fits
+   with 4 cues at 375 × 812 (the Ciljana područja figure at most 128 px); short phones (SE 375 × 667): the cards shrink to the room left under the full-width photo (and scroll
+   inside) instead of pushing the page, so the exercise page never scrolls */
+@media (max-width:385px){
+  .swb{padding:9px 16px 8px;gap:7px}
+  .swb .pz{font-size:14.5px;line-height:19px}
+  .swb .cues{gap:3px}
+  .swb .cues .bul{font-size:14.5px;line-height:19px;gap:10px}
+  .swb .cues .bul::before{margin-top:6.5px}
+  .view.exv .tgt .tf .body-fig{max-height:128px}
+}
+@media (max-height:700px){
+  .view.exv .exswipe{min-height:120px}
+}
+/* 1.8.2 review: the player's Upute with 4 cues: the cards' tighter cue lines (15 px on 20 px, 6 px apart), so the 4th cue stays in
+   view mid-set as far as the room allows */
+.icard.pinfo .expanel[data-tab="upute"]{gap:6px;padding-top:12px}
+.icard.pinfo .expanel[data-tab="upute"] .bul{font-size:15px;line-height:20px;gap:10px}
+.icard.pinfo .expanel[data-tab="upute"] .bul svg{margin-top:-1px}

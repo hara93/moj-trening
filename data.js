@@ -505,7 +505,7 @@ window.SEED = {
     "Uže iz niskog kolotura oko stopala, stani leđima prema njemu.",
     "Ispruženu nogu vodi naprijed-gore do oko 30–45°.",
     "Vraćaj polako; trup se ne naginje, zdjelica mirna.",
-    "Stajna noga drži svoj kraj užeta."
+    "Drugi kraj užeta oko stajnog stopala ostaje miran."
    ],
    "mistakes": [
     "Zabacuješ trup unatrag – smanji raspon i zategni trbuh.",
@@ -609,7 +609,7 @@ window.SEED = {
     "Uže iz niskog kolotura oko stopala, stani bočno uz njega.",
     "Ispruženu dalju nogu odmakni u stranu 30–40 cm.",
     "Vraćaj polako; trup se ne naginje, radi kuk.",
-    "Stajna noga drži svoj kraj užeta."
+    "Drugi kraj užeta oko stajnog stopala ostaje miran."
    ],
    "mistakes": [
     "Trup se naginje u suprotnu stranu – smanji raspon ili uzmi tanje uže.",
@@ -1949,7 +1949,7 @@ window.SEED = {
     "Klekni leđima prema ljestvama, pete ispod podstavljenog držača.",
     "Polako se naginji naprijed, koči stražnjom ložom što dulje.",
     "Dočekaj se na dlanove; kukovi ispruženi, ravna linija.",
-    "Dočekaj se savijenih laktova i odgurni natrag gore."
+    "Savijenim laktovima ublaži pad i odgurni se natrag gore."
    ],
    "mistakes": [
     "Savijanje u kukovima i guranje stražnjice unatrag – drži ravnu liniju od koljena do ramena.",
@@ -3068,7 +3068,7 @@ window.SEED = {
     "Podigni bučice ravnih leđa i stani uspravno.",
     "Hodaj kratkim, kontroliranim koracima, pogled naprijed.",
     "Ramena spuštena, trup miran; na kraju spusti teret ravnih leđa.",
-    "Bučice podiži s poda ili s plyo boxa."
+    "Bučice podiži s poda ili s plyo kutije."
    ],
    "mistakes": [
     "Ramena se dižu prema ušima ili padaju naprijed – drži ih spuštena i lagano unatrag.",
@@ -4227,7 +4227,7 @@ window.SEED = {
     "Stani na jednu nogu iza crte, koljeno blago savijeno.",
     "Odrazi se naprijed i doskoči meko na istu nogu.",
     "Koljeno iznad prstiju, zadrži doskok bez poskoka.",
-    "Zamah rukama, četvrt čučnja; druga noga ne dodiruje pod."
+    "Zamahni rukama iz četvrt čučnja; druga noga ne dodiruje pod."
    ],
    "mistakes": [
     "Koljeno upada prema unutra pri doskoku – guraj koljeno prema van, u smjeru prstiju.",
@@ -5803,7 +5803,7 @@ window.SEED = {
     "Iskorak lijevom nogom, desni dlan spusti uz lijevo stopalo.",
     "Lijevi lakat spusti prema stopalu, bez štipanja u preponi.",
     "Tu ruku podigni prema stropu, okreni prsa i prati šaku.",
-    "Stražnja noga ispružena, njezina stražnjica stisnuta."
+    "Stražnja noga ispružena, stražnjica stisnuta."
    ],
    "mistakes": [
     "Stražnja noga se savija i koljeno pada na pod – drži stražnju nogu opruženu i stisni stražnjicu.",
@@ -5858,7 +5858,7 @@ window.SEED = {
     "Stani na jednu nogu, ruke raširene u T.",
     "Pregni se iz kuka, slobodna noga ide unatrag.",
     "Uho, kuk i peta u liniji, pa polako gore.",
-    "Stajno koljeno blago savijeno, prsti slobodne noge u pod."
+    "Stajno koljeno blago savijeno, prsti slobodne noge gledaju u pod."
    ],
    "mistakes": [
     "Leđa se grbe – drži ravnu liniju od glave do pete slobodne noge.",
@@ -6930,7 +6930,7 @@ window.SEED = {
     "Stani na jednu nogu, bučica u suprotnoj ruci.",
     "Pregni se iz kuka, slobodna noga ravno unatrag.",
     "Ravnih leđa spusti bučicu do potkoljenice, pa gore.",
-    "Stajno koljeno blago savijeno, prsti slobodne noge u pod."
+    "Stajno koljeno blago savijeno, prsti slobodne noge gledaju u pod."
    ],
    "mistakes": [
     "Leđa se zaobljuju – spusti se manje i pregibaj se iz kuka.",
@@ -7090,7 +7090,7 @@ window.SEED = {
     "Stani na jednu nogu, ruke na kukovima.",
     "Dotakni pod u stranu, naprijed i unatrag: jedno ponavljanje.",
     "Stajno koljeno iznad stopala, zdjelica vodoravna.",
-    "Stajno koljeno blago savijeno, pod dodiruj samo prstima."
+    "Pod dodiruj samo prstima, bez prebacivanja težine."
    ],
    "mistakes": [
     "Stajno koljeno upada prema unutra – drži ga iznad drugog i trećeg prsta.",
@@ -7797,7 +7797,7 @@ window.SEED = {
     "Stani na rub kutije, stopala u širini kukova.",
     "Iskorači s kutije i padni ravno dolje, ne skači.",
     "Doskoči na oba stopala u polučučanj, koljena prema prstima, zadrži.",
-    "Prsa iznad koljena, doskok zadrži mirno."
+    "Prsa iznad koljena, doskok miran i tih."
    ],
    "mistakes": [
     "Skok s kutije prema gore ili naprijed – samo iskorači i padni ravno dolje.",
