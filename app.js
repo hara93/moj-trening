@@ -2717,6 +2717,212 @@ function fieldDoneLoad(){
   P.steps.forEach((st, i) => { if (st.kind !== 'work' || !P.doneSteps[i] || !st.b) return; addLoad(o, blockRep(st.b, f, mas)); if (st.b.rest_mas_pct && st.b.rest_s) addLoad(o, recRun(st.b, mas)); });
   return { m: Math.round(o.m), hsr: Math.round(o.hsr), spr: Math.round(o.spr), min: Math.round(o.t / 6) / 10, zones: o.z.map(Math.round), dose: P.dose === 'season' ? 'season' : 'full', mas: Math.round(mas * 100) / 100 };
 }
+/* ---------- training load, model LM1 (load2/MODEL.md): bodovi per set, hard sets per region, impact contacts ----------
+   The ONE place of the load maths. Everything between the two LM1 marker lines depends only on S.ex, S.log, window.SEED and
+   window.EXFX (loadfx.js, built by tools/build/build_loadfx.py); tools/build/check_load.cjs runs this block as it is.
+   B (bodovi) = predicted RPE × minutes. The [EO] priors are expert opinion until the personal calibration (a later step). */
+// ---- LM1 begin ----
+const LM = {
+  MV: 'LM1',
+  MUSCLE: ['Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Core','Leđa','Prsa','Ramena','Ruke'],
+  JOINT: ['Kuk','Koljeno','Gležanj'],
+  TREG: { 'Kvadriceps':['Kvadriceps'], 'Stražnji lanac':['Gluteus','Stražnja loža'], 'Aduktori':['Aduktori'], 'Gluteus medius':['Gluteus medius'],
+    'Fleksori kuka':['Fleksori kuka'], 'Lisni mišić':['Lisni mišić'], 'Trup':['Core'], 'Potisak':['Prsa','Ramena'], 'Povlačenje':['Leđa'], 'Ruke':['Ruke'] },
+  PAT: { L1:1.0, L2:0.6, HJ:0.5, U1:0.6, S:0.3, C:0.3, K:0.6, B:0.6, A:0.1, P:0, R:0 },
+  ECC: [1, 1.25, 1.5], NOV: [0.2, 0.35, 0.5],
+  TIER: { nisko:0.6, kutija:0.8, srednje:1.0, visoko:1.25, 'vrlo visoko':1.5 },
+  RIR_DEF: { L1:2, L2:2, HJ:2, U1:2, S:3, C:3, K:3, B:5, A:6, P:6, R:6 },
+  POW: 2, NCAP: 12, HOLD_S: 6, UNI: 0.55,   // per-rep non-linearity, reps above 12 count half, a 6-s hold = 1 rep, one side of non-L2 work
+  K: { L:2.7, U:2.7, C:2.7, imp:1.0, gmin:1.0, fmin:3.5, m:2.0, hsr:2.0, spr:0.5 },   // priors: B per SL, per CE, per gym minute, field
+  UPPER: ['Leđa','Prsa','Ramena','Ruke'],
+  RUN: ['lagano', 'umjereno', 'visoko', 'sprint'],
+  ASK: { L1:1, L2:1, HJ:1, U1:1, S:1, C:1, K:1, B:1 },   // patterns the player asks "Koliko si još mogao?" after (not A, P, R)
+  RIR_TAPS: [0, 1, 2, 3, 4.5, 7], RIR_TXT: ['0', '1', '2', '3', '4–5', '6+'],
+  SIR_TAPS: [0, 5, 10, 15, 25, 40], SIR_TXT: ['0', '5', '10', '15', '20–30', '30+'],
+  BAND: 0.3   // prior band ± 30 % until the calibration has data
+};
+LM.ALLZ = LM.MUSCLE.concat(LM.JOINT, ['Cijelo tijelo']);
+const lmObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const lmNum = v => typeof v === 'number' && isFinite(v);
+const lmIntens = R => R <= 1 ? 1 : 1 / (1 + Math.min(R, 15) / 30);   // share of the 1RM implied by reps + reserve (inverse Epley)
+const lmHard = r => r <= 3 ? 1 : r <= 5 ? 0.5 : 0;
+const lmZones = e => (e && Array.isArray(e.zones) ? e.zones : []).filter(z => typeof z === 'string' && LM.ALLZ.indexOf(z) !== -1);
+function lmPattern(e){
+  const zs = lmZones(e), z = zs.filter(x => LM.MUSCLE.indexOf(x) !== -1), z0 = z[0] || '', eq = Array.isArray(e.equip) ? e.equip : [];
+  const nm = ((typeof e.name === 'string' ? e.name : '') + ' ' + (typeof e.alt === 'string' ? e.alt : '')).toLowerCase();
+  if (e.cat === 'Kondicija') return /climber|plank/.test(nm) ? 'C' : 'R';
+  if (e.cat === 'Aktivacija' || e.cat === 'Mobilnost') return /trx (squat|reverse|lateral)/.test(nm) ? (e.sides ? 'L2' : 'L1') : (/trčanj|ubrzanj/.test(nm) ? 'R' : 'A');
+  if (e.cat === 'Eksplozivnost') return /med ball|medicink|slam|bacanj|throw|swing|pass|power pull|sprinter/.test(nm) || eq.indexOf('Medicinka') !== -1 || eq.indexOf('Girja') !== -1 || /barbell/.test(nm) ? 'B' : 'P';
+  if (/walk|carry|nošenj/.test(nm) && e.measure === 'time') return 'K';
+  if (e.cat === 'Trup') return 'C';
+  if (LM.UPPER.indexOf(z0) !== -1) return /fly|face pull|pull-apart|raise|high row|power pull/.test(nm) ? 'S' : 'U1';
+  if (z0 === 'Lisni mišić' || zs[0] === 'Gležanj') return 'S';
+  const big = ['Kvadriceps','Gluteus','Stražnja loža','Aduktori'], nBig = z.filter(x => big.indexOf(x) !== -1).length;
+  if (z0 === 'Kvadriceps' || (nBig >= 2 && /squat|čučanj|iskorak|lunge|step|deadlift|rdl|split/.test(nm))) return e.sides ? 'L2' : 'L1';
+  if (/deadlift|rdl|trap/.test(nm)) return e.sides ? 'L2' : 'L1';
+  if (z0 === 'Gluteus medius' || z0 === 'Aduktori') return e.measure === 'time' || /copenhagen|kopenhagen/.test(nm) ? 'HJ' : 'S';
+  return 'HJ';
+}
+// prime zones (1.0 hard set) and strain shares over the exercise's zones: prime 1, other muscle 0.5, joint 0.25, Σ = 1
+function lmRegions(zs, pat, prime){
+  const mus = zs.filter(z => LM.MUSCLE.indexOf(z) !== -1);
+  if (!prime) { prime = mus.slice(0, 1); if ((pat === 'L1' || pat === 'L2') && mus[1] && ['Kvadriceps','Gluteus'].indexOf(mus[1]) !== -1) prime.push(mus[1]); }
+  const w = {}; zs.forEach(z => { w[z] = prime.indexOf(z) !== -1 ? 1 : LM.MUSCLE.indexOf(z) !== -1 ? 0.5 : 0.25; });
+  if (!zs.length) w['Cijelo tijelo'] = 1;
+  const s = Object.values(w).reduce((a, b) => a + b, 0), rw = {}; Object.keys(w).forEach(z => rw[z] = Math.round(w[z] / s * 1000) / 1000);
+  return { prime: prime.slice(), rw };
+}
+// the factors of any exercise from what it already has (category, zones, equipment, measure, sides, name): always complete
+function deriveFx(e){
+  e = lmObj(e) ? e : {};
+  const pat = lmPattern(e), nm = ((typeof e.name === 'string' ? e.name : '') + ' ' + (typeof e.alt === 'string' ? e.alt : '')).toLowerCase();
+  const ecc = /nordic|depth drop|ekscentr/.test(nm) ? 2 : /rdl|step-down|spuštanj|zaustavljanj|duga poluga|hamstring curl|pregib nogu/.test(nm) ? 1 : 0;
+  const reg = lmRegions(lmZones(e), pat, null);
+  const fx = { v:1, pat, mx:null, uni:!!e.sides, ecc, prime:reg.prime, rw:reg.rw, bw:null, cpr:0, tier:null, rir:LM.RIR_DEF[pat], runM:null, runInt:null, tags:[], src:'procjena' };
+  if (pat === 'P') { fx.cpr = 1; fx.tier = /pogo|hop|skip/.test(nm) ? 'nisko' : /box/.test(nm) ? 'kutija' : /depth jump|depth drop|broad|bound|lateral|jednonožni/.test(nm) ? 'visoko' : 'srednje'; }
+  if (pat === 'R' && +e.runM > 0) { fx.runM = +e.runM; fx.runInt = LM.RUN.indexOf(e.runInt) !== -1 ? e.runInt : 'umjereno'; }   // own running drills keep their metres
+  if (/nordic/.test(nm)) fx.tags.push('ecc-ham');
+  if (/kopenhagen|copenhagen|adukc|adduct/.test(nm)) fx.tags.push('add');
+  if (/push-up|sklek/.test(nm)) fx.bw = 0.64; if (/zgib|pull-up|chin-up/.test(nm)) fx.bw = 0.95; if (/australsk|inverted|trx row/.test(nm)) fx.bw = 0.6;
+  return fx;
+}
+const lmWarned = {};
+// every field checked; a bad one takes the derived value (imports from older backups, hand-edited data, photo packs)
+function lmSanitize(f, e, d){
+  const zs = lmZones(e), mus = zs.filter(z => LM.MUSCLE.indexOf(z) !== -1), bad = [];
+  const o = { v:1 };
+  o.pat = Object.prototype.hasOwnProperty.call(LM.PAT, f.pat) ? f.pat : (bad.push('pat'), d.pat);
+  o.mx = f.mx == null ? null : lmNum(f.mx) && f.mx >= 0.05 && f.mx <= 1.5 ? f.mx : (bad.push('mx'), null);
+  o.uni = !!e.sides;
+  o.ecc = f.ecc === 0 || f.ecc === 1 || f.ecc === 2 ? f.ecc : (bad.push('ecc'), d.ecc);
+  let prime = Array.isArray(f.prime) && f.prime.every(z => mus.indexOf(z) !== -1) && f.prime.length <= 2 && new Set(f.prime).size === f.prime.length ? f.prime.slice() : null;
+  if (!prime || (!prime.length && mus.length)) { if (prime || f.prime != null) bad.push('prime'); prime = null; }
+  const keys = zs.length ? zs : ['Cijelo tijelo'];
+  let rw = lmObj(f.rw) && Object.keys(f.rw).length && Object.keys(f.rw).every(z => keys.indexOf(z) !== -1 && lmNum(f.rw[z]) && f.rw[z] > 0) ? Object.assign({}, f.rw) : null;
+  if (rw && prime && prime.some(z => !rw[z])) rw = null;
+  if (!prime || !rw) { if (f.rw != null && !rw) bad.push('rw'); const r = lmRegions(zs, o.pat, prime); prime = r.prime; rw = r.rw; }
+  const s = Object.values(rw).reduce((a, b) => a + b, 0); if (Math.abs(s - 1) > 0.001) Object.keys(rw).forEach(z => rw[z] = Math.round(rw[z] / s * 1000) / 1000);
+  o.prime = prime; o.rw = rw;
+  o.bw = f.bw == null ? null : lmNum(f.bw) && f.bw >= 0.3 && f.bw <= 1.05 ? f.bw : (bad.push('bw'), null);
+  o.cpr = o.pat === 'P' ? (Number.isInteger(f.cpr) && f.cpr >= 1 ? f.cpr : 1) : 0;
+  o.tier = o.pat === 'P' ? (Object.prototype.hasOwnProperty.call(LM.TIER, f.tier) ? f.tier : (bad.push('tier'), d.tier || 'srednje')) : null;
+  o.rir = lmNum(f.rir) && f.rir >= 0 && f.rir <= 10 ? f.rir : (f.rir != null && bad.push('rir'), LM.RIR_DEF[o.pat]);
+  o.runM = o.pat === 'R' && lmNum(+f.runM) && +f.runM > 0 ? +f.runM : null;
+  o.runInt = o.pat === 'R' && LM.RUN.indexOf(f.runInt) !== -1 ? f.runInt : o.runM ? 'umjereno' : null;
+  o.tags = Array.isArray(f.tags) ? f.tags.filter(t => typeof t === 'string') : [];
+  const id = e && e.id;
+  if (bad.length && !lmWarned[id]) { lmWarned[id] = 1; try { console.warn('Opterećenje: vježba ' + id + ' ima neispravne faktore (' + bad.join(', ') + '); uzete su procijenjene vrijednosti.'); } catch(er){} }
+  return o;
+}
+// The factors of an exercise: the shipped ones (loadfx.js) for a shipped exercise, else derived. Never throws, always complete.
+// A shipped exercise whose zones he changed gets its prime zones and strain shares rebuilt from his zones.
+function loadFx(e){
+  let d;
+  try { d = deriveFx(e); } catch(er) { d = { v:1, pat:'A', mx:null, uni:false, ecc:0, prime:[], rw:{ 'Cijelo tijelo':1 }, bw:null, cpr:0, tier:null, rir:6, runM:null, runInt:null, tags:[], src:'procjena' }; }
+  try {
+    const id = lmObj(e) && typeof e.id === 'string' ? e.id : '', X = window.EXFX, SD = window.SEED && window.SEED.exercises;
+    const s = id && lmObj(X) && Object.prototype.hasOwnProperty.call(X, id) && lmObj(X[id]) && lmObj(SD) && Object.prototype.hasOwnProperty.call(SD, id) ? X[id] : null;
+    const fx = Object.assign({}, d, s || {});
+    if (s) { const a = lmZones(e).slice().sort().join('|'), b = lmZones(SD[id]).slice().sort().join('|'); if (a !== b) { const r = lmRegions(lmZones(e), fx.pat, null); fx.prime = r.prime; fx.rw = r.rw; } }
+    const o = lmSanitize(fx, lmObj(e) ? e : {}, d);
+    o.src = s ? 'isporuka' : 'procjena';
+    return o;
+  } catch(er) { return d; }
+}
+// One set (MODEL 1.2–1.4, 1.7). s: { n, rir } or { t, sir } (a hold); ctx: { k: sessions with it in the last 56 days, c, bias }.
+function setLoad(e, fx, s, ctx){
+  ctx = ctx || {};
+  const bias = ctx.bias || 0, c = ctx.c || 1, k = ctx.k == null ? 3 : ctx.k;
+  const nov = 1 + LM.NOV[fx.ecc] * (k === 0 ? 1 : k === 1 ? 0.5 : 0) * (fx.pat === 'A' ? 0 : 1);
+  const sides = fx.uni ? 2 : 1, out = { B:0, SL:0, imp:0, ecc:0, hs:{}, reps:[], conf: (s.t != null ? s.sir : s.rir) == null ? 'zad' : 'tap' };
+  if (fx.pat === 'P') {
+    const t = LM.TIER[fx.tier || 'srednje'] * (fx.uni ? 1.3 : 1), contacts = (s.n || 0) * sides * (fx.cpr || 1);
+    out.imp = contacts * t * nov * c; out.B = LM.K.imp * out.imp; out.ch = 'imp'; return out;
+  }
+  if (fx.pat === 'R') { out.ch = 'R'; return out; }   // running drills: metres go to the field channel (lmRun)
+  let n = s.n || 0, r = s.rir == null ? fx.rir : s.rir;
+  if (s.t != null) { n = s.t / LM.HOLD_S; r = (s.sir == null ? fx.rir * LM.HOLD_S : s.sir) / LM.HOLD_S; }
+  r = Math.max(0, r + bias);
+  const R = n + r, u = fx.uni && fx.pat !== 'L2' ? LM.UNI : 1, m = (fx.mx || LM.PAT[fx.pat]) * u * LM.ECC[fx.ecc] * nov * c, ii = lmIntens(R);
+  let sl = 0; const whole = Math.floor(n), frac = n - whole;
+  for (let j = 1; j <= Math.ceil(n); j++) { const part = j <= whole ? 1 : frac; const cj = m * ii * (j <= LM.NCAP ? 1 : 0.5) * (1 + LM.POW * (j / R) ** 2) * part; out.reps.push(+cj.toFixed(3)); sl += cj; }
+  out.SL = sl * sides;
+  const ch = fx.pat === 'C' ? 'C' : Object.keys(fx.rw).some(z => LM.UPPER.indexOf(z) !== -1 && fx.prime.indexOf(z) !== -1) ? 'U' : 'L';
+  out.ch = ch; out.B = LM.K[ch] * out.SL; out.ecc = fx.ecc ? out.SL * (fx.ecc === 2 ? 1 : 0.5) : 0;
+  const h = fx.pat === 'A' && r > 3 ? 0 : lmHard(r);
+  Object.keys(LM.TREG).forEach(T => { let v = 0; LM.TREG[T].forEach(z => { if (fx.rw[z]) v = Math.max(v, fx.prime.indexOf(z) !== -1 ? 1 : 0.5); }); if (v && h) out.hs[T] = v * h; });
+  out.R = R; out.I = ii; out.r = r;
+  return out;
+}
+const lmVal = (a, i) => Array.isArray(a) && lmNum(a[i]) && a[i] >= 0 ? a[i] : null;
+// the sets a logged item did: reps (per-set list, a failed last set with its reps and 0 in reserve) or seconds, with the tap
+function lmSets(x){
+  if (!lmObj(x) || x.skipped) return [];
+  const N = Math.max(1, Math.round(+x.sets) || 1), done = x.setsDone != null ? Math.max(0, Math.min(N, Math.round(+x.setsDone) || 0)) : N, out = [];
+  for (let s = 0; s < done; s++) {
+    if (x.measure === 'time') out.push({ t: +x.sec || 0, sir: lmVal(x.sirList, s) });
+    else out.push({ n: lmVal(x.repsList, s) || +x.reps || 0, rir: lmVal(x.rirList, s) });
+  }
+  if (x.done === false && lmNum(x.lastReps) && out.length && x.measure !== 'time') { out[out.length - 1].n = Math.max(0, x.lastReps); out[out.length - 1].rir = 0; }
+  return out;
+}
+// sessions with this exercise in the 56 days before `at` (novelty: the first and second time cost more)
+function lmNovelty(exId, at, log){
+  const from = at - 56 * 864e5; let k = 0;
+  (log || []).forEach(l => { if (l && l.at < at && l.at >= from && Array.isArray(l.items) && l.items.some(x => x && x.exId === exId && !x.skipped)) k++; });
+  return k;
+}
+// running drills (field channel): metres from the factors' metres per rep, minutes for timed work (the bike)
+function lmRun(x, fx, sets){
+  const sd = x.sides ? 2 : 1, o = { m:0, hsr:0, spr:0, min:0, ex:0, B:0 };
+  if (x.measure === 'time') { o.min = sets.reduce((a, s) => a + s.t, 0) * sd / 60; if (fx.runM) o.m = sets.length * sd * fx.runM; }
+  else if (fx.runM) { const reps = sets.reduce((a, s) => a + s.n, 0) * sd; o.m = reps * fx.runM; if (fx.runInt === 'sprint') o.ex = reps; }
+  if (fx.runInt === 'visoko' || fx.runInt === 'sprint') o.hsr = o.m; if (fx.runInt === 'sprint') o.spr = o.m;
+  o.B = LM.K.fmin * o.min + LM.K.m * o.m / 100 + LM.K.hsr * o.hsr / 100 + LM.K.spr * o.spr / 10;
+  return o;
+}
+// one logged item: its sets' load; o.at (the session's time) and o.log (the history before it) give the novelty
+function itemPts(x, o){
+  o = o || {};
+  const r = { B:0, SL:{ L:0, U:0, C:0 }, CE:0, ECC:0, spr:0, m:0, HS:{}, sets:[], tap:0, zad:0 };
+  if (!lmObj(x) || x.skipped || typeof x.exId !== 'string') return r;
+  const ex = (S.ex && S.ex[x.exId]) || { id: x.exId };
+  const fx = Object.assign({}, o.fx || loadFx(ex)); if (x.sides != null) fx.uni = !!x.sides;
+  const sets = lmSets(x), k = o.k != null ? o.k : lmNovelty(x.exId, o.at != null ? o.at : Date.now(), o.log || S.log || []);
+  if (fx.pat === 'R') { const q = lmRun(x, fx, sets); r.B = q.B; r.m = q.m; r.spr = q.ex; return r; }
+  sets.forEach(s => {
+    const q = setLoad(ex, fx, s, { k }); r.sets.push(q); r.B += q.B; r.ECC += q.ecc; r.CE += q.imp;
+    if (q.ch === 'L' || q.ch === 'U' || q.ch === 'C') r.SL[q.ch] += q.SL;
+    Object.keys(q.hs).forEach(T => r.HS[T] = (r.HS[T] || 0) + q.hs[T]);
+    if (LM.ASK[fx.pat]) r[q.conf]++;
+  });
+  return r;
+}
+const lmR = (v, d) => { const p = Math.pow(10, d == null ? 1 : d); return Math.round(v * p) / p; };
+// A whole session (a log entry or the one on the done screen): B = Σ sets + gym minutes + a field session's metres.
+// o.log: the history before it (novelty; o.k fixes it, for checks); the result is stored on the entry as entry.load2 with the model version.
+function computeSession(entry, o){
+  o = o || {};
+  const r = { v: LM.MV, B:0, band:0, Bsets:0, Bfield:0, min:0, SL:{ L:0, U:0, C:0 }, CE:0, ECC:0, spr:0, m:0, HS:{}, ex:[], tap:0, zad:0 };
+  if (!lmObj(entry)) return r;
+  const at = lmNum(entry.at) ? entry.at : Date.now(), items = Array.isArray(entry.items) ? entry.items : [];
+  items.forEach(x => {
+    const q = itemPts(x, { at, log: o.log, k: o.k });
+    r.ex.push(lmR(q.B)); r.Bsets += q.B; r.CE += q.CE; r.ECC += q.ECC; r.spr += q.spr; r.m += q.m; r.tap += q.tap; r.zad += q.zad;
+    ['L', 'U', 'C'].forEach(c => r.SL[c] += q.SL[c]);
+    Object.keys(q.HS).forEach(T => r.HS[T] = (r.HS[T] || 0) + q.HS[T]);
+  });
+  r.min = Math.max(0, +entry.secs || 0) / 60;
+  const fl = entry.load;
+  if (lmObj(fl) && lmNum(fl.m)) { r.Bfield = LM.K.fmin * (+fl.min || 0) + LM.K.m * fl.m / 100 + LM.K.hsr * (+fl.hsr || 0) / 100 + LM.K.spr * (+fl.spr || 0) / 10; r.m += fl.m; }
+  r.B = r.Bsets + (items.length ? LM.K.gmin * r.min : 0) + r.Bfield;
+  r.band = r.B * LM.BAND;
+  ['B', 'band', 'Bsets', 'Bfield', 'min', 'CE', 'ECC', 'm'].forEach(k => r[k] = lmR(r[k]));
+  ['L', 'U', 'C'].forEach(c => r.SL[c] = lmR(r.SL[c], 2));
+  Object.keys(r.HS).forEach(T => r.HS[T] = lmR(r.HS[T], 2));
+  return r;
+}
+// ---- LM1 end ----
 // calendar weeks (a clock change never moves a session to another week), oldest first: trainings only (nTrainings' rule)
 function weekLoads(n){
   const ws = weekStart(Date.now()), out = [];
