@@ -1155,7 +1155,7 @@ function exOptHtml(e){
   if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
     '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
   const lp = exLastPts(e.id);
-  return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lp.B < 20 ? 'bodova' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
+  return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
 }
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
@@ -3225,9 +3225,10 @@ function rpeSet(t){
 // the done screen's load card: ≈ points ± band, hard sets per region, landings and metres
 function lmCardHtml(o){
   const hs = Object.keys(LM.TREG).filter(T => o.HS[T] > 0).map(T => '<span><i>' + esc(T) + '</i><b>' + lmHs(o.HS[T]) + '</b></span>');
-  const more = [o.CE > 0 ? 'Doskoci (CMJ-ekv.) <b>' + thou(o.CE) + '</b>' : '', o.m > 0 ? 'Trčanje <b>' + esc(loadFmt('m', o.m)) + '</b>' : ''].filter(Boolean);
+  const more = [o.CE > 0 ? 'Doskoci <b>≈ ' + thou(o.CE) + '</b>' : '', o.m > 0 ? 'Trčanje <b>' + esc(loadFmt('m', o.m)) + '</b>' : ''].filter(Boolean);
+  const dur = lmR(o.B - o.Bsets - o.Bfield);   // the gym minutes' part of B: said, so the sets' points add up
   return '<section class="lmc" aria-label="Opterećenje treninga"><div class="lmh"><span>Opterećenje · bodovi</span><span class="tag">Procjena</span></div>' +
-    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">predviđeno · ' + Math.round(o.min) + ' min</span></div>' +
+    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">' + Math.round(o.min) + ' min' + (dur >= 0.5 ? ' · +' + lmPts(dur) + ' za trajanje' : '') + '</span></div>' +
     '<p class="lmau" id="lmau">' + auHtml(P.srpe, o.min) + '</p>' +
     (hs.length ? '<div class="lmt">Tvrde serije</div><div class="lmhs">' + hs.join('') + '</div>' : '') +
     (more.length ? '<p class="lmx">' + more.join(' · ') + '</p>' : '') + '</section>';
