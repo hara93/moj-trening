@@ -569,3 +569,93 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .done h1.dh{display:flex;align-items:center;justify-content:center;gap:10px}
 .done h1.dh .ck{flex:none;width:36px;height:36px;border-radius:18px;box-shadow:inset 0 0 0 2.5px var(--accent)}
 .done h1.dh .ck svg{width:22px;height:22px}
+
+/* 1.8: the muscle figure (body.js), the exercise page's swipe cards, the library filter sheet, the editor's muscle picker.
+   The v1 tokens only: one accent, Figtree, the app's surfaces. */
+.body-fig{display:block;overflow:visible;max-width:100%;height:auto}
+.body-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;transition:fill-opacity .15s}
+.body-tap:focus-visible{fill-opacity:.35}
+.body-hit{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tag.sec,.afc.sec{background:transparent;box-shadow:inset 0 0 0 1px var(--tag-bg);color:var(--text-body)}
+
+/* the exercise page: photo, title, doses, the card row and the dots fill the screen; a long card scrolls inside */
+.view.exv{display:flex;flex-direction:column}
+.view.exv > *{flex:none}
+.view.exv .ttl{margin-top:12px}
+.view.exv .media.two{aspect-ratio:16/10}   /* 17 px lower than elsewhere: the cards get the room */
+.exswipe{flex:1 1 auto !important;min-height:210px;display:flex;flex-direction:column;margin-top:12px}
+.swrow{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 max(16px, env(safe-area-inset-left, 0px));padding:0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));scrollbar-width:none;overscroll-behavior-x:contain}
+.swrow::-webkit-scrollbar{display:none}
+.swrow::after{content:"";flex:0 0 6px}
+.swc{flex:0 0 calc(100% - 28px);scroll-snap-align:start;box-sizing:border-box;min-width:0;min-height:0;display:flex;flex-direction:column;border-radius:22px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
+.swc:last-of-type{scroll-snap-align:end}
+.swh{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;padding:10px 14px 0 16px}
+.swh h2{margin:0;font-size:15px;font-weight:600}
+.swh .per{padding:2px}
+.swh .per button{height:44px;margin:-9px 0}
+.swh .per button::before{inset:9px 0}
+.swb{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.swb .exequip{margin:0 0 2px;padding:8px 12px;border-radius:14px;background:var(--surface-2);font-size:14px;line-height:19px}
+.swb .bul{font-size:15px;line-height:21px}
+.swb .bul.ck svg{width:20px;height:20px;margin-top:0}
+.swb p{margin:0;font-size:14.5px;line-height:21px;color:var(--text-body)}
+.swb .lb{font-size:12.5px;font-weight:500;color:var(--text-2)}
+.swb .none{color:var(--text-2)}
+.swb .exvid{display:flex;flex-wrap:wrap;column-gap:18px;font-size:14px}
+.tgt{display:flex;gap:10px;align-items:flex-start}
+.tgt .tl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding-top:2px}
+.tgt .tcol{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.tgt .tcol .tag{font-size:13px;line-height:17px;padding:4px 9px;border-radius:8px;white-space:normal}
+.tgt .fe{font-size:13.5px;line-height:18px;color:var(--text-body)}
+.tgt .tf{flex:none}
+.swb .cn{border-top:1px solid var(--border);padding-top:10px}
+.swb .opthd{margin:0;min-height:24px}
+.swb .lc{border:0;background:none;padding:0;margin:0}
+.swb .lc .hd{min-height:22px}
+.swb .lc.hist .hrow{padding:7px 0;font-size:14px}
+.swb .opthd.sub{margin-top:4px}
+.swb .lmlast{margin:0}
+.swb .howc{align-self:flex-start;margin:-4px 0 -10px -10px}
+.swdots{flex:none;padding:0}
+.swdots .dot{position:relative;width:32px;height:26px}
+.swdots .dot::before{content:"";position:absolute;inset:-18px 0 0}   /* 44 px to tap (18 px of it over the card's bottom padding), 26 px in the row: nothing sticks out below, so the page never scrolls for it */
+.swdots .dot i{width:6px;height:6px}
+.swdots .dot[aria-current="true"] i{width:14px}
+
+/* Filter vježbi */
+.sheet.fsheet{max-height:none;height:calc(100% - 48px);padding-bottom:0;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;position:relative}
+.fsheet .grab{flex:none}
+.fhd{position:sticky;top:-10px;z-index:2;background:var(--surface);display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 8px;margin:0 -2px}
+.fhd h3{margin:0 !important;font-size:19px !important}
+.fcnt{font-size:17px;font-weight:600;color:var(--accent-text);font-variant-numeric:tabular-nums}
+.fsec{margin-top:12px;flex:none}
+.fl{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:600;margin:0 2px 10px}
+.chip.sm{height:44px;padding:0 13px;border-radius:12px;font-size:13.5px}
+.fcats{gap:7px}
+.eqgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.eqt{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;border:0;background:transparent;padding:0;color:var(--text)}
+.eqt .bx{width:100%;height:56px;box-sizing:border-box;border-radius:16px;background:var(--surface-2);border:2px solid transparent;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.eqt .bx svg{width:28px;height:28px}
+.eqt .tx{font-size:12.5px;font-weight:500;line-height:15px;color:var(--text-body);text-align:center}
+.eqt[aria-pressed="true"] .bx{border-color:var(--accent);background:var(--tag-bg);color:var(--accent-text)}
+.eqt[aria-pressed="true"] .tx{color:var(--text)}
+.figs{padding:4px 0 0}
+.figs .body-fig{margin:0 auto}
+.figl{display:flex;justify-content:space-around;margin-top:6px;font-size:12px;color:var(--text-2)}
+.zch{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;min-height:44px;align-items:center}
+.zhint{font-size:13px;color:var(--text-2)}
+.afc{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 10px 0 12px;border:0;border-radius:10px;background:var(--tag-bg);color:var(--accent-text);font-size:13.5px;font-weight:600;white-space:nowrap;flex:none}
+.afc svg{opacity:.85}
+.fft{position:sticky;bottom:0;z-index:2;display:grid;grid-template-columns:1fr 2fr;gap:10px;margin:16px -16px 0;margin-top:auto;padding:14px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));background:linear-gradient(transparent, var(--surface) 14px)}
+.fft .btn{height:52px;font-size:16px}
+
+/* the library with filters in use */
+.afil{margin-top:12px;gap:7px}
+.afn{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 0 4px;font-size:13px;color:var(--text-2)}
+
+/* the editor's muscle picker */
+.mpick .figs{margin-top:8px;padding:12px 0 10px;border-radius:20px;background:var(--surface)}
+.mleg{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin:8px 2px 0}
+.mleg .sw{display:inline-block;width:12px;height:12px;border-radius:4px;background:var(--accent)}
+.mleg .sw.s{opacity:.45;margin-left:6px}
+.mpick .zch{margin-top:8px}

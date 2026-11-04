@@ -67,6 +67,89 @@ const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stra
 const exZoneLabel = z => z === 'Core' ? 'Trup' : z;
 const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
 const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Sobni bicikl','Bez opreme'];
+// 1.8: the muscle figure (body.js: Tomislav's drawing, front and back). Each region stands for one zone of the data, so an
+// exercise's zones (filters, the progression's LOWER_ZONES, the load model's rw by zones) follow its muscles; 'Kuk' and 'Cijelo
+// tijelo' have no region of their own. `muscles` = { prime: [region ids], sec: [region ids] }; an exercise without it (your own,
+// or one you edited before 1.8) is drawn from its zones: the first zone's regions as the main ones, the others' as secondary.
+const MUSCLE_ZONE = { front_chest:'Prsa', front_shoulders:'Ramena', front_biceps:'Ruke', front_forearms:'Ruke', front_abs:'Core', front_obliques:'Core',
+  front_hip_flexors:'Fleksori kuka', front_adductors:'Aduktori', front_quadriceps:'Kvadriceps', front_knees:'Koljeno', front_shins_ankles:'Gležanj',
+  back_upper_back_trapezius:'Leđa', back_latissimus:'Leđa', back_lower_back:'Leđa', back_rear_shoulders:'Ramena', back_triceps:'Ruke',
+  back_glutes:'Gluteus', back_gluteus_medius:'Gluteus medius', back_hamstrings:'Stražnja loža', back_calves:'Lisni mišić' };
+const MUSCLES = Object.keys(MUSCLE_ZONE);
+const ZONE_MUSCLES = { 'Kuk': ['front_hip_flexors', 'back_gluteus_medius'], 'Cijelo tijelo': MUSCLES.slice() };
+MUSCLES.forEach(r => (ZONE_MUSCLES[MUSCLE_ZONE[r]] = ZONE_MUSCLES[MUSCLE_ZONE[r]] || []).push(r));
+const ZONE_ONLY = ['Kuk', 'Cijelo tijelo'];   // zones no region stands for: they stay as they are when the muscles change
+// "Cijelo tijelo" in the filter: exercises that work the upper body and the legs together (or your own tagged so)
+const UPPER_M = ['front_chest','front_shoulders','back_rear_shoulders','front_biceps','back_triceps','front_forearms','back_upper_back_trapezius','back_latissimus'];
+const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves'];
+const muscleLabel = r => window.BODY && BODY.regions && BODY.regions[r] ? BODY.regions[r].label_hr : r;
+const okMuscles = a => Array.isArray(a) ? Array.from(new Set(a.filter(r => MUSCLE_ZONE[r]))) : [];
+function exMuscles(e){
+  const m = e && e.muscles;
+  if (m && typeof m === 'object') { const prime = okMuscles(m.prime), sec = okMuscles(m.sec).filter(r => prime.indexOf(r) === -1); if (prime.length || sec.length) return { prime, sec, own: true }; }
+  const zs = (e && e.zones) || [], prime = okMuscles(ZONE_MUSCLES[zs[0]] || []), sec = [];
+  zs.slice(1).forEach(z => (ZONE_MUSCLES[z] || []).forEach(r => { if (prime.indexOf(r) === -1 && sec.indexOf(r) === -1) sec.push(r); }));
+  return { prime, sec, own: false };
+}
+const wholeBody = e => { const m = exMuscles(e), a = m.prime.concat(m.sec); return (e.zones || []).indexOf('Cijelo tijelo') !== -1 || (a.some(r => UPPER_M.indexOf(r) !== -1) && a.some(r => LEG_M.indexOf(r) !== -1)); };
+// the zones of a set of muscles: the main ones first (zones[0] decides upper or lower body), then 'Kuk' / 'Cijelo tijelo' kept
+function musclesZones(m, old){
+  const out = [];
+  (m.prime || []).concat(m.sec || []).forEach(r => { const z = MUSCLE_ZONE[r]; if (z && out.indexOf(z) === -1) out.push(z); });
+  (old || []).forEach(z => { if (ZONE_ONLY.indexOf(z) !== -1 && out.indexOf(z) === -1) out.push(z); });
+  return out;
+}
+// the figure (both views in one SVG), or nothing when body.js is missing (an older saved copy). act: the regions become
+// buttons with that action; under each one a wider transparent hit area (drawn below the regions, so a region's own shape always
+// wins) takes the taps in the gaps and around the outline, and the knees and gluteus medius get a ring above their neighbours
+const BODY_HIT_UNDER = 64, BODY_HIT_OVER = { front_knees: 34, back_gluteus_medius: 22 };
+function bodyFig(m, o){
+  if (!window.BODY || !BODY.svg) return '';
+  o = o || {};
+  let svg = BODY.svg({ prime: m.prime || [], on: m.sec || [], size: o.size || 140, tappable: !!o.act, cls: o.cls || '' });
+  if (!o.act) return svg;
+  svg = svg.replace(/ data-region="([a-z_]+)"/g, ' data-region="$1" data-a="' + o.act + '" data-v="$1" tabindex="0"');
+  // per view: the hit areas go in front of the first region (under) and in front of the outline group (over)
+  return svg.replace(/(<g data-view="[a-z]+"[^>]*>)([\s\S]*?)(<g class="body-ln")/g, (all, g, regs, ln) => {
+    const hit = (id, d, w) => '<path class="body-hit" data-a="' + o.act + '" data-v="' + id + '" aria-hidden="true" fill="none" stroke="transparent" stroke-width="' + w + '" stroke-linejoin="round" pointer-events="stroke" d="' + d + '"/>';
+    const under = [], over = [];
+    regs.replace(/<path class="body-rg[^"]*" data-region="([a-z_]+)"[^>]*? d="([^"]+)"\/>/g, (x, id, d) => { under.push(hit(id, d, BODY_HIT_UNDER)); if (BODY_HIT_OVER[id]) over.push(hit(id, d, BODY_HIT_OVER[id])); return x; });
+    return g + under.join('') + regs + over.join('') + ln;
+  });
+}
+// the region chips (main ones full, secondary ones lighter); rm: an action that removes the region
+function muscleTags(m, rm){
+  const x = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  const t = (r, sec) => rm ? '<button class="afc' + (sec ? ' sec' : '') + '" data-a="' + rm + '" data-v="' + r + '" aria-label="Ukloni: ' + esc(muscleLabel(r)) + (sec ? ' (pomoćni)' : '') + '">' + esc(muscleLabel(r)) + x + '</button>'
+    : '<span class="tag' + (sec ? ' sec' : '') + '">' + esc(muscleLabel(r)) + '</span>';
+  return m.prime.map(r => t(r, false)).join('') + m.sec.map(r => t(r, true)).join('');
+}
+// 1.8: equipment tiles of the library filter (Tabler Icons, MIT, and icons drawn for the app: THIRD-PARTY-NOTICES.md); a tile
+// stands for one or more equipment tags (both pilates balls; the rare kit under "Ostalo")
+const EQI = s => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + s + '</svg>';
+const EQ_TILES = [
+  ['Bez opreme', ['Bez opreme'], EQI('<path d="M6.5 21l3.5 -5"/><path d="M5 11l7 -2"/><path d="M16 21l-4 -7v-5l7 -4"/><path d="M9.007 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>')],
+  ['Šipka', ['Šipka'], EQI('<path d="M2 12h1"/><path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2"/><path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1"/><path d="M9 12h6"/><path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1"/><path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2"/><path d="M22 12h-1"/>')],
+  ['Kavez', ['Kavez'], EQI('<path d="M6 3v18"/><path d="M18 3v18"/><path d="M6 3.5h12"/><path d="M4 21h4"/><path d="M16 21h4"/><path d="M4.5 10.5h15"/><rect x="2" y="8" width="2.5" height="5" rx="1"/><rect x="19.5" y="8" width="2.5" height="5" rx="1"/><path d="M6 15.5h2"/><path d="M18 15.5h-2"/>')],
+  ['Klupa', ['Klupa'], EQI('<rect x="3" y="8" width="18" height="3.5" rx="1.5"/><path d="M7.5 11.5v7"/><path d="M16.5 11.5v7"/><path d="M5.5 18.5h4"/><path d="M14.5 18.5h4"/>')],
+  ['Bučice', ['Bučice'], EQI('<path d="M6.2 7.5L10.1 9.75L10.1 14.25L6.2 16.5L2.3 14.25L2.3 9.75Z"/><path d="M17.8 7.5L21.7 9.75L21.7 14.25L17.8 16.5L13.9 14.25L13.9 9.75Z"/><path d="M10.1 12h3.8"/>')],
+  ['Girja', ['Girja'], EQI('<path d="M7.026 9.61l-.95 -4.18a2 2 0 0 1 1.95 -2.43h8a2 2 0 0 1 2 2.43l-1 4.2"/><path d="M9.026 17.001h6"/><path d="M18.906 20.06a7.92 7.92 0 0 0 1 -5.33a8 8 0 1 0 -14.77 5.33a2 2 0 0 0 1.71 .94h10.36a2 2 0 0 0 1.7 -.94"/>')],
+  ['Landmine', ['Landmine'], EQI('<path d="M3 20.5h7"/><circle cx="6" cy="17.5" r="1.75"/><path d="M7.3 16.2l12.2 -12.2"/><rect x="-1.4" y="-4.5" width="2.8" height="9" rx="1.4" transform="translate(16 7.5) rotate(-45)"/>')],
+  ['TRX', ['TRX'], EQI('<path d="M9.5 2.5h5"/><circle cx="12" cy="5" r="1.5"/><path d="M11.2 6.3l-4.7 9.7"/><path d="M12.8 6.3l4.7 9.7"/><rect x="3.5" y="16" width="6" height="3" rx="1.5"/><rect x="14.5" y="16" width="6" height="3" rx="1.5"/>')],
+  ['Medicinka', ['Medicinka'], EQI('<circle cx="12" cy="12" r="9"/><path d="M3.4 9.6c5.6 1.9 11.6 1.9 17.2 0"/><path d="M3.4 14.4c5.6 1.9 11.6 1.9 17.2 0"/>')],
+  ['Plyo box', ['Plyo box'], EQI('<path d="M3.5 9h13v11.5h-13z"/><path d="M3.5 9l4 -4.5h13l-4 4.5"/><path d="M20.5 4.5v11.5l-4 4.5"/><rect x="7" y="11.5" width="6" height="2.5" rx="1.25"/>')],
+  ['Švedske ljestve', ['Švedske ljestve'], EQI('<path d="M6 3v18"/><path d="M18 3v18"/><path d="M6 5.5h12"/><path d="M6 9h12"/><path d="M6 12.5h12"/><path d="M6 16h12"/><path d="M6 19.5h12"/>')],
+  ['Elastično uže', ['Elastično uže'], EQI('<circle cx="4.5" cy="4.5" r="1.75"/><path d="M5.8 5.8c4 3 6.5 4 4.2 7s.5 4 3 3.7"/><rect x="13" y="13.5" width="8.5" height="6.5" rx="3.25"/><path d="M17.25 13.5v6.5"/>')],
+  ['Kolotur', ['Kolotur'], EQI('<path d="M9.5 2.5h5"/><path d="M12 2.5v1.5"/><circle cx="12" cy="8.5" r="4.5"/><circle cx="12" cy="8.5" r=".75" fill="currentColor"/><path d="M7.5 8.5v8"/><path d="M16.5 8.5v7"/><rect x="5" y="16.5" width="5" height="4.5" rx="1"/><rect x="14" y="15.5" width="5" height="2.5" rx="1.25"/>')],
+  ['Mini guma', ['Mini guma'], EQI('<ellipse cx="12" cy="12" rx="9.5" ry="6"/><ellipse cx="12" cy="11.2" rx="6.5" ry="3"/>')],
+  ['Pilates lopta', ['Velika pilates lopta', 'Mala pilates lopta'], EQI('<path d="M5.59 18.31a15.57 15.57 0 0 1 4.51 -9.21a15.9 15.9 0 0 1 7.43 -4.19"/><path d="M11.55 21a9.34 9.34 0 0 1 2.79 -7.65a9.5 9.5 0 0 1 6.54 -2.85"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/>')],
+  ['Strunjača', ['Strunjača'], EQI('<circle cx="7" cy="14" r="5"/><path d="M9.5 14a2.5 2.5 0 1 1 -2.5 -2.5"/><path d="M10.6 17.5H21v1.5H7"/>')],
+  ['Čunjevi', ['Čunjevi'], EQI('<path d="M4 20l16 0"/><path d="M9.4 10l5.2 0"/><path d="M7.8 15l8.4 0"/><path d="M6 20l5 -15h2l5 15"/>')],
+  ['Ostalo', ['Kotač', 'Bugarsko postolje', 'Sobni bicikl'], EQI('<path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>')],
+];
+const libArr = k => { const v = lsGet(k, []); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; };
+const tileOn = t => t[1].some(x => (S.lib.eq || []).indexOf(x) !== -1);
+const sheetFilters = () => EQ_TILES.filter(tileOn).length + (S.lib.cats || []).length + (S.lib.mus || []).length;
 const DAYS = ['P','U','S','Č','P','S','N'];
 const DAYNAMES = ['ponedjeljak','utorak','srijeda','četvrtak','petak','subota','nedjelja'];
 const daysText = ds => (ds||[]).slice().sort().map(i => DAYNAMES[i].slice(0,3)).join(', ');
@@ -98,7 +181,7 @@ const S = {
   dbState: 'loading', loaded: {},
   ex: {}, pr: {}, field: {}, prog: {}, log: [],
   tab: 'home', stack: [{v:'home'}],
-  lib: { cat: lsGet('mt.libcat', 'Sve'), q: '', eq: lsGet('mt.libeq', []) },
+  lib: { cat: lsGet('mt.libcat', 'Sve'), q: '', eq: libArr('mt.libeq'), cats: libArr('mt.libcats'), mus: libArr('mt.libmus') },   // 1.8: + Kategorija and Zona of the filter
   pack: lsGet('mt.pack', null),
   draft: null, pick: null, sheet: null, toast: null,
   settings: Object.assign({ sound: true, switchSec: 5, transSec: 10 }, lsGet('mt.settings', {})),
@@ -690,6 +773,8 @@ function render(){
   if (fk && fk.a && app.dataset.key && app.dataset.key !== key) focusMem[app.dataset.key] = fk;
   const old = app.querySelector('.view');
   if (old && app.dataset.key) scrollMem[app.dataset.key] = old.scrollTop;
+  // 1.8: a sheet rebuilt by a tap inside it (the filter's tiles and figure) stays where it was scrolled
+  const oldSheet = app.querySelector('.sheet'), sheetTop = oldSheet && S.sheet && oldSheet.dataset.kind === S.sheet.kind ? oldSheet.scrollTop : 0;
   const t = top();
   const fn = VIEWS[t.v] || VIEWS.home;
   let html;
@@ -704,6 +789,7 @@ function render(){
   app.dataset.key = key;
   const v = app.querySelector('.view');
   if (v && scrollMem[key] != null) v.scrollTop = scrollMem[key];
+  if (sheetTop) { const sh = app.querySelector('.sheet'); if (sh) sh.scrollTop = sheetTop; }
   after(t);
   refocus(fk, key);
 }
@@ -1011,12 +1097,18 @@ VIEWS.protocols = function(){
 const LIB_SYN = { 'Core':'trup trbuh trbusnjaci', 'Trup':'core trbuh trbusnjaci', 'Lisni mišić':'list listovi listove listova', 'Girja':'kettlebell', 'Bučice':'dumbbell', 'Šipka':'barbell', 'Medicinka':'medicine ball', 'Čunjevi':'cones', 'Kotač':'ab wheel' };
 const libSearchText = s => norm(s).replace(/dj/g, 'd');   // "ledja" finds "leđa"
 function libFiltered(){
-  const words = libSearchText(S.lib.q).split(/\s+/).filter(Boolean), c = S.lib.cat, eq = S.lib.eq || [];
+  const words = libSearchText(S.lib.q).split(/\s+/).filter(Boolean), c = S.lib.cat, eq = S.lib.eq || [], cs = S.lib.cats || [], mu = S.lib.mus || [];
+  // 1.8, the filter: OR inside a section, AND between sections; Zona by the exercise's muscles (main or secondary; 'cijelo' =
+  // Cijelo tijelo), the exercises that work a chosen muscle as a main one first
+  const muHit = e => { const m = exMuscles(e); return mu.some(r => r === 'cijelo' ? wholeBody(e) : m.prime.indexOf(r) !== -1 || m.sec.indexOf(r) !== -1); };
+  const muRank = e => { if (!mu.length) return 0; const m = exMuscles(e); return mu.some(r => m.prime.indexOf(r) !== -1) ? 0 : 1; };
   const syn = a => a.map(x => LIB_SYN[x] || '').join(' ');
   return Object.values(S.ex).filter(e => {
     // the search text holds the equipment tags themselves (Čunjevi, Bučice…) and their synonyms
     if (words.length) { const z = e.zones || [], q = exEquip(e), hay = libSearchText([e.name, e.alt, e.equipment, z.join(' '), syn(z), e.cat, syn([e.cat]), q.join(' '), syn(q), e.feel].join(' ')); if (!words.every(w => hay.indexOf(w) !== -1)) return false; }
     if (eq.length) { const mine = exEquip(e); if (!eq.some(x => mine.indexOf(x) !== -1)) return false; }
+    if (cs.length && cs.indexOf(e.cat) === -1) return false;
+    if (mu.length && !muHit(e)) return false;
     if (c === 'Sve') return true;
     if (c === 'Favoriti') return !!e.fav;
     if (c === 'TRX') return exEquip(e).indexOf('TRX') !== -1;
@@ -1024,7 +1116,16 @@ function libFiltered(){
     if (c === 'Rehab kuka') return e.cat === 'Rehab' || !!e.phase;
     if (c === 'Uže i kolotur') return !!e.cord;
     return e.cat === c;
-  }).sort((a,b) => (a.order||999) - (b.order||999) || a.name.localeCompare(b.name, 'hr'));
+  }).sort((a,b) => muRank(a) - muRank(b) || (a.order||999) - (b.order||999) || a.name.localeCompare(b.name, 'hr'));
+}
+// 1.8: the filters in use as one row of removable chips (the category of the chip row too), the count and "Očisti filtere"
+function activeFiltersHtml(){
+  const x = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  const chip = (k, v, t) => '<button class="afc" data-a="filtDrop" data-k="'+k+'" data-v="'+esc(v)+'" aria-label="Ukloni filter: '+esc(t)+'">'+esc(t)+x+'</button>';
+  const n = libFiltered().length;
+  return '<div class="chips afil" role="group" aria-label="Aktivni filteri">' + (S.lib.cat !== 'Sve' ? chip('libcat', S.lib.cat, S.lib.cat) : '') + (S.lib.cats || []).map(c => chip('cat', c, c)).join('') +
+    EQ_TILES.filter(tileOn).map(t => chip('eq', t[0], t[0])).join('') + (S.lib.mus || []).map(r => chip('mus', r, r === 'cijelo' ? 'Cijelo tijelo' : muscleLabel(r))).join('') + '</div>' +
+    '<div class="afn"><span id="afcount">' + n + ' ' + plural(n, 'vježba', 'vježbe', 'vježbi') + '</span><button class="txtbtn lnk" data-a="filtClear">Očisti filtere</button></div>';
 }
 function libListHtml(){
   if (S.dbState !== 'ready') return stateNote();
@@ -1055,8 +1156,10 @@ VIEWS.library = function(){
     '</div>' +
     '<h2 class="h2">Popis vježbi</h2>') +
     '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'">' +
-      '<button class="ib fbtn" data-a="eqSheet" aria-label="Filtriraj po opremi'+((S.lib.eq||[]).length ? ', odabrano ' + S.lib.eq.length : '')+'"'+((S.lib.eq||[]).length ? ' aria-pressed="true"' : '')+'>' + I.filter + ((S.lib.eq||[]).length ? '<span class="cnt">'+S.lib.eq.length+'</span>' : '') + '</button></div>' +
-    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && (S.pack.members || []).length ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>' +
+      (nF => '<button class="ib fbtn" data-a="eqSheet" aria-label="Filter vježbi'+(nF ? ', aktivno ' + nF : '')+'"'+(nF ? ' aria-pressed="true"' : '')+'>' + I.filter + (nF ? '<span class="cnt">'+nF+'</span>' : '') + '</button></div>')(sheetFilters()) +
+    // 1.8: with filters from the sheet in use, their chips take the place of the category row (one row, nothing hidden)
+    (sheetFilters() ? activeFiltersHtml() :
+    '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && (S.pack.members || []).length ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>') +
     '<div class="list" id="liblist" style="margin-top:14px">' + libListHtml() + '</div>' +
     '<div style="height:20px"></div></div>' +
     (picking ? '<div class="footer gut"><button class="btn" data-a="pickDone"'+(S.pick.ids.length?'':' disabled')+'>Dodaj u protokol ('+S.pick.ids.length+')</button></div>' : '');
@@ -1157,20 +1260,50 @@ function exOptHtml(e){
   const lp = exLastPts(e.id);
   return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
 }
+// 1.8: the exercise page's Upute | Cilj | Opterećenje as one row of cards that swipes sideways (scroll-snap, the next card peeks
+// in, the dots jump); the page itself does not scroll on a 393 × 852 phone, a long card scrolls inside. The card you were on
+// stays for every exercise while the app is open (S.exTab). The player keeps its compact Upute | Cilj tabs (exInfoHtml).
+const EX_CARDS = ['upute', 'cilj', 'opt'];
+function exCardsHtml(e){
+  const steps = e.steps || [], a = (href, t, ti) => '<a href="'+esc(href)+'" target="_blank" rel="noopener"'+(ti ? ' title="'+esc(ti)+'"' : '')+'>'+esc(t)+' ↗</a>';
+  const cues = steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
+  const eq = e.equipment || exEquip(e).join(', ') || 'Bez opreme';
+  const vids = !SHOW_SOURCES ? '' : (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
+  const card = (k, i, title, body, right) => '<article class="swc" id="swc-'+k+'" data-card="'+k+'" aria-label="'+title+', '+(i + 1)+' od 3"><div class="swh"><h2>'+title+'</h2>'+(right || '')+'</div><div class="swb">'+body+'</div></article>';
+  const c1 = '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
+  const m = exMuscles(e), fig = bodyFig(m, { size: 150, cls: 'exfig' });
+  const c2 = '<div class="tgt"><div class="tl">' + (m.prime.length + m.sec.length ? '<span class="lb">Ciljana područja</span><div class="tcol">' + muscleTags(m) + '</div>' : '') +
+      (e.feel ? '<span class="lb">Osjećaj</span><span class="fe">'+esc(e.feel)+'</span>' : '') + '</div>' + (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>' +
+    (e.note ? '<p class="cn">'+esc(e.note)+'</p>' : (m.prime.length || e.feel ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
+    (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '');
+  const h = historyOf(e.id), rg = LOAD_RANGES.find(r => r[0] === S.loadRange) || LOAD_RANGES[0];
+  const per = h.length ? '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>' : '';
+  const lp = h.length && exLastPts(e.id);
+  const c3 = (h.length ? '<div class="opthd"><span>Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b></span></div>' + exLoadCard(e, S.loadRange, false, true) +
+      (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h)
+    : '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
+      '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>') +
+    '<button class="txtbtn lnk howc" data-a="loadInfo">Kako se računa?</button>';
+  return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute', 0, 'Upute', c1) + card('cilj', 1, 'Cilj', c2) + card('opt', 2, 'Opterećenje', c3, per) + '</div>' +
+    '<div class="dots swdots" id="swdots">' + ['Upute', 'Cilj', 'Opterećenje'].map((t, i) => '<button class="dot" data-a="swGo" data-i="'+i+'" aria-label="'+t+'" aria-current="'+(EX_CARDS[i] === exTabOf(S.exTab))+'"><i></i></button>').join('') + '</div></section>';
+}
+// the scroll position of each card (the row is rebuilt on every render)
+const swPos = (r, i) => { const c = r.children[i]; return c ? Math.min(c.offsetLeft - r.firstElementChild.offsetLeft, r.scrollWidth - r.clientWidth) : 0; };
+const swIdx = r => { let b = 0; for (let i = 1; i < r.children.length; i++) if (Math.abs(r.scrollLeft - swPos(r, i)) < Math.abs(r.scrollLeft - swPos(r, b))) b = i; return b; };
+let swMem = { id: null, tops: [] };
 VIEWS.ex = function(t){
   const e = S.ex[t.id];
   if (!e) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ova vježba više ne postoji.</div></div>';
   const opts = doseOptions(e); const sel = t.dose || 0;
-  return '<div class="view">' +
+  return '<div class="view exv">' +
     '<div class="gut">' + topbar(backBtn(), '<button class="ib" data-a="fav" data-id="'+esc(e.id)+'" aria-pressed="'+(!!e.fav)+'" aria-label="Favorit">'+(e.fav?I.heartF:I.heart)+'</button><button class="ib" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'</button>') + '</div>' +
     mediaHtml(e, e.sides ? 'Lijeva i desna' : '') +
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
-    '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:14px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
-    // 1.6.2: everything about the exercise sits in the three tabs (nothing below them: the old Opterećenje section, Povijest and
-    // the Detalji card moved into Opterećenje, Cilj and Upute)
-    exInfoHtml(e) +
-    '<div style="height:16px"></div></div>' +
+    '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:10px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
+    // 1.8: everything about the exercise sits in the three swipe cards (1.6.2's tabs; nothing below them)
+    exCardsHtml(e) +
+    '</div>' +
     '<div class="ctrl gut">' +
       '<button class="small" data-a="editEx" data-id="'+esc(e.id)+'">Uredi</button><span></span>' +
       '<button class="ring" data-a="playEx" data-id="'+esc(e.id)+'" aria-label="Pokreni vježbu"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--accent)" stroke-width="3.5"/></svg><span class="n">'+I.play+'</span></button>' +
@@ -1246,7 +1379,7 @@ VIEWS.exEdit = function(t){
       (d.cat === 'Rehab' || d.cat === 'Mobilnost' ? '<div class="field"><span class="label">Faza rehabilitacije</span><div class="chips wrap">' + [0,1,2,3].map(p => '<button class="chip" data-a="dset" data-k="phase" data-v="'+p+'" aria-pressed="'+((d.phase||0)===p)+'">'+(p?'Faza '+p:'Bez faze')+'</button>').join('') + '</div></div>' : '') +
       '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6'],['Ø8','Ø8'],['Ø6/Ø8','Ø6 ili Ø8'],['Ø10','Ø10'],['Ø12','Ø12'],['Ø16','Ø16']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div><p class="lnote" style="margin:10px 2px 0">Kilogrami se upisuju za šipku, landmine, bučice ili girju; bez njih vježba se broji u ponavljanjima ili vremenu.</p></div>' +
-      '<div class="field"><span class="label">Ciljana područja</span><div class="chips wrap">' + ZONES.map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+((d.zones||[]).indexOf(z)!==-1)+'">'+esc(exZoneLabel(z))+'</button>').join('') + '</div></div>' +
+      musclePickerHtml(d) +
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Na ponavljanja</button></div>' +
         '<div class="panel">' +
@@ -1267,6 +1400,22 @@ VIEWS.exEdit = function(t){
     '<div class="footer gut"><button class="btn" data-a="saveEx"' + (d._uploading ? ' disabled' : '') + '>Spremi vježbu</button></div>';
 };
 
+// 1.8: "Ciljana područja" in the editor: tap a region on the figure (first tap: main, second: secondary, third: off); the zones
+// follow (musclesZones), 'Kuk' and 'Cijelo tijelo' stay chips of their own. Until you tap, an exercise without muscles keeps its
+// zones as they are and the figure shows them.
+function musclePickerHtml(d){
+  const m = exMuscles(d), zs = d.zones || [], fig = bodyFig(m, { act: 'dmus', size: 300, cls: 'pickfig' });
+  return '<div class="field mpick"><span class="label" id="mpick-l">Ciljana područja</span>' +
+    (fig ? '<div class="figs" role="group" aria-labelledby="mpick-l">' + fig + '<div class="figl"><span>Sprijeda</span><span>Straga</span></div></div>' +
+      '<p class="lnote mleg"><i class="sw p"></i>glavni <i class="sw s"></i>pomoćni · dodirni mišić: glavni, pomoćni, ukloni</p>' : '') +
+    '<div class="zch">' + (m.prime.length + m.sec.length ? muscleTags(m, 'dmusDrop') : '<span class="zhint">Nijedan mišić nije odabran.</span>') + '</div>' +
+    '<div class="chips wrap" style="margin-top:10px">' + ZONE_ONLY.concat(fig ? [] : ZONES.filter(z => ZONE_ONLY.indexOf(z) === -1)).map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+(zs.indexOf(z)!==-1)+'">'+esc(exZoneLabel(z))+'</button>').join('') + '</div>' +
+    '<p class="lnote" style="margin:10px 2px 0" id="mzones">Zone u filteru i opterećenju: ' + (zs.length ? esc(zs.map(exZoneLabel).join(', ')) : 'nijedna') + '</p></div>';
+}
+function setDraftMuscles(dr, prime, sec){
+  if (!prime.length && !sec.length) { dr.muscles = null; dr.zones = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1); return; }
+  dr.muscles = { prime, sec }; dr.zones = musclesZones(dr.muscles, dr.zones);
+}
 function daysPicker(action, id, days){
   days = days || [];
   return '<div class="days" role="group" aria-label="Dani u tjednu"><span class="label" style="padding-left:17px">Dani u tjednu' + (days.length ? '' : ' · dodirni dane kad ga radiš') + '</span><div class="drow">' +
@@ -3011,9 +3160,9 @@ function loadHead(txt, v, prev, vs, none){
 const LOAD_LABEL = { kg: 'Volumen tereta', reps: 'Ukupno ponavljanja', secs: 'Ukupno vrijeme', m: 'Metri' };
 const LOAD_RANGES = [['3', '3 mj', 91], ['6', '6 mj', 183], ['sve', 'Sve', 0]];
 // the "Opterećenje" card of one exercise (the exercise page and Glavne vježbe); range: '3' | '6' | 'sve'
-function exLoadCard(e, range, compact){
+function exLoadCard(e, range, compact, bare){
   const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2]), all = rg[2] ? exLoadSeries(e.id, 0) : sr;
-  const per = compact ? '<button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button>' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
+  const per = bare ? '' : compact ? '<button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button>' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
   const title = compact ? '<b class="t2">'+esc(e.name)+'</b>' : '<span class="t">'+(sr ? LOAD_LABEL[sr.kind] : LOAD_LABEL[all && all.kind] || 'Volumen')+'</span>';
   if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
   const P2 = sr.pts, k = sr.kind, f = v => loadFmt(k, v), n = P2.length, last = P2[n - 1], tr = loadTrend(P2);
@@ -3346,11 +3495,18 @@ function sheetHtml(){
   } else if (s.kind === 'progTest' || s.kind === 'progRestart') {
     body = progSheet(s);
   } else if (s.kind === 'eq') {
-    const eq = S.lib.eq || [];
-    const counts = {}; Object.values(S.ex).forEach(e => exEquip(e).forEach(t => counts[t] = (counts[t] || 0) + 1));
-    body = '<h3>Oprema</h3><p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Prikaži vježbe za opremu koju odabereš.</p>' +
-      '<div class="chips wrap">' + EQUIP.filter(t => counts[t]).map(t => '<button class="tagbtn" data-a="eqToggle" data-v="'+esc(t)+'" aria-pressed="'+(eq.indexOf(t) !== -1)+'">'+esc(t)+' <span style="opacity:.6">'+counts[t]+'</span></button>').join('') + '</div>' +
-      '<div class="seg" style="margin-top:18px"><button class="btn sec" data-a="eqClear" style="height:48px">Očisti</button><button class="btn" data-a="sheetDone" style="height:48px;font-size:16px">' + (n => 'Prikaži ' + n + ' ' + plural(n, 'vježbu', 'vježbe', 'vježbi'))(libFiltered().length) + '</button></div>';
+    // 1.8: Filter vježbi: Kategorija (pills), Oprema (icon tiles), Zona (the figure, tap a muscle; Cijelo tijelo); the count of
+    // matching exercises top right. OR inside a section, AND between sections.
+    const n = libFiltered().length, cs = S.lib.cats || [], mu = S.lib.mus || [];
+    const x = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+    const whole = mu.indexOf('cijelo') !== -1, regs = mu.filter(r => r !== 'cijelo'), fig = bodyFig({ prime: regs, sec: [] }, { act: 'musTap', size: 360, cls: 'filtfig' });
+    body = '<div class="fhd"><h3>Filter vježbi</h3><span class="fcnt" id="fcnt" aria-live="polite" aria-label="' + n + ' ' + plural(n, 'vježba', 'vježbe', 'vježbi') + '">' + n + '</span></div>' +
+      '<div class="fsec"><div class="fl" id="fl-cat">Kategorija</div><div class="chips wrap fcats" role="group" aria-labelledby="fl-cat">' + CATS.map(c => '<button class="chip sm" data-a="catToggle" data-v="'+esc(c)+'" aria-pressed="'+(cs.indexOf(c) !== -1)+'">'+esc(c)+'</button>').join('') + '</div></div>' +
+      '<div class="fsec"><div class="fl" id="fl-eq">Oprema</div><div class="eqgrid" role="group" aria-labelledby="fl-eq">' + EQ_TILES.map(t => '<button class="eqt" data-a="eqTile" data-v="'+esc(t[0])+'" aria-pressed="'+tileOn(t)+'"><span class="bx">'+t[2]+'</span><span class="tx">'+esc(t[0])+'</span></button>').join('') + '</div></div>' +
+      '<div class="fsec" id="fzona"><div class="fl"><span id="fl-z">Zona</span><button class="chip sm" data-a="musTap" data-v="cijelo" aria-pressed="'+whole+'">Cijelo tijelo</button></div>' +
+        (fig ? '<div class="figs" role="group" aria-labelledby="fl-z">' + fig + '<div class="figl"><span>Sprijeda</span><span>Straga</span></div></div>' : '') +
+        '<div class="zch">' + (mu.length ? mu.map(r => { const t = r === 'cijelo' ? 'Cijelo tijelo' : muscleLabel(r); return '<button class="afc" data-a="musTap" data-v="'+r+'" aria-label="Ukloni: '+esc(t)+'">'+esc(t)+x+'</button>'; }).join('') : '<span class="zhint">Dodirni mišić na tijelu.</span>') + '</div></div>' +
+      '<div class="fft"><button class="btn sec" data-a="filtClear">Očisti</button><button class="btn" data-a="sheetDone">Prikaži ' + n + ' ' + plural(n, 'vježbu', 'vježbe', 'vježbi') + '</button></div>';
   } else if (s.kind === 'day') {
     const ws = weekStart(Date.now()), st = weekStatus(ws, weekPlan(ws)), i = s.i, today = dayIdx(Date.now()), m = matchDay();
     const plan = st.slots.filter(x => x.day === i), done = st.log.filter(l => dayIdx(l.at) === i);
@@ -3444,7 +3600,7 @@ function sheetHtml(){
   }
   // the dialog is named by its title, which takes focus when the sheet opens (see refocus)
   const named = body.indexOf('<h3') !== -1; if (named) body = body.replace('<h3', '<h3 id="sheet-h" tabindex="-1"');
-  return '<div class="sheet-bg" data-a="sheetClose"><div class="sheet gut" data-stop="1" role="dialog" aria-modal="true"' + (named ? ' aria-labelledby="sheet-h"' : '') + '><div class="grab"></div>' + body + '</div></div>';
+  return '<div class="sheet-bg" data-a="sheetClose"><div class="sheet gut'+(s.kind === 'eq' ? ' fsheet' : '')+'" data-kind="'+esc(s.kind)+'" data-stop="1" role="dialog" aria-modal="true"' + (named ? ' aria-labelledby="sheet-h"' : '') + '><div class="grab"></div>' + body + '</div></div>';
 }
 
 /* ---------- after-render hooks ---------- */
@@ -3456,6 +3612,18 @@ function after(t){
       const i = Math.round(car.scrollLeft / w);
       dots.querySelectorAll('.dot').forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
     }, { passive: true });
+  }
+  if (t.v === 'ex') {
+    // the card you were on comes back (no animation), the dots and S.exTab follow the swipe; a card scrolled inside keeps its place
+    const r = document.getElementById('swrow'), dots = document.getElementById('swdots');
+    if (r && dots && r.children.length) {
+      const k = Math.max(0, EX_CARDS.indexOf(exTabOf(S.exTab)));
+      if (k) r.scrollLeft = swPos(r, k);
+      if (swMem.id !== t.id) swMem = { id: t.id, tops: [] };
+      Array.from(r.querySelectorAll('.swb')).forEach((b, i) => { if (swMem.tops[i]) b.scrollTop = swMem.tops[i]; b.addEventListener('scroll', () => { swMem.tops[i] = b.scrollTop; }, { passive: true }); });
+      const sync = () => { const i = swIdx(r); dots.querySelectorAll('.dot').forEach((d, j) => d.setAttribute('aria-current', j === i ? 'true' : 'false')); S.exTab = EX_CARDS[i]; };
+      r.addEventListener('scroll', sync, { passive: true });
+    }
   }
   if (t.v === 'play' && P) playAfter();
   if (app.querySelector('g.runner')) startRunners();
@@ -3521,7 +3689,7 @@ const A = {
     const video = !v || /^https?:\/\/\S+$/i.test(v) ? v : /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v) ? 'https://' + v : null;
     if (video === null) { toast('Link na video nije spremljen: upiši cijelu adresu (https://…).'); const el = document.getElementById('f-video'); if (el) el.focus(); return; }
     const prev = S.ex[d.id];
-    const body = { name, alt: (d.alt||'').trim(), cat:d.cat, phase: (d.cat === 'Rehab' || d.cat === 'Mobilnost') && d.phase ? d.phase : null, cord: d.cord || '', zones: d.zones||[], equip: (d.equip||[]).slice(), measure: d.measure, sec: d.sec, sets: d.sets, reps: d.reps, rest: d.rest, kg: d.kg||0, sides: !!d.sides,
+    const body = { name, alt: (d.alt||'').trim(), cat:d.cat, phase: (d.cat === 'Rehab' || d.cat === 'Mobilnost') && d.phase ? d.phase : null, cord: d.cord || '', zones: d.zones||[], muscles: d.muscles && (d.muscles.prime || d.muscles.sec) ? { prime: (d.muscles.prime || []).slice(), sec: (d.muscles.sec || []).slice() } : null, equip: (d.equip||[]).slice(), measure: d.measure, sec: d.sec, sets: d.sets, reps: d.reps, rest: d.rest, kg: d.kg||0, sides: !!d.sides,
       equipment: (d.equipment||'').trim(), feel: (d.feel||'').trim(), steps: lines(d.stepsText), mistakes: (d.mistakes || []).slice(), note: (d.note||'').trim(),
       video, videoTitle: prev && video === (prev.video || '') ? prev.videoTitle : undefined,
       media: d.media || null, mediaType: d.mediaType || null, fav: !!d.fav, order: d.order || 500, source: prev ? prev.source : (d.source || null), sourceTitle: prev ? prev.sourceTitle : (d.sourceTitle || null) };
@@ -3538,6 +3706,7 @@ const A = {
       Object.keys(prev).forEach(k => { if (k !== 'id' && k !== 'pack' && !(k in body)) body[k] = prev[k]; });
     }
     if (body.video === '' && (!prev || prev.video === undefined)) delete body.video;
+    if (body.muscles == null && (!prev || prev.muscles === undefined)) delete body.muscles;   // 1.8: no muscles = drawn from the zones
     if (body.videoTitle === undefined) delete body.videoTitle;
     // a pack drill saved unchanged, or with only your own photo or video, stays the pack's: a newer pack version still updates it
     if (prev && prev.pack && contentHash(Object.assign({}, body, { pack: prev.pack })) === contentHash(prev)) body.pack = prev.pack;
@@ -3799,8 +3968,24 @@ const A = {
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
   eqSheet: () => { S.sheet = { kind:'eq' }; render(); },
-  eqToggle: d => { const eq = S.lib.eq = (S.lib.eq || []).slice(); const i = eq.indexOf(d.v); if (i === -1) eq.push(d.v); else eq.splice(i, 1); lsSet('mt.libeq', eq); render(); },
-  eqClear: () => { S.lib.eq = []; lsSet('mt.libeq', []); S.sheet = null; render(); },
+  // 1.8: the filter sheet (Kategorija, Oprema tiles, Zona on the figure) and the chip row of the filters in use
+  catToggle: d => { const a = S.lib.cats = (S.lib.cats || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libcats', a); render(); },
+  eqTile: d => { const t = EQ_TILES.find(x => x[0] === d.v); if (!t) return; const on = tileOn(t); S.lib.eq = (S.lib.eq || []).filter(x => t[1].indexOf(x) === -1).concat(on ? [] : t[1]); lsSet('mt.libeq', S.lib.eq); render(); },
+  musTap: d => { if (d.v !== 'cijelo' && !MUSCLE_ZONE[d.v]) return; const a = S.lib.mus = (S.lib.mus || []).slice(), i = a.indexOf(d.v); if (i === -1) a.push(d.v); else a.splice(i, 1); lsSet('mt.libmus', a); render(); },
+  filtDrop: d => {
+    if (d.k === 'libcat') { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); }
+    else if (d.k === 'cat') { S.lib.cats = (S.lib.cats || []).filter(x => x !== d.v); lsSet('mt.libcats', S.lib.cats); }
+    else if (d.k === 'mus') { S.lib.mus = (S.lib.mus || []).filter(x => x !== d.v); lsSet('mt.libmus', S.lib.mus); }
+    else { const t = EQ_TILES.find(x => x[0] === d.v); S.lib.eq = (S.lib.eq || []).filter(x => !t || t[1].indexOf(x) === -1); lsSet('mt.libeq', S.lib.eq); }
+    render(); },
+  filtClear: () => { S.lib.eq = []; S.lib.cats = []; S.lib.mus = []; ['mt.libeq', 'mt.libcats', 'mt.libmus'].forEach(k => lsSet(k, [])); if (!S.sheet) { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); } render(); },
+  // the exercise page's dots: jump to that card
+  swGo: d => { const r = document.getElementById('swrow'), i = +d.i; if (!r || !r.children[i]) return; S.exTab = EX_CARDS[i]; r.scrollTo({ left: swPos(r, i), behavior: stillMotion() ? 'auto' : 'smooth' }); },
+  // the editor's muscle picker: main → secondary → off
+  dmus: d => { const dr = S.draft, r = d.v; if (!dr || !MUSCLE_ZONE[r]) return; const m = exMuscles(dr); let prime = m.prime.slice(), sec = m.sec.slice();
+    if (prime.indexOf(r) !== -1) { prime = prime.filter(x => x !== r); sec.push(r); } else if (sec.indexOf(r) !== -1) sec = sec.filter(x => x !== r); else prime.push(r);
+    setDraftMuscles(dr, prime, sec); render(); },
+  dmusDrop: d => { const dr = S.draft; if (!dr) return; const m = exMuscles(dr); setDraftMuscles(dr, m.prime.filter(x => x !== d.v), m.sec.filter(x => x !== d.v)); render(); },
   // programme tests: a result is one history entry of kind 'test' (not a training); "Kreni ispočetka" for a programme
   progTest: d => { const t = progTestDef(d.id, d.t), side = d.s || ''; if (!t || !Object.prototype.hasOwnProperty.call(t.names, side)) return; S.sheet = { kind:'progTest', id: d.id, t: d.t, s: side }; render(); const i = document.getElementById('testv'); if (i) i.focus(); },
   progTestSave: () => {
@@ -3878,7 +4063,7 @@ app.addEventListener('input', ev => {
     const h = document.getElementById('sec-' + t.dataset.from); if (h && val) h.textContent = val;
   }
 });
-app.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.dataset && (t.id === 'topkmh' || t.dataset.ikg != null || t.dataset.dkg != null || t.dataset.isec != null)) { ev.preventDefault(); t.blur(); } });
+app.addEventListener('keydown', ev => { const t = ev.target; if ((ev.key === 'Enter' || ev.key === ' ') && t.classList && t.classList.contains('body-tap')) { ev.preventDefault(); t.dispatchEvent(new MouseEvent('click', { bubbles: true })); return; } if (ev.key === 'Enter' && t.dataset && (t.id === 'topkmh' || t.dataset.ikg != null || t.dataset.dkg != null || t.dataset.isec != null)) { ev.preventDefault(); t.blur(); } });
 app.addEventListener('focusin', ev => { const t = ev.target; if (t.classList && t.classList.contains('kgin')) setTimeout(() => { try { t.select(); } catch(e){} }, 0); });
 app.addEventListener('change', async ev => {
   actionSeq++;
