@@ -3196,7 +3196,7 @@ function chartTable(head, rows){
 // pts: [{ t, v, sub }] oldest first; fmtV formats a value
 // low: the lower chart of the exercise page's Opterećenje card (1.8.1)
 function lineChart(id, pts, fmtV, label, low){
-  const W = 326, R = 288, T = low ? 12 : 26, B = low ? 30 : 110, n = pts.length;   // 1.8.2: the exercise page's (low) chart 20 px lower
+  const W = 326, R = 288, T = low ? 12 : 26, B = low ? 32 : 110, n = pts.length;   // 1.8.2: the exercise page's (low) chart 18 px lower (≥ 50 px tall on an SE)
   const vs = pts.map(p => p.v), mx = Math.max.apply(null, vs), mn = Math.min.apply(null, vs);
   let st = niceStep((mx - mn) / (low ? 2 : 3) || mx / 2 || 1);
   let lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st;
