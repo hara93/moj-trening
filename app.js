@@ -3650,7 +3650,9 @@ function after(t){
       const k = Math.max(0, EX_CARDS.indexOf(exTabOf(S.exTab)));
       if (k) r.scrollLeft = swPos(r, k);
       if (swMem.id !== t.id) swMem = { id: t.id, tops: [] };
-      Array.from(r.querySelectorAll('.swb')).forEach((b, i) => { if (swMem.tops[i]) b.scrollTop = swMem.tops[i]; b.addEventListener('scroll', () => { swMem.tops[i] = b.scrollTop; }, { passive: true }); });
+      // (review) a card with more below its bottom edge fades out there (.swb.more), so cut-off text reads as "scroll on"
+      Array.from(r.querySelectorAll('.swb')).forEach((b, i) => { const more = () => b.classList.toggle('more', b.scrollHeight - b.clientHeight - b.scrollTop > 4);
+        if (swMem.tops[i]) b.scrollTop = swMem.tops[i]; more(); b.addEventListener('scroll', () => { swMem.tops[i] = b.scrollTop; more(); }, { passive: true }); });
       const sync = () => { const i = swIdx(r); dots.querySelectorAll('.dot').forEach((d, j) => d.setAttribute('aria-current', j === i ? 'true' : 'false')); S.exTab = EX_CARDS[i]; };
       r.addEventListener('scroll', sync, { passive: true });
     }

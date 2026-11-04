@@ -582,6 +582,8 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .view.exv{display:flex;flex-direction:column}
 .view.exv > *{flex:none}
 .view.exv .ttl{margin-top:12px}
+.view.exv .media.two:has(.badge){margin-bottom:0}
+.view.exv .media.two .badge{bottom:10px;box-shadow:none}
 .exswipe{flex:1 1 auto !important;min-height:230px;display:flex;flex-direction:column;margin-top:12px}
 .swrow{flex:1;min-height:0;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 max(16px, env(safe-area-inset-left, 0px));padding:0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));scrollbar-width:none;overscroll-behavior-x:contain}
 .swrow::-webkit-scrollbar{display:none}
@@ -593,7 +595,8 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .swh .per{padding:2px}
 .swh .per button{height:44px;margin:-9px 0}
 .swh .per button::before{inset:9px 0}
-.swb{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.swb{flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto contain;padding:8px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.swb.more{-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),transparent);mask-image:linear-gradient(#000 calc(100% - 28px),transparent)}
 .swb .exequip{margin:0 0 2px;padding:8px 12px;border-radius:14px;background:var(--surface-2);font-size:14px;line-height:19px}
 .swb .bul{font-size:15px;line-height:21px}
 .swb .bul.ck svg{width:20px;height:20px;margin-top:0}
