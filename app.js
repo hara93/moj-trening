@@ -4064,7 +4064,7 @@ const A = {
   sheetDone: () => { S.sheet = null; render(); },
   daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
   // 1.8.2: a missed session off this week's plan (home make-up offer, day sheet), and back
-  skipSlot: d => { setSkip(weekStart(Date.now()), d.k, true); toast('Preskočeno ovaj tjedan: ne računa se ni kao propušteno.'); render(); },
+  skipSlot: d => { setSkip(weekStart(Date.now()), d.k, true); toast('Preskočeno ovaj tjedan.'); render(); },
   unskipSlot: d => { setSkip(weekStart(Date.now()), d.k, false); render(); },
   // (review) the library row's category, when it is one of the data categories, becomes a Kategorija pill of the sheet, so the
   // count never depends on something the sheet does not show; the other row categories (Favoriti, TRX …) and the search text
