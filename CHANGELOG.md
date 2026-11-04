@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.9.0 — 4. 11. 2026.
+
+- Gumb **Mjesec** uz tjedni raspored otvara kalendar s treninzima i utakmicama. Dodir na datum prikazuje cijeli raspored i postojeća upozorenja za taj dan.
+- Trening možeš dodati, preskočiti ili premjestiti odabirom novog datuma. Poništavanje vraća zadnju izmjenu. Mjesečne izmjene spremaju se na uređaju i ulaze u sigurnosnu kopiju.
+- Sažetak prikazuje odabrani tjedan. Pod **Više** možeš ponoviti njegove izmjene do kraja mjeseca ili vratiti buduće datume na tjedni plan.
+
 ## 1.8.2 — 4. 11. 2026.
 
 - **Slika vježbe preko cijele širine** (bez tamnih traka), niska, a za svaku sliku posebno namješteno da se ništa važno ne odreže.

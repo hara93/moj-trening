@@ -261,7 +261,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.9.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -412,6 +412,7 @@ function cleanSettings(s){
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
+  if ('planDates' in s) o.planDates = MonthPlan.clean(s.planDates);
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
@@ -699,6 +700,7 @@ const lostText = lost => { const t = nTrainings(lost), r = lost.filter(l => l.ki
 // nothing of yours on the phone yet (a fresh start: no history or programme, nothing created, changed or deleted): an import
 // then keeps no way back, since going back would only empty the app
 const nothingOwn = () => !S.log.length && !(S._deleted || []).length && !Object.keys(S.prog).length &&
+  !Object.keys(S.settings.planDates || {}).length && !Object.keys(S.settings.matchDates || {}).length &&
   ['exercises', 'protocols', 'field'].every(c => Object.values(collMap(c)).every(x => { const f = ((window.SEED || {})[c] || {})[x.id]; return !!f && contentHash(x) === contentHash(f); }));
 const dataCounts = d => { const nPr = Object.values(d.protocols || {}).filter(p => !(p && p.program)).length, nG = Object.keys(d.programs || {}).length, nT = nTrainings(d.log);
   return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'protokol', 'protokola', 'protokola') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti'; };
@@ -890,7 +892,7 @@ const slotCounts = s => !s.skip && (s.f !== 0 || s.done);
 function weekStatus(ws, plan){
   const we = calDay(ws, 7), log = S.log.filter(l => isTraining(l) && l.at >= ws && l.at < we), sk = skipSet(ws);
   const upTo = ws === weekStart(Date.now()) ? dayIdx(Date.now()) : ws < Date.now() ? 7 : -1;   // the days before this one are past
-  const used = {}, all = (plan || planSlots()).map(p => Object.assign({ done: false, f: 1 }, p, { skip: !!sk[slotKey(p)] }));
+  const used = {}, all = (plan || weekPlan(ws)).map(p => Object.assign({ done: false, f: 1 }, p, { skip: !!sk[slotKey(p)] }));
   const live = all.filter(s => !s.skip), fill = (list, sameDay) => list.forEach(s => { if (s.done) return;
     const k = log.findIndex((l, i) => !used[i] && slotHit(s, l) && (!sameDay || dayIdx(l.at) === s.day));
     if (k !== -1) { used[k] = 1; s.done = true; s.l = log[k]; } });
@@ -916,15 +918,15 @@ function planSnaps(){
   if (isPlainObj(o)) Object.keys(o).forEach(k => { const v = o[k]; if (!Array.isArray(v)) return;
     const s = v.filter(x => Array.isArray(x) && typeof x[1] === 'string' && Number.isInteger(x[2]) && x[2] >= 0 && x[2] < 7 && (x[0] !== 'g' || !!S.prog[x[1]]))
       .map(x => ({ kind: x[0] === 'f' ? 'field' : x[0] === 'g' ? 'program' : 'protocol', id: x[1], day: x[2], f: x[3] === 0 ? 0 : 1 }));
-    if (s.length) out[k] = s; });
+    if (s.length || !v.length) out[k] = s; });
   return out;
 }
 // slots: weekStatus(ws, weekPlan(ws)).slots — a removed day that is not done is not kept, so a later training cannot bring it back
 function notePlan(ws, slots){
   const o = lsGet(PLAN_KEY, null), m = isPlainObj(o) ? o : {};
   const v = slots.filter(s => !(s.gone && !s.done)).map(s => [s.kind === 'field' ? 'f' : s.kind === 'program' ? 'g' : 'p', s.id, s.day, s.f === 0 ? 0 : 1]);
-  if (JSON.stringify(m[ws] || []) === JSON.stringify(v)) return;
-  if (v.length) m[ws] = v; else delete m[ws];
+  if (JSON.stringify(m[ws]) === JSON.stringify(v)) return;
+  m[ws] = v;
   const old = calDay(ws, -7 * 105); Object.keys(m).forEach(k => { if (!(+k >= old)) delete m[k]; });
   lsSet(PLAN_KEY, m);
 }
@@ -947,29 +949,60 @@ function setSkip(ws, key, on){
 // earlier day of this week shows as missed with the make-up offer, but counts only once you do it; a day you remove disappears,
 // unless it was trained (then it stays done). Today and the days to come follow the plan as it is now. Sessions or programmes
 // no longer on the phone leave their past days out.
-function weekPlan(ws, plan){
-  plan = plan || planSlots();
-  if (ws !== weekStart(Date.now())) return plan;
-  const snaps = planSnaps(), was = snaps[ws], today = dayIdx(Date.now()), known = {};
+function calendarSlot(x){
+  const p = x.kind === 'protocol' && S.pr[x.id], f = x.kind === 'field' && S.field[x.id], g = x.kind === 'program' && S.prog[x.id];
+  if (p && !p.program) return {kind:x.kind,id:x.id,name:p.name,min:protoMin(p)};
+  if (f) return {kind:x.kind,id:x.id,name:f.name_hr,min:fieldMin(f)};
+  if (g) return {kind:x.kind,id:x.id,name:g.name,min:''};
+  return null;
+}
+function weekPlan(ws, plan, snaps, changes){
+  const now = Date.now(), current = weekStart(now), start = dateKey(ws);
+  snaps = snaps || planSnaps();
+  const was = snaps[ws];
+  if (ws < current && was) {
+    return was.map(x => {
+      const s = calendarSlot(x);
+      return s ? {...s, day:x.day, f:x.f, origin:MonthPlan.shift(start,x.day)} : null;
+    }).filter(Boolean);
+  }
+  let base = plan || planSlots();
+  if (ws > current) base = base.filter(x => x.kind !== 'program' || progStatus(S.prog[x.id]).next);
+  const edits = changes || S.settings.planDates || {};
+  const effective = MonthPlan.week(base,start,edits,calendarSlot);
+  if (ws !== current) return effective;
+  const today = dayIdx(now), known = {};
   const prev = was ? null : Object.keys(snaps).map(Number).filter(k => k < ws).sort((a, b) => b - a)[0];
   (was || (prev != null ? snaps[prev].map(x => Object.assign({}, x, { f: 1 })) : [])).forEach(x => { known[slotKey(x)] = x.f; });
-  const cur = {}, out = plan.map(s => { const k = slotKey(s); cur[k] = 1;
-    return s.day >= today || (!was && prev == null) ? s : Object.assign({}, s, { f: known[k] === 1 ? 1 : 0 }); });
+  // Only the standing weekdays carry over from the previous snapshot. Last week's one-off
+  // addition or move must not change whether this week's past weekday was planned in time.
+  if (!was && prev != null) {
+    const first = dateKey(prev), end = MonthPlan.shift(first,7);
+    const restore = [];
+    for (const [origin, records] of Object.entries(edits)) for (const r of records) {
+      if (r.to && r.to >= first && r.to < end) delete known[slotKey({...r,day:dayIdx(MonthPlan.time(r.to))})];
+      if (!r.extra && origin >= first && origin < end) restore.push(slotKey({...r,day:dayIdx(MonthPlan.time(origin))}));
+    }
+    restore.forEach(k => { known[k] = 1; });
+  }
+  const cur = {}, out = effective.map(s => { const k = slotKey(s); cur[k] = 1;
+    const dated = s.extra || s.origin !== MonthPlan.shift(start,s.day);
+    return s.day >= today || (!was && prev == null) ? s : {...s,f:dated || known[k] === 1 ? 1 : 0}; });
   (was || []).filter(x => x.day < today && !cur[slotKey(x)]).forEach(x => {
-    const p = x.kind === 'protocol' && S.pr[x.id], f = x.kind === 'field' && S.field[x.id], g = x.kind === 'program' && S.prog[x.id];
-    const s = p && !p.program ? { name: p.name, min: protoMin(p) } : f ? { name: f.name_hr, min: fieldMin(f) } : g ? { name: g.name || '', min: '' } : null;
-    if (s) out.push(Object.assign(s, { day: x.day, kind: x.kind, id: x.id, f: 0, gone: true }));
+    const s = calendarSlot(x);
+    if (s) out.push({...s, day:x.day, origin:MonthPlan.shift(start,x.day), f:0, gone:true});
   });
   return out.sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'hr'));
 }
 function streakWeeks(plan){
   plan = plan || planSlots();
   const tl = S.log.filter(isTraining);
-  if (!plan.length || !tl.length) return 0;
+  if (!tl.length) return 0;
   const now = weekStart(Date.now()), first = weekStart(tl[tl.length - 1].at), snap = planSnaps(); let n = 0;
-  for (let ws = calDay(now, -7); ws >= first; ws = calDay(ws, -7)) { const s = weekStatus(ws, snap[ws] || plan); if (s.done >= s.planned) n++; else break; }   // 1.8.2: a skipped slot is not planned
+  const complete = s => (plan.length || s.slots.length) && s.done >= s.planned;
+  for (let ws = calDay(now, -7); ws >= first; ws = calDay(ws, -7)) { const s = weekStatus(ws, weekPlan(ws, plan, snap)); if (complete(s)) n++; else break; }
   const cur = weekStatus(now, weekPlan(now, plan));
-  return n + (cur.done >= cur.planned ? 1 : 0);
+  return n + (complete(cur) ? 1 : 0);
 }
 // match day (Doziranje, your usual week), by the rule of weekAdvice: heavy legs at the latest 4 days before the match,
 // 2 days before a lighter session with explosive work, the day before only activation
@@ -977,14 +1010,28 @@ const heavyLegs = p => (p.items || []).some(it => { const e = S.ex[it.exId]; ret
 const gymLike = p => p.tag === 'Teretana' || (p.items || []).some(it => { const e = S.ex[it.exId]; return !!e && e.cat === 'Snaga' && loaded(e); });
 // matches: the standing match day (Doziranje) every week, plus dates marked in the day sheet or in Doziranje. settings.matchDates
 // is a flat map 'YYYY-MM-DD' → 1 (a match that day) or 0 (no match on the standing day that week); it goes into backups.
-const dateKey = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const dateKey = MonthPlan.key;
+// Both endpoints of a move are one record, written only after the latest settings are checked.
+function writeCalendarSetting(key, value){
+  try {
+    const raw = localStorage.getItem('mt.settings');
+    const latest = raw ? cleanSettings(JSON.parse(raw)) : S.settings;
+    if (JSON.stringify(latest[key] || {}) !== JSON.stringify(S.settings[key] || {})) {
+      S.settings = { ...SETTINGS_BASE, ...latest }; render();
+      toast('Raspored se promijenio u drugoj kartici. Pogledaj novi raspored i pokušaj ponovno.', true); return false;
+    }
+    const next = { ...S.settings, ...latest, [key]:value };
+    localStorage.setItem('mt.settings', JSON.stringify(next)); S.settings = next;
+    return true;
+  } catch(e) { toast('Promjena nije spremljena na uređaj. Provjeri slobodan prostor.', true); return false; }
+}
 const matchDates = () => isPlainObj(S.settings.matchDates) ? S.settings.matchDates : {};
 const matchOn = t => { const v = matchDates()[dateKey(t)]; return v === 1 ? true : v === 0 ? false : dayIdx(t) === matchDay(); };
 function setMatchDate(t, on){
   const m = Object.assign({}, matchDates()), k = dateKey(t), old = dateKey(calDay(Date.now(), -56));
   if (on === (dayIdx(t) === matchDay())) delete m[k]; else m[k] = on ? 1 : 0;
   Object.keys(m).forEach(x => { if (x < old) delete m[x]; });
-  S.settings.matchDates = m; lsSet('mt.settings', S.settings);
+  return writeCalendarSetting('matchDates', m);
 }
 // the days (0 = Monday) of the week that starts at ws with a match
 const weekMatches = ws => [0, 1, 2, 3, 4, 5, 6].filter(i => matchOn(calDay(ws, i)));
@@ -1017,15 +1064,15 @@ function fieldMatchNote(li, i, ws){
   return '';
 }
 // the warning for a planned session on day i (0 = Monday) of this week, '' when it fits the match week (all its matches)
-function matchNote(s, i){
-  const ws = weekStart(Date.now()), g = matchGap(ws, i);
+function matchNote(s, i, ws = weekStart(Date.now()), plan){
+  const g = matchGap(ws, i);
   if (g.next < 0 && g.prev < 0) return '';
   if (s.kind === 'field') {   // by the session's intensity (fieldLoad); at most one extra field session a week
     const f = S.field[s.id];
     if (!f) return '';
     const n = fieldMatchNote(fieldInt(f), i, ws);
     if (n || g.next === 0) return n;
-    const fs = planSlots().filter(x => x.kind === 'field');
+    const fs = (plan || weekStatus(ws).slots).filter(x => x.kind === 'field' && !x.skip);
     if (fs.length > 1 && fs[0].day !== i) return 'U sezoni najviše jedan dodatni trening na terenu tjedno: ovaj preskoči ili ga zamijeni lakšim.';
     return '';
   }
@@ -1074,9 +1121,9 @@ function weekHtml(){
   const sk = streakWeeks(cur);
   // (review) a week whose plan is all skipped still has a plan: 0/0 and the streak, not the empty-plan hint
   const line = st.planned || st.slots.length
-    ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today) ? ' • danas odrađeno' : '')
+    ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today && s.done) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
-  return strip + '<p class="sub wline">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
+  return strip + '<div class="month-entry"><span>' + esc(st.slots.length ? line : 'Ovaj tjedan') + '</span><button data-a="monthOpen" aria-label="Otvori mjesečni planer">Mjesec</button></div>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
 }
 
 /* ---------- views ---------- */
@@ -3353,8 +3400,9 @@ VIEWS.loadInfo = function(){
 VIEWS.progress = function(){
   const plan = planSlots(), ws = weekStart(Date.now()), wplan = weekPlan(ws, plan), wk = weekStatus(ws, wplan);
   if (S.dbState === 'ready') notePlan(ws, wk.slots);
-  let sk = plan.length ? streakWeeks(plan) : 0;
-  if (!plan.length) for (let w = ws, k = 0; k < 104; w = calDay(w, -7), k++) { const we = calDay(w, 7); if (S.log.some(l => isTraining(l) && l.at >= w && l.at < we)) sk++; else if (w !== ws) break; }
+  const hasPlan = plan.length || Object.keys(S.settings.planDates || {}).length;
+  let sk = hasPlan ? streakWeeks(plan) : 0;
+  if (!hasPlan) for (let w = ws, k = 0; k < 104; w = calDay(w, -7), k++) { const we = calDay(w, 7); if (S.log.some(l => isTraining(l) && l.at >= w && l.at < we)) sk++; else if (w !== ws) break; }
   const thisWeek = S.log.filter(l => isTraining(l) && l.at >= ws).length, total = nTrainings(S.log);
   const sugs = progSuggestions(), act = sugs.filter(x => x.kind === 'up' || x.kind === 'revert' || x.kind === 'variant'), way = sugs.filter(x => x.kind === 'way');
   const nokg = {}; sugs.filter(x => x.kind === 'nokg').forEach(x => { (nokg[x.p.id] = nokg[x.p.id] || { p: x.p, names: [] }).names.push(x.e.name); });
@@ -3965,13 +4013,21 @@ const A = {
       d[c] = d[c] || {}; Object.values(m).forEach(x => { if (x.pack === pk.id && !d[c][x.id]) d[c][x.id] = clone(x); }); });
     const settings0 = S.settings;
     applyData(d); S._deleted = (d._deleted || []).slice(); mergeSeed(window.SEED || {}); repairCopies();
-    if (s.undo) S.settings = Object.assign({}, SETTINGS_BASE, cleanSettings(s.settings)); else if (d.settings) S.settings = Object.assign({}, S.settings, d.settings);
-    if (!persist()) {
+    if (s.undo) S.settings = Object.assign({}, SETTINGS_BASE, cleanSettings(s.settings));
+    else S.settings = Object.assign({}, S.settings, {planDates:{}}, d.settings || {});
+    let previousSettings, settingsSaved = false;
+    try {
+      previousSettings = localStorage.getItem('mt.settings');
+      localStorage.setItem('mt.settings',JSON.stringify(S.settings)); settingsSaved = true;
+    } catch(e) {}
+    if (!settingsSaved || !persist()) {
+      if (settingsSaved) try {
+        if (previousSettings === null) localStorage.removeItem('mt.settings'); else localStorage.setItem('mt.settings',previousSettings);
+      } catch(e) {}
       try { const o = cleanData(JSON.parse(before.data)); applyData(o); S._deleted = o._deleted; } catch(e){}
       S.settings = settings0; S.saveFailed = false; S.sheet = null; render();
       toast('Podaci nisu zamijenjeni: memorija aplikacije je puna. Na mobitelu je sve ostalo kao prije.', true); return;
     }
-    lsSet('mt.settings', S.settings);
     if (s.undo) { try { await IDB.del('before-import'); } catch(e){} try { localStorage.removeItem('mt.beforeImportAt'); } catch(e){} }
     else { if (none) { try { await IDB.del('before-import'); } catch(e){} } if (s.noUndo || none) { try { localStorage.removeItem('mt.beforeImportAt'); } catch(e){} } else lsSet('mt.beforeImportAt', before.at); try { localStorage.removeItem('mt.freshAt'); } catch(e){} }
     if (packOld) lsSet('mt.packOld', Date.now()); else { try { localStorage.removeItem('mt.packOld'); } catch(e){} }
@@ -4259,6 +4315,229 @@ document.addEventListener('visibilitychange', () => {
   if (cur && savedJson != null && cur !== savedJson) { pendingExt = cur; if (!appBusy()) render(); }
   maybeReload();
   if (swContainer) swContainer.getRegistration().then(r => r && r.update()).catch(() => {});
+});
+
+/* ---------- Mjesec: the same weekly slots, with exceptions for individual dates ---------- */
+const monthDate = (key, opts) => new Date(MonthPlan.time(key)).toLocaleDateString('hr-HR', opts);
+const monthShort = key => monthDate(key, {day:'numeric',month:'numeric'});
+const monthCap = s => s.charAt(0).toLocaleUpperCase('hr') + s.slice(1);
+const monthDayName = key => monthCap(monthDate(key,{weekday:'long'})) + ', ' + monthDate(key,{day:'numeric',month:'long'});
+const calendarMap = () => S.settings.planDates || {};
+const monthCat = s => s.kind === 'field' ? 'Teren' : s.kind === 'program' ? 'Program' : S.pr[s.id]?.tag || 'Protokol';
+const monthRef = s => ' data-kind="' + esc(s.kind) + '" data-id="' + esc(s.id) + '"';
+const monthBall = '<span class="mc-ball" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 5.8 4 2.8-1.5 4.5h-5L6 8.6z" fill="currentColor"/></svg></span>';
+const monthDot = '<i class="mc-dot" aria-hidden="true"></i>';
+function monthDaySlots(key, map = calendarMap()){
+  const ws = weekStart(MonthPlan.time(key));
+  return weekStatus(ws, weekPlan(ws, null, null, map)).slots.filter(x => x.day === dayIdx(MonthPlan.time(key)));
+}
+function monthChoose(t, date){
+  t.date = t.page = date; t.menu = t.picker = t.more = t.confirm = null; t.move = null;
+}
+function monthSave(t, map, message){
+  const before = calendarMap();
+  if (!writeCalendarSetting('planDates', map)) return false;
+  planSaved();
+  t.undo = {key:'planDates',before,after:map,date:t.date,day:dateKey(Date.now())};
+  t.message = message;
+  return true;
+}
+function monthMatch(t, on){
+  const before = matchDates();
+  if (!setMatchDate(MonthPlan.time(t.date), on)) return;
+  t.undo = {key:'matchDates',before,after:matchDates(),date:t.date,day:dateKey(Date.now())};
+  t.message = on ? 'Utakmica je dodana.' : 'Utakmica je uklonjena s ovog datuma.';
+  t.picker = t.menu = null; render();
+}
+function monthBulk(t, which){
+  const today = dateKey(Date.now()), map = calendarMap();
+  if (which === 'clear') return MonthPlan.reset(map, MonthPlan.monthOf(t.date), today);
+  const base = planSlots(), snaps = planSnaps();
+  return MonthPlan.repeat(map, t.date, today, (changes,date,row) =>
+    weekPlan(weekStart(MonthPlan.time(date)), base, snaps, changes).some(s => s.day === dayIdx(MonthPlan.time(date)) && MonthPlan.same(s,row)));
+}
+function monthTools(t){
+  if (!t.more) return '';
+  const range = MonthPlan.monday(t.date), name = monthDate(t.date,{month:'long'});
+  const btn = (act, msg) => '<button data-a="monthBulkAsk" data-kind="'+act+'">'+esc(msg)+'</button>';
+  if (!t.confirm) return '<div class="mc-tools">'+btn('repeat','Ponovi izmjene tjedna '+monthShort(range)+' – '+monthShort(MonthPlan.shift(range,6)))+
+    btn('clear','Vrati tjedni plan za '+name)+'</div>';
+  const result = monthBulk(t,t.confirm), repeat = t.confirm === 'repeat';
+  return '<div class="mc-tools"><strong>'+(repeat?'Ponovi izmjene do kraja mjeseca':'Vrati tjedni plan')+'</strong><p>'+
+    (repeat?'Kopiraju se izmjene odabranog tjedna. Ručno uređeni datumi se preskaču.':'Vraćaju se buduće izmjene ovog mjeseca, uključujući povezana premještanja. Utakmice se čuvaju.')+
+    '</p><p>Broj izmjena: '+result.count+'</p><div><button data-a="monthMore">Odustani</button> <button class="mc-link" data-a="monthBulkApply"'+
+    (!result.count?' disabled':'')+'>Primijeni</button></div></div>';
+}
+function monthPicker(t, slots){
+  if (!t.picker) return '';
+  const groups = [['all','Sve'],['protocol','Protokoli'],['field','Teren'],['program','Programi']];
+  const filter = groups.map(([k,n])=>'<button data-a="monthFilter" data-kind="'+k+'" aria-pressed="'+(t.picker===k)+'">'+n+'</button>').join('');
+  const options = [];
+  for (const [kind, items] of [['protocol',S.pr],['field',S.field],['program',S.prog]]) {
+    if (t.picker !== 'all' && kind !== t.picker) continue;
+    for (const id of Object.keys(items)) {
+      if (kind === 'program' && !progStatus(items[id]).next) continue;
+      const s = calendarSlot({kind,id}); if (s) options.push(s);
+    }
+  }
+  options.sort((a,b) => a.name.localeCompare(b.name,'hr'));
+  const game = matchOn(MonthPlan.time(t.date));
+  const matchBtn = t.picker === 'all' ? '<button class="mc-option" data-a="monthMatch" data-on="1"'+(game?' disabled':'')+'><span>'+monthBall+' Utakmica</span><small>'+(game?'Već u planu':'Nogomet')+'</small></button>' : '';
+  return '<section class="mc-picker" aria-label="Dodaj u odabrani dan"><div class="mc-filters">'+filter+'</div>'+matchBtn+options.map(s=>{
+    const present = slots.some(x=>MonthPlan.same(x,s));
+    return '<button class="mc-option" data-a="monthPick"'+monthRef(s)+(present?' disabled':'')+'><span>'+esc(s.name)+'</span><small>'+
+      esc(present?'Već u planu':s.min?s.min+' min':monthCat(s))+'</small></button>';
+  }).join('')+(!options.length && !matchBtn?'<p class="mc-empty">Nema dostupnih treninga u ovoj skupini.</p>':'')+'</section>';
+}
+function monthItem(t, s, ws, st, editable){
+  const attrs = monthRef(s), ref = s.origin || t.date, menu = t.menu && MonthPlan.same(t.menu,s);
+  if (s.skip) {
+    const restore = !t.move && ws === weekStart(Date.now()) ? '<button class="mc-link" data-a="unskipSlot" data-k="'+esc(slotKey(s))+'">Vrati</button>' : '';
+    return '<div class="mc-item mc-itemrow mc-inactive"><div><b>'+esc(s.name)+'</b><small>Preskočeno</small></div>'+restore+'</div>';
+  }
+  const status = s.done ? 'Odrađeno'+(s.l && dateKey(s.l.at)!==t.date?' '+monthShort(dateKey(s.l.at)):'') :
+    t.date < dateKey(Date.now()) ? 'Propušteno' : ref !== t.date ? 'Premješteno s '+monthShort(ref) : s.extra ? 'Dodano za ovaj dan' : '';
+  const meta = [monthCat(s),s.min?s.min+' min':'',status].filter(Boolean).join(' · ');
+  const warnSlot = s.kind==='program' && !s.pr && S.prog[s.id] ? {...s,pr:progStatus(S.prog[s.id]).next?.pr} : s;
+  const warning = editable && !s.done ? matchNote(warnSlot,s.day,ws,st.slots) : '';
+  return '<div class="mc-item"><div class="mc-itemrow"><button class="mc-session" '+slotOpen(s)+'><b>'+esc(s.name)+'</b><small>'+esc(meta)+'</small></button>'+
+    (editable && !s.done?'<button class="mc-icon" data-a="monthMenu"'+attrs+' aria-label="Radnje za '+esc(s.name)+'" aria-expanded="'+!!menu+'">⋯</button>':'')+
+    '</div>'+(menu && editable && !s.done?'<div class="mc-actions"><button data-a="monthMove"'+attrs+'>Premjesti</button><button data-a="monthSkip"'+attrs+'>'+
+    (s.extra?'Ukloni':'Preskoči')+'</button></div>':'')+
+    (warning?'<p class="mc-warn">'+esc(warning)+'</p>':'')+'</div>';
+}
+function monthSummary(t, ws, st){
+  const start = dateKey(ws), days = Array.from({length:7},(_,i)=>MonthPlan.shift(start,i));
+  const games = weekMatches(ws);
+  const counted = st.slots.filter(slotCounts);
+  const minutes = counted.reduce((n,s)=>n+(Number(String(s.min||0).replace(',','.'))||0),0);
+  const metres = counted.reduce((n,s)=>n+(s.kind==='field' && S.field[s.id]?fieldLoad(S.field[s.id]).m||0:0),0);
+  const metrics = ['Odrađeno '+st.done+' od '+st.planned, games.length+' '+plural(games.length,'utakmica','utakmice','utakmica')];
+  if (minutes && counted.every(s=>s.min)) metrics.push('≈ '+Math.round(minutes)+' min');
+  if (metres) metrics.push('≈ '+(metres/1000).toLocaleString('hr-HR',{maximumFractionDigits:1})+' km na terenu');
+  return '<section class="mc-summary"><button class="mc-summary-head" data-a="monthSummary" aria-expanded="'+!!t.summary+'"><b>Sažetak tjedna</b><small>'+
+    esc(monthShort(start)+' – '+monthShort(days[6]))+'</small><span aria-hidden="true">'+(t.summary?'⌃':'⌄')+'</span></button>'+
+    (t.summary?'<p>'+esc(metrics.join(' · '))+'</p>'+days.map((d,i)=>{
+      const names = st.slots.filter(s=>s.day===i).map(s=>esc(s.name)+(s.skip?' · preskočeno':''));
+      if (games.includes(i)) names.unshift('<span class="mc-game">Utakmica</span>');
+      return '<button class="mc-weekrow" data-a="monthWeekDay" data-date="'+d+'"><small>'+esc(monthDate(d,{weekday:'short',day:'numeric'}))+
+        '</small><span>'+(names.join('<br>')||'Slobodan dan')+'</span></button>';
+    }).join(''):'')+'</section>';
+}
+VIEWS.month = function(t){
+  const today = dateKey(Date.now()), month = MonthPlan.monthOf(t.page), grid = MonthPlan.grid(month);
+  const weekly = new Map(), base = planSlots(), snaps = planSnaps();
+  function status(key) {
+    const ws = weekStart(MonthPlan.time(key));
+    if (!weekly.has(ws)) weekly.set(ws,weekStatus(ws,weekPlan(ws,base,snaps)));
+    return weekly.get(ws);
+  }
+  const calendar = grid.map(key=>{
+    const st = status(key), i = dayIdx(MonthPlan.time(key)), inMonth = MonthPlan.monthOf(key)===month;
+    const has = st.slots.some(s=>s.day===i && !s.skip) || st.log.some(l=>dayIdx(l.at)===i), game = matchOn(MonthPlan.time(key));
+    const label = [monthDayName(key),key===today?'danas':'',has?'trening':'',game?'utakmica':''].filter(Boolean).join(', ');
+    return '<button class="mc-date'+(inMonth?'':' adjacent')+'" data-a="monthDate" data-date="'+key+'" aria-label="'+esc(label)+'" aria-pressed="'+(key===t.date)+
+      '"'+(key===today?' aria-current="date"':'')+(t.move && (key<today || key===t.date)?' disabled':'')+'><b>'+Number(key.slice(8))+'</b><span class="mc-marks">'+
+      (inMonth && has?monthDot:'')+(inMonth && game?monthBall:'')+'</span></button>';
+  }).join('');
+  const ws = weekStart(MonthPlan.time(t.date)), st = status(t.date), i = dayIdx(MonthPlan.time(t.date));
+  const slots = st.slots.filter(s=>s.day===i), editable = t.date>=today && !t.move;
+  const game = matchOn(MonthPlan.time(t.date));
+  let agenda = game ? '<div class="mc-item mc-itemrow"><div><b class="mc-game">'+monthBall+' Utakmica</b><small>Nogomet</small></div>'+
+    (editable?'<button class="mc-link" data-a="monthMatch" data-on="0" aria-label="Ukloni utakmicu s ovog datuma">Ukloni</button>':'')+'</div>' : '';
+  agenda += slots.map(s=>monthItem(t,s,ws,st,editable)).join('');
+  const sourceRows = (calendarMap()[t.date]||[]).filter(r=>r.to!==t.date && !slots.some(s=>MonthPlan.same(s,r)));
+  for (const r of sourceRows) {
+    const s = calendarSlot(r); if (!s) continue;
+    agenda += '<div class="mc-item mc-itemrow mc-inactive"><div><b>'+esc(s.name)+'</b><small>'+
+      esc(r.to?'Premješteno na '+monthShort(r.to):'Preskočeno')+'</small></div>'+
+      (editable && !r.to?'<button class="mc-link" data-a="monthPick"'+monthRef(r)+'>Vrati</button>':'')+'</div>';
+  }
+  for (const l of st.log.filter(l=>dayIdx(l.at)===i && !slots.some(s=>s.l===l))) {
+    agenda += '<div class="mc-item"><b>'+esc(l.name||'Trening')+'</b><small>Odrađeno · dnevnik</small></div>';
+  }
+  const moving = t.move ? '<div class="mc-moving"><div><b>Odaberi novi datum</b><small>'+esc(t.move.name)+'</small></div>'+
+    '<button class="mc-link" data-a="monthCancel">Odustani</button></div>' : '';
+  return '<div class="view mc"><header>'+topbar(backBtn(),'<button class="mc-link" data-a="monthToday">Danas</button>')+
+    '<div class="mc-heading"><h1>'+esc(monthCap(monthDate(t.page,{month:'long'})))+' <small>'+t.page.slice(0,4)+'</small></h1><nav aria-label="Kretanje po mjesecima">'+
+    '<button class="mc-icon" data-a="monthStep" data-d="-1" aria-label="Prethodni mjesec">‹</button><button class="mc-icon" data-a="monthStep" data-d="1" aria-label="Sljedeći mjesec">›</button>'+
+    '<button class="mc-icon mc-overflow" data-a="monthMore" aria-label="Više radnji" aria-expanded="'+!!t.more+'"'+(t.move?' disabled':'')+'>⋯</button></nav></div></header>'+
+    monthTools(t)+moving+'<div class="mc-calendar"><div class="mc-names" aria-hidden="true">'+['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].map(n=>'<span>'+n+'</span>').join('')+
+    '</div><div class="mc-days" role="group" aria-label="Dani u mjesecu">'+calendar+'</div></div>'+
+    '<div class="mc-legend"><span>'+monthDot+' Trening</span><span>'+monthBall+' Utakmica</span></div>'+
+    '<section class="mc-agenda"><div class="mc-aghead"><h2 aria-live="polite">'+esc(monthDayName(t.date))+'</h2>'+
+    (editable?'<button class="mc-link" data-a="monthAdd" aria-expanded="'+!!t.picker+'">'+(t.picker?'Zatvori':'+ Dodaj')+'</button>':'')+'</div>'+
+    (agenda || '<p class="mc-empty">Slobodan dan.'+(!base.length && !Object.keys(calendarMap()).length?' Za jedan datum odaberi + Dodaj. Za ponavljanje označi dane u samom treningu.':'')+'</p>')+monthPicker(t,slots)+
+    (t.message?'<div class="mc-message" role="status"><span>'+esc(t.message)+'</span>'+(t.undo?'<button class="mc-link" data-a="monthUndo">Poništi</button>':'')+'</div>':'')+
+    '</section>'+(!t.move?monthSummary(t,ws,st):'')+'</div>';
+};
+Object.assign(A,{
+  monthOpen: d => {
+    const key = MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
+    go({v:'month',date:key,page:key});
+  },
+  monthStep: d => {
+    const t = top(), next = MonthPlan.changeMonth(t.page,+d.d);
+    if (t.move) t.page = next; else monthChoose(t,next);
+    render();
+  },
+  monthToday: () => { const t=top(), day=dateKey(Date.now()); if(t.move)t.page=day; else monthChoose(t,day); render(); },
+  monthDate: d => {
+    const t = top(), day = d.date, today = dateKey(Date.now());
+    if (!MonthPlan.valid(day)) return;
+    if (t.move) {
+      const s = monthDaySlots(t.date).find(x=>MonthPlan.same(x,t.move) && x.origin===t.move.origin && !!x.extra===!!t.move.extra && (x.n||0)===(t.move.n||0));
+      if (!s || s.done || s.skip || t.date<today) { monthChoose(t,day); render(); toast('Raspored se promijenio. Ponovno odaberi trening.'); return; }
+      if (day<today || day===t.date) return;
+      if (monthDaySlots(day).some(x=>MonthPlan.same(x,s))) { toast('Isti trening je već na tom datumu. Odaberi drugi dan.'); return; }
+      if (!monthSave(t,MonthPlan.put(calendarMap(),s.origin,{...s,to:day}),'Trening premješten na '+monthShort(day))) return;
+    }
+    monthChoose(t,day); render();
+  },
+  monthCancel: () => { const t=top(); monthChoose(t,t.date); render(); },
+  monthMenu: d => { const t=top(); t.menu=t.menu && MonthPlan.same(t.menu,d)?null:d; t.picker=null; render(); },
+  monthAdd: () => { const t=top(); t.picker=t.picker?null:'all'; t.menu=null; render(); },
+  monthFilter: d => { top().picker=d.kind; render(); },
+  monthMove: d => {
+    const t=top(), s=monthDaySlots(t.date).find(x=>MonthPlan.same(x,d));
+    if (!s || s.done || s.skip || t.date<dateKey(Date.now())) return;
+    t.move=s; t.menu=t.picker=t.more=null; render();
+  },
+  monthPick: d => {
+    const t=top(); if (t.date<dateKey(Date.now()) || !calendarSlot(d)) return;
+    if (monthDaySlots(t.date).some(s=>MonthPlan.same(s,d))) { toast('Taj je trening već u planu.'); return; }
+    const old = MonthPlan.regular(calendarMap(),t.date,d);
+    const weekly = planSlots().some(s=>s.day===dayIdx(MonthPlan.time(t.date)) && MonthPlan.same(s,d));
+    const extra = !weekly || !!old?.to;
+    const n = extra ? MonthPlan.extraNumber(calendarMap(),t.date,d) : 0;
+    const map = MonthPlan.put(calendarMap(),t.date,{...d,extra,n,to:t.date});
+    if (!monthSave(t,map,'Trening dodan za '+monthShort(t.date))) return;
+    t.picker=t.menu=null; render();
+  },
+  monthSkip: d => {
+    const t=top(), s=monthDaySlots(t.date).find(x=>MonthPlan.same(x,d));
+    if (!s || s.done || s.skip || t.date<dateKey(Date.now())) return;
+    if (!monthSave(t,MonthPlan.put(calendarMap(),s.origin,{...s,to:null}),s.extra?'Trening uklonjen.':'Trening preskočen za '+monthShort(t.date))) return;
+    t.menu=null; render();
+  },
+  monthMatch: d => { const t=top(); if(t.date>=dateKey(Date.now()))monthMatch(t,d.on==='1'); },
+  monthSummary: () => { const t=top(); t.summary=!t.summary; render(); },
+  monthWeekDay: d => { const t=top(); monthChoose(t,d.date); t.summary=false; render(); },
+  monthMore: () => { const t=top(); t.more=!t.more; t.confirm=t.menu=t.picker=null; render(); },
+  monthBulkAsk: d => { top().confirm=d.kind; render(); },
+  monthBulkApply: () => {
+    const t=top(); if (!['repeat','clear'].includes(t.confirm)) return;
+    const result=monthBulk(t,t.confirm);
+    if (!result.count || !monthSave(t,result.map,'Broj primijenjenih izmjena: '+result.count)) return;
+    t.more=t.confirm=null; render();
+  },
+  monthUndo: () => {
+    const t=top(), undo=t.undo; if (!undo) return;
+    if (undo.day!==dateKey(Date.now()) || JSON.stringify(S.settings[undo.key]||{})!==JSON.stringify(undo.after)) { t.undo=null; t.message='Raspored je u međuvremenu izmijenjen.'; render(); return; }
+    if (!writeCalendarSetting(undo.key,undo.before)) return;
+    planSaved();
+    monthChoose(t,undo.date); t.undo=null; t.message='Promjena poništena.'; render();
+  }
 });
 
 init();

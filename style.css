@@ -211,6 +211,67 @@ label:has(+ .vsr:focus-visible),div:has(> #mfile:focus-visible) label[for="mfile
 .over{position:absolute;top:0;left:0;right:0;z-index:2}
 .vsr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
+/* Monthly planner */
+.month-entry{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;color:var(--text-2);font-size:13px;min-height:34px}
+.month-entry button{position:relative;min-height:32px;border:0;border-radius:20px;padding:0 12px;color:var(--accent-text);background:var(--tag-bg);font-weight:600}
+.month-entry button::after{content:"";position:absolute;inset:-6px 0}
+.mc{--mc-gold:#ffc861;padding-bottom:20px}
+.mc button{background:transparent;color:var(--text);border:0;font:inherit;cursor:pointer}
+.mc button:disabled{opacity:.45;cursor:default}
+.mc .topbar{margin:5px 12px 0;grid-template-columns:minmax(44px,1fr) auto minmax(44px,1fr)}
+.mc-heading,.mc-aghead,.mc-itemrow,.mc-summary-head,.mc-moving,.mc-message{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mc-heading{margin:2px 12px 12px 21px}
+.mc-heading h1{margin:0;font-size:clamp(24px,7vw,30px);line-height:1.2;letter-spacing:-.045em}
+.mc-heading h1 small{font-size:17px;color:var(--text-2);font-weight:400;letter-spacing:-.02em;white-space:nowrap}
+.mc-heading nav{display:flex;align-items:center}
+.mc .mc-icon{min-width:42px;height:44px;font-size:25px;display:inline-grid;place-items:center;border-radius:11px;color:var(--text-2)}
+.mc .mc-overflow{font-size:19px}
+.mc .mc-link{color:var(--accent-text);font-size:14px;font-weight:600;min-height:44px;padding:0 6px;white-space:nowrap}
+.mc-calendar{padding:0 9px}
+.mc-names,.mc-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.mc-names{color:var(--text-2);text-align:center;font-size:12px;border-bottom:1px solid var(--border);padding:0 0 7px}
+.mc .mc-date{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:1px 0;min-width:0;height:47px;border-radius:10px}
+.mc-date b{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;font:600 15px/1 var(--font);font-variant-numeric:tabular-nums}
+.mc-date.adjacent{color:var(--text-2);opacity:.55}
+.mc-date[aria-current="date"] b{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent-text)}
+.mc-date[aria-pressed="true"] b{background:#426bc9;box-shadow:none;color:#fff}
+.mc-marks{display:flex;align-items:center;justify-content:center;gap:3px;height:10px}
+.mc-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent-text)}
+.mc-ball{display:inline-flex;align-items:center;justify-content:center;font:14px/1 "DejaVu Sans","Segoe UI Symbol",system-ui,sans-serif;color:var(--mc-gold)}
+.mc-legend{display:flex;gap:18px;padding:11px 20px 14px;color:var(--text-2);font-size:12px}
+.mc-legend span{display:inline-flex;align-items:center;gap:6px}
+.mc-agenda,.mc-summary{padding:8px 19px;background:var(--surface);border-top:1px solid var(--border)}
+.mc-aghead{min-height:44px}
+.mc-aghead h2{font-size:18px;letter-spacing:-.025em;margin:0;font-weight:600}
+.mc-item small,.mc-moving small{display:block;color:var(--text-2);font-size:12px;font-weight:400;margin-top:3px}
+.mc-item{padding:7px 0;font-size:15px}
+.mc-item+.mc-item,.mc-option+.mc-option,.mc-weekrow{border-top:1px solid var(--border)}
+.mc .mc-session{flex:1;min-width:0;text-align:left;padding:3px 0;min-height:43px}
+.mc .mc-session b,.mc-item b{font-size:15px;font-weight:600}
+.mc-game{color:var(--mc-gold)}
+.mc .mc-inactive b{color:var(--text-2);font-weight:400}
+.mc-empty,.mc-summary p,.mc-tools p{color:var(--text-2);font-size:13px;line-height:1.5}
+.mc .mc-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px}
+.mc-actions button,.mc-tools button,.mc-filters button{min-height:44px;padding:0 12px;border-radius:10px;background:var(--surface-2);color:var(--accent-text);font-size:13px;font-weight:600}
+.mc-warn{color:var(--mc-gold);background:#332d24;padding:9px 12px;margin:6px 0 0;border-radius:9px;font-size:13px;line-height:1.4}
+.mc-filters{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0}
+.mc-filters button{padding:0 10px;color:var(--text-2)}
+.mc-filters button[aria-pressed="true"]{color:var(--accent-text);background:var(--tag-bg)}
+.mc .mc-option,.mc .mc-weekrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:45px;padding:7px 0;border-radius:0;text-align:left;font-size:14px}
+.mc .mc-option+.mc-option,.mc .mc-weekrow{border-top:1px solid var(--border)}
+.mc-option small,.mc-summary small{color:var(--text-2);font-size:12px;white-space:nowrap}
+.mc-summary{padding-top:0;padding-bottom:0}
+.mc .mc-summary-head{width:100%;min-height:50px;color:var(--text-2);padding:0;text-align:left;font-size:13px}
+.mc-summary-head b{margin-right:auto;color:var(--text-body);font-weight:600}
+.mc .mc-weekrow{display:grid;grid-template-columns:56px 1fr}
+.mc-tools,.mc-moving,.mc-message{margin:0 12px 12px;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:14px}
+.mc-tools{display:grid;gap:5px}
+.mc-tools p{margin:3px 0}
+.mc-moving{background:var(--tag-bg);border-color:transparent}
+.mc-message{background:var(--surface-2);margin:8px 0 3px;padding:3px 10px;min-height:37px}
+@media(max-width:355px){.mc-calendar{padding:0 3px}.mc-heading{margin-left:12px;margin-right:4px}.mc-heading h1{font-size:22px}.mc-heading h1 small{font-size:15px}.mc .mc-icon{min-width:40px}.mc-agenda,.mc-summary{padding-left:13px;padding-right:13px}.mc-aghead h2{font-size:16px}}
+@media(hover:hover){.mc-date:hover,.mc .mc-icon:hover,.mc-option:hover,.mc-weekrow:hover{background:var(--surface-2)}}
+
 /* 1.1: week strip on the home screen */
 .week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:12px 25px 0}
 .wd{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:var(--text-2);padding:0;font-size:12px;font-weight:600}
