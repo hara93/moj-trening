@@ -1,0 +1,143 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const M = require('../muscle-work.js');
+const ex = (props = {}) => ({ id:'custom-push',name:'Vlastiti potisak',cat:'Snaga',muscles:{prime:['front_chest'],sec:['back_triceps']},...props });
+const done = (props = {}) => ({ exId:'custom-push',sets:3,reps:8,done:true,...props });
+const copy = x => JSON.parse(JSON.stringify(x));
+
+test('custom strength: primary/secondary credits remain separate integers and duplicates never multiply work', () => {
+  const e = ex({muscles:{prime:['front_chest','front_chest'],sec:['front_chest','back_triceps','back_triceps']}});
+  const s = M.completedItem(e,done());
+  assert.deepEqual(s.primary,['chest']); assert.deepEqual(s.secondary,['triceps']);
+  assert.deepEqual(s.credits,{direct:{chest:3},secondary:{triceps:3}});
+  const sum = M.sumSnapshots([s]);
+  assert.equal(sum.groups.chest.equivalent,3); assert.equal(sum.groups.triceps.equivalent,1.5);
+  assert.equal(sum.groups.triceps.secondary,3);
+});
+test('known partial work counts performed sets, skipped and zero-rep failed sets do not count', () => {
+  const partial = M.completedItem(ex(),done({setsDone:1}));
+  assert.equal(partial.completion,'partial'); assert.equal(partial.credits.direct.chest,1);
+  const failed = M.completedItem(ex(),done({done:false,lastReps:0}));
+  assert.equal(failed.completedSets,2); assert.equal(failed.completion,'partial');
+  assert.equal(M.completedItem(ex(),done({done:false,lastReps:0,setsDone:1})).completedSets,0);
+  assert.equal(M.completedItem(ex(),done({done:false,lastReps:4})).completedSets,3);
+  const skipped = M.completedItem(ex(),done({skipped:true}));
+  assert.equal(skipped.completion,'skipped'); assert.deepEqual(skipped.credits.direct,{});
+});
+test('ambiguous or malformed performed counts are unknown rather than full planned work', () => {
+  for (const change of [{done:false},{done:undefined},{setsDone:-1},{setsDone:1.5},{setsDone:4},{setsDone:'2'},{sets:undefined}]) {
+    const s = M.completedItem(ex(),done(change));
+    assert.equal(s.completion,'unknown',JSON.stringify(change));
+    assert.deepEqual(s.credits.direct,{});
+    assert.equal(M.sumSnapshots([s]).coverage.unknownItems,1);
+  }
+});
+test('warmups and unsuitable categories stay excluded; explicit exercise eligibility can opt in or out', () => {
+  for (const cat of ['Rehab','Mobilnost','Aktivacija','Eksplozivnost','Kondicija']) {
+    const s = M.completedItem(ex({cat}),done());
+    assert.equal(s.eligibility,'excluded'); assert.deepEqual(s.credits.direct,{});
+  }
+  assert.equal(M.completedItem(ex({cat:'Rehab',muscleWorkEligible:true}),done()).credits.direct.chest,3);
+  assert.equal(M.completedItem(ex({muscleWorkEligible:false}),done()).eligibility,'excluded');
+  for (const fn of [M.completedItem,M.plannedItem]) {
+    const s = fn(ex({muscleWorkEligible:true}),done({warmup:true}));
+    assert.equal(s.eligibility,'excluded'); assert.equal(s.eligibilitySource,'warmup'); assert.deepEqual(s.credits.direct,{});
+  }
+});
+test('custom names do not determine eligibility or infer anatomical coverage', () => {
+  const e = ex({name:'Bench press squat sprint rehab',cat:'Moj tip',muscles:null});
+  assert.equal(M.profile(e).eligibility,'unknown');
+  assert.equal(M.completedItem(e,done()).eligibility,'unknown');
+  const unknown = M.completedItem(ex({muscles:{prime:['front_knees','front_shins_ankles','new_region'],sec:[]}}),done());
+  assert.deepEqual(unknown.primary,[]); assert.equal(M.sumSnapshots([unknown]).coverage.unassignedItems,1);
+  assert.deepEqual(unknown.unassignedRegions,['front_knees','front_shins_ankles','new_region']);
+});
+test('completed snapshots are detached and deeply immutable; later edits do not rewrite history', () => {
+  const e = ex(), x = done(), s = M.completedItem(e,x);
+  e.name = 'Novo'; e.muscles.prime[0] = 'back_glutes'; x.sets = 10;
+  assert.equal(s.name,'Vlastiti potisak'); assert.deepEqual(s.primary,['chest']); assert.equal(s.completedSets,3);
+  assert.throws(()=>{s.primary.push('glutes');},TypeError);
+  assert.throws(()=>{s.credits.direct.chest=99;},TypeError);
+});
+test('planned protocol is an independent forecast; actual work does not borrow planned completion', () => {
+  const snapshots = M.plannedProtocol({items:[done({done:undefined}),done({warmup:true})]}, {'custom-push':ex()});
+  assert.equal(snapshots.length,2); assert.equal(snapshots[0].source,'planned');
+  assert.equal(snapshots[0].completedSets,null); assert.equal(snapshots[0].credits.direct.chest,3);
+  assert.equal(M.sumSnapshots(snapshots).groups.chest.direct,3);
+  assert.equal(M.completedItem(ex(),done({setsDone:1})).credits.direct.chest,1);
+});
+test('completion from a pinned plan retains the original name, eligibility, roles and warmup through retry/reload', () => {
+  const e = ex(), pinned = M.pack(M.plannedItem(e,done({done:undefined})));
+  e.name = 'Preimenovano'; e.cat = 'Mobilnost'; e.muscles = {prime:['back_glutes'],sec:[]}; e.muscleWorkEligible = false;
+  const actual = M.completedFromPlan(copy(pinned),done({setsDone:1}));
+  assert.equal(actual.name,'Vlastiti potisak'); assert.equal(actual.category,'Snaga');
+  assert.equal(actual.eligibility,'eligible'); assert.deepEqual(actual.primary,['chest']);
+  assert.deepEqual(actual.secondary,['triceps']); assert.equal(actual.completedSets,1); assert.equal(actual.completion,'partial');
+  assert.deepEqual(actual.credits,{direct:{chest:1},secondary:{triceps:1}});
+  assert.equal(M.completedFromPlan(pinned,done({done:false,lastReps:0})).completedSets,2);
+  assert.equal(M.completedFromPlan(pinned,done({done:false})).completion,'unknown');
+  const warmup = M.plannedItem(ex(),done({warmup:true}));
+  assert.equal(M.completedFromPlan(warmup,done({warmup:false})).eligibilitySource,'warmup');
+  assert.deepEqual(M.completedFromPlan(warmup,done()).credits.direct,{});
+  assert.equal(M.completedFromPlan(null,done()),null);
+  assert.equal(M.completedFromPlan(pinned,done({exId:'other'})),null);
+  assert.equal(M.completedFromPlan(pinned,done({sets:4})),null);
+  assert.equal(M.completedFromPlan(M.completedItem(ex(),done()),done()),null);
+  assert.equal(M.sanitize(M.pack(actual)).completedSets,1);
+  assert.throws(()=>{actual.primary.push('glutes');},TypeError);
+});
+test('compact packing round-trips every group, empty and partial/excluded snapshots with no stored derived credit', () => {
+  const e = ex({muscles:{prime:M.groups.map(g=>g.regions[0]),sec:[]}});
+  const all = M.completedItem(e,done()), packed = M.pack(all);
+  assert.equal(packed.length,13); assert.deepEqual(M.sanitize(copy(packed)),all);
+  for (const s of [M.completedItem(ex(),done({setsDone:1})),M.completedItem(ex(),done({skipped:true})),M.completedItem(ex(),done({done:false})),M.plannedItem(ex(),done({warmup:true}))]) {
+    assert.deepEqual(M.sanitize(copy(M.pack(s))),s);
+  }
+  assert.ok(JSON.stringify(M.pack(M.completedItem(ex(),done()))).length < JSON.stringify(M.completedItem(ex(),done())).length / 2);
+  const reversed = M.completedItem(ex({muscles:{prime:['back_glutes','front_chest'],sec:['back_triceps','front_biceps']}}),done());
+  assert.deepEqual(M.sanitize(copy(M.pack(reversed))),reversed);
+});
+test('skipped or zero-work unknown anatomy is not reported as unallocated performed work; excluded warmups are not partial strength work', () => {
+  const unassigned = ex({muscles:null});
+  for (const item of [done({skipped:true}),done({setsDone:0}),done({done:false,lastReps:0,setsDone:1})]) {
+    assert.equal(M.sumSnapshots([M.completedItem(unassigned,item)]).coverage.unassignedItems,0);
+  }
+  const warmup = M.completedItem(ex(),done({warmup:true,setsDone:1}));
+  assert.equal(M.sumSnapshots([warmup]).coverage.partialItems,0);
+  assert.equal(M.sumSnapshots([M.completedItem(unassigned,done())]).coverage.unassignedItems,1);
+});
+test('import validation refuses inconsistent, fractional, overlapping, unknown-version or tampered credits', () => {
+  const good = M.completedItem(ex(),done());
+  for (const mutate of [s=>s.v=2,s=>s.primary.push('futureGroup'),s=>s.secondary.push('chest'),s=>s.completedSets=1.5,s=>s.credits.direct.chest=40,s=>s.plannedSets=2,s=>s.completion='planned',s=>s.exerciseId='__proto__',s=>s.unassignedRegions.push('front_chest')]) {
+    const s = copy(good); mutate(s); assert.equal(M.sanitize(s),null);
+  }
+  for (const mutate of [s=>s[7]=2**18,s=>s[8]=-1,s=>s[4]=7,s=>s[12]='0',s=>s.pop()]) {
+    const s = copy(M.pack(good)); mutate(s); assert.equal(M.sanitize(s),null);
+  }
+  assert.deepEqual(M.sanitize(copy(good)),good);
+});
+test('weekly totals use only immutable authoritative snapshots, survive trimmed items and expose old missing/invalid logs', () => {
+  const actual = M.completedItem(ex(),done({setsDone:1})), planned = M.plannedItem(ex(),done());
+  const logs = [
+    {kind:'protocol',at:10,name:'Dovršeno',muscleWork:[M.pack(actual)]},
+    {kind:'protocol',at:12,name:'Staro',items:[done()]},
+    {kind:'protocol',at:13,muscleWork:[{broken:true}]},
+    {kind:'protocol',at:14,muscleWork:[planned]},
+    ...['field','exercise','test'].map((kind,i)=>({kind,at:15+i,muscleWork:[M.pack(actual)]})),
+    {kind:'protocol',at:20,muscleWork:[actual]}
+  ];
+  const result = M.week(logs,{from:10,to:20});
+  assert.equal(result.groups.chest.direct,1); assert.equal(result.groups.triceps.equivalent,.5);
+  assert.equal(result.coverage.sessions,4); assert.equal(result.coverage.missingSessions,1);
+  assert.equal(result.coverage.invalidSessions,2); assert.equal(result.coverage.partialSessions,1);
+  assert.equal(result.coverage.excludedSessions,3); assert.equal(result.coverage.invalidItems,2);
+  assert.equal(result.groups.chest.items[0].at,10); assert.equal(result.groups.chest.items[0].sessionName,'Dovršeno');
+  assert.equal(result.groups.chest.items[0].name,'Vlastiti potisak');
+  assert.throws(()=>M.week(logs,{from:20,to:20}),RangeError);
+});
+test('an imported empty attribution array remains a missing breakdown, never a covered zero-work session', () => {
+  const result = M.week([{kind:'protocol',at:10,muscleWork:[]}],{from:0,to:20});
+  assert.equal(result.coverage.sessions,1); assert.equal(result.coverage.missingSessions,1);
+  assert.equal(result.coverage.coveredSessions,0); assert.equal(result.groups.chest.direct,0);
+});

@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.10.0 — 4. 11. 2026.
+
+- **Moj pregled** na prvoj ikoni donje trake prikazuje odrađene treninge, tjednu pokrivenost 18 mišićnih skupina i usporedbu rada po skupinama. Dodir na mišić otvara vježbe i treninge iz kojih dolaze njegove serije. **Moji protokoli** dostupni su iz pregleda.
+- **Uključi preostali plan** dodaje projekciju preostalih termina iz ovog tjedna. U protokolu možeš otvoriti **Planirani rad po mišićima** prije treninga, a pri završetku **Odrađeno prema planu**.
+- Za odrađenu radnu seriju svaka glavna skupina dobiva 1, a svaka pomoćna 0,5 procijenjene serije. Računaju se stvarno odrađene serije. Zagrijavanje se izostavlja. U uređivaču vlastite vježbe biraš mišiće i možeš promijeniti ulazi li vježba u ovaj zbroj.
+- Uz završeni trening sprema se tadašnja raspodjela po mišićima. Kasnije izmjene vježbe vrijede za buduće termine. Sigurnosne kopije uključuju raspodjelu, a za starije zapise bez nje pregled označava nedostajuće podatke.
+
 ## 1.9.1 — 4. 11. 2026.
 
 - Nova figura tijela sprijeda i straga prikazuje mišićna područja u knjižnici, na kartici vježbe i pri uređivanju vježbe. Postojeće oznake glavnih i pomoćnih mišića vrijede i na novoj figuri.

@@ -261,7 +261,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.10.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -342,6 +342,16 @@ let cleanFixes = 0;   // how many values the last checks had to drop or convert
 function cleanVal(k, v, depth){
   const drop = () => { cleanFixes++; return undefined; };
   if (v == null || depth > 12) return depth > 12 ? drop() : v;
+  if (k === 'muscleWorkEligible') return typeof v === 'boolean' ? v : drop();
+  if (k === 'muscleWork') {
+    if (!Array.isArray(v)) return drop();
+    return v.map(raw => {
+      const snapshot = MuscleWork.sanitize(raw);
+      if (snapshot && snapshot.source === 'completed') return MuscleWork.pack(snapshot);
+      if (raw !== null) cleanFixes++;
+      return null; // retain an explicit gap instead of treating corrupted attribution as zero work
+    });
+  }
   // 1.8: an exercise's muscles { prime: [region ids], sec: [region ids] } (its 'sec' is not a dose's seconds)
   if (k === 'muscles') {
     if (!isPlainObj(v)) return drop();
@@ -803,7 +813,7 @@ function render(){
   // one damaged value must not take the whole app down: the screen says so, the rest keeps working
   try { html = fn(t); }
   catch(e){ console.error('view failed', t.v, e); html = '<div class="view gut">' + topbar(S.stack.length > 1 ? backBtn() : '') + '<div class="empty">Ovaj zaslon se ne može prikazati: neki spremljeni podaci su neispravni. Ostatak aplikacije radi.<button class="txtbtn" data-a="dataSheet">Moji podaci</button></div></div>'; }
-  const rootView = (t.v === 'home' || t.v === 'protocols' || t.v === 'library' || t.v === 'progress') && !S.pick;
+  const rootView = ['home', 'dashboard', 'protocols', 'library', 'progress'].includes(t.v) && !S.pick;
   if (rootView) html += tabbar();
   if (S.sheet) { try { html += sheetHtml(); } catch(e){ console.error('sheet failed', e); S.sheet = null; } }
   if (S.toast) html += '<div class="toast" role="' + (S.toastErr ? 'alert' : 'status') + '">' + esc(S.toast) + '</div>';
@@ -835,7 +845,7 @@ function toast(msg, err){
 function tabbar(){
   const t = S.tab;
   return '<nav class="tabbar gut" aria-label="Glavna navigacija">' +
-    '<button class="tab" data-a="tab" data-tab="protocols" aria-label="Moji protokoli"' + (t==='protocols'?' aria-current="page"':'') + '>' + I.tabGrid + '</button>' +
+    '<button class="tab" data-a="tab" data-tab="dashboard" aria-label="Moj pregled"' + (t==='dashboard'?' aria-current="page"':'') + '>' + I.tabGrid + '</button>' +
     '<button class="tab" data-a="tab" data-tab="home" aria-label="Početna"' + (t==='home'?' aria-current="page"':'') + '>' + I.tabPlay + '</button>' +
     '<button class="tab" data-a="tab" data-tab="library" aria-label="Knjižnica vježbi"' + (t==='library'?' aria-current="page"':'') + '>' + I.tabLib + '</button>' +
     '<button class="tab" data-a="tab" data-tab="progress" aria-label="Napredak"' + (t==='progress'?' aria-current="page"':'') + '>' + I.tabProg + '</button>' +
@@ -1170,6 +1180,103 @@ VIEWS.home = function(){
   '</div>';
 };
 
+// A planned slot uses today's protocol. Completed work always uses the session's saved attribution.
+function protocolMuscleWork(protocol) {
+  const items = protocol.items || [];
+  const sections = secOf(items);
+  return MuscleWork.plannedProtocol({
+    items: items.map((item,index) => ({ ...item, warmup: item.warmup === true || /^zagrij/.test(norm(sections[index])) }))
+  }, S.ex);
+}
+
+function muscleContributions(snapshots, source) {
+  const contributions = [];
+  for (const raw of snapshots || []) {
+    const item = MuscleWork.sanitize(raw);
+    if (!item || item.source !== source) continue;
+    const groups = new Set([...Object.keys(item.credits.direct), ...Object.keys(item.credits.secondary)]);
+    for (const groupId of groups) {
+      const direct = item.credits.direct[groupId] || 0;
+      const indirect = item.credits.secondary[groupId] || 0;
+      if (direct || indirect) contributions.push({ groupId, exerciseId:item.exerciseId, name:item.name, direct, indirect });
+    }
+  }
+  return contributions;
+}
+
+function protocolMusclePreview(protocol) {
+  const summary = MuscleWork.sumSnapshots(protocolMuscleWork(protocol));
+  const groups = Object.values(summary.groups).filter(g => g.equivalent > 0);
+  const rows = groups.map(g => '<div><span>' + esc(g.label) + '</span><b>' +
+    esc(g.equivalent.toLocaleString('hr-HR')) + '</b></div>').join('');
+  const gap = summary.coverage.unassignedItems || summary.coverage.unknownItems || summary.coverage.invalidItems;
+  return '<details class="protocol-muscles"><summary>Planirani rad po mišićima</summary>' +
+    (rows ? '<p>Procijenjene serije ako dovršiš protokol. Glavna serija vrijedi 1, pomoćna 0,5.</p>' + rows
+      : '<p>U protokolu nema raspoređenih serija snage.</p>') +
+    (gap ? '<p>Dio rada nema potpunu raspodjelu. Provjeri mišiće i postavke vježbi.</p>' : '') + '</details>';
+}
+
+function sessionMuscleComparison(entry, plan) {
+  if (!entry || !Array.isArray(entry.muscleWork) || !Array.isArray(plan)) return '';
+  const actual = MuscleWork.sumSnapshots(entry.muscleWork), target = MuscleWork.sumSnapshots(plan);
+  const rows = MuscleWork.groups.filter(g => target.groups[g.id].equivalent || actual.groups[g.id].equivalent).map(g => {
+    const recorded = actual.groups[g.id].equivalent.toLocaleString('hr-HR');
+    const planned = target.groups[g.id].equivalent.toLocaleString('hr-HR');
+    return '<div><span>'+esc(g.label)+'</span><b>'+recorded+' / '+planned+'</b></div>';
+  }).join('');
+  if (!rows) return '';
+  return '<details class="protocol-muscles"><summary>Odrađeno prema planu</summary><p>Odrađene / planirane procijenjene serije po mišiću u ovom treningu.</p>'+rows+'</details>';
+}
+
+VIEWS.dashboard = function(t) {
+  if (S.dbState !== 'ready') return TrainingDashboard.render({ loading:true });
+  const now = Date.now(), start = weekStart(now), end = calDay(start, 7), weekday = dayIdx(now);
+  const status = weekStatus(start), actual = MuscleWork.week(status.log, { from:start, to:end });
+  const remaining = status.slots.filter(slot => !slot.done && !slot.skip && !slot.gone && slot.day >= weekday);
+  const plannedItems = [], sessions = [];
+  const quality = { missingSessions:actual.coverage.missingSessions + actual.coverage.invalidSessions,
+    unallocatedSessions:actual.coverage.unassignedSessions, partialSessions:actual.coverage.partialSessions, missingPlannedSessions:0 };
+  const savedByIndex = new Map(actual.sessions.map(s => [s.index, s.snapshots]));
+  for (const [index, log] of status.log.entries()) {
+    sessions.push({ id:String(log.at), date:dateKey(log.at), label:log.name, kind:log.kind, status:'done',
+      contributions:muscleContributions(savedByIndex.get(index), 'completed') });
+  }
+  for (const slot of remaining) {
+    const date = dateKey(calDay(start, slot.day)), protocolId = slot.kind === 'program' ? slot.pr : slot.id;
+    const protocol = slot.kind === 'field' ? null : S.pr[protocolId];
+    const planned = protocol ? protocolMuscleWork(protocol) : [];
+    const counts = MuscleWork.sumSnapshots(planned).coverage;
+    if (slot.kind !== 'field' && (!protocol || counts.unknownItems || counts.unassignedItems || counts.invalidItems)) {
+      quality.missingPlannedSessions++;
+    }
+    plannedItems.push(...planned);
+    sessions.push({ id:slotKey(slot), date, label:slot.name, kind:slot.kind, status:'planned',
+      contributions:muscleContributions(planned, 'planned'),
+      action:protocol ? { name:'openPr', id:protocolId } : slot.kind === 'field' && S.field[slot.id] ? { name:'openField', id:slot.id } : null });
+  }
+  const plan = MuscleWork.sumSnapshots(plannedItems);
+  function groupValues(report, id, type) {
+    const group = report.groups[id];
+    const dates = sessions.filter(s => s.status === type && s.contributions.some(c => c.groupId === id)).map(s => s.date);
+    return { direct:group.direct, indirect:group.secondary, equivalent:group.equivalent, days:new Set(dates).size };
+  }
+  const groups = MuscleWork.groups.map(g => ({
+    id:g.id, label:g.label, regions:g.regions, actual:groupValues(actual,g.id,'done'),
+    planned:groupValues(plan,g.id,'planned'), target:null
+  }));
+  const days = DAYS.map((name,index) => ({ date:dateKey(calDay(start,index)), label:name, isToday:index === weekday,
+    done:status.log.filter(log => dayIdx(log.at) === index).length,
+    planned:remaining.filter(slot => slot.day === index).length }));
+  const todaysSlots = status.slots.filter(slot => slot.day === weekday && slotCounts(slot));
+  return TrainingDashboard.render({
+    range:{ start:dateKey(start), end:dateKey(calDay(start,6)), label:shortDate(start) + ' – ' + shortDate(calDay(start,6)), isCurrent:true },
+    today:dateKey(now), forecast:!!t.forecast, selectedGroup:t.selectedGroup, groups, sessions, days, quality,
+    summary:{ done:status.done, planned:status.planned, todayDone:todaysSlots.filter(s => s.done).length, todayPlanned:todaysSlots.length },
+    coverage:{ done:groups.filter(g => g.actual.equivalent > 0).length, total:groups.length,
+      projected:groups.filter(g => g.actual.equivalent + g.planned.equivalent > 0).length }
+  });
+};
+
 // Moji protokoli: Trening A, B, C on top in their order, then the rest by last use (trained or changed);
 // ones never used keep the shipped order (the seed numbers them 1–10)
 function protoListOrder(list){
@@ -1181,7 +1288,7 @@ VIEWS.protocols = function(){
   const list = protoListOrder(Object.values(S.pr).filter(p => !p.program));
   const progs = Object.values(S.prog);
   const fieldN = Object.keys(S.field).length;
-  return '<div class="view gut">' + topbar('', '') +
+  return '<div class="view gut">' + topbar(S.stack.length > 1 ? backBtn() : '', '') +
     '<h1 class="h1">Moji protokoli</h1>' +
     (stateNote() || (
       '<div class="list" style="margin-top:24px">' +
@@ -1496,7 +1603,7 @@ VIEWS.exEdit = function(t){
       (d.cat === 'Rehab' || d.cat === 'Mobilnost' ? '<div class="field"><span class="label">Faza rehabilitacije</span><div class="chips wrap">' + [0,1,2,3].map(p => '<button class="chip" data-a="dset" data-k="phase" data-v="'+p+'" aria-pressed="'+((d.phase||0)===p)+'">'+(p?'Faza '+p:'Bez faze')+'</button>').join('') + '</div></div>' : '') +
       '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6'],['Ø8','Ø8'],['Ø6/Ø8','Ø6 ili Ø8'],['Ø10','Ø10'],['Ø12','Ø12'],['Ø16','Ø16']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div><p class="lnote" style="margin:10px 2px 0">Kilogrami se upisuju za šipku, landmine, bučice ili girju; bez njih vježba se broji u ponavljanjima ili vremenu.</p></div>' +
-      musclePickerHtml(d) +
+      musclePickerHtml(d) + muscleCountingEditor(d) +
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Na ponavljanja</button></div>' +
         '<div class="panel">' +
@@ -1528,6 +1635,20 @@ function musclePickerHtml(d){
     '<div class="zch">' + (m.prime.length + m.sec.length ? muscleTags(m, 'dmusDrop') : '<span class="zhint">Nijedan mišić nije odabran.</span>') + '</div>' +
     '<div class="chips wrap" style="margin-top:10px">' + ZONE_ONLY.concat(fig ? [] : ZONES.filter(z => ZONE_ONLY.indexOf(z) === -1)).map(z => '<button class="tagbtn" data-a="dzone" data-v="'+esc(z)+'" aria-pressed="'+(zs.indexOf(z)!==-1)+'">'+esc(exZoneLabel(z))+'</button>').join('') + '</div>' +
     '<p class="lnote" style="margin:10px 2px 0" id="mzones">Zone u filteru i opterećenju: ' + (zs.length ? esc(zs.map(exZoneLabel).join(', ')) : 'nijedna') + '</p></div>';
+}
+
+function muscleCountingEditor(d) {
+  const selected = typeof d.muscleWorkEligible === 'boolean' ? String(d.muscleWorkEligible) : 'auto';
+  const profile = MuscleWork.profile(d);
+  const options = [['auto','Po kategoriji'],['true','Uključi'],['false','Isključi']];
+  const included = profile.eligibility === 'eligible';
+  const mapped = profile.primary.length || profile.secondary.length;
+  const note = included
+    ? (mapped ? 'Radne serije ulaze u tjedni pregled prema odabranim glavnim i pomoćnim mišićima.' : 'Odaberi mišiće na figuri za raspodjelu serija. Do tada će rad biti označen kao neraspoređen.')
+    : 'Ova vježba ostaje u dnevniku, a njezine se serije izostavljaju iz tjednog zbroja snage.';
+  return '<div class="field"><span class="label">Računanje radnih serija</span><div class="chips wrap" role="group" aria-label="Računanje radnih serija">' +
+    options.map(([value,label]) => '<button class="chip" data-a="muscleEligibility" data-v="' + value + '" aria-pressed="' +
+      (value === selected) + '">' + label + '</button>').join('') + '</div><p class="lnote">' + note + '</p></div>';
 }
 // 1.8 (review): the zones change only by what the taps changed: a zone goes when its last region was taken off here, a region
 // you added brings its zone, every other zone (the shipped joint zones Koljeno / Gležanj, Kuk, the order, zones[0]) stays;
@@ -1698,6 +1819,7 @@ VIEWS.pr = function(t){
       (p.desc ? '<p style="margin:0 17px;font-size:16px;line-height:24px;color:var(--text-body)">' + esc(p.desc) + '</p>' : '') +
       '<div class="stack" style="gap:16px;margin:4px 17px 0">' + featRows(p) + '</div>' +
       goalCard(p) +
+      protocolMusclePreview(p) +
       (p.program ? '' : daysPicker('prDays', p.id, p.days)) +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2>' + (p.program ? '' : '<button class="txtbtn" data-a="progInfo" style="font-size:14px;padding:0">Kako napredujem?</button>') + '</div>' +
       '<div class="list">' + itemRowsHtml(p.items || [], lab) + '</div>' +
@@ -2325,6 +2447,7 @@ function finish(){
   P.secs = Math.round((P.finishedAt - P.startedAt)/1000);
   P.answers = P.answers || {}; P.lastReps = P.lastReps || {}; P.auto = {};
   if (P.mode === 'ex') (P.items || []).forEach((it, j) => { P.auto[j] = autoAnswer(j); if (P.answers[j] == null) P.answers[j] = P.auto[j]; });
+  if (P.ref && P.ref.kind === 'protocol' && !P.musclePlan) P.musclePlan = protocolMuscleWork(P).map(MuscleWork.pack);
   savePlay();
   if (top().v === 'play') render();
 }
@@ -2421,7 +2544,8 @@ function savePlay(){
   if (!P) return;
   lsSet(PLAY_KEY, { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
-    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null, at: Date.now() });
+    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null,
+    musclePlan:P.musclePlan, at: Date.now() });
 }
 function clearPlay(){ try { localStorage.removeItem(PLAY_KEY); } catch(e){} }
 // on the next start: an unfinished session (up to 12 h old) can be continued; a finished one that never reached the history can be saved
@@ -2445,6 +2569,11 @@ function restorePlay(s){
   P = { i:0, paused:false, done:!!s.done, endAt:0, left:0, lastBeep:null, mode:s.mode, title:s.title, ref:s.ref, items: f ? undefined : s.items, f: f || undefined, dose: f && s.dose === 'season' ? 'season' : f ? 'full' : undefined,
     steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
   if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
+  // A finished player saved by an older version has no historical muscle profile.
+  if (P.done && P.ref.kind === 'protocol') P.musclePlan = P.items.map((it,j) => {
+    const snap = MuscleWork.sanitize(Array.isArray(s.musclePlan) && s.musclePlan[j]);
+    return snap && snap.source === 'planned' && snap.exerciseId === it.exId ? MuscleWork.pack(snap) : null;
+  });
   if (isPlainObj(s.rir)) P.rir = s.rir; if (s.srpe >= 1 && s.srpe <= 10) P.srpe = s.srpe;
   S.stack.push({ v:'play' }); S.sheet = null;
   if (!P.done) {   // back at the same step; a timed one waits, paused, with the time that was left
@@ -2472,7 +2601,12 @@ function saveSoFar(){
 const LOG_MAX = 2000;
 function trimLog(){
   const yr = Date.now() - 365 * DAY_MS;
-  S.log.forEach(l => { if (l.at < yr && l.items) delete l.items; });
+  S.log = S.log.map(l => {
+    if (l.at >= yr || !l.items) return l;
+    const summary = { ...l };
+    delete summary.items;
+    return summary;
+  });
   if (S.log.length <= LOG_MAX) return '';
   const n = S.log.length - LOG_MAX; S.log = S.log.slice(0, LOG_MAX);
   // 'zapisa': the history also holds test results and exercises tried from the library
@@ -2492,18 +2626,37 @@ function sessionEntry(){
     return x;
   });
   if (P.mode === 'field' && P.f) entry.load = fieldDoneLoad();   // what was run: metres, fast running, sprint, zones, the dose
+  if (entry.kind === 'protocol' && entry.items) {
+    entry.muscleWork = entry.items.map((item,index) => MuscleWork.pack(MuscleWork.completedFromPlan(P.musclePlan && P.musclePlan[index], item)));
+  }
   return entry;
 }
 // writes the session (also a partly done one) to the history and counts progression
 function logSession(){
   const entry = sessionEntry();
+  // A retry of this finished player must not apply progression or add its muscle work twice.
+  if (S.log.some(l => l.at === entry.at && l.kind === entry.kind && l.refId === entry.refId)) {
+    const saved = persist();
+    if (saved) clearPlay();
+    return { news: [], cut: '', saved };
+  }
   // the session's load (model LM1) as computed now, and his rating of the whole session (1–10) when he gave one
   if (P.srpe >= 1 && P.srpe <= 10) entry.srpe = P.srpe;
   entry.load2 = computeSession(entry); if (entry.srpe) entry.load2.au = entry.srpe * Math.round(entry.load2.min);
+  const previousLog = S.log;
+  const previousProtocol = entry.kind === 'protocol' && S.pr[entry.refId];
   const news = applyProgress();
-  S.log.unshift(entry); const test = masFromPlay(); if (test) S.log.splice(1, 0, test); const cut = trimLog();
-  const saved = persist(); if (saved) clearPlay();   // a refused save keeps the snapshot: the next start offers the session again
-  return { news, cut, saved };
+  S.log = [entry, ...previousLog];
+  const test = masFromPlay();
+  if (test) S.log.splice(1, 0, test);
+  const cut = trimLog();
+  if (!persist()) {
+    S.log = previousLog;
+    if (previousProtocol) S.pr[entry.refId] = previousProtocol;
+    return { news: [], cut: '', saved:false }; // the finished player snapshot remains available for retry
+  }
+  clearPlay();
+  return { news, cut, saved:true };
 }
 const newsMsg = news => (news.length > 1 ? 'Novi prijedlozi' : 'Novi prijedlog') + ' na stranici Napredak: ' + news.join(', ');
 // short durations in seconds, the rest in whole minutes ("45 min", not "45:12 min")
@@ -3545,7 +3698,8 @@ VIEWS.play = function(){
     const willCount = any && P.ref && weekPlan(weekStart(Date.now())).some(s => slotHit(s, { kind: P.ref.kind, refId: P.ref.id }));
     const wk = willCount ? weekAfter() : { planned: 0 };
     // the load of what was done (recomputed with every answer on this screen); the last set's reserve can still be tapped here
-    const lm = any ? computeSession(sessionEntry()) : null, rk = any ? rirStep() : -1; P._lm = lm;
+    const entry = any ? sessionEntry() : null;
+    const lm = entry ? computeSession(entry) : null, rk = any ? rirStep() : -1; P._lm = lm;
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
@@ -3564,7 +3718,7 @@ VIEWS.play = function(){
             '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
             (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
-        }).join('') + '</div>' : '') + (lm ? lmCardHtml(lm) : '') +
+        }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.musclePlan) + (lm ? lmCardHtml(lm) : '') +
       masDoneHtml() + '<div style="height:12px"></div></div>' +
       '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">'+(!any ? 'Izađi' : P.quit ? 'Spremi i izađi' : 'Završi')+'</button>' + (P.quit || !any ? '' : '<button class="txtbtn" data-a="restartPlay" style="align-self:center">Spremi i ponovi</button>') + '</div>';
   }
@@ -3785,6 +3939,22 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
+  dashboardForecast: () => { const t = top(); t.forecast = !t.forecast; render(); },
+  dashboardGroup: d => {
+    if (!MuscleWork.groups.some(g => g.id === d.id)) return;
+    top().selectedGroup = d.id;
+    render();
+    document.getElementById('db-group-title')?.scrollIntoView({ block:'nearest' });
+  },
+  dashboardCalendar: d => A.monthOpen(d),
+  dashboardProtocols: () => go({ v:'protocols' }),
+  dashboardProgress: () => setTab('progress'),
+  muscleEligibility: d => {
+    if (!S.draft || !['auto','true','false'].includes(d.v)) return;
+    if (d.v === 'auto') delete S.draft.muscleWorkEligible;
+    else S.draft.muscleWorkEligible = d.v === 'true';
+    render();
+  },
   tab: d => setTab(d.tab),
   back: () => {
     S.planAsk = false;   // the plan's restart question closes when you leave or come back to the field list
@@ -3858,6 +4028,8 @@ const A = {
     if (body.video === '' && (!prev || prev.video === undefined)) delete body.video;
     if (body.muscles == null && (!prev || prev.muscles === undefined)) delete body.muscles;   // 1.8: no muscles = drawn from the zones
     if (body.videoTitle === undefined) delete body.videoTitle;
+    if (typeof d.muscleWorkEligible === 'boolean') body.muscleWorkEligible = d.muscleWorkEligible;
+    else delete body.muscleWorkEligible;
     // a pack drill saved unchanged, or with only your own photo or video, stays the pack's: a newer pack version still updates it
     if (prev && prev.pack && contentHash(Object.assign({}, body, { pack: prev.pack })) === contentHash(prev)) body.pack = prev.pack;
     const ok = await save('exercises', d.id, body); if (!ok) return;
