@@ -3161,10 +3161,12 @@ const lmHs = v => String(Math.round(v * 10) / 10).replace('.', ',');
 const setEnd = st => isWork(st) && st.side !== 'Lijeva strana';
 const stepFx = st => st && st.it ? loadFx(S.ex[st.it.exId] || { id: st.it.exId }) : null;
 // the set the row asks about: the last work step before this one, done, closing its set, of an exercise that asks (not
-// activation/mobility, jumps or running). On a work step only when no rest came between (a superset without rests).
+// activation/mobility, jumps or running). On a set screen (manual) only when no rest came between (a superset without rests);
+// never while a timed hold runs (kind 'work'): the row would vanish at its side switch and the card would jump mid-hold
 function rirStep(){
   if (!P || P.mode !== 'ex' || !Array.isArray(P.steps)) return -1;
   const i = P.done ? P.steps.length : P.i; let k = i - 1, rest = false;
+  if (!P.done && P.steps[i] && P.steps[i].kind === 'work') return -1;
   while (k >= 0 && !isWork(P.steps[k])) { if (P.steps[k].kind === 'rest') rest = true; k--; }
   if (k < 0 || !P.doneSteps[k] || !setEnd(P.steps[k]) || (!P.done && isWork(P.steps[i]) && rest)) return -1;
   const fx = stepFx(P.steps[k]); return fx && LM.ASK[fx.pat] ? k : -1;
