@@ -2861,7 +2861,8 @@ function setLoad(e, fx, s, ctx){
   out.SL = sl * sides;
   const ch = fx.pat === 'C' ? 'C' : Object.keys(fx.rw).some(z => LM.UPPER.indexOf(z) !== -1 && fx.prime.indexOf(z) !== -1) ? 'U' : 'L';
   out.ch = ch; out.B = LM.K[ch] * out.SL; out.ecc = fx.ecc ? out.SL * (fx.ecc === 2 ? 1 : 0.5) : 0;
-  const h = fx.pat === 'A' && r > 3 ? 0 : lmHard(r);
+  // light rehab/activation drills (tag no-hs: hip airplane, iso-abdukcija …) never count toward the hard-set floors, tapped or not
+  const h = (fx.pat === 'A' && r > 3) || (Array.isArray(fx.tags) && fx.tags.indexOf('no-hs') !== -1) ? 0 : lmHard(r);
   Object.keys(LM.TREG).forEach(T => { let v = 0; LM.TREG[T].forEach(z => { if (fx.rw[z]) v = Math.max(v, fx.prime.indexOf(z) !== -1 ? 1 : 0.5); }); if (v && h) out.hs[T] = v * h; });
   out.R = R; out.I = ii; out.r = r;
   return out;
