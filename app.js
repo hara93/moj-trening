@@ -1275,28 +1275,32 @@ function exOptHtml(e){
 // 1.8: the exercise page's Upute | Cilj | Opterećenje as one row of cards that swipes sideways (scroll-snap, the next card peeks
 // in, the dots jump); the page itself does not scroll on a 393 × 852 phone, a long card scrolls inside. The card you were on
 // stays for every exercise while the app is open (S.exTab). The player keeps its compact Upute | Cilj tabs (exInfoHtml).
+// 1.8.1: like GOWOD, no card titles: Upute = small grey "Podražaj" + the feel line, "Upute" + at most 3 dot bullets (Oprema stays in
+// the editor and the filter); Cilj = "Ciljana područja" (the main muscles as stacked chips left, the figure right) + "Zašto" + the
+// note; Opterećenje = a small grey label with the period chips, Zadnje, the volume, a lower chart, the last points, the last 3 sessions.
 const EX_CARDS = ['upute', 'cilj', 'opt'];
 function exCardsHtml(e){
   const steps = e.steps || [], a = (href, t, ti) => '<a href="'+esc(href)+'" target="_blank" rel="noopener"'+(ti ? ' title="'+esc(ti)+'"' : '')+'>'+esc(t)+' ↗</a>';
-  const cues = steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
-  const eq = e.equipment || exEquip(e).join(', ') || 'Bez opreme';
+  const lb = t => '<span class="lb">'+t+'</span>';
+  const cues = steps.length ? '<div class="cues">' + steps.map(s => '<div class="bul">'+esc(s)+'</div>').join('') + '</div>' : '<p class="none">Dodaj upute u uređivanju.</p>';
   const vids = !SHOW_SOURCES ? '' : (e.video ? a(e.video, 'Pogledaj demonstraciju', e.videoTitle) : '') + (packVideo(e) ? a(packVideo(e), 'Pogledaj kod TAE') : '');
-  const card = (k, i, title, body, right) => '<article class="swc" id="swc-'+k+'" data-card="'+k+'" aria-label="'+title+', '+(i + 1)+' od 3"><div class="swh"><h2>'+title+'</h2>'+(right || '')+'</div><div class="swb">'+body+'</div></article>';
-  const c1 = '<div class="exequip"><span class="lb">Oprema</span><span>'+esc(eq)+'</span></div>' + cues + (vids ? '<p class="exvid">' + vids + '</p>' : '');
-  const m = exMuscles(e), fig = m.prime.length + m.sec.length ? bodyFig(m, { size: 150, cls: 'exfig' }) : '';
-  const c2 = (m.prime.length + m.sec.length === 0 && !e.feel ? '' : '<div class="tgt"><div class="tl">' + (m.prime.length + m.sec.length ? '<span class="lb">Ciljana područja</span><div class="tcol">' + muscleTags(m) + '</div>' : '') +
-      (e.feel ? '<span class="lb">Osjećaj</span><span class="fe">'+esc(e.feel)+'</span>' : '') + '</div>' + (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>') +
-    (e.note ? '<p class="cn">'+esc(e.note)+'</p>' : (m.prime.length || e.feel ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
+  const card = (k, i, title, body, head) => '<article class="swc" id="swc-'+k+'" data-card="'+k+'" aria-label="'+title+', '+(i + 1)+' od 3">'+(head ? '<div class="swh">'+head+'</div>' : '')+'<div class="swb">'+body+'</div></article>';
+  const c1 = (e.feel ? '<div class="sec">' + lb('Podražaj') + '<p class="pz">'+esc(e.feel)+'</p></div>' : '') + '<div class="sec">' + lb('Upute') + cues + '</div>' + (vids ? '<p class="exvid">' + vids + '</p>' : '');
+  const m = exMuscles(e), fig = m.prime.length + m.sec.length ? bodyFig(m, { size: 168, cls: 'exfig' }) : '';
+  const chips = m.prime.length ? m.prime : m.sec;   // own exercises from their zones may have only secondary muscles
+  const c2 = (chips.length ? '<div class="tgt"><div class="tl">' + lb('Ciljana područja') + '<div class="tcol">' + chips.map(r => '<span class="tag">'+esc(muscleLabel(r))+'</span>').join('') + '</div></div>' +
+      (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>' : '') +
+    (e.note ? '<div class="sec">' + lb('Zašto') + '<p class="cn">'+esc(e.note)+'</p></div>' : (chips.length ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
     (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '');
   const h = historyOf(e.id), rg = LOAD_RANGES.find(r => r[0] === S.loadRange) || LOAD_RANGES[0];
   const per = h.length ? '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>' : '';
-  const lp = h.length && exLastPts(e.id);
+  const lp = h.length && exLastPts(e.id), sr = h.length && exLoadSeries(e.id, rg[2]), tbl = sr && sr.pts.length > 1 ? exLoadTable(sr.kind, sr.pts, v => loadFmt(sr.kind, v)) : '';
   const c3 = (h.length ? '<div class="opthd"><span>Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + dose(h[0]))+'</b></span></div>' + exLoadCard(e, S.loadRange, false, true) +
-      (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h)
+      (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h, 2)
     : '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
       '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>') +
-    '<button class="txtbtn lnk howc" data-a="loadInfo">Kako se računa?</button>';
-  return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute', 0, 'Upute', c1) + card('cilj', 1, 'Cilj', c2) + card('opt', 2, 'Opterećenje', c3, per) + '</div>' +
+    '<div class="c3f">' + (tbl || '') + '<button class="txtbtn lnk howc" data-a="loadInfo">Kako se računa?</button></div>';
+  return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute', 0, 'Upute', c1) + card('cilj', 1, 'Cilj', c2) + card('opt', 2, 'Opterećenje', c3, lb('Opterećenje') + per) + '</div>' +
     '<div class="dots swdots" id="swdots">' + ['Upute', 'Cilj', 'Opterećenje'].map((t, i) => '<button class="dot" data-a="swGo" data-i="'+i+'" aria-label="'+t+'" aria-current="'+(EX_CARDS[i] === exTabOf(S.exTab))+'"><i></i></button>').join('') + '</div></section>';
 }
 // the scroll position of each card (the row is rebuilt on every render)
@@ -1312,7 +1316,7 @@ VIEWS.ex = function(t){
     mediaHtml(e, e.sides ? 'Lijeva i desna' : '') +
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
-    '<div class="chips center" role="group" aria-label="Doziranje" style="margin-top:10px">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
+    '<div class="chips center dz" role="group" aria-label="Doziranje">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
     // 1.8: everything about the exercise sits in the three swipe cards (1.6.2's tabs; nothing below them)
     exCardsHtml(e) +
     '</div>' +
@@ -3142,15 +3146,17 @@ function chartTable(head, rows){
   return '<details class="ltab"><summary>Tablica</summary><table><tr><th>'+esc(head[0])+'</th><th>'+esc(head[1])+'</th></tr>' + rows.map(r => '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('') + '</table></details>';
 }
 // pts: [{ t, v, sub }] oldest first; fmtV formats a value
-function lineChart(id, pts, fmtV, label){
-  const W = 326, R = 288, T = 26, B = 110, n = pts.length;
+// low: the lower chart of the exercise page's Opterećenje card (1.8.1)
+function lineChart(id, pts, fmtV, label, low){
+  const W = 326, R = 288, T = low ? 12 : 26, B = low ? 50 : 110, n = pts.length;
   const vs = pts.map(p => p.v), mx = Math.max.apply(null, vs), mn = Math.min.apply(null, vs);
-  const st = niceStep((mx - mn) / 3 || mx / 2 || 1); let lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st;
+  let st = niceStep((mx - mn) / (low ? 2 : 3) || mx / 2 || 1);
+  let lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st;
   if (hi === lo) { lo = Math.max(0, lo - st); hi += st; }
   const t0 = pts[0].t, t1 = pts[n - 1].t, X = t => t1 > t0 ? 6 + (t - t0) / (t1 - t0) * (R - 12) : R / 2, Y = v => B - (v - lo) / (hi - lo) * (B - T);
   const xy = pts.map(p => [X(p.t), Y(p.v)]), line = xy.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ');
   let g = '';
-  for (let v = lo, k = 0; v <= hi + st / 1e6 && k < 8; v += st, k++) { const y = Y(v).toFixed(1); g += '<line class="gr" x1="0" y1="'+y+'" x2="'+R+'" y2="'+y+'"/><text class="tk" x="'+W+'" y="'+(+y + 4)+'" text-anchor="end">'+esc(thou(v))+'</text>'; }
+  for (let v = lo, k = 0; v <= hi + st / 1e6 && k < 8; v += st, k++) { const y = Y(v).toFixed(1); g += '<line class="gr" x1="0" y1="'+y+'" x2="'+R+'" y2="'+y+'"/>' + (low && k && v + st <= hi + st / 1e6 ? '' : '<text class="tk" x="'+W+'" y="'+(+y + 4)+'" text-anchor="end">'+esc(thou(v))+'</text>'); }   // the low chart labels only its lowest and highest line
   const dates = '<text class="tk" x="0" y="'+(B + 18)+'">'+dm(t0)+'</text>' + (n > 1 ? '<text class="tk" x="'+R+'" y="'+(B + 18)+'" text-anchor="end">'+dm(t1)+'</text>' : '') +
     (n > 2 && X(pts[n >> 1].t) > 70 && X(pts[n >> 1].t) < R - 70 ? '<text class="tk" x="'+X(pts[n >> 1].t).toFixed(1)+'" y="'+(B + 18)+'" text-anchor="middle">'+dm(pts[n >> 1].t)+'</text>' : '');
   const last = xy[n - 1], dot = (q, c) => '<circle class="'+c+'" cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="5"/>';
@@ -3200,15 +3206,18 @@ function exLoadCard(e, range, compact, bare){
   const pts = P2.map(p => ({ t: p.t, v: p.v, sub: sub(p) }));
   const sum = (compact ? e.name + ': ' : '') + LOAD_LABEL[k] + ', ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' od ' + shortDate(P2[0].t) + ' do ' + shortDate(last.t) + ': od ' + f(P2[0].v) + ' do ' + f(last.v) + (tr ? '. ' + tr.text : '') + '.';
   return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga', n === 1 ? 'prvi trening' : '') +
-    (n > 1 ? lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum) : '<p class="none">' + esc(shortDate(last.t) + ' · ' + sub(last) + '. Graf se crta od drugog treninga.') + '</p>') +
+    (n > 1 ? lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum, bare) : '<p class="none">' + esc(shortDate(last.t) + ' · ' + sub(last) + '. Graf se crta od drugog treninga.') + '</p>') +
     (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
-    chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)])) + '</div>';
+    (bare ? '' : exLoadTable(k, P2, f)) + '</div>';
+}
+function exLoadTable(k, P2, f){
+  return chartTable(['Trening', LOAD_LABEL[k]], P2.slice().reverse().map(p => [shortDate(p.t) + (p.xs.length === 1 ? ' · ' + doseBase(p.xs[0]) : ''), f(p.v)]));
 }
 // the history list under the chart: the last sessions, how they went; the label counts every logged session of the exercise
-function exHistHtml(e, h){
+function exHistHtml(e, h, max){
   h = h || historyOf(e.id); if (!h.length) return '';
   const n = new Set(h.map(x => x.at)).size;
-  return '<div class="opthd sub"><span>Zadnji treninzi</span><span>'+n+' '+plural(n, 'trening', 'treninga', 'treninga')+'</span></div><div class="lc hist">' + h.slice(0, 6).map(x => {
+  return '<div class="opthd sub"><span>Zadnji treninzi</span><span>'+n+' '+plural(n, 'trening', 'treninga', 'treninga')+'</span></div><div class="lc hist">' + h.slice(0, max || 6).map(x => {
     const tags = (x.done === false ? '<span class="tag">nije išlo' + (x.lastReps != null ? ' · zadnja serija ' + esc(x.lastReps) + ' pon.' : '') + '</span>' : '') + (x.setsDone != null ? '<span class="tag">' + esc(x.setsDone + ' od ' + (x.sets || 1) + ' ' + plural(x.sets || 1, 'serije', 'serije', 'serija')) + '</span>' : '');
     return '<div class="hrow" style="align-items:baseline"><span style="flex:none">' + esc(shortDate(x.at)) + '</span><b>' + esc(dose(x)) + (tags ? '<span style="display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 2px">' + tags + '</span>' : '') + '</b></div>'; }).join('') + '</div>';
 }
