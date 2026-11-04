@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.7.0 — 4. 11. 2026.
+
+Prvi korak modela opterećenja.
+- **Koliko si još mogao?** Nakon serije jednim dodirom upišeš rezervu (0 · 1 · 2 · 3 · 4–5 · 6+, kod izdržaja u sekundama). Bez dodira vrijedi uobičajena procjena za tu vježbu.
+- **Koliko je bilo teško?** Na kraju treninga klizač 1–10 (ispod piše riječ: lagano, srednje, teško …).
+- **Bodovi opterećenja:** svaka serija i cijeli trening dobivaju bodove (ponavljanja, blizina otkaza, težina vježbe za cijelo tijelo, nova vježba vrijedi više), tvrde serije po području, doskoci i metri. Svih 152 vježbi ima svoje faktore; tvoje vlastite vježbe dobivaju procjenu automatski.
+- Na kartici Opterećenje vježbe: opterećenje zadnjeg treninga.
+
 ## 1.6.11 — 4. 11. 2026.
 
 - **Bez izvora i vanjskih linkova (za sada):** nigdje se više ne prikazuju retci „Izvor: …”, linkovi „Pogledaj demonstraciju” i „Pogledaj kod TAE”, preuzete snimke i fotografije s natpisima autora ni spominjanje izvora u opisima treninga na terenu. Svuda je tvoja slika. Podaci i datoteke ostaju spremljeni; jedna postavka u kodu (SHOW_SOURCES) sve vraća.
