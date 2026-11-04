@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.8.2 — 4. 11. 2026.
+
+- **Slika vježbe preko cijele širine** (bez tamnih traka), niska, a za svaku sliku posebno namješteno da se ništa važno ne odreže.
+- **Do 4 upute:** 119 vježbi dobilo je četvrtu kratku uputu.
+- **Propušteni trening:** „Nadoknadi danas” ili „Preskoči”; preskočeni trening ne broji se kao propušten i ne prekida niz; u prozoru dana „Vrati”.
+- **Ispravak:** dan maknut iz plana više ne ostaje kao propušten; odrađeni trening ostaje odrađen.
+
 ## 1.8.1 — 4. 11. 2026.
 
 - **Kartice kao kod GOWOD-a:** prva ima „Podražaj” (jedan redak) i „Upute” (najviše 3 točke), druga ciljana područja, figuru i kratko „Zašto”, treća opterećenje. Kod svih vježbi svaka kartica stane bez skrolanja.
