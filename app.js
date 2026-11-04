@@ -882,22 +882,24 @@ const slotOpen = s => s.kind === 'field' ? 'data-a="openField" data-id="'+esc(s.
 // a planned session counts as done when you trained it on any day of that week; each log entry fills one slot. Sessions
 // done on their planned day fill that day first, so a session done today never fills an earlier missed day instead.
 // 1.8.2: a slot with f = 0 (a past day added after it ended, or one removed after it was trained; see weekPlan) counts only
-// when it is done, and it fills last; a slot you skipped this week (Preskoči, skipSet) is neither planned nor missed; a removed
+// when it is done. After the same-day pass the past days fill first (planned in time before added late), the days to come last,
+// so a session made up today goes to the missed day it makes up, never to a later day of the same session; a slot you skipped this week (Preskoči, skipSet) is neither planned nor missed; a removed
 // slot that is not done is gone. planned / done count the slots that count.
 const slotKey = s => (s.kind === 'field' ? 'f' : s.kind === 'program' ? 'g' : 'p') + ':' + s.id + ':' + s.day;
 const slotCounts = s => !s.skip && (s.f !== 0 || s.done);
 function weekStatus(ws, plan){
   const we = calDay(ws, 7), log = S.log.filter(l => isTraining(l) && l.at >= ws && l.at < we), sk = skipSet(ws);
+  const upTo = ws === weekStart(Date.now()) ? dayIdx(Date.now()) : ws < Date.now() ? 7 : -1;   // the days before this one are past
   const used = {}, all = (plan || planSlots()).map(p => Object.assign({ done: false, f: 1 }, p, { skip: !!sk[slotKey(p)] }));
   const live = all.filter(s => !s.skip), fill = (list, sameDay) => list.forEach(s => { if (s.done) return;
     const k = log.findIndex((l, i) => !used[i] && slotHit(s, l) && (!sameDay || dayIdx(l.at) === s.day));
     if (k !== -1) { used[k] = 1; s.done = true; s.l = log[k]; } });
-  fill(live, true); fill(live.filter(s => s.f !== 0), false); fill(live.filter(s => s.f === 0), false);
+  fill(live, true); fill(live.filter(s => s.day < upTo && s.f !== 0), false); fill(live.filter(s => s.day < upTo && s.f === 0), false); fill(live.filter(s => s.day >= upTo), false);
   const slots = all.filter(s => !(s.gone && !s.done));
   // this week's programme slots: the session you did, otherwise the programme's next sessions in order, today's slot first,
   // then the missed days (made up next), then the days to come: today never offers a later session than the programme page
   if (ws === weekStart(Date.now())) { const next = {}, today = dayIdx(Date.now()), rank = s => s.day === today ? 0 : s.day < today ? 1 : 2;
-    slots.slice().sort((a, b) => rank(a) - rank(b) || a.day - b.day).forEach(s => { if (s.kind !== 'program') return;
+    slots.slice().sort((a, b) => rank(a) - rank(b) || a.day - b.day).forEach(s => { if (s.kind !== 'program' || (s.skip && !s.done)) return;   // a skipped day does not use up a session
       const x = s.l ? { pr: s.l.refId } : (next[s.id] = next[s.id] || (S.prog[s.id] ? progStatus(S.prog[s.id]).items.filter(y => !y.done && S.pr[y.pr]) : [])).shift();
       const p = x && S.pr[x.pr]; if (p) Object.assign(s, { pr: x.pr, name: p.name, min: protoMin(p) }); else if (s.l) s.name = s.l.name;
     }); }
@@ -926,14 +928,17 @@ function notePlan(ws, slots){
   const old = calDay(ws, -7 * 105); Object.keys(m).forEach(k => { if (!(+k >= old)) delete m[k]; });
   lsSet(PLAN_KEY, m);
 }
+// 1.8.2 (review): the days of a session changed: this week's snapshot is written at once, so a day removed while it is not done is
+// gone before any later training (not only once the home screen or Napredak has shown the change)
+function planSaved(){ if (S.dbState !== 'ready') return; const ws = weekStart(Date.now()); notePlan(ws, weekStatus(ws, weekPlan(ws)).slots); }
 // 1.8.2: the slots you skipped (Preskoči on the home screen or in the day sheet), per week: week start → [slotKey]. A skipped
-// slot is neither planned nor missed that week; Vrati takes it back. Kept 16 weeks.
+// slot is neither planned nor missed that week; Vrati takes it back. Kept as long as the week snapshots (105 weeks), so the streak never changes back in time.
 function skipSet(ws){ const o = lsGet(SKIP_KEY, null), v = isPlainObj(o) && Array.isArray(o[ws]) ? o[ws] : [], out = {}; v.forEach(k => { if (typeof k === 'string') out[k] = 1; }); return out; }
 function setSkip(ws, key, on){
   const o = lsGet(SKIP_KEY, null), m = isPlainObj(o) ? o : {}, l = (Array.isArray(m[ws]) ? m[ws] : []).filter(k => k !== key);
   if (on) l.push(key);
   if (l.length) m[ws] = l; else delete m[ws];
-  const old = calDay(ws, -7 * 16); Object.keys(m).forEach(k => { if (!(+k >= old)) delete m[k]; });
+  const old = calDay(ws, -7 * 105); Object.keys(m).forEach(k => { if (!(+k >= old)) delete m[k]; });
   lsSet(SKIP_KEY, m);
 }
 // this week's plan (1.8.2, Tomislav): a past day counts only while it is in the plan as it is now and was planned before that
@@ -1052,9 +1057,9 @@ function weekHtml(){
   const strip = '<div class="week" role="group" aria-label="Ovaj tjedan">' + DAYS.map((L, i) => {
     const d = new Date(calDay(ws, i));
     const all = st.slots.filter(s => s.day === i), plan = all.filter(s => !s.skip);   // a skipped slot leaves its day neutral
-    const missed = i < today && plan.some(s => !s.done);
-    const cls = trainedDays[i] ? 'done' : missed ? 'miss' : plan.length ? 'plan' : '';
-    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : all.length ? ', preskočeno' : '') + (wm.indexOf(i) !== -1 ? ', utakmica' : '');
+    const missed = i < today && plan.some(s => !s.done), made = i < today && plan.length && !missed;   // (review) a past day made up on another day is done, not "planned"
+    const cls = trainedDays[i] || made ? 'done' : missed ? 'miss' : plan.length ? 'plan' : '';
+    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : made ? ', nadoknađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : all.length ? ', preskočeno' : '') + (wm.indexOf(i) !== -1 ? ', utakmica' : '');
     // a match day (the standing one or a marked date) carries a small dot under its date (flex:none: the done screen's .done{flex:1} must not stretch the circles)
     return '<button class="wd" data-a="daySheet" data-i="'+i+'"' + (i === today ? ' aria-current="date"' : '') + ' aria-label="'+esc(label)+'"><span class="l">'+L+'</span><span class="c '+cls+'" style="flex:none">'+d.getDate()+'</span>' + (wm.indexOf(i) !== -1 ? '<i style="display:block;width:6px;height:6px;margin-top:-2px;border-radius:3px;background:#FFC861"></i>' : '') + '</button>';
   }).join('') + '</div>';
@@ -1062,12 +1067,13 @@ function weekHtml(){
   const missed = st.slots.filter(s => s.day < today && !s.done && !s.skip);
   const row = (s, pre) => '<button class="row today" '+slotOpen(s)+'><span class="thumb" style="width:52px;height:52px">'+pathIcon(s.kind === 'field' ? I.run : I.dumb, 24)+'</span><span class="tx"><span class="t">'+esc(pre + s.name)+'</span><span class="m">'+(s.min ? '<span>'+esc(s.min)+' min</span>' : '')+'</span></span>'+I.chev+'</button>';
   // 1.8.2: a missed session is an offer you accept (Nadoknadi danas: opens it) or decline (Preskoči: off this week's plan)
-  const mku = s => '<div class="lift go mku" role="group" aria-label="'+esc('Propušteno ' + DAYS_IN[s.day] + ': ' + s.name)+'"><div class="top"><b>'+esc('Nadoknadi: ' + s.name)+'</b><span>'+esc(DAYNAMES[s.day] + (s.min ? ' · ' + s.min + ' min' : ''))+'</span></div>' +
+  const mku = s => '<div class="lift go mku" role="group" aria-label="'+esc('Propušteno ' + DAYS_IN[s.day] + ': ' + s.name)+'"><div class="top"><b>'+esc(s.name)+'</b><span>'+esc('Propušteno ' + DAYS_IN[s.day] + (s.min ? ' · ' + s.min + ' min' : ''))+'</span></div>' +
     '<div class="acts"><button class="bt" '+slotOpen(s)+'>Nadoknadi danas</button><button class="bt ghost" data-a="skipSlot" data-k="'+esc(slotKey(s))+'">Preskoči</button></div></div>';
   const shown = todo.length ? todo : missed.slice(0, 1);
   const rows = shown.map(s => todo.length ? row(s, 'Danas: ') : mku(s)).join('') + matchBox(shown.map(s => matchNote(s, today)).find(Boolean), today);
   const sk = streakWeeks(cur);
-  const line = st.planned
+  // (review) a week whose plan is all skipped still has a plan: 0/0 and the streak, not the empty-plan hint
+  const line = st.planned || st.slots.length
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
   return strip + '<p class="sub wline">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
@@ -3900,7 +3906,7 @@ const A = {
     ['program','week','slot','pack','goal','goalSkip','kgSkip'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     if (body.program) delete body.days;   // a programme session is planned by the programme's days
     const ok = await save('protocols', dr.id, body); if (!ok) return;
-    S.pr[dr.id] = Object.assign({ id: dr.id }, body);
+    S.pr[dr.id] = Object.assign({ id: dr.id }, body); planSaved();
     const id = dr.id; S.draft = null; S.draftSig = null; S.stack.pop();
     if (top().v !== 'pr' || top().id !== id) S.stack.push({ v:'pr', id });
     if (d.start) { A.startPr({ id }); return; }
@@ -4062,9 +4068,9 @@ const A = {
   ltip: (d, el) => { const svg = el.closest('svg'); if (!svg) return; const g = svg.querySelector('.tipg[data-i="'+d.i+'"]'), on = g && g.classList.contains('on');
     svg.querySelectorAll('.tipg.on').forEach(x => x.classList.remove('on')); if (g && !on) g.classList.add('on'); },
   sheetDone: () => { S.sheet = null; render(); },
-  daySheet: d => { S.sheet = { kind:'day', i: +d.i }; render(); },
+  daySheet: d => { clearToast(); S.sheet = { kind:'day', i: +d.i }; render(); },   // (review) a toast would cover the sheet's rows
   // 1.8.2: a missed session off this week's plan (home make-up offer, day sheet), and back
-  skipSlot: d => { setSkip(weekStart(Date.now()), d.k, true); toast('Preskočeno ovaj tjedan.'); render(); },
+  skipSlot: d => { setSkip(weekStart(Date.now()), d.k, true); if (!S.sheet) toast('Preskočeno ovaj tjedan.'); render(); },   // in the day sheet the row's tag says it
   unskipSlot: d => { setSkip(weekStart(Date.now()), d.k, false); render(); },
   // (review) the library row's category, when it is one of the data categories, becomes a Kategorija pill of the sheet, so the
   // count never depends on something the sheet does not show; the other row categories (Favoriti, TRX …) and the search text
@@ -4118,9 +4124,9 @@ const A = {
   progTestKeep: () => { const s = S.sheet; if (!s) return; progTyped(s); s._del = false; render(); },
   progRestartAsk: d => { if (!S.prog[d.id]) return; S.sheet = { kind:'progRestart', id: d.id }; render(); },
   progRestart: d => { const g = S.prog[d.id]; if (!g) return; S.settings.progFrom = Object.assign({}, S.settings.progFrom, { [g.id]: Date.now() }); lsSet('mt.settings', S.settings); S.sheet = null; render(); toast('Program kreće ispočetka.'); },
-  prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; render(); await save('protocols', d.id, n); },
-  fieldDays: async d => { const f = S.field[d.id]; if (!f) return; const n = clone(f); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.field[d.id].days = ds; render(); await save('field', d.id, n); },
-  progDays: async d => { const g = S.prog[d.id]; if (!g) return; const n = clone(g); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.prog[d.id].days = ds; render(); await save('programs', d.id, n); },
+  prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; planSaved(); render(); await save('protocols', d.id, n); },
+  fieldDays: async d => { const f = S.field[d.id]; if (!f) return; const n = clone(f); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.field[d.id].days = ds; planSaved(); render(); await save('field', d.id, n); },
+  progDays: async d => { const g = S.prog[d.id]; if (!g) return; const n = clone(g); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.prog[d.id].days = ds; planSaved(); render(); await save('programs', d.id, n); },
   ddays: d => { const ds = S.draft.days = (S.draft.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); render(); },
   ilink: d => {
     const items = S.draft.items, i = +d.i, a = items[i], b = items[i + 1]; if (!a || !b) return;
