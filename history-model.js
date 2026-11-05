@@ -4,10 +4,11 @@
   'use strict';
   var mw = typeof module === 'object' && module.exports ? require('./muscle-work.js') : root.MuscleWork;
   var td = typeof module === 'object' && module.exports ? require('./team.js') : root.TeamDiary;
-  var api = factory(mw,td);
+  var load = typeof module === 'object' && module.exports ? require('./training-load.js') : root.TrainingLoad;
+  var api = factory(mw,td,load);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.HistoryModel = api;
-})(typeof window !== 'undefined' ? window : null,function(M,T){
+})(typeof window !== 'undefined' ? window : null,function(M,T,Load){
   'use strict';
   var has = function(o,k){return Object.prototype.hasOwnProperty.call(o,k);};
   var plain = function(o){return !!o && typeof o === 'object' && !Array.isArray(o);};
@@ -71,7 +72,7 @@
     return freeze(out);
   }
   function effortStatus(entry){return entry && ['needsProfile','needsDose','needsFieldData'].indexOf(entry.load2Status)!==-1?entry.load2Status:entry && plain(entry.load2)?'recorded':'missing';}
-  function sessionAU(entry){return entry&&entry.kind==='team'?T.sessionAU(entry):entry && finite(entry.srpe) && entry.srpe>=1 && entry.srpe<=10 && finite(entry.secs) && entry.secs>=0 ? entry.srpe*Math.round(entry.secs/60) : null;}
+  function sessionAU(entry){return Load.sessionAU(entry);}
   function failure(errors){return freeze({ok:false,errors:errors});}
   function transaction(entry,patch,kind){
     var errors=[],changes=[],warnings=[];
@@ -99,7 +100,7 @@
       else put(out,'secs',patch.secs,'secs');
     }
     if(has(patch,'srpe')){
-      if(patch.srpe!==null && !int(patch.srpe,1,10))error('srpe','Težinu treninga odaberi od 1 do 10 ili ostavi prazno.');
+      if(patch.srpe!==null && !int(patch.srpe,0,10))error('srpe','Težinu treninga odaberi od 0 do 10 ili ostavi prazno.');
       else put(out,'srpe',patch.srpe,'srpe');
     }
     var doseChanged=false,fieldChanged=false;

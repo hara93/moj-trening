@@ -9,6 +9,7 @@ function harness(p){
     S:{ex:{a:{id:'a',name:'Potisak'},b:{id:'b',name:'Izdržaj'}},log:[]},isWork:s=>s&&(s.kind==='manual'||s.kind==='work'),
     loadFx:e=>({pat:e.id==='b'?'C':'U1',rir:2}),setLoad:(e,fx,work)=>{points.push(work);return{B:work.n||work.t||0};},lmNovelty:()=>1,lmPts:String,
     esc:String,toast:s=>warnings.push(s),app:{querySelector:()=>null},render:()=>{},document:{getElementById:()=>null},
+    rpeKnown:v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=10,
     rpePct:v=>String(v),rpeTxt:v=>String(v),auHtml:(v,min)=>String(v*min)};
   ctx.savePlay=()=>{if(!ctx.shouldSave)return false;ctx.checkpoint=clone(ctx.P);return true;};
   vm.createContext(ctx);
@@ -67,6 +68,12 @@ test('refused sRPE restores both the stored choice and the displayed slider, pre
   const attrs={},t={value:'8',classList:{toggle:()=>{}},style:{setProperty:()=>{}},setAttribute:(k,v)=>attrs[k]=v};
   h.ctx.rpeSet(t);assert.equal(p.srpe,undefined);assert.equal(t.value,'5');assert.equal(attrs['aria-valuetext'],'nije ocijenjeno');
   p.srpe=3;t.value='8';h.ctx.rpeSet(t);assert.equal(p.srpe,3);assert.equal(t.value,'3');
+});
+test('explicit zero sRPE stays a known recorded choice and survives a refused replacement rating',()=>{
+  const p=pressing(),h=harness(p),attrs={};
+  const t={value:'0',classList:{toggle:()=>{}},style:{setProperty:()=>{}},setAttribute:(k,v)=>attrs[k]=v};
+  h.ctx.rpeSet(t);assert.equal(p.srpe,0);assert.equal(h.ctx.checkpoint.srpe,0);assert.equal(t.value,'0');assert.equal(attrs['aria-valuetext'],'0');
+  h.ctx.shouldSave=false;t.value='8';h.ctx.rpeSet(t);assert.equal(p.srpe,0);assert.equal(t.value,'0');assert.equal(attrs['aria-valuetext'],'0');
 });
 test('partial edited, field and activation sessions all stop for review without an automatic history write',()=>{
   for(const mode of ['ex','field']){

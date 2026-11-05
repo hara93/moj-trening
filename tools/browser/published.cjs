@@ -23,7 +23,7 @@ async function main() {
   const runtime = new Set(['index.html','sw.js']);
   for (const match of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const match of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
-  for (const required of ['app.js','body.js','month-plan.js','muscle-work.js','dashboard.js','dashboard.css','style.css','today-model.js','today-view.js','team.js','today.css','team.css','history-model.js','progress-view.js','progress.css','starting-load.js','starting-load.css']) assert(runtime.has(required),'missing local runtime dependency '+required);
+  for (const required of ['app.js','body.js','month-plan.js','muscle-work.js','dashboard.js','dashboard.css','style.css','today-model.js','today-view.js','team.js','today.css','team.css','history-model.js','progress-view.js','progress.css','starting-load.js','starting-load.css','workout-view.js','workout.css','training-load.js','training-load-view.js','training-load.css','session-clock.js']) assert(runtime.has(required),'missing local runtime dependency '+required);
 
   const browser = await launch();
   const report = {revision,expectedVersion,base,files:[],checks:{},errors:[]};
@@ -183,23 +183,23 @@ async function main() {
     report.checks.fieldCategories=true;
     await page.locator('.view [data-a="back"]').first().click();
     await page.locator('.view [data-a="openPr"]').first().click();
-    await page.locator('.pre-sets').waitFor();
-    const preSets=page.locator('.pre-sets .set-item');
-    assert.ok(await preSets.count()>0,'protocol shows set rows before starting');
+    await page.locator('.workout-compact-row').first().waitFor();
+    await page.locator('.workout-compact-row').first().click();
+    assert.ok(await page.locator('.workout-fullscreen .workout-set-row').count()>0,'exercise shows set rows before starting');
+    await page.locator('[data-a="workoutClose"]').click();
     await page.locator('[data-a="startPr"]').click();
     if(await page.locator('#starting-load-form').isVisible()) {
       const fields=page.locator('#starting-load-form input');
       for(let i=0;i<await fields.count();i++)await fields.nth(i).fill('10');
       await page.locator('#starting-load-form button[type="submit"]').click();
     }
-    await page.locator('[data-a="playDoseCard"][data-i="2"]').first().click();
     await page.locator('[data-a="playDoseEdit"]').first().click();
     await page.locator('#play-dose-form').waitFor();
     assert.ok(await page.locator('#play-dose-form input').count()>=2);
     await page.screenshot({path:path.join(artifacts,'published-release-dose-proof.png'),animations:'disabled'});
     await page.locator('[data-a="playDoseCancel"]').click();
     report.checks.liveDoseEditor=true;
-    const count=await page.locator('#play-card-2 .set-list .set-item').count();
+    const count=await page.locator('.workout-journal .workout-set-row').count();
     assert.ok(count>0);report.checks.liveIndividualSets=count;
     await page.locator('[data-a="quitPlay"]').click();
     await page.locator('[data-a="quitDiscard"]').click();
@@ -207,8 +207,7 @@ async function main() {
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
     await page.locator('#libq').fill('Bench press');
     await page.locator('[data-a="openEx"][data-id="bench-press"]').first().click();
-    await page.locator('[data-a="swGo"][data-i="2"]').click();
-    assert.ok(await page.locator('#swc-dose .set-item').count()>0);
+    assert.ok(await page.locator('.workout-exercise-page .workout-set-row').count()>0);
     await page.locator('[data-a="playEx"]').click();
     await page.getByRole('heading',{name:'Unesi početnu težinu'}).waitFor();
     await page.locator('#starting-load-form input').first().fill('17,5');

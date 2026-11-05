@@ -2,10 +2,11 @@
    distance, muscle attribution or calendar prescriptions are inferred. */
 (function(root,factory){
   'use strict';
-  var api=factory();
+  var load=typeof module==='object'&&module.exports?require('./training-load.js'):root.TrainingLoad;
+  var api=factory(load);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.TeamDiary=api;
-})(typeof window!=='undefined'?window:globalThis,function(){
+})(typeof window!=='undefined'?window:globalThis,function(Load){
   'use strict';
   const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
   const plain=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
@@ -71,7 +72,7 @@
     return validate(patch,entry,options&&finite(options.now)?options.now:Date.now());
   }
   function sessionAU(entry){
-    return entry&&Number.isInteger(entry.srpe)&&entry.srpe>=0&&entry.srpe<=10&&finite(entry.secs)&&entry.secs>0?Math.round(entry.srpe*entry.secs/60*1e6)/1e6:null;
+    return Load.sessionAU(entry);
   }
   function extras(entry){
     entry=entry||{};const saved=Array.isArray(entry.teamContent)?entry.teamContent:[];

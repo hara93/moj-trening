@@ -160,8 +160,8 @@ test('timed seconds and sides never fall back over explicit gaps or a missing ta
   assert.equal(History.performedSets(item),null);
 });
 
-test('history AU matches the player single rounding step at the half-minute boundary', () => {
-  assert.equal(History.sessionAU({kind:'protocol',secs:749,srpe:7}),84);
-  assert.equal(History.sessionAU({kind:'protocol',secs:750,srpe:7}),91);
+test('history AU uses the same exact elapsed-minute rule across the former rounding boundary', () => {
+  assert.equal(History.sessionAU({kind:'protocol',secs:749,srpe:7}),87.383333);
+  assert.equal(History.sessionAU({kind:'protocol',secs:750,srpe:7}),87.5);
   assert.ok(Math.abs(History.sessionAU({kind:'team',secs:749,srpe:7})-7*749/60)<0.000001);
 });

@@ -95,6 +95,10 @@
         error: 'Već započete i odrađene serije ostaju u treningu.'
       };
     }
+    // Preview and pending replacements retain unknown loads across sparse edits.
+    if (guard.allowMissingWeight && Array.isArray(item.kgList)) {
+      item.kgList.forEach((value,index) => { if (value === null && index < out.sets) out.kgList[index]=null; });
+    }
     var oldN = out.sets;
     out.sets = n;
     ['repsList', 'kgList', 'secList'].forEach(k => {

@@ -133,7 +133,7 @@ async function expand(page, id) {
     assert.equal(await page.locator('#pg-rules').evaluate(node=>node.open),true);
     assert.equal(await page.locator('[data-a="setProgN"][data-v="3"]').getAttribute('aria-pressed'),'true');
     const link=page.locator('#pg-exercises [data-a="openEx"]').first();
-    await link.click(); await page.locator('#swrow').waitFor(); await A(page,'back').first().click();
+    await link.click(); await page.locator('.workout-exercise-page').waitFor(); await A(page,'back').first().click();
     await page.locator('.progress-view').waitFor();
     await page.setViewportSize({width:320,height:850});
     await noOverflow(page,'allDetails320');

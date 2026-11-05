@@ -38,90 +38,70 @@ async function seed(p){
   await home(p);await A(p,'dataSheet').click();await p.locator('#importFile').setInputFiles({name:'primjer-serija.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(b))});await A(p,'restoreApply').click();await A(p,'restoreApply').waitFor({state:'hidden'});
 }
 async function layout(p,scope){
-  const d=await p.locator(scope).evaluate(el=>({width:innerWidth,view:el.clientWidth,sw:el.scrollWidth,body:document.documentElement.scrollWidth}));
+  const d=await p.locator(scope).last().evaluate(el=>({width:innerWidth,view:el.clientWidth,sw:el.scrollWidth,body:document.documentElement.scrollWidth}));
   assert.ok(d.body<=d.width+1 && d.sw<=d.view+1,JSON.stringify(d));
 }
 async function protocols(p){await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProtocols').first().click();}
+async function exercise(p,j){
+  await p.locator('[data-a="workoutExercise"][data-j="'+j+'"]').first().click();await p.locator('.workout-exercise-page').waitFor();
+}
+function row(p,j,set,scope='.workout-exercise-page'){return p.locator(scope).last().locator('.workout-set-row[data-set="'+set+'"]:has([data-j="'+j+'"])');}
+async function inline(p,j,set,key,value,scope='.workout-exercise-page'){
+  const input=row(p,j,set,scope).locator('[data-field="'+key+'"]');await input.fill(String(value));await input.press('Tab');
+}
 async function fillEdit(p,j,set,vals,live=false){
-  await p.locator('[data-a="'+(live?'playDoseEdit':'previewDoseEdit')+'"][data-j="'+j+'"]').click();
-  const f=p.locator('#play-dose-form');await f.waitFor();
-  for(const [key,value] of Object.entries(vals))await f.locator('[data-dose-set="'+set+'"] [data-dose-value="'+key+'"]').fill(String(value));
-  await A(p,'playDoseApply').click();await f.waitFor({state:'hidden'});
+  await exercise(p,j);
+  for(const [key,value] of Object.entries(vals))await inline(p,j,set,key,value);
+  await A(p,'workoutClose').click();
 }
 async function solo(p){
   await home(p);await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await by(p,'openEx','bench-press').click();
-  await p.getByRole('button',{name:'Doziranje',exact:true}).click();const c=p.locator('#swc-dose');await c.waitFor();assert.equal(await c.locator('.set-item').count(),2);assert.equal(await c.locator('[data-state=planned]').count(),2);
-  await p.locator('[data-a=dose][data-i="1"]').click();assert.equal(await c.locator('.set-item').count(),3);
-  await fillEdit(p,0,3,{reps:3,kg:'27,5'});assert.match(await c.locator('.set-item').nth(2).innerText(),/3 pon.*27,5 kg/);
-  assert.equal((await store(p)).exercises['bench-press'].kg,20);
-  await A(p,'exerciseLoad').click();await p.getByRole('heading',{name:'Opterećenje i povijest'}).waitFor();assert.match(await p.locator('.view').innerText(),/Još nema treninga/);await A(p,'back').first().click();assert.equal(await c.locator('.set-item').count(),3);
-  await p.setViewportSize({width:320,height:812});await layout(p,'#swc-dose');await p.setViewportSize({width:375,height:812});
-  await by(p,'playEx','bench-press').click();const draft=await play(p);assert.equal(draft.items[0].sets,3);assert.deepEqual(draft.items[0].kgList,[20,20,27.5]);assert.equal(draft.originalItems[0].kg,20);
+  const c=p.locator('.workout-exercise-page').last();await c.waitFor();assert.equal(await c.locator('.workout-set-row').count(),2);assert.equal(await c.locator('.workout-set-row[data-state=planned]').count(),2);assert.equal(await p.locator('[role=tab]').count(),0);
+  await p.locator('.workout-plan-options summary').click();await A(p,'workoutEdit').click();const f=p.locator('#play-dose-form');await f.locator('[name=sets]').fill('3');await A(p,'playDoseResize').click();await f.locator('[data-dose-set="3"] [data-dose-value=reps]').fill('3');await f.locator('[data-dose-set="3"] [data-dose-value=kg]').fill('27,5');await A(p,'playDoseApply').click();
+  assert.equal(await c.locator('.workout-set-row').count(),3);assert.equal(await row(p,0,3).locator('[data-field=kg]').inputValue(),'27,5');assert.equal((await store(p)).exercises['bench-press'].kg,20);
+  await A(p,'workoutHistory').last().click();await p.locator('.workout-exercise-panel').waitFor();assert.match(await p.locator('.workout-panel-body').innerText(),/Još nema/);await A(p,'workoutPanelBack').click();assert.equal(await c.locator('.workout-set-row').count(),3);
+  await A(p,'workoutTrends').last().click();assert.equal(await p.locator('.workout-chart').count(),1);assert.equal(await p.locator('.workout-chart svg').count(),0);await A(p,'workoutPanelBack').click();
+  await p.setViewportSize({width:320,height:812});await layout(p,'.workout-exercise-page');await p.setViewportSize({width:375,height:812});
+  await by(p,'playEx','bench-press').last().click();const draft=await play(p);assert.equal(draft.items[0].sets,3);assert.deepEqual(draft.items[0].kgList,[20,20,27.5]);assert.equal(draft.originalItems[0].kg,20);
   await A(p,'quitPlay').click();await A(p,'quitDiscard').click();assert.equal((await store(p)).log.length,0);
-  record('solo',{preset:3,plannedOnly:true,thirdDose:'3×27.5',loadHistoryAvailable:true,sourceKg:20});
+  record('solo',{sets:3,plannedOnly:true,thirdDose:'3×27.5',historyAndTrendsAvailable:true,sourceKg:20});
 }
 async function superset(p){
-  await protocols(p);await by(p,'openPr','audit-unknown').click();assert.match(await p.locator('.pre-sets').innerText(),/Početna težina nije upisana/);
-  await protocols(p);await by(p,'openPr',prId).click();const panel=p.locator('.pre-sets');assert.equal(await panel.locator('.set-item').count(),4);assert.equal(await panel.locator('li[data-state="planned"]').count(),4);assert.equal(await A(p,'checklistDone').count(),0);
-  await p.locator('.workout-exercise-open[data-j="1"]').click();await p.locator('.workout-exercise-panel').waitFor();await A(p,'workoutClose').click();assert.equal(await panel.locator('.set-item').count(),4);
-  assert.equal(await A(p,'toggleDosePlan').count(),0);assert.equal(await panel.locator('.set-item:visible').count(),4);
-  await fillEdit(p,0,2,{reps:4,kg:30});assert.match(await panel.locator('.set-item').nth(1).innerText(),/4 pon.*30 kg/);
-  await p.setViewportSize({width:320,height:812});await layout(p,'.pre-sets');await p.setViewportSize({width:375,height:812});
+  await protocols(p);await by(p,'openPr','audit-unknown').click();await exercise(p,0);assert.equal(await row(p,0,1).locator('[data-field=kg]').inputValue(),'');await A(p,'workoutClose').click();
+  await protocols(p);await by(p,'openPr',prId).click();const panel=p.locator('.workout-overview');assert.equal(await panel.locator('.workout-compact-row').count(),2);assert.equal(await A(p,'workoutSetDone').count(),0);
+  await exercise(p,1);assert.equal(await p.locator('.workout-exercise-page .workout-set-row').count(),2);assert.ok((await p.locator('.workout-exercise-page').innerText()).includes('SIR'));await A(p,'workoutClose').click();
+  await fillEdit(p,0,2,{reps:4,kg:30});
+  await p.setViewportSize({width:320,height:812});await layout(p,'.workout-overview');await p.setViewportSize({width:375,height:812});
   await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-prestart-webkit-375.png':'checklist-prestart-375.png')});
-  await A(p,'startPr').click();await p.locator('.play-card-tabs [data-i="2"]').click();const live=p.locator('#play-card-2');
-  assert.equal(await live.locator('.set-item').count(),4);assert.equal(await A(p,'checklistDone').count(),0);
-  await advance(p,6);const active=A(p,'checklistDone');assert.equal(await active.count(),1);assert.equal(await active.getAttribute('data-j'),'0');assert.equal(await active.getAttribute('data-set'),'1');await active.click();
+  await A(p,'startPr').click();const live=p.locator('.workout-journal');assert.equal(await live.locator('.workout-set-row').count(),4);assert.equal(await A(p,'workoutSetDone').count(),0);
+  await advance(p,6);const active=A(p,'workoutSetDone');assert.equal(await active.count(),1);assert.equal(await active.getAttribute('data-j'),'0');assert.equal(await active.getAttribute('data-set'),'1');
+  const beforeRefusal=await play(p);await p.evaluate(()=>{window.realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='mt.play')throw new DOMException('Synthetic refusal','QuotaExceededError');return window.realSet.call(this,k,v);};});await active.click();assert.equal((await play(p)).i,beforeRefusal.i);assert.deepEqual((await play(p)).doneSteps,beforeRefusal.doneSteps);assert.equal(await row(p,0,1,'.workout-journal').getAttribute('data-state'),'active');assert.match(await p.locator('.toast').innerText(),/nije spremljena/);await p.evaluate(()=>{Storage.prototype.setItem=window.realSet;});await active.click();
   const rir=p.locator('[data-a=rir][data-v="0"]');if(await rir.count())await rir.first().click();
-  const marked=live.locator('.set-item').first();assert.equal(await marked.getAttribute('data-state'),'done');if(await rir.count())assert.match(await marked.innerText(),/RIR 0/);
-  assert.equal(await A(p,'checklistDone').count(),0);
-  const start=p.getByRole('button',{name:'Kreni',exact:true});
-  const firstHold=live.locator('.set-item').nth(2);
-  for(let i=0;i<18 && await firstHold.getAttribute('data-state')!=='active';i++){
-    if(await start.isVisible())await start.click();else await advance(p,2);
-  }
-  assert.equal(await firstHold.getAttribute('data-state'),'active');
-  await advance(p,3);
-  const help=p.getByRole('button',{name:'Kako se bilježe serije',exact:true});
-  await help.click();
-  const dialog=p.getByRole('dialog',{name:'Kako se bilježe serije',exact:true});await dialog.waitFor();
-  assert.equal(await dialog.locator('.set-legend li').count(),5);
-  const paused=await play(p);await advance(p,35);assert.equal((await play(p)).i,paused.i);assert.match(await p.locator('#phint').innerText(),/Pauzirano/);
-  await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.ok(await p.getByRole('button',{name:'Pauziraj',exact:true}).isVisible());
-  assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'playDoseHelp');
-  await p.getByRole('button',{name:'Pauziraj',exact:true}).click();await help.click();await advance(p,28);
-  await p.locator('.sheet-bg').click({position:{x:2,y:2}});await dialog.waitFor({state:'hidden'});assert.ok(await p.getByRole('button',{name:'Nastavi',exact:true}).isVisible());assert.equal((await play(p)).left,paused.left);
-  await p.getByRole('button',{name:'Nastavi',exact:true}).click();record('legend',{states:5,elapsedWhileHelpOpen:63,sameRemainingSeconds:paused.left,runningRestoredAfterEscape:true,previousPauseRestoredAfterBackdrop:true});
-  assert.equal(await A(p,'checklistDone').count(),0);await advance(p,16);
-  assert.equal(await live.locator('.set-item').nth(2).getAttribute('data-state'),'partial');assert.match(await live.locator('.set-item').nth(2).innerText(),/✓ Lijeva · ○ Desna/);
-  const before=await play(p);await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,before.doneSteps);assert.equal(await live.locator('.set-item').nth(2).getAttribute('data-state'),'partial');
-  await p.locator('.view').evaluate(el=>el.scrollTo(0,document.querySelector('.play-cards').offsetTop-10));
-  await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-live-webkit-375.png':'checklist-live-375.png')});
-  await p.setViewportSize({width:320,height:812});await layout(p,'#play-card-2');await p.setViewportSize({width:375,height:812});
-  await p.locator('[data-a="jump"][data-d="1"]').click();
-  if(await start.isVisible())await start.click();
-  const second=live.locator('[data-a=checklistDone][data-j="0"][data-set="2"]');await second.waitFor();await second.click();
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
-  const d=await store(p),row=d.log[0];assert.deepEqual(row.items[0].kgList,[20,30]);assert.deepEqual(row.items[0].repsList,[5,4]);assert.deepEqual(row.items[1].sideCounts,[1]);assert.equal(d.protocols[prId].items[0].kg,20);
-  record('superset',{realCheckboxes:2,originalBenchKg:20,done:row.items[0].kgList,partialTimed:row.items[1].sideCounts,sourceRows:4});
+  const marked=row(p,0,1,'.workout-journal');assert.equal(await marked.getAttribute('data-state'),'done');
+  await inline(p,0,1,'rir','0','.workout-journal');assert.equal(await marked.locator('[data-field=rir]').inputValue(),'0');assert.equal(await A(p,'workoutSetDone').count(),0);
+  const start=p.getByRole('button',{name:'Kreni',exact:true}),firstHold=row(p,1,1,'.workout-journal');
+  for(let i=0;i<18 && await firstHold.getAttribute('data-state')!=='active';i++){if(await start.isVisible())await start.click();else await advance(p,2);}
+  assert.equal(await firstHold.getAttribute('data-state'),'active');await advance(p,3);
+  const help=live.locator('[data-a=workoutInfo][data-j="1"]');await help.click();await p.locator('.workout-instructions-body').waitFor();const paused=await play(p);await advance(p,35);assert.equal((await play(p)).i,paused.i);
+  await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.ok(await p.getByRole('button',{name:'Pauziraj',exact:true}).isVisible());
+  await p.getByRole('button',{name:'Pauziraj',exact:true}).click();await help.click();await advance(p,28);await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});assert.ok(await p.getByRole('button',{name:'Nastavi',exact:true}).isVisible());assert.equal((await play(p)).left,paused.left);
+  await p.getByRole('button',{name:'Nastavi',exact:true}).click();record('instructionsPause',{elapsedWhileOpen:63,sameRemainingSeconds:paused.left,runningAndPausedRestored:true});
+  assert.equal(await A(p,'workoutSetDone').count(),0);await advance(p,16);assert.equal(await firstHold.getAttribute('data-state'),'partial');assert.match(await firstHold.locator('xpath=following-sibling::tr[1]').innerText(),/✓ lijeva · ○ desna/);
+  const before=await play(p);await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,before.doneSteps);assert.equal(await firstHold.getAttribute('data-state'),'partial');
+  await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-live-webkit-375.png':'checklist-live-375.png')});await p.setViewportSize({width:320,height:812});await layout(p,'.workout-journal');await p.setViewportSize({width:375,height:812});
+  await p.locator('[data-a="jump"][data-d="1"]').click();if(await start.isVisible())await start.click();const second=live.locator('[data-a=workoutSetDone][data-j="0"][data-set="2"]');await second.waitFor();await second.click();
+  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const d=await store(p),entry=d.log[0];assert.deepEqual(entry.items[0].kgList,[20,30]);assert.deepEqual(entry.items[0].repsList,[5,4]);assert.deepEqual(entry.items[1].sideCounts,[1]);assert.equal(d.protocols[prId].items[0].kg,20);
+  record('superset',{realCheckboxes:2,originalBenchKg:20,done:entry.items[0].kgList,partialTimed:entry.items[1].sideCounts,sourceRows:4});
 }
 async function longList(p){
-  await protocols(p);await by(p,'openPr','audit-long').click();
-  await p.setViewportSize({width:320,height:700});await layout(p,'.pre-sets');
-  const planned=p.locator('.pre-sets li.set-item');
-  assert.equal(await planned.count(),24);await planned.last().scrollIntoViewIfNeeded();assert.match(await planned.last().innerText(),/Krug 12/);
-  await A(p,'startPr').click();await p.locator('.play-card-tabs [data-i="2"]').click();
-  const live=p.locator('#play-card-2 li.set-item');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'#play-card-2');assert.match(await live.last().innerText(),/Krug 12/);
-  const dimensions=await p.locator('#play-card-2 .play-card-content').evaluate(el=>[el.clientHeight,el.scrollHeight,document.querySelector('.view').scrollTop]);
-  assert.ok(dimensions[0]+1>=dimensions[1] && dimensions[2]>1000,'the enclosing page can scroll to final set '+JSON.stringify(dimensions));assert.equal(await p.locator('[data-state=done]').count(),0);
-  await A(p,'quitPlay').click();await A(p,'quitDiscard').click();record('long-default-checklist',{rows:24,width:320,pageScroll:dimensions[2],fabricatedCompletions:0});
+  await protocols(p);await by(p,'openPr','audit-long').click();await p.setViewportSize({width:320,height:700});await layout(p,'.workout-overview');assert.equal(await p.locator('.workout-compact-row').count(),2);
+  await exercise(p,1);const planned=p.locator('.workout-exercise-page .workout-set-row');assert.equal(await planned.count(),12);await planned.last().scrollIntoViewIfNeeded();assert.equal(await planned.last().getAttribute('data-set'),'12');await layout(p,'.workout-exercise-page');await A(p,'workoutClose').click();
+  await A(p,'startPr').click();const live=p.locator('.workout-journal .workout-set-row');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'.workout-journal');assert.equal(await live.last().getAttribute('data-set'),'12');const scroll=await p.locator('.workout-journal').evaluate(el=>el.scrollTop);assert.ok(scroll>1000,'the page scrolls to every set: '+scroll);assert.equal(await p.locator('.workout-set-row[data-state=done]').count(),0);
+  await A(p,'quitPlay').click();await A(p,'quitDiscard').click();record('long-default-checklist',{rows:24,width:320,pageScroll:scroll,fabricatedCompletions:0});
 }
 async function mixedWeights(p){
   await protocols(p);await by(p,'openPr','audit-mixed').click();
-  const entries=p.locator('.pre-sets .set-block').first().locator('.set-item');assert.match(await entries.nth(0).innerText(),/10 kg/);assert.match(await entries.nth(1).innerText(),/Početna težina nije/);assert.match(await entries.nth(2).innerText(),/0 kg/);
-  await p.locator('[data-a="previewDoseEdit"][data-j="0"]').click();
-  const f=p.locator('#play-dose-form');assert.equal(await f.locator('[data-dose-set="2"] [data-dose-value=kg]').inputValue(),'');
-  assert.equal(await f.locator('[data-dose-set="3"] [data-dose-value=kg]').inputValue(),'0');
-  await f.locator('[data-dose-set="1"] [data-dose-value=reps]').fill('7');await A(p,'playDoseApply').click();
+  await exercise(p,0);assert.equal(await row(p,0,1).locator('[data-field=kg]').inputValue(),'10');assert.equal(await row(p,0,2).locator('[data-field=kg]').inputValue(),'');assert.equal(await row(p,0,3).locator('[data-field=kg]').inputValue(),'0');await inline(p,0,1,'reps','7');assert.equal(await row(p,0,2).locator('[data-field=kg]').inputValue(),'');await A(p,'workoutClose').click();
   await A(p,'startPr').click();const gate=p.locator('#starting-load-form');await gate.waitFor();
   assert.equal(await gate.locator('[data-start-kg]').count(),1);await gate.locator('[data-start-kg]').fill('12');
   await gate.getByRole('button',{name:'Spremi i kreni'}).click();
@@ -143,7 +123,7 @@ async function run(){
   const browser=await launch();
   try{const ctx=await browser.newContext({viewport:{width:375,height:812},hasTouch:true,isMobile:true,locale:'hr-HR',timezoneId:'Europe/Zagreb',reducedMotion:'reduce'});
     const p=await ctx.newPage();p.setDefaultTimeout(4500);const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.setFixedTime(new Date(fixed));await p.goto('http://127.0.0.1:'+server.address().port+'/');
-    try{await seed(p);if(process.argv.includes('just-mixed')){await mixedWeights(p);assert.deepEqual(errors,[]);return;}if(!process.argv.includes('just-long')){await solo(p);await superset(p);}await longList(p);assert.deepEqual(errors,[]);}
+    try{await seed(p);if(process.argv.includes('just-mixed')){await mixedWeights(p);assert.deepEqual(errors,[]);return;}if(!process.argv.includes('just-long')){await solo(p);await superset(p);}await longList(p);await mixedWeights(p);assert.deepEqual(errors,[]);}
     catch(e){console.error('view:',(await p.locator('.view').allInnerTexts()).join().slice(0,1300));console.error('dialog:',await p.getByRole('dialog').allInnerTexts());throw e;}
     finally{await ctx.close();}
   }finally{await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}

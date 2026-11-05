@@ -46,13 +46,15 @@ async function basics(p){
   const q=p.locator('#libq');await q.fill('xzz-test-no-matches');assert.equal(await p.locator('#liblist [data-a="openEx"]').count(),0);
   await q.fill('bench');assert.ok(await p.locator('#liblist [data-a="openEx"]').count()>0);
   await A(p,'eqSheet').click();const filter=p.locator('[data-a="eqTile"]').first();await filter.click();await A(p,'sheetDone').click();await A(p,'filtClear').click();await q.fill('bench');await by(p,'openEx','bench-press').click();
-  for(const i of [1,2,0]){await p.locator('[data-a="swGo"][data-i="'+i+'"]').click();await p.waitForFunction(i=>document.querySelector('[data-a="swGo"][data-i="'+i+'"]').getAttribute('aria-current')==='true',i);}
+  await p.locator('.workout-exercise-page').waitFor();
+  for(const [action,close] of [['workoutInfo','workoutPanelBack'],['workoutHistory','workoutPanelBack'],['workoutTrends','workoutPanelBack']]){await A(p,action).first().click();await p.locator('.workout-fullscreen').waitFor();await A(p,close).click();if(await A(p,'workoutClose').count())await A(p,'workoutClose').first().click();}
+  assert.equal(await p.locator('.exswipe,.play-cards').count(),0);
   await noOverflow(p,'bench details');
   await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardForecast').click();if(!await p.locator('.db-comparison-row').first().isVisible())await p.locator('.db-groups summary').click();await p.locator('.db-comparison-row').first().click();await noOverflow(p,'dashboard');await p.setViewportSize({width:320,height:812});await noOverflow(p,'dashboard 320');await p.setViewportSize({width:375,height:812});
-  await p.locator('.db-daily [data-date="2026-11-06"]').click();assert.match(await p.locator('.view').innerText(),/6\. 11\.|6\. studen|petak,? 6/i);await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
-  await A(p,'dashboardProgress').click();assert.match(await p.locator('.view').innerText(),/Napredak/);await noOverflow(p,'progress');await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
+  await p.locator('.db-daily [data-date="2026-11-06"]').click();assert.match(await p.locator('.view:not([inert])').innerText(),/6\. 11\.|6\. studen|petak,? 6/i);await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
+  await A(p,'dashboardProgress').click();assert.match(await p.locator('.view:not([inert])').innerText(),/Napredak/);await noOverflow(p,'progress');await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
   assert.equal((await store(p)).log.length,count);
-  record('home-library-dashboard-progress',{cards:5,device:'375px',keyboard:'Home card & library via Enter',search:'empty + partial + filter clear',detailSlides:3});
+  record('home-library-dashboard-progress',{cards:5,device:'375px',keyboard:'Home card & library via Enter',search:'empty + partial + filter clear',fullpageExercise:true});
 }
 async function fieldCatalogue(p){
   await home(p);await p.locator('#car [data-a="fieldList"]').click();
@@ -177,7 +179,7 @@ async function mixedCharts(p,ctx,pr){
   const after=(await store(p)).log.find(l=>l.historyId==='mix01');assert.deepEqual(after.items[0].kgList,[20,null]);
   await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProgress').click();
   if(!await p.locator('#wk-vl').isVisible())await p.locator('#wk-vl').locator('xpath=ancestor::details[1]/summary').click();
-  const mixedText=await p.locator('.view').innerText();const chartLabel=await p.locator('#wk-vl').getAttribute('aria-label');
+  const mixedText=await p.locator('.view:not([inert])').innerText();const chartLabel=await p.locator('#wk-vl').getAttribute('aria-label');
   assert.match(mixedText,/Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad/);
   record('mixed-weights-and-unknown',{originalVolume:190,originalMeaning:'5×20 + 3×30; independent trial excluded',unrecordedSet2kg:chartLabel,partialNotice:/nepotpun|dijelom|djelomič|dio .*nije|nedosta|poznati podaci/i.test(mixedText)});
   await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);
@@ -191,28 +193,14 @@ async function mixedCharts(p,ctx,pr){
   });
 }
 async function editDose(p,j){
-  await p.locator('[data-a="playDoseCard"][data-i="2"]').first().click();
   await p.locator('[data-a="playDoseEdit"][data-j="'+j+'"]').click();await p.locator('#play-dose-form').waitFor();
 }
 async function swipePlayer(p){
- const row=p.locator('#play-card-row');await row.scrollIntoViewIfNeeded();
- const box=await row.boundingBox();const x=box.x+box.width*.82,y=box.y+Math.min(box.height*.45,65);
- if(engine==='webkit'){
-   // WebKit has no Chrome DevTools touch channel. Exercise actual tab controls
-   // here; the Chromium branch below separately verifies a real touch swipe.
-   await p.locator('.play-card-tabs [data-i="1"]').click();
-   await p.waitForFunction(()=>document.querySelector('#play-card-row').scrollLeft>50);
-   assert.equal(await p.locator('.play-card-tabs [data-i="1"]').getAttribute('aria-selected'),'true');
-   record('webkit-player-card-control',{selected:1});return;
- }
- const cdp=await p.context().newCDPSession(p);
- try{
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-   for(let i=1;i<=8;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-box.width*.7*i/8,y}]});await p.waitForTimeout(20);}
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForFunction(()=>document.querySelector('#play-card-row').scrollLeft>50);
- }finally{await cdp.detach();}
- const selected=Number(await p.locator('.play-card-tabs [aria-selected="true"]').getAttribute('data-i'));assert.ok(selected>0);
- record('real-touch-swipe',{selected});
+  await p.locator('.workout-journal').waitFor();
+  assert.equal(await p.locator('.play-cards').count(),0);
+  assert.ok(await p.locator('.workout-journal .workout-set-row').count()>0);
+  await A(p,'workoutExercise').first().click();await p.locator('.workout-fullscreen .workout-exercise-page').waitFor();await A(p,'workoutClose').first().click();
+  record('vertical-workout-journal',{engine,fullpageDetail:true,allSets:true});
 }
 async function liveFlow(p,pr){
   await toProtocol(p,pr);await advance(p,6);
@@ -241,8 +229,7 @@ async function liveFlow(p,pr){
   if(process.argv.includes('continue-known')){await row(2,'reps').fill('3');await row(2,'kg').fill('30');}else{assert.equal(await row(2,'kg').inputValue(),'30');assert.equal(await row(2,'reps').inputValue(),'3');}
   await A(p,'playDoseApply').click();await p.locator('#play-dose-form').waitFor({state:'hidden'});
   await editDose(p,1);await row(2,'sec').fill('20');await A(p,'playDoseApply').click();
-  await p.locator('[data-a="playDoseCard"][data-i="2"]').first().click();
-  await p.locator('.toast').waitFor({state:'hidden',timeout:10000});await p.locator('.view').evaluate(el=>el.scrollTo(0,0));await p.screenshot({path:path.join(artifacts,'player-dose-card-375.png')});
+  await p.locator('.toast').waitFor({state:'hidden',timeout:10000});await p.locator('.view:not([inert])').evaluate(el=>el.scrollTo(0,0));await p.screenshot({path:path.join(artifacts,'player-dose-card-375.png')});
   await editDose(p,0);
   for(const width of [320,375]){await p.setViewportSize({width,height:812});
     const editorWidth=await p.locator('#play-dose-form').evaluate(el=>{const b=el.getBoundingClientRect();return{left:b.left,right:b.right,client:el.clientWidth,scroll:el.scrollWidth,kgRight:el.querySelector('[data-dose-value=kg]').getBoundingClientRect().right,width:innerWidth};});
@@ -255,8 +242,9 @@ async function liveFlow(p,pr){
   await reach(p,()=>p.locator('.hint#phint').innerText().then(t=>/brojač za pauzu/.test(t)),20);
   await advance(p,pr.items[1].sec+1);await p.locator('[data-a="jump"][data-d="1"]').click();
   await reach(p,()=>ring.isVisible(),20);
-  const shown=await p.locator('.meta').innerText()+' '+await p.locator('.ttl').innerText();
-  assert.match(await p.locator('.view').innerText(),/30 kg/);assert.match(await p.locator('.view').innerText(),/3 ponavljanja/);
+  const shown=await p.locator('.workout-now').innerText();
+  assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="kg"]').inputValue(),'30');
+  assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="reps"]').inputValue(),'3');
   await ring.click();
   await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const data=await store(p),log=data.log.find(l=>l.refId===pr.id&&l.items[0].liveDoseChanged===true);
@@ -312,7 +300,7 @@ async function reach(p,condition,max){
     if(label==='Kreni'||label==='Preskoči odmor'||label==='Nastavi')await ring.click();
     else await advance(p,2);
   }
-  throw Error('Step not reached; '+await p.locator('.view').innerText());
+  throw Error('Step not reached; '+await p.locator('.view:not([inert])').innerText());
 }
 async function run(){
   const serverReady=new Promise((r,j)=>{server.once('error',j);server.listen(0,'127.0.0.1',r);});await serverReady;
@@ -325,7 +313,7 @@ async function run(){
     await p.clock.setFixedTime(new Date(fixed));await p.goto('http://127.0.0.1:'+server.address().port+'/');
     try {await importTest(p);if(process.argv.includes('just-program')){await programNegative(p);assert.deepEqual(errors,[]);return;}if(process.argv.includes('just-live')){const pr=await createSuperset(p);await liveFlow(p,pr);assert.deepEqual(errors,[]);return;}
     await basics(p);await fieldCatalogue(p);await persistNegative(p);const pr=await createSuperset(p);await planner(p,pr);await fieldFlow(p,ctx);await exerciseTrial(p);await bodyRound(p,pr);if(process.argv.includes('live'))await liveFlow(p,pr);await mixedCharts(p,ctx,pr);await programNegative(p);assert.deepEqual(errors,[]);}
-    catch(e){console.error('Current view:',(await p.locator('.view').innerText()).slice(0,1100));console.error('Dialog:',await p.getByRole('dialog').allInnerTexts());throw e;}
+    catch(e){console.error('Current view:',(await p.locator('.view:not([inert])').innerText()).slice(0,1100));console.error('Dialog:',await p.getByRole('dialog').allInnerTexts());throw e;}
     finally{await ctx.close();fs.writeFileSync(path.join(artifacts,process.argv.includes('just-program')?'whole-app-program-audit.json':process.argv.includes('just-live')?'whole-app-live-audit.json':'whole-app-audit.json'),JSON.stringify(results,null,2));}
   }finally{if(browser)await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));}
 }

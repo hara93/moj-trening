@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const H=require('../history-model.js'),UI=require('../history.js');
+const H=require('../history-model.js'),UI=require('../history.js'),TrainingLoad=require('../training-load.js');
 const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
 const window={HistoryModel:H};
 for(const name of ['data.js','loadfx.js'])new Function('window',fs.readFileSync(path.join(__dirname,'..',name),'utf8'))(window);
@@ -120,10 +120,10 @@ test('rep trends and history never fill explicit missing reps, weight or seconds
   assert.deepEqual(series([item]).pts,[]);
 });
 test('effort explanations state the fixed model rather than promising personal calibration',()=>{
-  const start=source.indexOf('const auHtml ='),end=source.indexOf('// a tap on the track',start);
-  const au=new Function('thou',source.slice(start,end)+';return auHtml;')(String);
-  assert.doesNotMatch(au(0,5),/uče|kalibr/);assert.match(au(5,12.483),/5 × 12 min = <b>60/);
-  assert.match(au(5,12.483),/ne mijenja LM1/);
+  const start=source.search(/const auHtml\s*=/),end=source.indexOf('function rpeTap(',start);
+  const au=new Function('TrainingLoad','esc','fmtDur',source.slice(start,end)+';return auHtml;')(TrainingLoad,String,seconds=>seconds+' s');
+  assert.match(au(0,5),/data-au="0"/);assert.doesNotMatch(au(null,5),/data-au=/);assert.match(au(5,12.483),/data-au="62.415"/);
+  assert.doesNotMatch(au(0,5),/uče|kalibr/);assert.match(au(5,12.483),/zasebna od procjene LM1/);
   assert.doesNotMatch(source,/Linija koja raste znači napredak|Ravna linija dulje od 2–3 tjedna znači/);
 });
 test('five-minute history corrections update the exact paired result and refuse clearing or invalid test measurements',()=>{
@@ -161,24 +161,25 @@ test('an entirely unknown dose is omitted from charts while known partial rows r
     H,{ex:window.SEED.exercises},(at,n)=>at+n*864e5,()=>items,()=>false,x=>Math.max(0,...(H.recordedRows(x)||[]).filter(r=>r.reps>0).map(r=>r.kg||0)),M.itemLoad);
   const series=model(id,0);assert.equal(series.partial,true);assert.equal(series.pts.length,1);assert.equal(series.pts[0].v,220);
 });
-test('88/89/90-second finish, rating update and stored AU use the same single rounding of actual seconds',()=>{
-  const auBegin=source.indexOf('const auHtml ='),auEnd=source.indexOf('// a tap on the track',auBegin);
-  const au=new Function('thou',source.slice(auBegin,auEnd)+';return auHtml;')(String);
+test('88/89/90-second finish, rating update and stored AU use exact elapsed seconds for zero, known and missing ratings',()=>{
+  const auBegin=source.search(/const auHtml\s*=/),auEnd=source.indexOf('function rpeTap(',auBegin);
+  const au=new Function('TrainingLoad','esc','fmtDur',source.slice(auBegin,auEnd)+';return auHtml;')(TrainingLoad,String,seconds=>seconds+' s');
   const cardBegin=source.indexOf('function lmCardHtml('),cardEnd=source.indexOf('// the exercise page',cardBegin);
   const saveBegin=source.indexOf('function logSession()'),saveEnd=source.indexOf('const newsMsg =',saveBegin);
   const rateBegin=source.indexOf('function rpeSet(t)'),rateEnd=source.indexOf('// the done screen',rateBegin);
-  for(const secs of [88,89,90]){
-    const P={historyId:'new-history',secs,srpe:5,done:true},S={log:[],pr:{}},expected=secs<90?5:10;
+  const rpeKnown=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=10;
+  for(const secs of [88,89,90])for(const rating of [0,5,undefined]){
+    const P={historyId:'new-history',secs,srpe:rating,done:true},S={log:[],pr:{}},expected=TrainingLoad.sessionAU({srpe:rating,secs});
     const model={v:'LM1',min:Math.round(secs/6)/10,B:12,band:3.6,Bsets:10.5,Bfield:0,HS:{},CE:0,m:0};P._lm=model;
     const card=new Function('P','LM','auHtml','lmR','lmPts','loadFmt','lmHs','thou','esc','plural',source.slice(cardBegin,cardEnd)+';return lmCardHtml;')(
       P,{TREG:{}},au,Math.round,String,String,String,String,String,()=> 'bodova');
-    assert.match(card(model),new RegExp('5 × '+Math.round(secs/60)+' min = <b>'+expected+'<'));
+    if(expected===null)assert.doesNotMatch(card(model),/data-au=/);else assert.ok(card(model).includes('data-au="'+expected+'"'));
     const area={innerHTML:''},document={getElementById:id=>id==='lmau'?area:null},input={value:'5',classList:{toggle(){}},style:{setProperty(){}},setAttribute(){}};
-    const rate=new Function('P','savePlayerChoice','document','rpePct','rpeTxt','auHtml',source.slice(rateBegin,rateEnd)+';return rpeSet;')(P,(_,fn)=>fn(),document,String,String,au);
-    rate(input);assert.match(area.innerHTML,new RegExp('= <b>'+expected+'<'));
+    const rate=new Function('P','savePlayerChoice','document','rpeKnown','rpePct','rpeTxt','auHtml',source.slice(rateBegin,rateEnd)+';return rpeSet;')(P,(_,fn)=>fn(),document,rpeKnown,String,String,au);
+    if(rating!==undefined){input.value=String(rating);rate(input);assert.ok(area.innerHTML.includes('data-au="'+expected+'"'));}
     const save=new Function('S','P','sessionEntry','computeSession','HistoryModel','applyProgress','masFromPlay','trimLog','persist','clearPlay',source.slice(saveBegin,saveEnd)+';return logSession;')(
       S,P,()=>({kind:'protocol',refId:'p',at:1000,secs}),()=>({...model}),H,()=>[],()=>null,()=>'',()=>true,()=>{});
-    assert.equal(save().saved,true);assert.equal(S.log[0].load2.au,expected);assert.equal(H.sessionAU(S.log[0]),expected);
+    assert.equal(save().saved,true);assert.equal(S.log[0].load2.au,expected===null?undefined:expected);assert.equal(H.sessionAU(S.log[0]),expected);
   }
 });
 test('accessible chart tables retain every supplied column including unknown speed evidence',()=>{

@@ -75,7 +75,7 @@ test('a live edited dose remains excluded even if current item scalars were late
   assert.equal(ctx.progCandidates().length,0);ctx.applyProgress();assert.equal(ctx.S.pr.p.items[0].ok,undefined);
 });
 function checkpointHarness(P){
-  const writes=new Map(),ctx={P,S:{field:{},ex:{newA:exercise('newA'),oldB:exercise('oldB')},stack:[],sheet:null},PlayerDose:D,MuscleWork:M,
+  const writes=new Map(),ctx={P,S:{field:{},ex:{newA:exercise('newA'),oldB:exercise('oldB')},stack:[],sheet:null},PlayerDose:D,MuscleWork:M,SessionClock:require('../session-clock.js'),
     audioMode(){},ensureAudio(){},stepsFromItems:manualSteps,clone,isPlainObj:value=>!!value&&typeof value==='object'&&!Array.isArray(value),uid:()=> 'hnew123',
     render(){},keepAwake(){},remaining:()=>ctx.P.left||0,PLAY_KEY:'mt.play',localStorage:{setItem:(key,value)=>writes.set(key,value)},
     clearInterval(){},setInterval:()=> 1,tick(){},ticker:null};
@@ -114,7 +114,7 @@ test('planned reserve targets stay optional, bounded and separate from actual re
 });
 test('actual startup refuses an unsaved first checkpoint without losing its form, then starts once on retry',()=>{
   const cfg={mode:'ex',title:'Replacement',ref:{kind:'protocol',id:'p'},items:[{...replacement,kg:10}],originalItems:[oldA],sessionOnly:true};
-  const writes=new Map(),audio=[],ctx={P:null,S:{stack:[{v:'pr',id:'p'}],sheet:{kind:'startingLoad',values:{0:'10'},cfg}},PlayerDose:D,clone,
+  const writes=new Map(),audio=[],ctx={P:null,S:{stack:[{v:'pr',id:'p'}],sheet:{kind:'startingLoad',values:{0:'10'},cfg}},PlayerDose:D,clone,SessionClock:require('../session-clock.js'),
     PLAY_KEY:'mt.play',shouldCheckpoint:false,intervals:0,ticker:null,
     lsGet:()=>null,openStartingLoad:()=>false,audioMode:on=>audio.push(on),ensureAudio(){},stepsFromItems:manualSteps,
     beep(){},buzz(){},render(){},keepAwake:()=>Promise.resolve(),wakeHint(){},clearInterval(){},setInterval:()=>++ctx.intervals,tick(){},toast(){},

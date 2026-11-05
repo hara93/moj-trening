@@ -10,10 +10,11 @@ const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./ru
 
 const ids = {
   protocol: 'workout-audit', replacement: 'workout-db-press', hold: 'workout-side-hold',
-  program: 'workout-frozen', frozen: 'workout-program'
+  program: 'workout-frozen', frozen: 'workout-program', clock: 'workout-clock', missing: 'workout-missing'
 };
 const fixed = new Date('2026-11-04T10:00:00+01:00');
 const action = (page, name) => page.locator('[data-a="' + name + '"]');
+const detailAction = (page, name) => page.locator('.workout-exercise-page [data-a="' + name + '"]');
 const byId = (page, name, id) => page.locator('[data-a="' + name + '"][data-id="' + id + '"]');
 const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')));
 const player = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -45,7 +46,16 @@ function fixture() {
       secList: [12, 8], kg: 0, rest: 10, sides: true, ss: 'pair', section: 'Glavni dio' }
   ];
   data.protocols[ids.protocol] = {
-    id: ids.protocol, name: 'Kontrolni trening sa zamjenom', tag: 'Teretana', days: [], items
+    id: ids.protocol, name: 'Kontrolni trening sa zamjenom', tag: 'Teretana', days: [], items,
+    desc: 'Kontrolni opis protokola ostaje vidljiv uz izvorni veliki prikaz.'
+  };
+  data.protocols[ids.clock] = {
+    id: ids.clock, name: 'Samo aktivno trajanje', days: [], tag: 'Teretana',
+    items: [{ ...items[0], ss: null, rest: 0, repsList: [5, 5], kgList: [20, 20] }]
+  };
+  data.protocols[ids.missing] = {
+    id: ids.missing, name: 'Nepoznata težina u sredini', days: [], tag: 'Teretana',
+    items: [{ ...items[0], ss: null, sets: 3, repsList: [5, 5, 5], kg: 0, kgList: [10, null, 0] }]
   };
   data.protocols[ids.frozen] = {
     id: ids.frozen, name: 'Programska doza ostaje zadana', program: ids.program,
@@ -103,8 +113,8 @@ async function exercise(page, index) {
   const button = page.locator('[data-a="workoutExercise"][data-j="' + index + '"]').first();
   await button.focus();
   await page.keyboard.press('Enter');
-  await page.locator('.workout-exercise-panel').waitFor();
-  return page.locator('.workout-exercise-panel');
+  await page.locator('.workout-exercise-page').waitFor();
+  return page.locator('.workout-exercise-page');
 }
 
 async function closeSheet(page) {
@@ -118,8 +128,8 @@ async function advance(page, seconds) {
   await page.waitForTimeout(320);
 }
 
-async function resume(page) {
-  await page.reload();
+async function resume(page, reload = true) {
+  if (reload) await page.reload();
   await action(page, 'resumeGo').click();
   const continueTimer = page.getByRole('button', { name: 'Nastavi', exact: true });
   if (await continueTimer.isVisible()) await continueTimer.click();
@@ -155,14 +165,21 @@ async function discardPlayer(page) {
   await action(page, 'quitDiscard').click();
 }
 
-const doseField = (page, set, key) => page.locator('#play-dose-form [data-dose-set="' + set + '"] [data-dose-value="' + key + '"]');
+const doseField = (page, set, key) => page.locator('.workout-exercise-page .workout-set-table input[data-set="' + set + '"][data-field="' + key + '"]');
+
+async function inline(page, set, field, value) {
+  const input = doseField(page, set, field);
+  await input.fill(String(value));
+  await input.press('Tab');
+}
 
 async function replacement(page, index, id, equipment) {
   await exercise(page, index);
-  await action(page, 'workoutSwap').click();
+  await detailAction(page, 'workoutSwap').click();
   await page.locator('#workout-equipment').selectOption({ label: equipment });
   await byId(page, 'workoutCandidate', id).click();
-  await page.locator('#play-dose-form').waitFor();
+  await page.locator('.workout-exercise-page').waitFor();
+  assert.equal(await page.locator('#play-dose-form').count(), 0, 'replacement is immediate, without a second confirmation form');
 }
 
 async function savePartial(page) {
@@ -172,71 +189,228 @@ async function savePartial(page) {
   await action(page, 'quitPlay').waitFor({ state: 'hidden' });
 }
 
-async function preview(page, baseline) {
+async function panelBack(page) {
+  await action(page, 'workoutPanelBack').click();
+  await page.locator('.workout-exercise-page').waitFor();
+}
+
+async function target(page, value) {
+  const options = page.locator('.workout-plan-options');
+  if (!await options.evaluate(node => node.open)) await options.locator('summary').click();
+  await page.locator('#workout-target').selectOption(String(value));
+}
+
+async function noSliders(page) {
+  assert.equal(await page.locator('#swrow,#swdots,#play-card-row,.play-card-tabs').count(), 0);
+}
+
+async function draftIsolation(page) {
   await openProtocol(page);
-  assert.equal(await page.locator('.workout-exercise[data-index]').count(), 2);
-  const sets = page.locator('.pre-sets .set-item');
-  assert.equal(await sets.count(), 4);
-  assert.equal(await action(page, 'toggleDosePlan').count(), 0);
-  for (const row of await sets.all()) assert.ok(await row.isVisible());
-  assert.match(await sets.nth(0).innerText(), /5 pon.*20 kg/);
-  assert.match(await sets.nth(1).innerText(), /3 pon.*30 kg/);
-  for (const width of [375, 320]) {
-    await page.setViewportSize({ width, height: 850 });
-    await noOverflow(page, '.workout-overview', 'overview-' + width);
-    await page.locator('.workout-overview').scrollIntoViewIfNeeded();
-    await screenshot(page, 'overview-' + width);
-  }
-  const panel = await exercise(page, 0);
-  const previous = panel.locator('.workout-previous-table tbody tr');
+  await action(page, 'startPr').click();
+  await advance(page, 6);
+  await exercise(page, 0);
+  await refuseStorage(page, 'mt.play', true);
+  await inline(page, 1, 'reps', 99);
+  assert.equal(await doseField(page, 1, 'reps').inputValue(), '99');
+  assert.equal((await player(page)).items[0].repsList[0], 5);
+  await refuseStorage(page, 'mt.play', false);
+  await closeSheet(page);
+  await discardPlayer(page);
+  // No reload: a discarded player's failed draft must not contaminate the next.
+  await action(page, 'startPr').click();
+  await page.locator('.workout-journal').waitFor();
+  assert.equal(await page.locator('.workout-journal input[data-j="0"][data-set="1"][data-field="reps"]').inputValue(), '5');
+  assert.equal((await player(page)).items[0].repsList[0], 5);
+  await discardPlayer(page);
+  results.push({ label: 'draft-isolation', discardedRaw99DoesNotReplaceStored5: true });
+}
+
+async function missingWeight(page) {
+  await openProtocol(page, ids.missing);
+  await exercise(page, 0);
+  assert.deepEqual(await page.locator('.workout-exercise-page input[data-field="kg"]').evaluateAll(inputs => inputs.map(input => input.value)), ['10', '', '0']);
+  await inline(page, 2, 'reps', 7);
+  assert.deepEqual(await page.locator('.workout-exercise-page input[data-field="kg"]').evaluateAll(inputs => inputs.map(input => input.value)), ['10', '', '0']);
+  await closeSheet(page);
+  await action(page, 'startPr').click();
+  await page.locator('#starting-load-form').waitFor();
+  assert.equal(await player(page), null);
+  await closeSheet(page);
+  results.push({ label: 'unknown-weight', unrelatedRepetitionEditPreservesNullAndKnownZero: true });
+}
+
+async function pendingWeight(page, baseline) {
+  await openProtocol(page);
+  await action(page, 'startPr').click();
+  await exercise(page, 0);
+  await detailAction(page, 'workoutEquipment').click();
+  await byId(page, 'workoutQuickCandidate', 'db-bench-press').click();
+  assert.equal((await player(page)).items[0].exId, 'bench-press');
+  assert.equal(await doseField(page, 1, 'kg').inputValue(), '');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.locator('.workout-exercise-page').isVisible());
+  assert.match(await page.locator('.workout-exercise-page').innerText(), /Unesi težinu|prije nastavka/i);
+  await action(page, 'workoutCancelPending').click();
+  assert.equal(await doseField(page, 1, 'kg').inputValue(), '20');
+  await detailAction(page, 'workoutEquipment').click();
+  await byId(page, 'workoutQuickCandidate', 'db-bench-press').click();
+  await inline(page, 1, 'kg', '17,5');
+  assert.equal((await player(page)).items[0].exId, 'bench-press');
+  await refuseStorage(page, 'mt.play', true);
+  await inline(page, 2, 'kg', 19);
+  assert.equal(await doseField(page, 2, 'kg').inputValue(), '19');
+  assert.equal((await player(page)).items[0].exId, 'bench-press');
+  await refuseStorage(page, 'mt.play', false);
+  await doseField(page, 2, 'kg').press('Enter');
+  assert.equal((await player(page)).items[0].exId, 'db-bench-press');
+  assert.deepEqual((await player(page)).items[0].kgList, [17.5, 19]);
+  assert.equal(await action(page, 'workoutCancelPending').count(), 0);
+  await closeSheet(page);
+  await discardPlayer(page);
+  assert.deepEqual((await store(page)).protocols[ids.protocol].items, baseline.items);
+  results.push({ label: 'live-pending-weight', oldIdentityUntilAllWeightsKnown: true, escapeDoesNotResumeUnknownLoad: true, cancelRestoresOriginal: true, quotaRetryKeepsInputs: true });
+}
+
+async function activeDuration(page) {
+  await openProtocol(page, ids.clock);
+  await action(page, 'startPr').click();
+  await advance(page, 10);
+  await exercise(page, 0);
+  assert.equal((await player(page)).clock.seconds, 10);
+  await advance(page, 120);
+  assert.equal((await player(page)).clock.seconds, 10);
+  await closeSheet(page);
+  await advance(page, 5);
+  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
+  assert.equal((await player(page)).clock.seconds, 15);
+  const beginSecond = page.getByRole('button', { name: 'Kreni', exact: true });
+  if (await beginSecond.isVisible()) await beginSecond.click();
+  await action(page, 'quitPlay').click();
+  await advance(page, 60);
+  await action(page, 'quitResume').click();
+  assert.equal((await player(page)).clock.seconds, 15);
+  await advance(page, 3);
+  await action(page, 'quitPlay').click();
+  await action(page, 'quitResume').click();
+  assert.equal((await player(page)).clock.seconds, 18);
+  // Leave first: pagehide saves the real checkpoint before time away begins.
+  // Moving Date while the app is still open would correctly count active time.
+  const beforeAway = await page.evaluate(() => Date.now());
+  const appUrl = page.url();
+  await page.goto('about:blank');
+  await page.clock.setFixedTime(new Date(beforeAway + 3600000));
+  await page.goto(appUrl);
+  await resume(page, false);
+  assert.equal((await player(page)).clock.seconds, 18);
+  await advance(page, 2);
+  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="2"]').click();
+  await action(page, 'finishPlay').click();
+  const saved = (await store(page)).log.find(row => row.refId === ids.clock);
+  assert.ok(saved);
+  assert.equal(saved.secs, 20);
+  results.push({ label: 'active-duration', activeSeconds: 20, editorSecondsExcluded: 120, pauseSecondsExcluded: 60, timeAwayExcluded: 3600 });
+}
+
+async function infoAndHistory(page) {
+  await page.locator('.workout-detail-cover [data-a="workoutInfo"]').click();
+  const info = page.locator('.workout-instructions-body');
+  await info.waitFor();
+  assert.ok(await info.locator('.workout-muscle-figure svg').count());
+  assert.match(await info.locator('.workout-muscle-key').innerText(), /Glavni|Primarni/i);
+  assert.match(await info.locator('.workout-muscle-key').innerText(), /Pomoćni|Sekundarni/i);
+  const shades = await info.locator('.workout-muscle-figure').evaluate(node => {
+    const brightness = selector => {
+      const style = getComputedStyle(node.querySelector(selector));
+      const color = style.fill.match(/[\d.]+/g).map(Number);
+      const alpha = Number(style.fillOpacity) * Number(style.opacity) * (color.length > 3 ? color[3] : 1);
+      return color.slice(0, 3).reduce((sum, channel) => sum + alpha * channel + (1 - alpha) * 255, 0);
+    };
+    return { primary: brightness('.is-prime'), secondary: brightness('.is-on') };
+  });
+  assert.ok(shades.primary < shades.secondary, 'primary muscles appear darker than secondary: ' + JSON.stringify(shades));
+  await noOverflow(page, '.workout-exercise-panel', 'instructions-320');
+  await screenshot(page, 'instructions-320');
+  await panelBack(page);
+  await detailAction(page, 'workoutHistory').click();
+  const previous = page.locator('.workout-previous-table tbody tr');
   assert.equal(await previous.count(), 3);
   const cells = await previous.evaluateAll(rows => rows.map(row => Array.from(row.querySelectorAll('th,td'), cell => cell.textContent.trim())));
   assert.deepEqual(cells[0], ['1', '4 pon.', '20', '2 RIR']);
   assert.deepEqual(cells[1], ['2', '—', '—', '—']);
   assert.equal(await previous.nth(1).locator('[aria-label="Nije zabilježeno"]').count(), 3);
-  assert.match(await panel.locator('.workout-previous').innerText(), /Nije zabilježeno/i);
   assert.deepEqual(cells[2], ['3', '3 pon.', '25', '1 RIR']);
-  await noOverflow(page, '.workout-exercise-panel', 'exercise-sheet-320');
-  await screenshot(page, 'exercise-320');
-  await panel.locator('.workout-previous').scrollIntoViewIfNeeded();
-  await screenshot(page, 'previous-320');
-  await action(page, 'workoutHistory').click();
-  assert.ok(await panel.locator('.workout-previous .lc').count());
-  await action(page, 'workoutHistory').click();
-  await action(page, 'workoutEdit').click();
-  await doseField(page, 1, 'reps').fill('7');
-  await doseField(page, 1, 'kg').fill('22');
-  await action(page, 'playDoseCancel').click();
-  assert.match(await sets.nth(0).innerText(), /5 pon.*20 kg/);
-  await exercise(page, 0);
-  await action(page, 'workoutEdit').click();
-  await doseField(page, 1, 'reps').fill('7');
-  await doseField(page, 1, 'kg').fill('22');
-  await action(page, 'playDoseApply').click();
-  await page.locator('#play-dose-form').waitFor({ state: 'hidden' });
-  assert.match(await sets.nth(0).innerText(), /7 pon.*22 kg/);
+  await screenshot(page, 'history-320');
+  await panelBack(page);
+  await detailAction(page, 'workoutTrends').click();
+  await page.locator('.workout-trends-body').waitFor();
+  assert.ok(await page.locator('.workout-chart').count());
+  await panelBack(page);
+}
+
+async function library(page) {
+  await home(page);
+  assert.equal(await page.locator('#car .hcard .cov').count(), 5);
+  assert.equal(await action(page, 'homeGuide').count(), 0);
+  await page.getByRole('button', { name: 'Knjižnica vježbi', exact: true }).click();
+  await byId(page, 'openEx', 'bench-press').click();
+  const detail = page.locator('.workout-exercise-page');
+  await detail.waitFor();
+  assert.equal(await detail.getAttribute('data-context'), 'library');
+  await noSliders(page);
+  assert.ok(await detail.locator('.workout-set-table tbody .workout-set-row').count());
+  assert.ok(await doseField(page, 1, 'rir').isDisabled());
+  assert.equal(await doseField(page, 1, 'rir').inputValue(), '');
+  const source = (await store(page)).exercises['bench-press'];
+  await inline(page, 1, 'reps', 6);
+  assert.deepEqual((await store(page)).exercises['bench-press'], source);
+  await noOverflow(page, '.workout-exercise-page', 'library-375');
+}
+
+async function preview(page, baseline) {
+  await openProtocol(page);
+  assert.equal(await page.locator('.workout-compact-row[data-a="workoutExercise"]').count(), 2);
+  assert.match(await page.locator('.workout-overview').innerText(), /Kontrolni opis protokola/);
+  assert.equal(await page.locator('.workout-overview .workout-set-table').count(), 0);
+  for (const width of [375, 320]) {
+    await page.setViewportSize({ width, height: 850 });
+    await noOverflow(page, '.workout-overview', 'overview-' + width);
+    await screenshot(page, 'overview-' + width);
+  }
+  const detail = await exercise(page, 0);
+  assert.equal(await detail.getAttribute('data-context'), 'preview');
+  assert.equal(await detail.locator('.workout-set-row').count(), 2);
+  assert.equal(await doseField(page, 1, 'reps').inputValue(), '5');
+  assert.equal(await doseField(page, 2, 'kg').inputValue(), '30');
+  assert.ok(await doseField(page, 1, 'rir').isDisabled());
+  assert.equal(await doseField(page, 1, 'rir').inputValue(), '');
+  await noSliders(page);
+  await infoAndHistory(page);
+  await inline(page, 1, 'reps', 7);
+  await inline(page, 1, 'kg', 22);
   assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
-  await exercise(page, 1);
-  assert.match(await panel.locator('.workout-previous').innerText(), /1\s*(?:od|\/)\s*2|jedna strana|jedne strane|djelomič/i);
   await closeSheet(page);
 
+  // The equipment pill offers a real named variant and changes it immediately.
+  await openProtocol(page);
+  await exercise(page, 0);
+  await detailAction(page, 'workoutEquipment').click();
+  await byId(page, 'workoutQuickCandidate', 'db-bench-press').click();
+  assert.match(await detail.innerText(), /Potisak bučicama/);
+  assert.equal(await doseField(page, 1, 'kg').inputValue(), '');
+  assert.equal(await page.locator('#play-dose-form').count(), 0);
+  assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
+  await closeSheet(page);
+
+  await openProtocol(page);
   await replacement(page, 0, ids.replacement, 'Bučice');
-  assert.equal(await page.locator('#play-dose-sets').inputValue(), '2');
   assert.equal(await doseField(page, 1, 'reps').inputValue(), '9');
   assert.equal(await doseField(page, 1, 'kg').inputValue(), '');
   assert.equal(await doseField(page, 2, 'kg').inputValue(), '');
-  await action(page, 'workoutClose').click();
-  assert.match(await page.locator('.workout-overview').innerText(), /Bench press/);
-  assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
-  await replacement(page, 0, ids.replacement, 'Bučice');
-  await doseField(page, 1, 'reps').fill('8');
-  await doseField(page, 2, 'reps').fill('6');
-  await action(page, 'workoutReplaceApply').click();
-  await page.locator('#play-dose-form').waitFor({ state: 'hidden' });
-  assert.match(await page.locator('.workout-overview').innerText(), /Kontrolni potisak bučicama/);
-  assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
-  await exercise(page, 0);
-  await page.locator('#workout-target').selectOption('2');
+  await inline(page, 1, 'reps', 8);
+  await inline(page, 2, 'reps', 6);
+  await target(page, 2);
+  assert.equal(await doseField(page, 1, 'rir').inputValue(), '');
+  await screenshot(page, 'exercise-320');
   await closeSheet(page);
   await action(page, 'startPr').click();
   const starting = page.locator('#starting-load-form');
@@ -250,8 +424,6 @@ async function preview(page, baseline) {
   assert.match(await page.locator('#start-weight-error').innerText(), /Trening nije spremljen/i);
   assert.equal(await starting.locator('input').inputValue(), '17,5');
   assert.equal(await player(page), null);
-  assert.equal(await action(page, 'quitPlay').count(), 0);
-  assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
   await refuseStorage(page, 'mt.play', false);
   await starting.locator('button[type="submit"]').click();
   await action(page, 'quitPlay').waitFor();
@@ -265,53 +437,60 @@ async function preview(page, baseline) {
   assert.deepEqual((await store(page)).protocols[ids.protocol], baseline);
   assert.equal((await store(page)).exercises[ids.replacement].kg, 0);
   await resume(page);
-  assert.equal((await player(page)).items[0].exId, ids.replacement);
-  await page.locator('.play-card-tabs [data-i="2"]').click();
+  await noSliders(page);
   await advance(page, 6);
-  await page.locator('[data-a="checklistDone"][data-j="0"][data-set="1"]').click();
-  await page.locator('[data-a="rir"][data-v="1"]').first().click();
+  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
+  await exercise(page, 0);
+  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await doseField(page, 1, 'kg').isDisabled());
+  assert.equal(await doseField(page, 1, 'rir').inputValue(), '');
+  await inline(page, 1, 'rir', 1);
+  await closeSheet(page);
   await savePartial(page);
   const saved = (await store(page)).log.find(row => row.historyId !== 'workout-previous');
   assert.equal(saved.items[0].exId, ids.replacement);
-  assert.deepEqual(History.recordedRows(saved.items[0]).map(row => [row.reps, row.kg]), [[8, 17.5]]);
+  assert.deepEqual(History.recordedRows(saved.items[0]).map(row => [row.reps, row.kg, row.rir]), [[8, 17.5, 1]]);
   assert.equal(saved.items[0].targetRir, 2);
-  assert.equal(History.recordedRows(saved.items[0])[0].rir, 1);
   const snapshot = MuscleWork.sanitize(saved.muscleWork[0]);
   assert.equal(snapshot.exerciseId, ids.replacement);
   assert.deepEqual(snapshot.secondary, MuscleWork.profile(fixture().exercises[ids.replacement]).secondary);
   assert.deepEqual((await store(page)).protocols[ids.protocol].items, baseline.items);
-  results.push({ label: 'preview-replacement', previousUnknownPreserved: true, sourceUnchanged: true, firstCheckpointRefusalRetainsInputs: true, resumed: true, actual: [8, 17.5], targetRir: 2, actualRir: 1 });
+  results.push({ label: 'preview-replacement', compactOverview: true, directEquipmentVariant: true, previousUnknownPreserved: true, sourceUnchanged: true, firstCheckpointRetry: true, resumed: true, actual: [8, 17.5], targetRir: 2, actualRir: 1 });
 }
 
 async function live(page, baseline) {
   await openProtocol(page);
   await action(page, 'startPr').click();
   await action(page, 'quitPlay').waitFor();
-  await page.locator('.play-card-tabs [data-i="2"]').click();
+  await noSliders(page);
+  assert.equal(await page.locator('.workout-journal-exercise').count(), 2);
+  assert.equal(await page.locator('.workout-journal .workout-set-row').count(), 4);
   await advance(page, 6);
   await exercise(page, 0);
-  assert.equal(await action(page, 'workoutSwap').count(), 0, 'current exercise cannot be replaced');
+  assert.equal(await detailAction(page, 'workoutSwap').isDisabled(), false, 'an untouched current manual set remains replaceable');
+  await inline(page, 1, 'reps', 6);
+  await inline(page, 1, 'kg', 22);
+  assert.equal((await player(page)).liveSchedule.filter(step => step.kind === 'manual' && step.g === 0 && step.set === 1).length, 1);
   await closeSheet(page);
   await replacement(page, 1, ids.hold, 'Bez opreme');
-  await doseField(page, 1, 'sec').fill('7');
-  await doseField(page, 2, 'sec').fill('9');
+  assert.equal((await player(page)).items[1].exId, ids.hold);
   await refuseStorage(page, 'mt.play', true);
-  await action(page, 'workoutReplaceApply').click();
-  assert.match(await page.locator('.play-dose-error').innerText(), /nije spremljena/i);
+  await inline(page, 1, 'sec', 7);
   assert.equal(await doseField(page, 1, 'sec').inputValue(), '7');
-  assert.equal((await player(page)).items[1].exId, 'side-plank');
+  const beforeRetry = (await player(page)).items[1];
+  assert.equal(Object.hasOwn(beforeRetry, 'secList') ? beforeRetry.secList[0] : beforeRetry.sec, 6);
+  assert.match(await page.locator('.toast').innerText(), /nije spremljena/i);
   await refuseStorage(page, 'mt.play', false);
-  await action(page, 'workoutReplaceApply').click();
-  await page.locator('#play-dose-form').waitFor({ state: 'hidden' });
+  await doseField(page, 1, 'sec').press('Enter');
+  assert.equal((await player(page)).items[1].secList[0], 7);
+  await inline(page, 2, 'sec', 9);
+  await closeSheet(page);
   const replaced = await player(page);
-  assert.equal(replaced.items[1].exId, ids.hold);
   assert.deepEqual(replaced.items[1].secList, [7, 9]);
   assert.equal(replaced.items[1].ss, baseline.items[1].ss);
   assert.equal(replaced.items[1].rest, baseline.items[1].rest);
   await resume(page);
-  assert.equal((await player(page)).items[1].exId, ids.hold);
-  await page.locator('.play-card-tabs [data-i="2"]').click();
-  await page.locator('[data-a="checklistDone"][data-j="0"][data-set="1"]').click();
+  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
   for (let attempt = 0; attempt < 15; attempt++) {
     const current = await player(page), step = current.liveSchedule[current.i];
     if (step?.kind === 'work' && step.g === 1) break;
@@ -321,49 +500,45 @@ async function live(page, baseline) {
   const working = await player(page);
   assert.equal(working.liveSchedule[working.i].kind, 'work');
   await exercise(page, 1);
-  assert.equal(await action(page, 'workoutSwap').count(), 0, 'started timed exercise cannot be replaced');
+  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
   const paused = await player(page);
-  await action(page, 'workoutHistory').click();
+  await detailAction(page, 'workoutHistory').click();
   await advance(page, 30);
   assert.equal((await player(page)).i, paused.i);
   assert.equal((await player(page)).left, paused.left);
+  await panelBack(page);
   await closeSheet(page);
   assert.ok(await page.getByRole('button', { name: 'Pauziraj', exact: true }).isVisible());
   await advance(page, paused.left + 0.2);
   await savePartial(page);
   const saved = (await store(page)).log.find(row => row.items?.[1]?.exId === ids.hold);
   assert.ok(saved);
+  assert.deepEqual(History.recordedRows(saved.items[0]).map(row => [row.reps, row.kg]), [[6, 22]]);
   assert.deepEqual(History.recordedRows(saved.items[1]).map(row => [row.sec, row.sides]), [[7, 1]]);
   const contribution = MuscleWork.sanitize(saved.muscleWork[1]);
   assert.equal(contribution.exerciseId, ids.hold);
   assert.equal(contribution.completedSets, 0);
   assert.deepEqual(contribution.secondary, MuscleWork.profile(fixture().exercises[ids.hold]).secondary);
-  assert.equal(saved.items[1].liveDoseChanged, true);
   assert.deepEqual((await store(page)).protocols[ids.protocol].items, baseline.items);
-  results.push({ label: 'live-replacement', refusedWriteRetainsDraft: true, resumed: true, actualSeconds: 7, actualSides: 1, fullBilateralSets: 0, historyPausesTimer: true });
+  results.push({ label: 'live-inline-replacement', refusedWriteRetainsDraft: true, enterRetriesSameValue: true, currentManualNotDuplicated: true, resumed: true, actualSeconds: 7, actualSides: 1, fullBilateralSets: 0, historyPausesTimer: true });
 }
 
 async function frozen(page) {
   await openProtocol(page, ids.frozen);
   const baseline = (await store(page)).protocols[ids.frozen];
   await exercise(page, 0);
-  assert.equal(await action(page, 'workoutSwap').count(), 0);
-  assert.ok(await action(page, 'workoutEdit').isDisabled());
+  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await doseField(page, 1, 'reps').isDisabled());
+  assert.ok(await doseField(page, 1, 'kg').isDisabled());
   await closeSheet(page);
-  assert.equal(await action(page, 'previewDoseEdit').count(), 0);
   await action(page, 'startPr').click();
   await action(page, 'quitPlay').waitFor();
-  await page.locator('.play-card-tabs [data-i="2"]').click();
   await exercise(page, 1);
-  assert.equal(await action(page, 'workoutSwap').count(), 0);
-  assert.equal(await action(page, 'workoutEdit').isDisabled(), false);
-  await action(page, 'workoutEdit').click();
-  await doseField(page, 1, 'sec').fill('11');
-  await action(page, 'playDoseApply').click();
-  await page.locator('#play-dose-form').waitFor({ state: 'hidden' });
+  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.equal(await doseField(page, 1, 'sec').isDisabled(), false);
+  await inline(page, 1, 'sec', 11);
   assert.deepEqual((await player(page)).items[1].secList, [11, 8]);
-  assert.equal(await action(page, 'playDoseEdit').count(), 2, 'live dose adjustment remains available for a program');
-  assert.deepEqual((await store(page)).protocols[ids.frozen], baseline);
+  await closeSheet(page);
   await discardPlayer(page);
   assert.deepEqual((await store(page)).protocols[ids.frozen], baseline);
   results.push({ label: 'frozen-program', replacementBlocked: true, previewDoseEditingBlocked: true, liveDoseEditable: true, sourceUnchanged: true });
@@ -405,9 +580,14 @@ async function main() {
 
 async function runScenarios(page) {
   const baseline = (await store(page)).protocols[ids.protocol];
+  await draftIsolation(page);
+  await library(page);
   await preview(page, baseline);
+  await missingWeight(page);
   await live(page, baseline);
+  await pendingWeight(page, baseline);
   await frozen(page);
+  await activeDuration(page);
 }
 
 module.exports = { fixture, ids };

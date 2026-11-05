@@ -36,7 +36,7 @@
     return '<nav class="db-quick" aria-label="Prečaci iz pregleda">' +
       '<button type="button" data-a="dashboardProtocols">'+icon('protocol')+'<span>Moji protokoli</span></button>' +
       '<button type="button" data-a="historyList">'+icon('calendar')+'<span>Povijest treninga</span></button>' +
-      '<button type="button" data-a="dashboardProgress">'+icon('chart')+'<span>Napredak</span></button></nav>';
+      '<button type="button" data-a="dashboardProgress">'+icon('chart')+'<span>Napredak</span></button><button type="button" data-a="trainingLoadOpen">'+icon('chart')+'<span>Opterećenje</span></button></nav>';
   }
 
   function stateView(vm) {

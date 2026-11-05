@@ -1,5 +1,15 @@
 # Promjene
 
+## 1.17.0 — 5. 11. 2026.
+
+- Zadržana je postojeća početna stranica. Pregled treninga čuva naslovnu fotografiju i opis te dobiva kompaktan popis vježbi s punim sličicama.
+- Vježba se otvara preko cijelog ekrana. Sve serije, ponavljanja ili sekunde, kilogrami i stvarna rezerva vidljivi su u urednim redovima prije i tijekom treninga. Upute i figura mišića dostupni su preko ikone na slici, a povijest i novi grafovi ostaju u traci alata.
+- Odabir izričito povezanog rekvizita odmah mijenja varijantu vježbe. Težine ostaju zasebne i prije nastavka se traže nepoznati kilogrami. Izvorni protokol, završene serije i započeti vremenski rad ostaju zaštićeni.
+- **Moj pregled → Opterećenje** razdvaja rad po mišićima, zabilježeni subjektivni napor te jutarnju energiju, noge i bol. Sedam dana rada uspoređuje se s prethodna četiri tjedna. Nepotpuni podaci ostaju vidljivi; nema izmišljenog optimalnog raspona.
+- Subjektivni napor u završnom pregledu, povijesti, ekipnom dnevniku i grafovima koristi isti izračun: ocjena 0–10 × točne spremljene sekunde / 60. Poznata nula razlikuje se od nepoznate ocjene. Novi trening isključuje izričite pauze i vrijeme izvan aplikacije nakon kontrolne točke, uz redovite odmore između serija.
+- Očekivani napor protokola temelji se samo na najmanje dvije spremljene izvedbe iste pune doze. LM1 ostaje odvojena, unaprijed zadana procjena koja nije osobno kalibrirana niti računa iz stvarne kilaže.
+- Ispravljeni su gubitak nepoznate težine pri promjeni drugog polja, prenošenje nespremljenog unosa u novi trening i čuvanje unosa pri odbijenom spremanju. Proširene su automatske provjere za Chrome i Safari/WebKit.
+
 ## 1.16.0 — 5. 11. 2026.
 
 - Pregled treninga sada prikazuje jasne blokove, sličice vježbi, opremu i sve pojedinačne serije. Gumb za pokretanje ostaje dostupan pri dnu.

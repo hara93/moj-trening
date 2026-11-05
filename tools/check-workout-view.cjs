@@ -87,3 +87,128 @@ test('styles remain scoped to workout surfaces with a full-sized live checkbox a
   assert.match(css,/\.set-reserve\[data-kind=sir\]/);
   assert.doesNotMatch(css,/\.set-(?:item|list)[^{]*\{[^}]*(?:display:none|visibility:hidden|height:0)/);
 });
+
+test('premium overview retains supplied original hero and description with compact exercise routes',()=>{
+  const hero='<div class="hero"><img src="original-highres.webp" alt=""></div>';
+  const row=View.compactExercise({index:2,name:'Potisak s klupe',thumbHtml:'<img src="bench-thumb.webp" alt="">',summary:'3 × 8 pon. · 50 kg'});
+  const html=View.overview({heroHtml:hero,topbarHtml:'<button data-a="back">Natrag</button>',title:'Teretana A',description:'Izvorni opis treninga.',blocksHtml:View.list({itemsHtml:row})});
+  assert.ok(html.includes(hero));
+  assert.match(html,/workout-premium-overview/);
+  assert.match(html,/Izvorni opis treninga/);
+  assert.match(html,/class="workout-compact-row" data-a="workoutExercise" data-j="2"/);
+  assert.match(html,/3 × 8 pon\. · 50 kg/);
+  assert.doesNotMatch(row,/set-item|<input|data-state="done"/);
+});
+
+test('real app toolbar wrappers, sheet primary action and secondary library actions retain premium layout',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  const tools='<div class="workout-tools workout-tools-four"><button>Šipka</button><button>Zamjena</button><button>Povijest</button><button>Trendovi</button></div><section class="workout-equipment-menu">Varijante</section>';
+  const html=View.exercisePage({toolsHtml:tools,footerHtml:'<div class="footer"><button class="btn">Pokreni</button><div class="workout-library-secondary"><button>Uredi</button></div></div>'});
+  assert.ok(html.includes(tools));
+  assert.match(css,/\.workout-detail-tools>\.workout-tools\{display:contents\}/);
+  assert.match(css,/\.workout-detail-tools>\.workout-equipment-menu\{grid-column:1\/-1/);
+  assert.match(css,/\.sheet\.workout-fullscreen \.workout-footer \.btn:not\(\.sec\):not\(\.danger\)\{background:#dce88d/);
+  assert.match(css,/\.workout-library-secondary\{display:flex;flex-wrap:wrap/);
+});
+
+test('app compact rows preserve varying doses, unknown weight and intentional zero without repeating sides',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
+  const body=app.slice(app.indexOf('function workoutCompactHtml(items) {'),app.indexOf('\nfunction workoutCandidates('));
+  const StartingLoad=require('../starting-load.js');
+  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc',body+';return workoutCompactHtml;')(
+    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x));
+  let html=render([{exId:'bench',sets:2,measure:'sets',reps:5,repsList:[5,3],kg:20,kgList:[20,30]}]);
+  assert.match(html,/2 × 5\/3 pon\. · 20\/30 kg/);
+  html=render([{exId:'hold',sets:2,measure:'time',sec:12,secList:[12,8],kg:0,sides:true}]);
+  assert.match(html,/2 × 12\/8 s po strani/);assert.equal((html.match(/po strani/g)||[]).length,1);
+  html=render([{exId:'bench',sets:3,reps:5,kg:0,kgList:[10,null,0]}]);
+  assert.match(html,/10\/—\/0 kg · dio težina nije upisan/);
+  html=render([{exId:'bench',sets:2,reps:5,kg:0}]);assert.match(html,/težina nije upisana/);
+  html=render([{exId:'bench',sets:5,reps:5,repsList:[8,7,6,5,4],kg:20,kgList:[20,20,25,25,30]}]);assert.match(html,/5 serija · 4–8 pon\. · 20–30 kg/);
+});
+
+test('journal info sits over its thumbnail as a separate accessible button with a 44px target',()=>{
+  const html=View.journalExercise({index:0,name:'Potisak',thumbHtml:'<img src="bench.webp" alt="">',infoHtml:'<button data-a="workoutInfo" aria-label="Upute za potisak">i</button>',rowsHtml:'<table></table>'});
+  assert.match(html,/<\/button><span class="workout-journal-info"><button data-a="workoutInfo" aria-label="Upute za potisak">i<\/button><\/span><\/header>/);
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/\.workout-journal-info\{position:absolute;left:calc\(var\(--wk-thumb\) - 40px\)/);
+  assert.match(css,/\.workout-journal-info>button\{[^}]*width:44px;height:44px;min-width:44px;min-height:44px/);
+  assert.match(css,/\.workout-journal-info>button::before\{[^}]*width:24px;height:24px/);
+});
+
+test('full exercise page preserves high-resolution media and the sole info slot over the image before fixed toolbar and table',()=>{
+  const media='<div class="media two"><img src="highres.webp" alt=""></div>',info='<button data-a="workoutInfo">O vježbi</button>';
+  const toolbar='<button data-a="workoutEquipment">Šipka</button><button data-a="workoutSwap">Zamjena</button><button data-a="workoutHistory">Povijest</button><button data-a="workoutTrends">Trendovi</button>';
+  const table=View.seriesTable({name:'Potisak',rowsHtml:'<tr data-state="planned"><td>1</td><td>8</td><td>50</td><td>—</td></tr>'});
+  const html=View.exercisePage({name:'Potisak',mediaHtml:media,infoHtml:info,topbarHtml:'<button data-a="back">Natrag</button>',previousHtml:'Prethodno50kg',toolsHtml:toolbar,rowsHtml:table,footerHtml:'<button data-a="startPr">Pokreni</button>'});
+  assert.ok(html.includes(media));
+  assert.equal(html.split(info).length-1,1);
+  assert.ok(html.indexOf(info)<html.indexOf('class="workout-detail-main"'));
+  assert.ok(html.indexOf(toolbar)<html.indexOf(table));
+  assert.match(html,/<div class="workout-footer"><button data-a="startPr"/);
+  assert.doesNotMatch(html,/swrow|play-card-row|workout-panel-media/);
+});
+
+test('series tables adapt seconds/SIR while preserving every actual editable state, side detail and unknown field',()=>{
+  const rows='<tr class="workout-set-row" data-state="partial"><td class="workout-set-number"><button class="set-mark" data-a="checklistDone" disabled>◐</button></td><td><input data-field="sec" value="10"></td><td><input value="0"></td><td><input data-field="sir" placeholder="—" value=""></td></tr><tr class="workout-set-details"><td colspan="4">Lijeva odrađena · desna nije odrađena</td></tr>';
+  const html=View.seriesTable({name:'Bočni plank',measure:'time',weightLabel:'kg',rowsHtml:rows});
+  assert.ok(html.includes(rows));
+  assert.match(html,/<th scope="col">Sek\.<\/th>/);
+  assert.match(html,/<th scope="col">SIR \(s\)<\/th>/);
+  assert.doesNotMatch(html,/>Pon\.<|data-state="done"/);
+  const journal=View.journal({title:'Snaga',blocksHtml:View.journalExercise({index:0,name:'Bočni plank',rowsHtml:html})});
+  assert.ok(journal.includes(html));
+  assert.match(journal,/class="view workout-journal"/);
+  assert.doesNotMatch(journal,/swrow|play-card-row|<details/);
+});
+
+test('instructions preserve provided anatomical figure and distinguish primary versus secondary labels',()=>{
+  const figure='<svg role="img"><path class="body-rg is-prime"/><path class="body-rg is-on"/></svg>';
+  const html=View.instructions({name:'Potisak',why:'Kontrolirani potisak.',steps:['Namjesti stopala.','<Sigurna bilješka>'],figureHtml:figure,primary:['Prsa'],secondary:['Ramena','Triceps']});
+  assert.ok(html.includes(figure));
+  assert.match(html,/Kako pravilno izvesti/);
+  assert.match(html,/&lt;Sigurna bilješka&gt;/);
+  assert.match(html,/<strong>Glavni<\/strong>Prsa/);
+  assert.match(html,/<strong>Pomoćni<\/strong>Ramena, Triceps/);
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/\.workout-anatomy \.body-rg\.is-prime\{fill:#4f7ccd!important/);
+  assert.match(css,/\.workout-anatomy \.body-rg\.is-on\{fill:#a7c1ee!important/);
+});
+
+const points=[{at:new Date(2026,9,13).getTime(),value:42.5,context:'8 pon. · RIR 2'},{at:new Date(2026,9,20).getTime(),value:45,context:'8 pon. · RIR 2'},{at:new Date(2026,9,27).getTime(),value:47.5,context:'8 pon. · RIR 2'},{at:new Date(2026,10,3).getTime(),value:50,context:'8 pon. · RIR 2'}];
+test('actual point charts render line/bar series and an accessible complete table without invented example values',()=>{
+  const line=View.chart({id:'strength',title:'Radna težina',subtitle:'8 ponavljanja u seriji',unit:'kg',points});
+  assert.match(line,/workout-line-chart/);
+  assert.match(line,/class="workout-chart-line"/);
+  assert.equal((line.match(/class="workout-chart-dot"/g)||[]).length,4);
+  assert.match(line,/>42,5 kg<\/td>/);
+  assert.equal((line.match(/scope="row"/g)||[]).length,4);
+  assert.match(line,/8 pon\. · RIR 2/);
+  const bar=View.chart({id:'volume',title:'Volumen tereta',type:'bar',unit:'kg',points:points.map((p,i)=>({...p,value:[1020,1080,1140,1200][i]}))});
+  assert.equal((bar.match(/class="workout-chart-bar"/g)||[]).length,4);
+  assert.doesNotMatch(bar,/workout-chart-line/);
+  assert.match(bar,/role="img" aria-label="Volumen tereta:/);
+  assert.doesNotMatch(line+bar,/primjerne izvedbe|demo|NaN|Infinity/);
+});
+
+test('unknown and zero chart values remain distinct; missing values break lines and never revive an older latest value',()=>{
+  const broken=View.chart({title:'Izvedbe',unit:'kg',points:[points[0],{...points[1],value:null},points[2],{...points[3],value:null}]});
+  assert.equal((broken.match(/class="workout-chart-dot"/g)||[]).length,2);
+  assert.doesNotMatch(broken,/class="workout-chart-line"/);
+  assert.match(broken,/<strong>— <small>kg<\/small>/);
+  assert.equal((broken.match(/<td>Nije zabilježeno<\/td>/g)||[]).length,2);
+  const zero=View.chart({type:'bar',points:[{at:points[0].at,value:0}]});
+  assert.match(zero,/height="0"/);
+  assert.match(zero,/<strong>0 <small>/);
+  const empty=View.chart({points:[{at:points[0].at,value:null},{at:NaN,value:500}]});
+  assert.doesNotMatch(empty,/<svg|workout-chart-dot|workout-chart-bar/);
+  assert.match(empty,/još nema zabilježenih vrijednosti/);
+  assert.doesNotMatch(empty,/500/);
+});
+
+test('premium plain titles, contexts and units stay escaped while supplied markup remains unchanged',()=>{
+  const unsafe='<img src=x onerror=bad()>',trusted='<button data-a="kept">Akcija</button>';
+  const outputs=[View.compactExercise({index:0,name:unsafe,summary:unsafe}),View.exercisePage({name:unsafe,note:unsafe,toolsHtml:trusted}),View.journal({title:unsafe,noticeHtml:trusted}),View.instructions({name:unsafe,why:unsafe,primary:[unsafe],steps:[unsafe]}),View.chart({id:'x" onclick="bad()',title:unsafe,subtitle:unsafe,unit:unsafe,points:[{...points[0],context:unsafe}]}),View.trends({name:unsafe,subtitle:unsafe,note:unsafe,currentHtml:trusted})];
+  outputs.forEach(html=>{assert.doesNotMatch(html,/<img src=x/);assert.match(html,/&lt;img src=x onerror=bad\(\)&gt;/);});
+  assert.ok(outputs[1].includes(trusted)&&outputs[2].includes(trusted)&&outputs[5].includes(trusted));
+});

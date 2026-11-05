@@ -91,8 +91,8 @@ test('weekly duration and AU remain distinct and missing ratings never become ze
     entry('trial',5,[],{kind:'exercise',secs:1000,srpe:10}),entry('test',5,[],{kind:'test',secs:300}),entry('future',6,[],{secs:5000,srpe:10})
   ];
   const result=summarize(log),week=result.weeks[7];assert.equal(result.weeks.length,8);assert.equal(week.count,6);
-  assert.equal(week.minutes,14.433333);assert.equal(week.missingDuration,1);assert.equal(week.au,14);assert.equal(week.unrated,2);
-  assert.equal(History.sessionAU(log[0]),5);assert.equal(History.sessionAU(log[1]),0);
+  assert.equal(week.minutes,14.433333);assert.equal(week.missingDuration,1);assert.equal(week.au,16.333333);assert.equal(week.unrated,2);
+  assert.equal(History.sessionAU(log[0]),7.333333);assert.equal(History.sessionAU(log[1]),0);
 });
 test('local Monday boundaries survive both daylight-saving transitions and include exactly now',()=>{
   const saved=process.env.TZ;process.env.TZ='Europe/Zagreb';

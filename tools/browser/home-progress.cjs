@@ -278,7 +278,7 @@ async function runScenarios(page) {
   await page.keyboard.press('Escape');
   assert.equal(await help.evaluate(node => node === document.activeElement), true);
   await plank.locator('[data-a="openEx"]').click();
-  await page.locator('#swrow').waitFor();
+  await page.locator('.workout-exercise-page').waitFor();
   await action(page, 'back').first().click();
   await page.locator('.progress-view').waitFor();
 

@@ -56,11 +56,14 @@ async function run(){
   console.log('drafts: nested editor, conflict copy, team raw values/checks, history cancel and morning save passed');
 
   await protocols(p);await named(p,'openPr','nav-timed').click();await a(p,'startPr').click();await advance(p,6);
-  const tabs=p.locator('.play-card-tabs [role=tab]');await tabs.nth(0).focus();await p.keyboard.press('ArrowRight');assert.equal(await tabs.nth(1).getAttribute('aria-selected'),'true');await p.keyboard.press('End');assert.equal(await tabs.nth(2).getAttribute('aria-selected'),'true');assert.equal(await p.locator('#play-card-2').evaluate(el=>el.inert),false);assert.equal(await p.locator('#play-card-0').evaluate(el=>el.inert),true);await p.keyboard.press('Home');assert.equal(await tabs.nth(0).getAttribute('aria-selected'),'true');await p.keyboard.press('ArrowLeft');assert.equal(await tabs.nth(2).getAttribute('aria-selected'),'true');assert.deepEqual(await tabs.evaluateAll(es=>es.map(e=>e.tabIndex)),[-1,-1,0]);
+  const journal=p.locator('.workout-journal');await journal.waitFor();assert.equal(await p.locator('[role=tab]').count(),0);assert.equal(await journal.locator('.workout-set-row').count(),2);
+  const info=journal.locator('[data-a=workoutInfo]').first();await info.focus();await p.keyboard.press('Enter');await p.locator('.workout-instructions-body').waitFor();
+  for(const key of ['Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.workout-fullscreen')),true);}
+  await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});
   const before=Number(await p.locator('.prog').getAttribute('aria-valuenow'));await advance(p,20);const after=await p.locator('.prog').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:parseFloat(e.querySelector('i').style.width)}));assert.ok(after.aria>before);assert.ok(Math.abs(after.aria-after.visual)<.6);
-  await a(p,'playDoseHelp').click();const paused=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));await advance(p,30);await back(p);await p.getByRole('dialog').waitFor({state:'hidden'});const continued=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));assert.equal(continued.i,paused.i);assert.equal(continued.left,paused.left);
+  await journal.locator('[data-a=workoutInfo]').first().click();const paused=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));await advance(p,30);await back(p);await p.locator('.workout-exercise-page').waitFor();await back(p);await p.getByRole('dialog').waitFor({state:'hidden'});const continued=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));assert.equal(continued.i,paused.i);assert.equal(continued.left,paused.left);
   await back(p);await a(p,'quitResume').waitFor();await a(p,'quitResume').click();await p.reload();await a(p,'resumeGo').click();await waitView(p,'play');await back(p);await a(p,'quitDiscard').click();assert.equal((await data(p)).log.filter(x=>x.refId==='nav-timed').length,0);
-  console.log('player: arrows/Home/End, selected-panel focus, matching visual/ARIA progress, help pause and Back/reload passed');
+  console.log('player: vertical full journal, keyboard instructions/focus containment, matching visual/ARIA progress, panel pause and Back/reload passed');
 
   // The guard is only a child-screen entry, not a trap at the root.
   await home(p);await p.waitForFunction(()=>history.state?.mtNavigation?.guard!==1);

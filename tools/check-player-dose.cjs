@@ -265,3 +265,13 @@ test('adding a set uses the latest visible edited prescription and schedule chec
   assert.equal(Object.hasOwn(saved[0],'ss'),false);
   assert.equal(D.restoreSteps(saved,[source],()=>({name:'Exercise'}))[0].dur,60);
 });
+
+
+test('sparse preview edits preserve unknown per-set weights and explicit zero across added sets',()=>{
+  const source={...item(),kg:0,kgList:[10,null,0]};
+  const edited=D.editItem(source,{rows:[{set:1,reps:7}]},{allowMissingWeight:true});
+  assert.equal(edited.ok,true);assert.deepEqual(edited.item.kgList,[10,null,0]);assert.equal(edited.item.repsList[0],7);
+  assert.deepEqual(source.kgList,[10,null,0]);
+  const extended=D.editItem({...source,sets:2,kgList:[10,null]},{sets:3},{allowMissingWeight:true});
+  assert.equal(extended.ok,true);assert.deepEqual(extended.item.kgList,[10,null,null]);
+});
