@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.14.0';
+const APP_VERSION = '1.14.1';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -374,20 +374,21 @@ function cleanVal(k, v, depth){
   }
   if (CLEAN_LINKS[k]) return typeof v === 'string' && (v === '' || /^https?:\/\//i.test(v)) ? v : drop();
   if (CLEAN_LISTS[k]) {
-    if (!Array.isArray(v)) return drop();
+    const perSet = ['repsList','kgList','secList','rirList','sirList','sideCounts','setNumbers'].includes(k);
+    if (!Array.isArray(v)) { if (perSet) { cleanFixes++; return []; } return drop(); }
     let a;
     if (k === 'days') a = Array.from(new Set(v.filter(i => Number.isInteger(i) && i >= 0 && i < 7))).sort();
-    else if (k === 'rirList' || k === 'sirList') a = v.map(x => typeof x === 'number' && isFinite(x) && x >= 0 && x <= 40 ? x : null);   // reserve per set, null = not tapped (stays aligned with the sets)
-    else if (['kgList','secList','sideCounts','setNumbers'].includes(k)) {
-      const limit = { kgList:10000, secList:86400, sideCounts:2, setNumbers:1000 }[k];
+    else if (perSet) {
+      const limit = { repsList:10000, kgList:10000, secList:86400, rirList:40, sirList:40, sideCounts:2, setNumbers:1000 }[k];
       a = v.slice(0,1000).map(n => {
         if (n === null) return null;
-        if (typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= limit &&
-            (!['sideCounts','setNumbers'].includes(k) || Number.isInteger(n) && n >= 1)) return n;
+        const value = typeof n === 'string' ? cleanVal(k === 'repsList' ? 'reps' : 'kg', n, depth + 1) : n;
+        if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= limit &&
+            (!['sideCounts','setNumbers'].includes(k) || Number.isInteger(value) && value >= 1) &&
+            (k !== 'repsList' || Number.isInteger(value))) return value;
         cleanFixes++; return null;
       });
     }
-    else if (k === 'repsList') a = v.map(x => cleanVal('reps', x, depth + 1)).filter(x => typeof x === 'number' && x >= 0);   // 0 = a set with no reps (history)
     else if (k === 'zones' && v.length === 4 && v.every(x => typeof x === 'number' && isFinite(x) && x >= 0)) a = v.slice();   // a field log entry's load: metres per intensity zone
     else if (CLEAN_WORDS[k]) a = v.filter(x => typeof x === 'string' && !((k === 'zones' || k === 'equip') && badKey(x)));
     else a = v.filter(x => isPlainObj(x) && (k !== 'items' || (typeof x.exId === 'string' && !badKey(x.exId))) && (k !== 'sessions' || (typeof x.pr === 'string' && !badKey(x.pr))))
@@ -428,6 +429,8 @@ function cleanData(d){
   });
   out._deleted = (Array.isArray(d._deleted) ? d._deleted : []).filter(x => typeof x === 'string');
   out.log = HistoryStore.live(out.log, out._deleted);
+  const repairedLog = repairKnownMasLoads(out.log);
+  if (repairedLog !== out.log) { out.log = repairedLog; cleanFixes++; }
   if (d.settings !== undefined) out.settings = cleanSettings(d.settings);
   return out;
 }
@@ -718,6 +721,7 @@ async function init(){
   }
   if (S.lib.cat === 'TAE' && !(S.pack && (S.pack.members || []).length)) { S.lib.cat = 'Sve'; lsSet('mt.libcat', 'Sve'); }
   S.dbState = 'ready';
+  restoreUnsavedDraft();
   render();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
   loadMedia();
@@ -758,6 +762,47 @@ const nothingOwn = () => !S.log.length && !(S._deleted || []).length && !Object.
 const dataCounts = (d, settings) => { const nPr = Object.values(d.protocols || {}).filter(p => !(p && p.program)).length, nG = Object.keys(d.programs || {}).length, nT = nTrainings(d.log), nM=Object.keys(settings?.morningChecks || {}).length;
   return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'protokol', 'protokola', 'protokola') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti' + (nM?' • '+nM+' '+plural(nM,'jutarnja provjera','jutarnje provjere','jutarnjih provjera'):''); };
 const backupObject = () => ({ kind: BACKUP_KIND, v: 1, app: APP_VERSION, exportedAt: new Date().toISOString(), exercises: S.ex, protocols: S.pr, field: S.field, programs: S.prog, log: S.log, _deleted: S._deleted || [], settings: S.settings });
+// A sheet intentionally defers another tab's UI changes. Export a detached,
+// up-to-date snapshot instead of exporting that deferred screen or saving over it.
+function freshBackupObject(){
+  let rawData, rawSettings, stable = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    rawData = localStorage.getItem(STORE_KEY);
+    rawSettings = localStorage.getItem('mt.settings');
+    if (rawData === localStorage.getItem(STORE_KEY) && rawSettings === localStorage.getItem('mt.settings')) { stable = true; break; }
+  }
+  if (!stable || (!rawData && savedJson != null)) throw new Error('backup source changed');
+  const snapshot = clone(backupObject());
+  if (rawData && rawData !== savedJson) {
+    const parsed = JSON.parse(rawData);
+    if (!isPlainObj(parsed) || !isPlainObj(parsed.exercises) || !isPlainObj(parsed.protocols) || !Array.isArray(parsed.log)) {
+      throw new Error('backup source unreadable');
+    }
+    const theirs = cleanData(parsed), base = savedJson == null ? null : JSON.parse(savedJson);
+    if (!base) {
+      DATA_COLLS.forEach(c => snapshot[c] = theirs[c]);
+      snapshot.log = theirs.log; snapshot._deleted = theirs._deleted;
+    } else {
+      const same = (a,b) => (a == null && b == null) || (a != null && b != null && mtCanon(a) === mtCanon(b));
+      DATA_COLLS.forEach(c => {
+        const ours = snapshot[c], previous = base[c] || {}, latest = theirs[c] || {};
+        new Set(Object.keys(previous).concat(Object.keys(latest))).forEach(id => {
+          if (same(ours[id],previous[id]) && !same(latest[id],previous[id])) {
+            if (latest[id]) ours[id] = {...latest[id],id}; else delete ours[id];
+          }
+        });
+      });
+      snapshot._deleted = Array.from(new Set(snapshot._deleted.concat(theirs._deleted)));
+      snapshot.log = HistoryStore.merge(base.log || [],snapshot.log,theirs.log,same,snapshot._deleted);
+    }
+  }
+  if (rawSettings !== null) {
+    const settings = JSON.parse(rawSettings);
+    if (!isPlainObj(settings)) throw new Error('backup settings unreadable');
+    snapshot.settings = {...SETTINGS_BASE,...cleanSettings(settings)};
+  } else snapshot.settings = {...SETTINGS_BASE};
+  return snapshot;
+}
 // a backup is recognised by its content; the photo pack (also a .json file) is sent to its own row
 function backupProblem(d){
   if (isPlainObj(d) && d.kind === PACK_KIND) return 'Ovo je paket slika, a ne sigurnosna kopija. Ništa nije promijenjeno. Paket se uvozi u retku „Uvezi paket slika”.';
@@ -798,6 +843,144 @@ function dataHint(){
 const app = document.getElementById('app');
 const scrollMem = {};
 const FORM_VIEWS = { exEdit:1, build:1, play:1, historyEdit:1, morning:1, teamEntry:1 };
+// Drafts belong to this tab, never to the saved workout database. A refresh can
+// recover them; closing/reloading also gets the browser's native dirty warning.
+const DRAFT_KEY = 'mt.unsavedDraft.v1';
+const EDIT_FORMS = {historyEdit:'history-edit-form',morning:'morning-form',teamEntry:'team-entry-form'};
+function formFieldKey(el) {
+  return el.id || (el.name ? el.name + ((el.type==='checkbox'||el.type==='radio') ? ':'+el.value : '') : dsKey(el));
+}
+function formValues(form) {
+  const values = {};
+  if (form) for (const el of form.querySelectorAll('input,select,textarea')) {
+    if (el.type==='file' || !formFieldKey(el)) continue;
+    values[formFieldKey(el)] = el.type==='checkbox'||el.type==='radio' ? el.checked : el.value;
+  }
+  return values;
+}
+function captureEditForm() {
+  const t=top(), form=document.getElementById(EDIT_FORMS[t.v]);
+  if (form && app.dataset.key===viewKey()) t._formValues=formValues(form);
+}
+function restoreEditForm() {
+  const t=top(), form=document.getElementById(EDIT_FORMS[t.v]);
+  if (!form) return;
+  if (!t._formBase) t._formBase=formValues(form);
+  if (t._formValues) for (const el of form.querySelectorAll('input,select,textarea')) {
+    const key=formFieldKey(el);
+    if (el.type==='file' || !Object.prototype.hasOwnProperty.call(t._formValues,key)) continue;
+    if (el.type==='checkbox'||el.type==='radio') el.checked=!!t._formValues[key]; else el.value=t._formValues[key];
+  }
+}
+function unsavedChanges() {
+  const t=top();
+  if (['build','exEdit'].includes(t.v)) return !!S.draft && draftSig(S.draft)!==S.draftSig;
+  return !!EDIT_FORMS[t.v] && !!t._formBase && mtCanon(t._formValues || formValues(document.getElementById(EDIT_FORMS[t.v])))!==mtCanon(t._formBase);
+}
+function draftSnapshot() {
+  captureEditForm();
+  const dirtyDraft=(S.draft && draftSig(S.draft)!==S.draftSig) || (S.below && draftSig(S.below.draft)!==S.below.sig);
+  if (!dirtyDraft && !unsavedChanges()) return null;
+  const sources=[];
+  for (const draft of [S.draft,S.below?.draft]) if (draft) {
+    const coll=Array.isArray(draft.items)?'pr':'ex';
+    sources.push({coll,id:draft.id,value:mtCanon(S[coll][draft.id] || null)});
+  }
+  return {v:1,at:Date.now(),tab:S.tab,stack:S.stack,draft:S.draft,draftSig:S.draftSig,below:S.below,pick:S.pick,sources};
+}
+let draftCheckpointFailed=false;
+function checkpointDraft() {
+  if (S.dbState!=='ready') return false;
+  let snapshot;
+  try {
+    snapshot=draftSnapshot();
+    if (snapshot) sessionStorage.setItem(DRAFT_KEY,JSON.stringify(snapshot)); else sessionStorage.removeItem(DRAFT_KEY);
+    draftCheckpointFailed=false;
+    return true;
+  } catch(e) {
+    if (snapshot && !draftCheckpointFailed) {
+      draftCheckpointFailed=true;
+      toast('Privremeni nacrt nije sačuvan. Spremi unos prije osvježavanja ili zatvaranja.',true);
+    }
+    return false;
+  }
+}
+function restoreUnsavedDraft() {
+  let d;
+  try {d=JSON.parse(sessionStorage.getItem(DRAFT_KEY));} catch(e) {return;}
+  if (!d || d.v!==1 || !Array.isArray(d.stack) || !d.stack.length || d.stack.length>40 || d.stack.some(x=>!x || !VIEWS[x.v] || x.v==='play') ||
+      (d.draft && (typeof d.draft!=='object' || typeof d.draft.id!=='string')) ||
+      (d.below && (!d.below.draft || typeof d.below.draft.id!=='string')) ||
+      !['home','dashboard','library','protocols','progress'].includes(d.tab)) return;
+  // A saved protocol/exercise changed while this tab was gone: retain its new
+  // version and recover the editor as a new copy, never overwrite it silently.
+  let copied=false;
+  for (const source of Array.isArray(d.sources)?d.sources:[]) {
+    if (!source || typeof source.id!=='string') continue;
+    if (!['pr','ex'].includes(source.coll) || mtCanon(S[source.coll][source.id] || null)===source.value) continue;
+    for (const draft of [d.draft,d.below?.draft]) if (draft?.id===source.id) {
+      const old=draft.id;draft.id=uid(source.coll==='pr'?'p':'e');
+      draft.name=(draft.name || 'Unos')+' (oporavljeni nacrt)';
+      for (const key of ['program','pack','home','week','slot','goalSkip']) delete draft[key];
+      if (source.coll==='pr') {draft.days=[];for (const item of draft.items || []) for(const key of PROG_STATE)delete item[key];}
+      copied=true;
+      for (const entry of d.stack) if (entry.id===old && ['build','exEdit'].includes(entry.v)) entry.id=draft.id;
+    }
+  }
+  S.tab=d.tab;S.stack=d.stack;S.draft=d.draft || null;S.draftSig=d.draftSig;S.below=d.below || null;S.pick=d.pick || null;
+  if (S.draft) delete S.draft._uploading;
+  // Form baselines/original history rows remain pinned; their normal save path
+  // detects a newer edit in another tab before accepting the recovered values.
+  setTimeout(()=>toast(copied?'Izvornik je u međuvremenu promijenjen. Tvoj je unos vraćen kao novi nacrt.':'Nespremljeni unos je vraćen. Pregledaj ga pa spremi.'),0);
+}
+
+// One same-document guard routes the browser's Back through the same close /
+// discard decisions as the app. It is removed on a clean root screen, so Back
+// can leave the site; Forward never revives a saved form or an old player.
+const NAV_KEY='mtNavigation';
+const navId=history.state?.[NAV_KEY]?.id || uid('n');
+let navMoving=false;
+function navigationNeeded() {return S.stack.length>1 || !!S.sheet || !!S.pick || !!P;}
+function syncNavigation() {
+  if (S.dbState!=='ready' || navMoving) return;
+  const state=history.state?.[NAV_KEY], guarded=state?.id===navId && state.guard===1;
+  try {
+    if (navigationNeeded() && !guarded) {
+      history.replaceState({...history.state,[NAV_KEY]:{id:navId,guard:0}},'');
+      history.pushState({[NAV_KEY]:{id:navId,guard:1}},'');
+    } else if (!navigationNeeded() && guarded) {navMoving=true;history.back();}
+  } catch(e) {navMoving=false;}
+}
+function dismissSheet() {
+  if (!S.sheet) return;
+  if (S.sheet.kind==='quit') {A.quitResume();return;}
+  if (['playDose','playDoseHelp'].includes(S.sheet.kind)) {A.playDoseCancel();return;}
+  S.sheet=null;render();
+}
+function browserBack() {
+  if (document.getElementById('progress-info')?.open) {ProgressView.closeInfo();return;}
+  if (S.sheet) {dismissSheet();return;}
+  if (P && top().v==='play') {
+    if (P.done) toast('Pregledaj odrađeno pa spremi trening gumbom pri dnu.'); else A.quitPlay();
+    return;
+  }
+  if (S.pick && top().v==='library') {A.pickCancel();return;}
+  A.back();
+}
+window.addEventListener('popstate',ev=>{
+  if (navMoving) {navMoving=false;syncNavigation();return;}
+  const state=ev.state?.[NAV_KEY];
+  // Forward may land on an obsolete guard after the UI already reached root.
+  // Remove it immediately; the next Back must still leave the site in one step.
+  if (state?.id===navId && state.guard===1) {syncNavigation();return;}
+  if (state?.id!==navId || state.guard!==0 || !navigationNeeded()) return;
+  syncNavigation();browserBack();
+});
+window.addEventListener('beforeunload',ev=>{
+  const dirty=!!draftSnapshot();checkpointDraft();
+  if (dirty) {ev.preventDefault();ev.returnValue='';}
+});
+window.addEventListener('pagehide',checkpointDraft);
 let renderQueued = false;
 function softRender(){
   if (FORM_VIEWS[top().v]) return; // never clobber an open form or the running player
@@ -842,6 +1025,7 @@ function refocus(fk, key){
 // the 12-week consistency grid read as one picture: how many of its days have a training (cells l2/l3 of the grid markup)
 function heatLabel(heat){ const n = (String(heat).match(/class="[^"]*\bl[23]\b[^"]*"/g) || []).length; return 'Zadnjih 12 tjedana: ' + n + ' ' + plural(n, 'dan', 'dana', 'dana') + ' s treningom'; }
 function render(){
+  captureEditForm();
   if (pendingExt && !appBusy()) takeOtherCopy();
   const key = viewKey();
   const fk = focusKey(document.activeElement);
@@ -862,11 +1046,14 @@ function render(){
   if (S.toast) html += '<div class="toast" role="' + (S.toastErr ? 'alert' : 'status') + '">' + esc(S.toast) + '</div>';
   app.innerHTML = html;
   app.dataset.key = key;
+  restoreEditForm();
   const v = app.querySelector('.view');
   if (v && scrollMem[key] != null) v.scrollTop = scrollMem[key];
   if (sheetTop) { const sh = app.querySelector('.sheet'); if (sh) sh.scrollTop = sheetTop; }
   after(t);
   refocus(fk, key);
+  checkpointDraft();
+  syncNavigation();
 }
 function go(entry){ S.stack.push(entry); S.sheet = null; render(); }
 function back(){ if (S.stack.length > 1) S.stack.pop(); S.sheet = null; render(); }
@@ -1474,6 +1661,9 @@ function changeHistory(original, replacement) {
   if (!current || mtCanon(current) !== mtCanon(original)) {
     historyError('Ovaj se zapis u međuvremenu promijenio. Vrati se na popis i ponovno ga otvori.'); return false;
   }
+  const coupled = masHistoryChange(current,replacement,S.log,uid('h'));
+  if (!coupled.ok) { historyError(coupled.error); return false; }
+  replacement = coupled.entry;
   const before = S.log, previousDeleted = S._deleted;
   const protocol = current.kind === 'protocol' && S.pr[current.refId];
   const removed = [];
@@ -1482,9 +1672,10 @@ function changeHistory(original, replacement) {
     if (row.historyId === current.historyId) {
       if (replacement) next.push(clone(replacement)); else removed.push(row.historyId);
     } else if (pairedMas(current,row)) {
-      if (replacement) next.push({ ...row, at:replacement.at }); else removed.push(row.historyId);
+      if (replacement) next.push(coupled.test || { ...row, at:replacement.at }); else removed.push(row.historyId);
     } else next.push(row);
   }
+  if (coupled.newTest) next.push(coupled.newTest);
   S.log = next.sort((a,b) => b.at - a.at);
   if (removed.length) S._deleted = (previousDeleted || []).concat(removed.map(id => 'log/' + id));
   if (protocol && (!replacement || current.at !== replacement.at || mtCanon(current.items) !== mtCanon(replacement.items))) {
@@ -1667,7 +1858,7 @@ const firstSentence = t => (String(t || '').match(/^[\s\S]*?[.!?](?=\s+[A-ZČĆ�
 function exInfoHtml(e, wrap){
   const pl = !!wrap, steps = e.steps || [], list = pl ? EX_TABS.slice(0, 2) : EX_TABS;
   let on = exTabOf(S.exTab); if (pl && on === 'opt') on = 'upute';   // the player has no Opterećenje: it shows Upute, S.exTab stays
-  const tab = (k, t) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+(k === on)+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
+  const tab = (k, t) => '<button class="chip" role="tab" id="extab-'+k+'" aria-selected="'+(k === on)+'" tabindex="'+(k === on?0:-1)+'" aria-controls="expanel" data-a="exTab" data-v="'+k+'">'+t+'</button>';
   const a = (href, t, ti) => '<a href="'+esc(href)+'" target="_blank" rel="noopener"'+(ti ? ' title="'+esc(ti)+'"' : '')+'>'+esc(t)+' ↗</a>';
   const cues = steps.length ? steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p class="none">Dodaj upute u uređivanju.</p>';
   const zones = Array.from(new Set((e.zones||[]).map(exZoneLabel))).map(z => '<span class="tag">'+esc(z)+'</span>').join('');
@@ -1840,10 +2031,10 @@ const PROG_STATE = ['ok', 'fail', 'snoozeOk', 'prev', 'up', 'easy'];
 // a video still reading its file is stopped first, so releasing the file's address is never an error
 const unload = root => (root || document).querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e){} });
 // your own photo or video that nothing uses any more
-function dropMedia(id){ if (!id) return; IDB.del(id).catch(() => {}); const u = MEDIA[id]; if (!u) return; delete MEDIA[id];
+function dropMedia(id){ if (!id || Object.values(S.ex).some(e=>e.media===id)) return; IDB.del(id).catch(() => {}); const u = MEDIA[id]; if (!u) return; delete MEDIA[id];
   document.querySelectorAll('video').forEach(v => { if ((v.getAttribute('src') || '').indexOf(u) === 0) unload(v.parentNode); });
   setTimeout(() => URL.revokeObjectURL(u), 1500); }
-function dropDraftMedia(){ const d = S.draft; if (d && d.media && d.media !== ((S.ex[d.id] || {}).media)) dropMedia(d.media); }
+function dropDraftMedia(){ const d = S.draft; if (d && d.media && !Object.values(S.ex).some(e=>e.media===d.media)) dropMedia(d.media); }
 // the editor's preview of his own picture or video; a video follows Reduce motion like every other one (videoTag)
 function mediaBoxHtml(d){
   const up = d._uploading;
@@ -2276,7 +2467,7 @@ const masLast = () => S.log.reduce((b, l) => l && l.kind === 'test' && l.test ==
 const masNow = () => { const l = masLast(); return l ? l.value : 0; };
 const masM = (pct, s) => Math.round(masNow() * pct / 100 * s);
 const masTxt = v => String(Math.round(v * 100) / 100).replace('.', ',');
-const masOk = m => m >= 600 && m <= 2400;   // 2 to 8 m/s
+const masOk = m => Number.isInteger(m) && m >= 600 && m <= 2400;   // 2 to 8 m/s
 const masEntry = (m, at) => ({ historyId:uid('h'), kind:'test', test:'mas', name:'MAS test', value: Math.round(m / 3) / 100, unit:'m/s', dist: m, at: at || Date.now() });
 const masOut = (m, done) => masOk(m) ? 'MAS ' + masTxt(m / 300) + ' m/s' + (done ? ' · sprema se kad dodirneš Završi' : '')
   : m > 0 ? 'Upiši metre u 5 minuta, od 600 do 2400 m.' : done ? 'Upiši metre pa dodirni Završi. Bez njih se sprema samo trening.' : '';
@@ -3076,7 +3267,10 @@ function sessionEntry(){
     else { const rl = rirLists(j, it); if (rl) x[it.measure === 'time' ? 'sirList' : 'rirList'] = rl; }
     return x;
   });
-  if (P.mode === 'field' && P.f) entry.load = fieldDoneLoad();   // what was run: metres, fast running, sprint, zones, the dose
+  if (P.mode === 'field' && P.f) {
+    entry.load = fieldDoneLoad();
+    if (!HistoryModel.fieldSummary(entry).complete) entry.fieldLoadStatus = 'partial';
+  }
   if (entry.kind === 'protocol' && entry.items) {
     entry.muscleWork = entry.items.map((item,index) => MuscleWork.pack(MuscleWork.completedFromPlan(P.musclePlan && P.musclePlan[index], item)));
   }
@@ -3094,7 +3288,9 @@ function logSession(){
   }
   // the session's load (model LM1) as computed now, and his rating of the whole session (1–10) when he gave one
   if (P.srpe >= 1 && P.srpe <= 10) entry.srpe = P.srpe;
-  entry.load2 = computeSession(entry); if (entry.srpe) entry.load2.au = entry.srpe * Math.round(entry.load2.min);
+  const effort = computeSession(entry);
+  if (effort.incomplete) entry.load2Status = effort.incompleteReason === 'field' ? 'needsFieldData' : 'needsDose';
+  else { entry.load2 = effort; const au=HistoryModel.sessionAU(entry); if (au !== null) entry.load2.au = au; }
   const previousLog = S.log;
   const previousProtocol = entry.kind === 'protocol' && S.pr[entry.refId];
   entry.historyId = P.historyId;
@@ -3117,11 +3313,7 @@ const newsMsg = news => (news.length > 1 ? 'Novi prijedlozi' : 'Novi prijedlog')
 function fmtDur(s){ s = Math.round(s || 0); return s < 60 ? s + ' s' : Math.round(s / 60) + ' min'; }
 // reps you actually did in a logged item: per-set reps, only the sets done, the failed last set as you entered it
 function repsDone(x){
-  if (x.historySetsUnknown || x.historyRepsUnknown) return 0;
-  const n = x.setsDone != null ? x.setsDone : (x.sets || 1), list = Array.isArray(x.repsList) ? x.repsList : null; let t = 0;
-  for (let s = 1; s <= n; s++) t += list?.[s - 1] ?? x.reps ?? 0;
-  if (x.done === false && x.lastReps != null && n > 0) t += x.lastReps - (list?.[n - 1] ?? x.reps ?? 0);
-  return Math.max(0, t);
+  return HistoryModel.repetitionTotal(x);
 }
 // the done screen tells the week as it will be once this session is saved
 function weekAfter(){
@@ -3413,7 +3605,8 @@ function heaviestSet(x) {
 }
 function liftSeries(h, n){
   const time = !!h.length && h[h.length - 1].measure === 'time';
-  let pts = h.filter(x => (x.measure === 'time') === time && !x.historySetsUnknown && !x.historyRepsUnknown);
+  let pts = h.filter(x => (x.measure === 'time') === time && !x.historySetsUnknown && !x.historyRepsUnknown &&
+    Number.isFinite(time ? HistoryModel.timeTotal(x) : repsDone(x)));
   if (!time && pts.some(x => heaviestSet(x)>0)) pts = pts.filter(x => heaviestSet(x)>0);
   if (n) pts = pts.slice(-n);
   const kg = !time && pts.some(x => heaviestSet(x) !== heaviestSet(pts[0]));
@@ -3472,8 +3665,9 @@ function itemLoad(x){
 // 0 kg ones are left out of that chart), otherwise reps or seconds; metres for an own running drill
 function incompleteRecordedDose(x) {
   if (x.historySetsUnknown || x.historyRepsUnknown || x.historyKgUnknown || x.historySecUnknown) return true;
-  return (HistoryModel.recordedRows(x) || []).some(r=>r.sides===null || (x.measure==='time'
-    ? r.sec===null : r.reps===null || (Array.isArray(x.kgList) && r.kg===null)));
+  const rows = HistoryModel.recordedRows(x);
+  return !rows || rows.some(r=>r.sides===null || (x.measure==='time'
+    ? r.sec===null : r.reps===null || (Object.prototype.hasOwnProperty.call(x,'kgList') && r.kg===null)));
 }
 function exLoadSeries(exId, days){
   const e = S.ex[exId], from = days ? calDay(Date.now(), -days) : 0;
@@ -3485,7 +3679,11 @@ function exLoadSeries(exId, days){
   const kind = runDrill(e) ? 'm' : time ? 'secs' : pts.some(x => heaviestSet(x) > 0) ? 'kg' : 'reps';
   if (kind === 'kg') pts = pts.filter(x => heaviestSet(x) > 0);
   const out = [];
-  pts.forEach(x => { const v = itemLoad(x)[kind], last = out[out.length - 1];
+  pts.forEach(x => {
+    const rows=HistoryModel.recordedRows(x);
+    const known=rows && rows.some(r=>r.sides!=null && (kind==='secs' ? r.sec!=null : kind==='kg' ? r.reps!=null && r.kg!=null : time && kind==='m' ? true : r.reps!=null));
+    if (!known) return;
+    const v = itemLoad(x)[kind], last = out[out.length - 1];
     if (last && last.t === x.at) { last.v += v; last.xs.push(x); } else out.push({ t: x.at, v, xs: [x] }); });
   return { kind, pts: out, partial:all.some(incompleteRecordedDose) };
 }
@@ -3628,15 +3826,72 @@ function fieldLoad(f, dose, mas){
     vol: o.m < 1500 ? 'nizak' : o.m <= 3000 ? 'srednji' : 'visok', notes, mas, def: !masNow(), doseText: g.doseText || '' };
 }
 const fieldInt = f => f ? fieldLoad(f).li : 0;
-// what a field session in the history did: its stored load, else (an entry from before 1.6) the full session with today's MAS
+// Historical field work is the saved evidence only. A current template/MAS cannot
+// reconstruct an older session whose distance or speed breakdown was not saved.
 function fieldLogLoad(l){
-  if (l.fieldLoadStatus === 'partial') return l.load || null;
-  if (l.load && typeof l.load.m === 'number') return l.load;
-  const f = S.field[l.refId]; return f ? fieldLoad(f) : null;
+  return l && l.load && typeof l.load === 'object' && !Array.isArray(l.load) ? l.load : null;
+}
+// A five-minute result proves total distance and average speed, not time spent
+// above a speed threshold. Keep those unmeasured distances absent, including 0.
+function masResultLoad(metres, workMinutes){
+  const load = { min:workMinutes, dose:'full', source:'mas-test' };
+  if (Number.isInteger(metres) && metres >= 600 && metres <= 2400 && workMinutes === 5) {
+    load.m = metres; load.mas = Math.round(metres / 3) / 100;
+  }
+  return load;
+}
+// A correction to a recorded five-minute distance changes the paired test in the
+// same transaction. Clearing an established measurement needs deleting the pair,
+// rather than silently leaving an old MAS result behind a blank session value.
+function masHistoryChange(current,replacement,logs,newId){
+  if (!replacement || current.kind !== 'field' || current.refId !== 'mas-test-5-min') return {ok:true,entry:replacement};
+  const old=current.load || {}, load=replacement.load || {};
+  const changed=old.m !== load.m, minutesChanged=old.min !== load.min;
+  if (!changed && !minutesChanged) return {ok:true,entry:replacement};
+  const linked=logs.filter(test=>pairedMas(current,test));
+  if (linked.length>1) return {ok:false,error:'Uz trening postoji više MAS rezultata. Ispravak nije spremljen; prvo provjeri povezane zapise.'};
+  if ((linked.length || load.m != null) && load.min !== 5) return {ok:false,error:'MAS rezultat vrijedi za 5 minuta rada. Zadrži radno vrijeme 5 min ili odustani od izmjene.'};
+  if (!changed) return {ok:true,entry:replacement};
+  if (load.m == null && (linked.length || Number.isFinite(old.m))) return {ok:false,error:'Povezani poznati MAS rezultat ne može se ukloniti praznim poljem. Upiši točne metre ili izbriši trening i povezani rezultat.'};
+  if (load.m == null) return {ok:true,entry:replacement};
+  if (!Number.isInteger(load.m) || load.m < 600 || load.m > 2400) return {ok:false,error:'Za MAS test upiši cijele metre u 5 minuta, od 600 do 2400 m.'};
+  const value=Math.round(load.m / 3) / 100;
+  const entry={...replacement,load:{...load,mas:value,source:'mas-test'}};
+  const test={...(linked[0] || {historyId:newId,kind:'test',test:'mas',name:'MAS test',unit:'m/s',parentSessionId:current.historyId}),at:entry.at,dist:load.m,value,editedAt:entry.editedAt};
+  return linked.length ? {ok:true,entry,test} : {ok:true,entry,newTest:test};
+}
+// Repair only the exact legacy algorithm signature and a unique, explicit saved
+// parent/result pair. Intentional edits, ambiguous pairs and unknown logs survive.
+function repairKnownMasLoads(logs){
+  if (!Array.isArray(logs)) return logs;
+  let changed = false;
+  const repaired = logs.map(entry => {
+    if (!entry || entry.kind !== 'field' || entry.refId !== 'mas-test-5-min' || !entry.historyId || entry.editedAt) return entry;
+    const load = entry.load;
+    if (!load || typeof load !== 'object' || Array.isArray(load) || load.source || load.dose !== 'full' || load.min !== 5 ||
+        !Number.isFinite(load.mas) || load.mas < 2 || load.mas > 8 ||
+        Object.keys(load).some(k => !['m','hsr','spr','min','zones','dose','mas'].includes(k))) return entry;
+    const m = Math.round(load.mas * 300), hsr = load.mas >= LOAD_HSR ? m : 0, spr = load.mas >= LOAD_SPR ? m : 0;
+    const zones = [0,0,load.mas < LOAD_SPR ? m : 0,load.mas >= LOAD_SPR ? m : 0];
+    if (load.m !== m || load.hsr !== hsr || load.spr !== spr || JSON.stringify(load.zones) !== JSON.stringify(zones)) return entry;
+    const tests = logs.filter(test => test && test.kind === 'test' && test.test === 'mas' && test.parentSessionId === entry.historyId);
+    if (tests.length !== 1) return entry;
+    const test = tests[0];
+    if (test.editedAt || test.at !== entry.at || !Number.isInteger(test.dist) || test.dist < 600 || test.dist > 2400 || test.value !== Math.round(test.dist / 3) / 100) return entry;
+    const out = { ...entry, load:masResultLoad(test.dist,5), fieldLoadStatus:'partial', load2Status:'needsFieldData' };
+    delete out.load2;
+    changed = true;
+    return out;
+  });
+  return changed ? repaired : logs;
 }
 // the work done in the player: every work step that was done, with its recovery run
 function fieldDoneLoad(){
   const f = P.f, mas = loadMas(), o = zeroLoad();
+  if (f.id === 'mas-test-5-min') {
+    const seconds = P.steps.reduce((sum,st,i) => sum + (st.kind === 'work' && P.doneSteps[i] && st.b ? st.b.work_s || 0 : 0),0);
+    return masResultLoad(!P.quit && seconds === 300 ? Number(P.masDist) : null, seconds / 60);
+  }
   P.steps.forEach((st, i) => { if (st.kind !== 'work' || !P.doneSteps[i] || !st.b) return; addLoad(o, blockRep(st.b, f, mas)); if (st.b.rest_mas_pct && st.b.rest_s) addLoad(o, recRun(st.b, mas)); });
   return { m: Math.round(o.m), hsr: Math.round(o.hsr), spr: Math.round(o.spr), min: Math.round(o.t / 6) / 10, zones: o.z.map(Math.round), dose: P.dose === 'season' ? 'season' : 'full', mas: Math.round(mas * 100) / 100 };
 }
@@ -3833,6 +4088,18 @@ function computeSession(entry, o){
   });
   r.min = Math.max(0, +entry.secs || 0) / 60;
   const fl = entry.load;
+  if (entry.kind === 'field' && (!lmObj(fl) || ['m','hsr','spr','min'].some(k => !lmNum(fl[k]) || fl[k] < 0))) {
+    r.incomplete = true; r.incompleteReason = 'field';
+    return r;
+  }
+  if (items.some(x => {
+    if (x && x.skipped) return false;
+    const rows = window.HistoryModel.recordedRows(x,true);
+    return !rows || rows.some(row => row.sides == null || (x.measure === 'time' ? row.sec == null : row.reps == null));
+  })) {
+    r.incomplete = true; r.incompleteReason = 'dose';
+    return r;
+  }
   if (lmObj(fl) && lmNum(fl.m)) { r.Bfield = LM.K.fmin * (+fl.min || 0) + LM.K.m * fl.m / 100 + LM.K.hsr * (+fl.hsr || 0) / 100 + LM.K.spr * (+fl.spr || 0) / 10; r.m += fl.m; }
   r.B = r.Bsets + (items.length ? LM.K.gmin * r.min : 0) + r.Bfield;
   r.band = r.B * LM.BAND;
@@ -3850,8 +4117,12 @@ function weekLoads(n){
     if (!isTraining(l)) return; const w = out.find(o => l.at >= o.ws && l.at < o.we); if (!w) return;
     if (l.kind === 'field') {
       const fl = fieldLogLoad(l);
-      if (l.fieldLoadStatus === 'partial') w.partial = true;
-      if (fl) { w.m += fl.m || 0; w.hsr += fl.hsr || 0; }
+      const metres = fl && Number.isFinite(fl.m) && fl.m >= 0;
+      const fast = metres && Number.isFinite(fl.hsr) && fl.hsr >= 0 && fl.hsr <= fl.m;
+      if (!metres || !fast || l.fieldLoadStatus === 'partial') w.partial = true;
+      if (metres) w.m += fl.m;
+      if (fast) w.hsr += fl.hsr;
+      else if (metres && fl.m > 0) w.speedUnknown = true;
     }
     if ((l.items || []).some(incompleteRecordedDose)) w.partial = true;
     (l.items || []).forEach(x => { const il = itemLoad(x); w.vl += il.kg; w.m += il.m; w.hsr += il.hsr; });
@@ -3871,7 +4142,7 @@ function tipBox(x, y0, val, sub, maxX){
   return '<rect class="tb" x="'+bx.toFixed(1)+'" y="'+y0+'" width="'+w.toFixed(1)+'" height="38" rx="9"/><text class="tv" x="'+(bx + 10).toFixed(1)+'" y="'+(y0 + 17)+'">'+esc(val)+'</text><text class="ts" x="'+(bx + 10).toFixed(1)+'" y="'+(y0 + 31)+'">'+esc(sub)+'</text>';
 }
 function chartTable(head, rows){
-  return '<details class="ltab"><summary>Tablica</summary><table><tr><th>'+esc(head[0])+'</th><th>'+esc(head[1])+'</th></tr>' + rows.map(r => '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('') + '</table></details>';
+  return '<details class="ltab"><summary>Tablica</summary><table><thead><tr>' + head.map(label=>'<th scope="col">'+esc(label)+'</th>').join('') + '</tr></thead><tbody>' + rows.map(row=>'<tr>'+head.map((_,i)=>'<td>'+esc(row[i] == null ? '' : row[i])+'</td>').join('')+'</tr>').join('') + '</tbody></table></details>';
 }
 // pts: [{ t, v, sub }] oldest first; fmtV formats a value
 // low: the lower chart of the exercise page's Opterećenje card (1.8.1)
@@ -3953,7 +4224,7 @@ function exHistHtml(e, h, max){
 // Napredak → "Tjedno opterećenje": strength volume load and field metres per calendar week, the last 8 weeks
 function weekLoadHtml(compact){
   const W = weekLoads(8), cur = W[7], prev4 = W.slice(3, 7), avg = k => prev4.reduce((a, w) => a + w[k], 0) / 4;
-  const anyVl = W.some(w => w.vl > 0), anyM = W.some(w => w.m > 0);
+  const anyVl = W.some(w => w.vl > 0), anyM = W.some(w => w.m > 0), unknownSpeed = W.some(w => w.speedUnknown);
   const head = (compact ? '' : '<div class="psec"><h2>Tjedno opterećenje</h2><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>') +
     (W.some(w => w.partial) ? '<p class="sub">Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad.</p>' : '');
   if (!anyVl && !anyM) return head + '<p class="sub" style="margin:0 17px 10px;line-height:20px">Kad odradiš treninge s kilogramima ili trčanje na terenu, ovdje vidiš koliko si napravio svaki tjedan u zadnjih 8 tjedana.</p>';
@@ -3965,10 +4236,11 @@ function weekLoadHtml(compact){
       weekBars('wk-vl', W, [{ k: 'vl', cls: 'bs' }], f, a, 'Volumen tereta po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.vl) + pct(cur.vl, a) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w)) +
       chartTable(['Tjedan', 'Volumen tereta'], W.slice().reverse().map(w => [range(w), f(w.vl)])) + '</div>'; }
   if (anyM) { const a = avg('m'), f = v => loadFmt('m', v);
+    const speedText = w => w.speedUnknown ? (w.hsr > 0 ? f(w.hsr) + ' poznato; dio nije zabilježen' : 'Nije potpuno zabilježeno') : f(w.hsr);
     out += '<div class="lc"><div class="hd"><span class="t">Teren · metri</span><span class="t">zadnjih 8 tjedana</span></div>' + loadHead(f(cur.m), cur.m, a, 'od prosjeka 4 tjedna', 'ovaj tjedan') +
-      weekBars('wk-m', W, [{ k: 'ost', cls: 'bt1' }, { k: 'hsr', cls: 'bt2' }], f, a, 'Metri na terenu po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.m) + pct(cur.m, a) + ', od toga brzo trčanje ' + f(cur.hsr) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w) + ' · brzo ' + f(w.hsr)) +
-      '<div class="lg2"><span><i class="k1"></i>Ostali metri</span><span><i class="k2"></i>Brzo trčanje</span></div>' +
-      chartTable(['Tjedan', 'Metri (brzo trčanje)'], W.slice().reverse().map(w => [range(w), f(w.m) + ' (' + f(w.hsr) + ')'])) + '</div>'; }
+      weekBars('wk-m', W, unknownSpeed ? [{ k:'m', cls:'bt1' }] : [{ k: 'ost', cls: 'bt1' }, { k: 'hsr', cls: 'bt2' }], f, a, 'Metri na terenu po tjednima, zadnjih 8 tjedana. Ovaj tjedan ' + f(cur.m) + pct(cur.m, a) + (unknownSpeed ? '; raspodjela brzine nije potpuno zabilježena' : ', od toga brzo trčanje ' + f(cur.hsr)) + '; prosjek prethodna 4 tjedna ' + f(a) + '.', w => range(w) + ' · brzo ' + speedText(w)) +
+      (unknownSpeed ? '<p class="none">Stupci prikazuju ukupne poznate metre. Raspodjela brzog trčanja nije potpuno zabilježena; nepoznati metri nisu prikazani kao sporo trčanje.</p>' : '<div class="lg2"><span><i class="k1"></i>Ostali metri</span><span><i class="k2"></i>Brzo trčanje</span></div>') +
+      chartTable(['Tjedan', 'Metri', 'Poznato brzo trčanje'], W.slice().reverse().map(w => [range(w), f(w.m), speedText(w)])) + '</div>'; }
   return out;
 }
 // the field page: tags, three tiles, the intensity distribution with its assumptions, "U sezoni" (the dose and the best days)
@@ -4016,14 +4288,16 @@ VIEWS.loadInfo = function(){
     '<div class="edu"><h1>Napredak vježbe: volumen i volumen tereta</h1>' +
     '<p>Volumen pokazuje koliko si ukupno odradio. Računa se iz onoga što si stvarno napravio, prema vrsti vježbe:</p>' +
     '<ul><li><b>S kilogramima:</b> volumen tereta = ponavljanja × kg, zbrojeno po serijama.</li><li><b>Bez tereta:</b> ukupna ponavljanja, a kod vježbi na vrijeme ukupno vrijeme.</li><li><b>Trčanje:</b> ukupni metri, od toga brzo trčanje (od 19,8 km/h) i sprint (od 25,2 km/h).</li></ul>' +
-    '<h2>Zašto je važno?</h2><p>Snaga i kondicija rastu kad tijelu postupno daješ malo više posla. Volumen to pokazuje jednim brojem: vidiš rasteš li, stojiš li na mjestu ili si tjedan prije utakmice napravio previše.</p>' +
+    '<h2>Što broj pokazuje?</h2><p>Volumen prikazuje količinu zabilježenog rada. Za usporedbu koristi istu vježbu i usporedivu izvedbu. Sam porast volumena ne dokazuje rast snage, mišića ili kondicije, a pad ne znači lošiji trening.</p>' +
     '<h2>Kako se računa?</h2><p>Npr. 4 serije × 5 ponavljanja × 80 kg = 1.600 kg. Kod bučica se računa jedna bučica, kao što upisuješ kilograme. Vježba „po strani” broji obje strane. Djelomične serije računaju se kako si ih odradio, preskočene ne.</p>' +
     '<p>Graf vježbe prikazuje volumen tereta kad u razdoblju ima treninga s kilogramima (treninzi bez kilograma tada se ne crtaju), inače ponavljanja ili vrijeme. Tjedno opterećenje u Napretku zbraja treninge u kalendarskom tjednu, od ponedjeljka do nedjelje, i uspoređuje ih s prosjekom prethodna 4 tjedna. Vježba isprobana iz knjižnice ulazi u svoj graf, ali ne i u tjedni zbroj.</p>' +
-    '<h2>Trčanje na terenu</h2><p>Metri se računaju iz blokova treninga i tvog MAS-a (zadnji MAS test; dok ga nemaš, 4,5 m/s). Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Postotak brzine ili napora računa se od tvoje najveće brzine iz Doziranja (zadano 28,8 km/h). Gdje trening ne navodi udaljenost ili brzinu, na njegovoj stranici piše procjena.</p>' +
+    '<h2>Trčanje na terenu</h2><p>Metri i zone običnog terenskog treninga procjenjuju se iz odrađenih blokova i tada korištenog MAS-a (dok nema testa, 4,5 m/s). To nije GPS mjerenje ostvarene brzine. Zone: lagano ispod 70 % MAS-a, umjereno 70–90 %, visoko od 90 % MAS-a do 25,2 km/h, a sprint iznad toga. Postotak brzine ili napora računa se od najveće brzine iz Doziranja (zadano 28,8 km/h).</p>' +
+    '<p>Za MAS test spremaju se prijavljeni metri u 5 minuta. Prosječna brzina testa ne otkriva koliko je metara bilo iznad praga brzog trčanja ili sprinta, pa ti dijelovi ostaju nepoznati. Bez rezultata nema procijenjene udaljenosti testa. Stari trening bez spremljenih metara ne računa se ponovno iz današnjeg predloška.</p>' +
     '<p>Intenzitet treninga ovisi o udjelu brzog trčanja i sprinta, a volumen o metrima: nizak do 1,5 km, srednji do 3 km, visok iznad toga.</p>' +
     '<h2>U sezoni</h2><p>Kad u Doziranju postaviš dan utakmice (ili u tjednu označiš utakmicu), Kreni pokreće dozu za sezonu: oko 2/3 serija (s jednom serijom 2/3 ponavljanja). Uz treninge s loptom najviše jedan dodatni trening na terenu tjedno: intenzivan najbolje 4 dana prije utakmice, nikad dan prije. U tjednu s dvije utakmice samo lagani trening na terenu i bez teških nogu između utakmica.</p>' +
-    '<h2>Na što paziti?</h2><div class="icons"><figure>' + up + '<figcaption>Raste: napredak</figcaption></figure><figure>' + flat + '<figcaption>Ravno 2–3 tjedna: vrijeme za promjenu</figcaption></figure></div>' +
-    '<p>Linija koja raste znači napredak. Ravna linija dulje od 2–3 tjedna znači da je vrijeme za promjenu: koje ponavljanje, kilogram ili serija više. Lakši tjedan prije utakmice je u redu, kao i pad u tjednu s dvije utakmice.</p></div>' +
+    '<h2>Na što paziti?</h2><div class="icons"><figure>' + up + '<figcaption>Raste: više zabilježenog rada</figcaption></figure><figure>' + flat + '<figcaption>Ravno: slična količina rada</figcaption></figure></div>' +
+    '<p>Usporedi rad s izvedbom: kilogramima i ponavljanjima pri sličnoj rezervi, rezultatom istog testa te osjećajem napora i oporavka. Ravna linija sama ne traži povećanje doze. Lakši tjedan može biti dio plana; iz grafa se ne može zaključiti koliko je rada za tebe previše.</p>' +
+    '<h2>Bodovi i osjećaj napora</h2><p>LM1 bodovi su procjena prema unaprijed postavljenim faktorima. Prikazanih ±30 % zadani je raspon modela, a ne provjeren osobni interval pogreške. Model se zasad ne kalibrira iz tvojih ocjena i ne mjeri točan umor ili oporavak. Kad rezerva nije unesena, procjena koristi zadanu vrijednost za vježbu. Mišićne serije zasebno broje pripisani rad; ne mjere rast mišića ni njihovu spremnost.</p><p>Jedinice napora zasebno množe tvoju ocjenu cijelog treninga s trajanjem zaokruženim na minute. One ne mijenjaju LM1 bodove i ne govore koji je mišić dobio koliko podražaja.</p></div>' +
     '<div style="height:24px"></div></div>';
 };
 VIEWS.progress = function(){
@@ -4072,7 +4346,7 @@ VIEWS.progress = function(){
     ],
     counts:{ready:act.length, missing:Object.keys(nokg).length, way:way.length, records:prs.length},
     suggestionsHtml:act.map(sugCard).join(''), missingWeightsHtml:nokgHtml, wayHtml:way.map(sugCard).join(''),
-    weeklyHtml:weekLoadHtml(true), hasWeeklyData:weeks.some(w=>w.vl > 0 || w.m > 0),
+    weeklyHtml:weekLoadHtml(true), hasWeeklyData:weeks.some(w=>w.vl > 0 || w.m > 0 || w.partial),
     loadHint:loadParts.length ? 'Ovaj tjedan · ' + loadParts.join(' · ') : 'Kilogrami i poznati metri · zadnjih 8 tjedana',
     exercises:exerciseCharts, recordsHtml, heatHtml:heat, heatLabel:heatLabel(heat),
     consistencyHint:heatLabel(heat), ruleN:progN()
@@ -4145,7 +4419,7 @@ function rpeHtml(){
     '<input type="range" id="srpe" class="rng' + (v ? ' set' : '') + '" min="1" max="10" step="1" value="' + (v || 5) + '" style="--p:' + rpePct(v || 5) + '" aria-labelledby="rpeq" aria-valuetext="' + (v ? rpeTxt(v) : 'nije ocijenjeno') + '">' +
     '<div class="rpes"><span>1</span><b id="rpelab" aria-live="polite">' + (v ? esc(rpeTxt(v)) : 'povuci za ocjenu') + '</b><span>10</span></div></section>';
 }
-const auHtml = (v, min) => v ? 'Tvoj osjećaj: ' + v + ' × ' + Math.round(min) + ' min = <b>' + thou(v * Math.round(min)) + '</b>' : 'Ocijeni težinu: iz toga se uče tvoji bodovi.';
+const auHtml = (v, min) => v ? 'Napor × zaokruženo trajanje: ' + v + ' × ' + Math.round(min) + ' min = <b>' + thou(v * Math.round(min)) + '</b> jedinica. Ocjena ne mijenja LM1 bodove.' : 'Ocijeni osjećaj napora cijelog treninga, po želji. Ocjena se sprema zasebno od procjene LM1.';
 // a tap on the track (iOS Safari leaves the thumb where it was): the rating is the tapped spot (thumb 28 px)
 function rpeTap(t, ev){
   const r = t.getBoundingClientRect(), w = r.width - 28;
@@ -4159,24 +4433,27 @@ function rpeSet(t){
   const v=P.srpe || 0;
   t.value=String(v || 5);t.classList.toggle('set',!!v); t.style.setProperty('--p', rpePct(v || 5)); t.setAttribute('aria-valuetext', v?rpeTxt(v):'nije ocijenjeno');
   const l = document.getElementById('rpelab'); if (l) l.textContent = v?rpeTxt(v):'povuci za ocjenu';
-  const a = document.getElementById('lmau'); if (a && P._lm) a.innerHTML = auHtml(v, P._lm.min);
+  const a = document.getElementById('lmau'); if (a && P._lm) a.innerHTML = auHtml(v, Math.max(0,+P.secs || 0)/60);
 }
 // the done screen's load card: ≈ points ± band, hard sets per region, landings and metres
 function lmCardHtml(o){
+  const minutes=Math.max(0,+P.secs || 0)/60;
+  if (o.incomplete) return '<section class="lmc" aria-label="Procjena napora nije dostupna"><div class="lmh"><span>Procjena napora LM1</span></div><p class="lmx">' + (o.incompleteReason === 'field' ? 'Za bodove nisu poznati svi terenski podaci. Nepoznato brzo trčanje i sprint nisu nula.' : 'Za bodove nisu poznate sve stvarno odrađene serije, ponavljanja ili sekunde. Nedostajući rad nije nula.') + '</p><p class="lmau" id="lmau">' + auHtml(P.srpe,minutes) + '</p></section>';
   const hs = Object.keys(LM.TREG).filter(T => o.HS[T] > 0).map(T => '<span><i>' + esc(T) + '</i><b>' + lmHs(o.HS[T]) + '</b></span>');
   const more = [o.CE > 0 ? 'Doskoci <b>≈ ' + thou(o.CE) + '</b>' : '', o.m > 0 ? 'Trčanje <b>' + esc(loadFmt('m', o.m)) + '</b>' : ''].filter(Boolean);
   const dur = lmR(o.B - o.Bsets - o.Bfield);   // the gym minutes' part of B: said, so the sets' points add up
-  return '<section class="lmc" aria-label="Opterećenje treninga"><div class="lmh"><span>Opterećenje · bodovi</span><span class="tag">Procjena</span></div>' +
-    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">' + Math.round(o.min) + ' min' + (dur >= 0.5 ? ' · +' + lmPts(dur) + ' za trajanje' : '') + '</span></div>' +
-    '<p class="lmau" id="lmau">' + auHtml(P.srpe, o.min) + '</p>' +
-    (hs.length ? '<div class="lmt">Tvrde serije</div><div class="lmhs">' + hs.join('') + '</div>' : '') +
+  return '<section class="lmc" aria-label="Procjena napora treninga LM1"><div class="lmh"><span>Procjena napora LM1</span><span class="tag">Zadani model</span></div>' +
+    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">' + Math.round(minutes) + ' min' + (dur >= 0.5 ? ' · +' + lmPts(dur) + ' za trajanje' : '') + '</span></div>' +
+    '<p class="lmau" id="lmau">' + auHtml(P.srpe, minutes) + '</p>' +
+    '<p class="lmx">±30 % je zadani raspon procjene, ne provjerena osobna pogreška. Bodovi ne mjere točan umor ni oporavak.</p>' +
+    (hs.length ? '<div class="lmt">Procjena težih serija</div><div class="lmhs">' + hs.join('') + '</div>' : '') +
     (more.length ? '<p class="lmx">' + more.join(' · ') + '</p>' : '') + '</section>';
 }
 // the exercise page (Opterećenje): the points of its last session, from the stored snapshot (recomputed for older entries)
 function exLastPts(exId){
   for (const l of S.log) {
     if (!l || !Array.isArray(l.items)) continue;
-    if (l.load2Status === 'needsProfile' && l.items.some(x => x.exId === exId && !x.skipped)) return null;
+    if (['needsProfile','needsDose'].includes(l.load2Status) && l.items.some(x => x.exId === exId && !x.skipped)) return null;
     let B = 0, hit = false;
     l.items.forEach((x, i) => { if (!x || x.exId !== exId || x.skipped) return; hit = true;
       const s = l.load2 && l.load2.v === LM.MV && Array.isArray(l.load2.ex) && lmNum(l.load2.ex[i]) ? l.load2.ex[i] : itemPts(x, { at: l.at }).B; B += s; });
@@ -4188,6 +4465,16 @@ function ringSvg(frac, color){
   const C = 2 * Math.PI * 35;
   return '<svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="35" fill="none" stroke="var(--track)" stroke-width="3.5"/><circle id="ringArc" cx="38" cy="38" r="35" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(C*Math.max(0,Math.min(1,frac))).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 38 38)"/></svg>';
 }
+function syncPlayTabs(selected) {
+  app.querySelectorAll('.play-card-tabs button').forEach((button,index)=>{
+    button.setAttribute('aria-selected',String(index===selected));
+    button.tabIndex=index===selected?0:-1;
+  });
+  app.querySelectorAll('.play-card').forEach((panel,index)=>{
+    panel.setAttribute('aria-hidden',String(index!==selected));
+    panel.inert=index!==selected;
+  });
+}
 function playDoseCardsHtml(e){
   const on = P.cardIndex || 0, names = ['Upute','Cilj','Doziranje'];
   const cues = e && (e.steps || []).length ? e.steps.map(s => '<div class="bul ck">'+I.ckc+'<span>'+esc(s)+'</span></div>').join('') : '<p>Bez uputa.</p>';
@@ -4196,7 +4483,7 @@ function playDoseCardsHtml(e){
   const doseRows=checklistHtml(P.items,P,true);
   const contents = [cues,target || '<p>Bez dodatnog opisa.</p>',doseRows];
   const info = '<button type="button" class="dose-info" data-a="playDoseHelp" aria-label="Kako se bilježe serije" aria-haspopup="dialog"><span aria-hidden="true">i</span></button>';
-  return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row'+(on===2?' show-sets':'')+'" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" aria-label="'+name+'"><div class="play-card-heading"><h3>'+name+'</h3>'+(i===2?info:'')+'</div><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
+  return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" id="play-tab-'+i+'" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" tabindex="'+(i===on?0:-1)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row'+(on===2?' show-sets':'')+'" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" role="tabpanel" aria-labelledby="play-tab-'+i+'" aria-hidden="'+(i!==on)+'"'+(i===on?'':' inert')+'><div class="play-card-heading"><h3>'+name+'</h3>'+(i===2?info:'')+'</div><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
 }
 function playDoseEditorHtml(s){
   const it = s.draft, guard = s.kind==='previewDose'?{locked:[],minSets:1}:PlayerDose.locks(P,s.j), ex = S.ex[it.exId], unit = it.measure === 'time' ? 'sec' : 'reps';
@@ -4298,7 +4585,7 @@ function paintPlayer(full){
   const n = document.getElementById('ringN'); if (n && !P.paused && v.st.kind !== 'ready') n.textContent = v.big;
   const fb = document.getElementById('fbig'); if (fb) fb.textContent = v.big;
   const arc = document.getElementById('ringArc'); if (arc) { const C = 2*Math.PI*35; arc.setAttribute('stroke-dasharray', (C*Math.max(0,Math.min(1,v.ringFrac))).toFixed(1)+' '+C.toFixed(1)); }
-  const pb = document.getElementById('progbar'); if (pb) { const prog = (P.i + (v.st.dur ? 1 - remaining()/v.st.dur : 0)) / P.steps.length; pb.style.width = (prog*100).toFixed(1) + '%'; }
+  const pb = document.getElementById('progbar'); if (pb) { const prog = (P.i + (v.st.dur ? 1 - remaining()/v.st.dur : 0)) / P.steps.length; pb.style.width = (prog*100).toFixed(1) + '%'; pb.parentElement.setAttribute('aria-valuenow',String(Math.round(prog*100))); }
   if (P._lastI !== P.i) { P._lastI = P.i; render(); }
 }
 // The screen is rebuilt at every step; the demo video (or photo) of the same exercise is moved over from the old screen,
@@ -4317,7 +4604,7 @@ function playAfter(){
       let nearest=0; for(let i=1;i<row.children.length;i++) if(Math.abs(row.scrollLeft-pos(i))<Math.abs(row.scrollLeft-pos(nearest)))nearest=i;
       row.classList.toggle('show-sets',nearest===2);
       if (P.cardIndex===nearest) return; P.cardIndex=nearest;
-      app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===nearest)));
+      syncPlayTabs(nearest);
       app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===nearest)));
       savePlay();
     },{passive:true});
@@ -4344,7 +4631,7 @@ function sheetHtml(){
       '<button class="opt" data-a="addToNew" style="color:var(--accent-text);font-weight:600"><span>+ Novi protokol s ovom vježbom</span></button>';
   } else if (s.kind === 'leave') {
     const pr = top().v === 'build';
-    body = '<h3>Spremiti promjene?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">' + (pr ? 'Promjene u ovom protokolu još nisu spremljene.' : 'Promjene u ovoj vježbi još nisu spremljene.') + '</p>' +
+    body = '<h3>Spremiti promjene?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">' + (pr ? 'Promjene u ovom protokolu još nisu spremljene.' : top().v==='exEdit' ? 'Promjene u ovoj vježbi još nisu spremljene.' : 'Ovaj unos još nije spremljen.') + '</p>' +
       '<div class="stack" style="gap:10px"><button class="btn" data-a="leaveSave" style="height:52px;font-size:17px">Spremi i izađi</button><button class="btn danger" data-a="leaveDiscard">Izađi bez spremanja</button><button class="btn sec" data-a="sheetDone" style="height:48px">Nastavi uređivanje</button></div>';
   } else if (s.kind === 'progTest' || s.kind === 'progRestart') {
     body = progSheet(s);
@@ -4562,7 +4849,7 @@ const A = {
     if (S.dbState !== 'ready') { toast('Pričekaj da se tvoji podaci učitaju.'); return; }
     go({ v:'teamEntry', date:MonthPlan.valid(d.date)?d.date:dateKey(Date.now()), type:d.type==='match'?'match':'training', historyId:uid('h') });
   },
-  teamCancel: () => { if (top().v === 'teamEntry') back(); },
+  teamCancel: () => { if (top().v === 'teamEntry') A.back(); },
   teamSave: () => {
     const t=top(), form=document.getElementById('team-entry-form');
     if (t.v !== 'teamEntry' || !form || t.saving) return;
@@ -4590,7 +4877,7 @@ const A = {
     const row = historyRecord(top().id);
     if (row) go({ v:'historyEdit', id:row.historyId, original:clone(row) });
   },
-  historyCancelEdit: () => back(),
+  historyCancelEdit: () => A.back(),
   historySave: () => {
     const original = top().original, form = document.getElementById('history-edit-form');
     if (!original || !form) return;
@@ -4632,14 +4919,14 @@ const A = {
   tab: d => setTab(d.tab),
   back: () => {
     S.planAsk = false;   // the plan's restart question closes when you leave or come back to the field list
-    // leaving the builder or the exercise editor with unsaved changes asks first
-    if (S.draft && (top().v === 'build' || top().v === 'exEdit') && draftSig(S.draft) !== S.draftSig) { S.sheet = { kind:'leave' }; render(); return; }
+    captureEditForm();
+    if (unsavedChanges()) { S.sheet = { kind:'leave' }; render(); return; }
     dropDraftMedia();
     if (S.below && top().v === 'exEdit') { S.draft = S.below.draft; S.draftSig = S.below.sig; S.below = null; back(); return; }
     S.draft = null; S.draftSig = null; S.below = null; S.pick = null; back();
   },
-  leaveSave: () => { S.sheet = null; render(); if (top().v === 'build') A.savePr({}); else A.saveEx(); },
-  leaveDiscard: () => { S.sheet = null; if (S.draft) S.draftSig = draftSig(S.draft); A.back(); },
+  leaveSave: () => { S.sheet = null; render(); const saveAction={build:'savePr',exEdit:'saveEx',teamEntry:'teamSave',historyEdit:'historySave',morning:'morningSave'}[top().v]; if(saveAction)A[saveAction]({}); },
+  leaveDiscard: () => { S.sheet = null; if (S.draft) S.draftSig = draftSig(S.draft); if(EDIT_FORMS[top().v]) {top()._formBase=formValues(document.getElementById(EDIT_FORMS[top().v]));top()._formValues=top()._formBase;} A.back(); },
   dot: d => { const car = document.getElementById('car'); const c = car && car.children[+d.i]; if (c) c.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); },
   libCat: d => { S.lib.cat = d.cat; lsSet('mt.libcat', d.cat); if (top().v !== 'library') { S.tab = 'library'; S.stack = [{v:'library'}]; } render(); },
   fieldList: () => { S.planAsk = false; go({ v:'fieldList' }); },   // the inline restart question never waits for a later visit
@@ -4849,7 +5136,7 @@ const A = {
     const row=document.getElementById('play-card-row');
     if (row) row.classList.toggle('show-sets',P.cardIndex===2);
     if (row) row.scrollTo({left:row.children[P.cardIndex].offsetLeft-row.children[0].offsetLeft,behavior:stillMotion()?'auto':'smooth'});
-    app.querySelectorAll('.play-card-tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===P.cardIndex)));
+    syncPlayTabs(P.cardIndex);
     app.querySelectorAll('.play-card-dots button').forEach((b,i)=>b.setAttribute('aria-current',String(i===P.cardIndex)));
     savePlay();
   },
@@ -4903,9 +5190,11 @@ const A = {
   },
   // the file is made at once so the share sheet opens within the tap; success is reported only when it happened
   exportData: async () => {
-    let body; try { body = JSON.stringify(backupObject(), null, 1); } catch(e){ toast(EXPORT_MSG.failed, true); return; }
+    let body, snapshot;
+    try { snapshot = freshBackupObject(); body = JSON.stringify(snapshot, null, 1); }
+    catch(e){ toast(EXPORT_MSG.failed, true); return; }
     const r = await shareOrDownload('moj-trening-kopija-' + fileDate(Date.now()) + '.json', body);
-    if (r === 'shared' || r === 'downloaded') { lsSet('mt.lastBackupAt', Date.now()); try { localStorage.removeItem('mt.backupLater'); } catch(e){} }
+    if (r === 'shared' || r === 'downloaded') { lsSet('mt.lastBackupAt', Date.parse(snapshot.exportedAt)); try { localStorage.removeItem('mt.backupLater'); } catch(e){} }
     if (!FORM_VIEWS[top().v]) render();
     if (r !== 'busy') toast(EXPORT_MSG[r], r === 'failed');
   },
@@ -5132,7 +5421,7 @@ app.addEventListener('click', ev => {
   if (ev.target && ev.target.id === 'srpe') { rpeTap(ev.target, ev); return; }   // a tap on the slider rates where it was tapped
   const el = ev.target.closest('[data-a]');
   if (!el || !app.contains(el)) return;
-  if (el.dataset.a === 'sheetClose') { if (ev.target !== el) return; if (S.sheet && S.sheet.kind === 'quit') { A.quitResume(); return; } if(['playDose','playDoseHelp'].includes(S.sheet?.kind)){A.playDoseCancel();return;} S.sheet = null; render(); return; }   // player editing restores its exact pause state
+  if (el.dataset.a === 'sheetClose') { if (ev.target === el) dismissSheet(); return; }
   if (el.disabled) return;
   const fn = A[el.dataset.a];
   if (fn) { ev.preventDefault(); fn(Object.assign({}, el.dataset), el, ev); }
@@ -5171,7 +5460,16 @@ app.addEventListener('input', ev => {
     const h = document.getElementById('sec-' + t.dataset.from); if (h && val) h.textContent = val;
   }
 });
-app.addEventListener('keydown', ev => { const t = ev.target; if ((ev.key === 'Enter' || ev.key === ' ') && t.classList && t.classList.contains('body-tap')) { ev.preventDefault(); t.dispatchEvent(new MouseEvent('click', { bubbles: true })); return; } if (ev.key === 'Enter' && t.dataset && (t.id === 'topkmh' || t.dataset.ikg != null || t.dataset.dkg != null || t.dataset.isec != null)) { ev.preventDefault(); t.blur(); } });
+app.addEventListener('keydown', ev => {
+  const t=ev.target, list=t.closest('[role="tablist"]');
+  if (t.getAttribute('role')==='tab' && list && ['ArrowLeft','ArrowRight','Home','End'].includes(ev.key)) {
+    const tabs=Array.from(list.querySelectorAll('[role="tab"]:not([disabled])'));
+    const current=tabs.indexOf(t), next=ev.key==='Home'?0:ev.key==='End'?tabs.length-1:(current+(ev.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+    ev.preventDefault();const key=focusKey(tabs[next]);tabs[next].click();(focusEl(key)||tabs[next]).focus();return;
+  }
+  if ((ev.key==='Enter'||ev.key===' ') && t.classList?.contains('body-tap')) {ev.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}));return;}
+  if (ev.key==='Enter' && t.dataset && (t.id==='topkmh'||t.dataset.ikg!=null||t.dataset.dkg!=null||t.dataset.isec!=null)) {ev.preventDefault();t.blur();}
+});
 app.addEventListener('focusin', ev => { const t = ev.target; if (t.classList && t.classList.contains('kgin')) setTimeout(() => { try { t.select(); } catch(e){} }, 0); });
 app.addEventListener('change', async ev => {
   actionSeq++;
@@ -5226,7 +5524,19 @@ app.addEventListener('change', async ev => {
   dr._uploading = false;
   if (S.draft === dr) paintMedia(dr);
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.sheet) { if (S.sheet.kind === 'quit') { A.quitResume(); return; } if(['playDose','playDoseHelp'].includes(S.sheet.kind)){A.playDoseCancel();return;} S.sheet = null; render(); } });
+document.addEventListener('keydown', ev => {
+  if (ev.key==='Escape' && S.sheet) {ev.preventDefault();dismissSheet();return;}
+  const sheet=app.querySelector('.sheet');
+  if (ev.key!=='Tab' || !sheet) return;
+  const controls=Array.from(sheet.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')).filter(el=>el.getClientRects().length && !el.closest('[inert]'));
+  if (!controls.length) {ev.preventDefault();document.getElementById('sheet-h')?.focus();return;}
+  const current=controls.indexOf(document.activeElement);
+  const next=current<0?(ev.shiftKey?controls.length-1:0):(current+(ev.shiftKey?-1:1)+controls.length)%controls.length;
+  ev.preventDefault();controls[next].focus();
+});
+// Register after the input binders, so a checkpoint includes the value just typed.
+app.addEventListener('input',checkpointDraft);
+app.addEventListener('change',checkpointDraft);
 
 /* ---------- another open copy, coming back to the app, a new version ---------- */
 // a second copy (another Safari tab) saved: its data shows here as soon as nothing is open

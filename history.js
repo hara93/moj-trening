@@ -4,6 +4,7 @@
 (function(root) {
   'use strict';
   const Team=root.TeamDiary||(typeof module==='object'&&module.exports?require('./team.js'):null);
+  const History=root.HistoryModel||(typeof module==='object'&&module.exports?require('./history-model.js'):null);
   const own=(o,k)=>!!o&&Object.prototype.hasOwnProperty.call(o,k);
   const array=v=>Array.isArray(v)?v:[];
   const number=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0?v:null;
@@ -69,15 +70,12 @@
   function itemName(item) {return item.name||item.exId||'Vježba bez naziva';}
   function itemNameSource(item) {return item.nameSource==='snapshot'?'Naziv iz spremljenog zapisa':item.nameSource==='library'?'Naziv iz trenutačne knjižnice':item.nameSource==='id'?'Sačuvan je samo ID vježbe':'';}
   function rowReps(item,index) {
-    const n=attempted(item);
-    if(item.done===false&&number(item.lastReps)!=null&&n!=null&&index===n-1)return item.lastReps;
-    if(item.historyRepsUnknown===true)return null;
-    const value=array(item.repsList)[index];
-    return number(value)!=null?value:number(item.reps);
+    const row=History.recordedRows(item)?.[index];
+    return row?row.reps:null;
   }
   function rowDose(item,key,i) {
-    const values=item[key+'List'];
-    return Array.isArray(values)&&i<values.length?values[i]:item[key];
+    const row=History.recordedRows(item)?.[i];
+    return row?row[key]:null;
   }
   function rowLabel(item,i) {
     const ordinal=Array.isArray(item.setNumbers)?item.setNumbers[i]:i+1;
@@ -108,10 +106,13 @@
     const srpe=number(entry.srpe),lm=entry.load2&&typeof entry.load2==='object'?entry.load2:null;
     const computedAu=root.HistoryModel&&typeof root.HistoryModel.sessionAU==='function'?root.HistoryModel.sessionAU(entry):null;
     const au=computedAu!=null?computedAu:lm?number(lm.au):null;
-    const score=lm&&entry.load2Status!=='needsProfile'?number(lm.B):null,band=lm?number(lm.band):null;
+    const score=lm&&!['needsProfile','needsDose','needsFieldData'].includes(entry.load2Status)?number(lm.B):null,band=lm?number(lm.band):null;
     return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric(entry.kind==='team'&&entry.teamType==='match'?'Odigrano':'Trajanje',duration(entry.secs))+metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno')+
       (score!=null?metric(lm.v==='LM1'?'Procjena napora LM1':'Spremljena procjena napora',fmt(score)+(band!=null?' ± '+fmt(band):'')+' bodova'):'')+(au!=null?metric(computedAu!=null?'Napor × trajanje':'Spremljene jedinice napora',fmt(au)):'')+'</dl>'+
-      (entry.load2Status==='needsProfile'?'<p class="hy-footnote">Nakon izmjene izvedbe bodovi napora čekaju izvorni profil. Ne preuzimaju se iz današnje knjižnice.</p>':'')+
+      (entry.load2Status==='needsProfile'?'<p class="hy-footnote">Za LM1 nedostaju izvorni podaci o vježbama. Bodovi se ne preuzimaju iz današnje knjižnice.</p>':'')+
+      (entry.load2Status==='needsDose'?'<p class="hy-footnote">Za LM1 nije poznata sva stvarno odrađena izvedba. Nedostajuće serije, ponavljanja ili sekunde nisu nula.</p>':'')+
+      (entry.load2Status==='needsFieldData'?'<p class="hy-footnote">LM1 bodovi nisu prikazani jer nisu poznati svi terenski podaci. Nepoznato brzo trčanje i sprint nisu nula.</p>':'')+
+      (score!=null&&lm.v==='LM1'?'<p class="hy-footnote">LM1 koristi zadane faktore. Prikazani raspon je zadana procjena modela, ne provjerena osobna pogreška ni mjera oporavka.</p>':'')+
       (computedAu!=null?'<p class="hy-footnote">Jedinice napora: prijavljena ocjena cijelog treninga × '+(entry.kind==='team'?'stvarno trajanje u minutama.':'trajanje zaokruženo na minute.')+'</p>':'')+(entry.editedAt?'<p class="hy-footnote">Zapis je naknadno uređen.</p>':'')+'</section>';
   }
   function linkedMas(entry) {
@@ -131,19 +132,19 @@
   function numericField(label,value,attrs,help='') {return field(label,inputNumber(value),'type="text" inputmode="decimal" '+attrs,help);}
   function editItem(item,index) {
     if(!item||typeof item!=='object')return note('Detalji ove vježbe nisu dostupni za uređivanje.');
-    const timed=item.measure==='time',count=rowsCount(item),bySet=Array.isArray(item.repsList),prefix='data-history-item="'+index+'" ';
+    const timed=item.measure==='time',count=rowsCount(item),bySet=own(item,'repsList'),prefix='data-history-item="'+index+'" ';
     const rowFields=Array.from({length:count},(_,i)=>{
       const common=prefix+'data-history-set="'+i+'" ';
       const failedLast=item.done===false&&number(item.lastReps)!=null&&i===attempted(item)-1;
       return '<div class="hy-set-edit"><b>Serija '+rowLabel(item,i)+(failedLast?' · zadnja pokušana':'')+'</b><div class="hy-form-grid">'+(!timed?(failedLast?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):numericField('Ponavljanja',rowReps(item,i),common+'data-history-field="reps"')):'')+
-        (Array.isArray(item.kgList)?numericField('Teret serije (kg)',rowDose(item,'kg',i),common+'data-history-field="kg"'):'')+
-        (timed&&Array.isArray(item.secList)?numericField('Vrijeme serije (s)',rowDose(item,'sec',i),common+'data-history-field="sec"'):'')+
+        (own(item,'kgList')?numericField('Teret serije (kg)',rowDose(item,'kg',i),common+'data-history-field="kg"'):'')+
+        (timed&&own(item,'secList')?numericField('Vrijeme serije (s)',rowDose(item,'sec',i),common+'data-history-field="sec"'):'')+
         numericField(timed?'Rezerva u sekundama':'RIR',array(item[timed?'sirList':'rirList'])[i],common+'data-history-field="'+(timed?'sir':'rir')+'"','Prazno znači da nije zabilježeno.')+'</div></div>';
     }).join('');
     return '<fieldset class="hy-card hy-edit-item"><legend>'+esc(itemName(item))+'</legend>'+(itemNameSource(item)?'<p class="hy-footnote">'+esc(itemNameSource(item))+'</p>':'')+'<p class="hy-muted">Serije u izvornom zapisu: '+fmt(item.sets,0)+(item.sides?' · po strani':'')+'</p><div class="hy-form-grid">'+
       numericField('Odrađene serije',completed(item),prefix+'data-history-field="setsDone"','Cijeli broj; 0 znači preskočeno.')+
-      (timed?(Array.isArray(item.secList)?'':numericField('Vrijeme po seriji (s)',item.sec,prefix+'data-history-field="sec"')):!bySet?numericField('Ponavljanja po seriji',item.reps,prefix+'data-history-field="reps"'):'')+
-      (Array.isArray(item.kgList)?'':numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.'))+
+      (timed?(own(item,'secList')?'':numericField('Vrijeme po seriji (s)',item.sec,prefix+'data-history-field="sec"')):!bySet?numericField('Ponavljanja po seriji',item.reps,prefix+'data-history-field="reps"'):'')+
+      (own(item,'kgList')?'':numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.'))+
       (item.done===false&&!timed&&!count?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):'')+'</div>'+
       (rowFields?'<details class="hy-details"><summary>Podaci po serijama</summary>'+rowFields+(count===64?'<p class="hy-muted">Uređivanje prikazuje prvih 64 serije. Ostale se čuvaju.</p>':'')+'</details>':'')+'</fieldset>';
   }
@@ -151,7 +152,7 @@
     const knownLoad=entry.load&&typeof entry.load==='object'?entry.load:null,load=knownLoad||{};
     const fields=[['m','Ukupna udaljenost (m)'],['hsr','Brzo trčanje (m)'],['spr','Sprint (m)'],['min','Radno vrijeme (min)']];
     const zones=array(load.zones);
-    return '<fieldset class="hy-card"><legend>Podaci terena</legend>'+(!knownLoad?'<p class="hy-copy">Ovaj zapis nema ranije sačuvane terenske podatke. Upiši samo ono što poznaješ; ostalo ostavi prazno.</p>':'')+'<p class="hy-copy">Radno vrijeme odnosi se na dionice; ukupno trajanje sesije uređuje se iznad.</p><div class="hy-form-grid">'+fields.map(([id,label])=>numericField(label,load[id],'data-history-load="'+id+'"')).join('')+'</div>'+
+    return '<fieldset class="hy-card"><legend>Podaci terena</legend>'+(!knownLoad?'<p class="hy-copy">Ovaj zapis nema ranije sačuvane terenske podatke. Upiši samo ono što poznaješ; ostalo ostavi prazno.</p>':'')+'<p class="hy-copy">Radno vrijeme odnosi se na dionice; ukupno trajanje sesije uređuje se iznad.</p>'+(entry.refId==='mas-test-5-min'?'<p class="hy-copy">Ispravak ukupnih metara ovog 5-minutnog testa ažurira i povezani MAS rezultat za buduće intervale. Upiši 600–2400 cijelih metara uz 5 min rada. Poznati rezultat zadrži ili izbriši cijeli povezani zapis.</p>':'')+'<div class="hy-form-grid">'+fields.map(([id,label])=>numericField(label,load[id],'data-history-load="'+id+'"')).join('')+'</div>'+
       (zones.length===4?'<details class="hy-details"><summary>Uredi spremljene zone</summary><div class="hy-form-grid">'+['Lagano (m)','Umjereno (m)','Visoko (m)','Sprint (m)'].map((label,i)=>numericField(label,zones[i],'data-history-load="zones" data-history-zone="'+i+'"')).join('')+'</div></details>':'')+
       '<p class="hy-footnote">Sprint mora biti dio brzog trčanja, a brzo trčanje dio ukupnih metara. Promjena metara uklanja stare zone ako ih ne uskladiš zasebno.</p></fieldset>';
   }
@@ -226,7 +227,11 @@
             const label={reps:'Ponavljanja',kg:'Teret serije',sec:'Vrijeme serije',rir:'RIR',sir:'Rezerva u sekundama'}[field];
             const value=numeric(raw,label,{integer:field==='reps',max:field==='sec'?86400:['reps','kg'].includes(field)?10000:40,optional:field!=='reps'});
             const mapKey=index+':'+key;
-            if(!arrayChanges.has(mapKey))arrayChanges.set(mapKey,{index,key,values:Array.isArray(item[key])?item[key].slice():key==='repsList'?Array.from({length:rowsCount(item)},(_,i)=>rowReps(item,i)):[]});
+            if(!arrayChanges.has(mapKey)){
+              const values=own(item,key)?array(item[key]).slice():key==='repsList'?Array.from({length:rowsCount(item)},(_,i)=>rowReps(item,i)):[];
+              while(values.length<rowsCount(item))values.push(null);
+              arrayChanges.set(mapKey,{index,key,values});
+            }
             const change=arrayChanges.get(mapKey);while(change.values.length<=pos)change.values.push(null);change.values[pos]=value;
           } else {
             if(!['setsDone','reps','kg','sec','lastReps'].includes(field))throw new Error('Nepoznato polje vježbe.');

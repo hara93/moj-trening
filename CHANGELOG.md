@@ -1,5 +1,16 @@
 # Promjene
 
+## 1.14.1 — 5. 11. 2026.
+
+- MAS test i povezani trening koriste istu prijavljenu udaljenost, uključujući naknadni ispravak u povijesti. Bez rezultata nema izmišljenih metara; prosječna brzina ne stvara pretpostavljene metre sprinta ili brzinskih zona. Raniji pogrešan izračun ispravlja se samo uz pouzdano povezan rezultat testa i bez prepisivanja ručnih ispravaka.
+- Stariji terenski zapisi bez sačuvane udaljenosti više ne dobivaju metre prema današnjem predlošku ili MAS-u. Povijest, tjedni grafovi i bodovi dosljedno označavaju nepotpune podatke.
+- Izvoz sigurnosne kopije uzima najnovije spremljene treninge i postavke, uključujući promjene iz druge otvorene kartice. Nepoznate vrijednosti u uvezenim serijama zadržavaju svoje mjesto i ne nadopunjavaju se planiranom dozom.
+- Povratak preglednikom prolazi zaštitu nespremljenih promjena. Otvoreni nacrt može se vratiti nakon osvježavanja, a novija spremljena izmjena u drugoj kartici ostaje zaštićena.
+- Brisanje ili zamjena slike u kopiji vježbe čuva sliku dok je koristi druga spremljena vježba.
+- Kartice treninga podržavaju prebacivanje tipkovnicom, a čitači zaslona dobivaju aktualan napredak odbrojavanja. Fokus ostaje unutar otvorenog prozora pomoći.
+- Objašnjenja razlikuju volumen rada, procijenjene bodove i subjektivni napor. Bodovi se ne predstavljaju kao naučena osobna mjera ili dokaz napretka. Nepotpuni podaci ne daju privid potpunog izračuna. Subjektivni napor koristi isto zaokruživanje trajanja u završnom pregledu i povijesti.
+- Regresijski testovi i pregledničke provjere spremljeni su uz aplikaciju. GitHub ih pokreće za promjene glavne grane i prijedloge izmjena, u Chromiumu i WebKitu.
+
 ## 1.14.0 — 4. 11. 2026.
 
 - **Doziranje** prikazuje svaku seriju u svojem retku, u knjižnici prije pokretanja i u aktivnom treningu. U protokolu možeš odmah pregledati cijeli popis. Kvačica potvrđuje aktivnu seriju, a jednostrani dio izdržaja ostaje označen kao djelomična izvedba.

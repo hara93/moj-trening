@@ -29,7 +29,9 @@
   }
   function rowValue(x, key, index) {
     var values = x[key+'List'];
-    var value = Array.isArray(values) && index < values.length ? values[index] : x[key];
+    // An explicitly recorded list is authoritative, including its gaps or a
+    // missing tail. Only old uniform records without a list use the scalar dose.
+    var value = has(x,key+'List') ? Array.isArray(values) ? values[index] : null : x[key];
     return finite(value) && value >= 0 ? value : null;
   }
   function recordedRows(x, assumePlanned) {
@@ -38,11 +40,12 @@
     if (n === null) return null;
     return Array.from({length:n},function(_,i) {
       var failed = x.done === false && i === n-1 && finite(x.lastReps);
-      var sides = Array.isArray(x.sideCounts) && i<x.sideCounts.length ? x.sideCounts[i] : x.sides?2:1;
+      var sides = has(x,'sideCounts') ? Array.isArray(x.sideCounts) ? x.sideCounts[i] : null : x.sides?2:1;
       return { number:Array.isArray(x.setNumbers)?x.setNumbers[i]:i+1,
         sides:int(sides,1,x.sides?2:1)?sides:null, kg:rowValue(x,'kg',i),
         reps:x.historyRepsUnknown?null:failed?x.lastReps:rowValue(x,'reps',i), sec:rowValue(x,'sec',i),
-        failed:failed, rir:failed?0:Array.isArray(x.rirList)?x.rirList[i]:null, sir:Array.isArray(x.sirList)?x.sirList[i]:null };
+        failed:failed, rir:failed?0:Array.isArray(x.rirList)&&finite(x.rirList[i])&&x.rirList[i]>=0&&x.rirList[i]<=40?x.rirList[i]:null,
+        sir:Array.isArray(x.sirList)&&finite(x.sirList[i])&&x.sirList[i]>=0&&x.sirList[i]<=40?x.sirList[i]:null };
     });
   }
   function performedSets(x) {
@@ -67,8 +70,8 @@
     out.complete=['m','hsr','spr','min'].every(function(k){return out[k]!==null;});
     return freeze(out);
   }
-  function effortStatus(entry){return entry && entry.load2Status==='needsProfile'?'needsProfile':entry && plain(entry.load2)?'recorded':'missing';}
-  function sessionAU(entry){return entry&&entry.kind==='team'?T.sessionAU(entry):entry && finite(entry.srpe) && entry.srpe>=1 && entry.srpe<=10 && finite(entry.secs) && entry.secs>=0 ? entry.srpe*Math.round(round(entry.secs/60)) : null;}
+  function effortStatus(entry){return entry && ['needsProfile','needsDose','needsFieldData'].indexOf(entry.load2Status)!==-1?entry.load2Status:entry && plain(entry.load2)?'recorded':'missing';}
+  function sessionAU(entry){return entry&&entry.kind==='team'?T.sessionAU(entry):entry && finite(entry.srpe) && entry.srpe>=1 && entry.srpe<=10 && finite(entry.secs) && entry.secs>=0 ? entry.srpe*Math.round(entry.secs/60) : null;}
   function failure(errors){return freeze({ok:false,errors:errors});}
   function transaction(entry,patch,kind){
     var errors=[],changes=[],warnings=[];
@@ -217,14 +220,15 @@
     }
     if(doseChanged||fieldChanged||timeChanged){
       var summary=fieldSummary(out),lm=out.load2;
-      if(kind==='field'&&plain(lm)&&lm.v==='LM1'&&summary.complete&&finite(out.secs)&&out.secs>=0&&!Array.isArray(out.items)){
+      if(kind==='field'&&(!plain(lm)||lm.v==='LM1')&&summary.complete&&finite(out.secs)&&out.secs>=0&&!Array.isArray(out.items)){
         var B=3.5*summary.min+2*summary.m/100+2*summary.hsr/100+0.5*summary.spr/10;
+        lm=plain(lm)&&lm.v==='LM1'?lm:{v:'LM1'};out.load2=lm;
         lm.B=round(B);lm.Bsets=0;lm.Bfield=round(B);lm.band=round(B*0.3);lm.min=round(out.secs/60);lm.m=round(summary.m);
         delete out.load2Status;
       }else if(kind!=='field'&&!doseChanged&&plain(lm)&&lm.v==='LM1'&&finite(lm.Bsets)&&lm.Bsets>=0&&finite(lm.Bfield)&&lm.Bfield>=0&&finite(out.secs)&&out.secs>=0&&
         (Array.isArray(entry.items)||Array.isArray(lm.ex))&&
         !(Array.isArray(entry.items)&&Array.isArray(lm.ex)&&entry.items.length!==lm.ex.length)){
-        // LM1 stored these calibrated subtotals already rounded to 0.1. Retain
+        // LM1 stored these model subtotals already rounded to 0.1. Retain
         // them as recorded; only its documented one-point-per-gym-minute term
         // changes. No exercise factors, reserve or novelty are reconstructed.
         var gymItems=Array.isArray(entry.items)?entry.items.length:lm.ex.length;
@@ -232,8 +236,13 @@
         lm.min=round(out.secs/60);lm.B=round(subtotal+(gymItems?out.secs/60:0));lm.band=round(lm.B*0.3);
         delete out.load2Status;
       }else{
-        delete out.load2;out.load2Status='needsProfile';
-        warnings.push('Bodovi napora čekaju izvorni profil; ne računaju se prema današnjoj knjižnici.');
+        var unknownDose=Array.isArray(out.items)&&out.items.some(function(item){
+          if(item && item.skipped)return false;
+          var rows=recordedRows(item);
+          return !rows||rows.some(function(row){return row.sides===null||(item.measure==='time'?row.sec===null:row.reps===null);});
+        });
+        delete out.load2;out.load2Status=kind==='field'&&!summary.complete?'needsFieldData':unknownDose?'needsDose':'needsProfile';
+        warnings.push(out.load2Status==='needsFieldData'?'Za bodove nedostaju terenski podaci; nepoznata raspodjela brzine nije nula.':out.load2Status==='needsDose'?'Za bodove nije poznata sva stvarno odrađena izvedba.':'Bodovi napora čekaju izvorne podatke o vježbama; ne računaju se prema današnjoj knjižnici.');
       }
     }
     if((rpeChanged||timeChanged||fieldChanged)&&plain(out.load2)){

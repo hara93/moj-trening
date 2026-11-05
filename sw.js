@@ -1,4 +1,4 @@
-const CACHE = 'mt-v1.14.0';
+const CACHE = 'mt-v1.14.1';
 const SHELL = ['./', './index.html', './style.css', './dashboard.css', './history.css', './player-dose.css', './starting-load.css', './today.css', './progress.css', './team.css', './hash.js', './data.js', './seed-history.js', './media.js', './pitch.js', './loadfx.js', './body.js', './month-plan.js', './muscle-work.js', './dashboard.js', './history-store.js', './team.js', './history-model.js', './history.js', './player-dose.js', './starting-load.js', './today-model.js', './today-view.js', './progress-view.js', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
 // pictures, thumbnails and font files stay from one version to the next (a new version must not take away, e.g. offline at
 // the gym, what was already shown); each is saved the first time a screen shows it

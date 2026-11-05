@@ -1,0 +1,67 @@
+name: Provjere aplikacije
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  logic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Izračuni, povijest i stanje aplikacije
+        run: node --test tools/check-*.cjs
+      - name: Isporučene vježbe i model opterećenja
+        run: node tools/build/check_load.cjs .
+      - name: Sintaksa JavaScripta
+        run: |
+          for file in *.js tools/browser/*.cjs; do node --check "$file"; done
+  browser:
+    needs: logic
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      MT_TEST_OUTPUT: ${{ runner.temp }}/moj-trening-${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/browser/package-lock.json
+      - run: npm ci --prefix tools/browser --ignore-scripts --no-audit --no-fund
+      - run: npx --prefix tools/browser playwright install --with-deps ${{ matrix.browser }}
+      - name: Cijeli trening i postojeće funkcije
+        run: node tools/browser/whole-app.cjs live ${{ matrix.browser }}
+      - name: Danas i ekipni dnevnik
+        run: node tools/browser/today.cjs ${{ matrix.browser }}
+      - name: Serije, početna težina i Napredak
+        run: |
+          node tools/browser/checklist.cjs ${{ matrix.browser }}
+          node tools/browser/checklist.cjs just-mixed ${{ matrix.browser }}
+          node tools/browser/starting-load.cjs ${{ matrix.browser }}
+          node tools/browser/progress.cjs ${{ matrix.browser }}
+      - name: Ispravci iz analize
+        run: |
+          node tools/browser/storage.cjs ${{ matrix.browser }}
+          node tools/browser/field-results.cjs ${{ matrix.browser }}
+          node tools/browser/navigation.cjs ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: provjere-${{ matrix.browser }}
+          path: ${{ env.MT_TEST_OUTPUT }}
+          if-no-files-found: ignore

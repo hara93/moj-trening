@@ -1,0 +1,7 @@
+{
+  "name": "moj-trening-browser-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Disposable browser regression checks, separate from the application",
+  "devDependencies": { "playwright": "1.62.1" }
+}

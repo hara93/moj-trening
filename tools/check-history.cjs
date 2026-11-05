@@ -75,7 +75,7 @@ test('field zones derive only exact aggregate sums and reject inconsistent total
  assert.equal(H.edit(field(),{load:{zones:[1000000,1000000,0,0]}}).ok,false);
 });
 test('partial or legacy field loads remain unknown and cannot fabricate current-template values or reinterpret a different LM',()=>{
- const old=field(),r=H.edit(old,{load:{hsr:null}});assert.equal(r.ok,true);assert.equal(r.entry.load.hsr,undefined);assert.equal(r.entry.fieldLoadStatus,'partial');assert.equal(r.entry.load2,undefined);assert.equal(r.entry.load2Status,'needsProfile');
+ const old=field(),r=H.edit(old,{load:{hsr:null}});assert.equal(r.ok,true);assert.equal(r.entry.load.hsr,undefined);assert.equal(r.entry.fieldLoadStatus,'partial');assert.equal(r.entry.load2,undefined);assert.equal(r.entry.load2Status,'needsFieldData');
  const summary=H.fieldSummary(r.entry);assert.equal(summary.hsr,null);assert.equal(summary.m,3000);assert.equal(summary.complete,false);
  const totalCleared=H.edit(old,{load:{m:null}});assert.equal(totalCleared.ok,true);assert.equal(H.fieldSummary(totalCleared.entry).m,null);assert.equal(totalCleared.entry.load.zones,undefined);assert.equal(totalCleared.entry.load2,undefined);
  const legacy={kind:'field',at:100,name:'Starije'};const renamed=H.edit(legacy,{name:'Ispravak'});assert.equal(renamed.entry.load,undefined);assert.equal(renamed.entry.fieldLoadStatus,'partial');assert.equal(H.fieldSummary(renamed.entry).m,null);

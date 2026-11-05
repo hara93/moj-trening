@@ -1,0 +1,163 @@
+{
+  "kind": "moj-trening-backup",
+  "v": 1,
+  "app": "1.10.0",
+  "exportedAt": "2026-11-04T11:03:00.000Z",
+  "log": [
+    {
+      "name": "Primjer treninga · provjera",
+      "kind": "protocol",
+      "refId": "pmw209280f41o6",
+      "at": 1793790180000,
+      "secs": 180,
+      "items": [
+        {
+          "exId": "emw2092804jnwc",
+          "measure": "sets",
+          "sets": 3,
+          "reps": 10,
+          "sec": 30,
+          "kg": 25,
+          "sides": false,
+          "done": true,
+          "setsDone": 1,
+          "rirList": [
+            2
+          ]
+        }
+      ],
+      "muscleWork": [
+        [
+          "mw1",
+          "emw2092804jnwc",
+          "Primjer potiska · provjera",
+          "Snaga",
+          0,
+          1,
+          1,
+          1,
+          8192,
+          [],
+          3,
+          1,
+          1
+        ]
+      ],
+      "load2": {
+        "v": "LM1",
+        "B": 24.3,
+        "band": 7.3,
+        "Bsets": 21.3,
+        "Bfield": 0,
+        "min": 3,
+        "SL": {
+          "L": 0,
+          "U": 7.89,
+          "C": 0
+        },
+        "CE": 0,
+        "ECC": 0,
+        "spr": 0,
+        "m": 0,
+        "HS": {
+          "Potisak": 1,
+          "Ruke": 0.5
+        },
+        "ex": [
+          21.3
+        ],
+        "tap": 1,
+        "zad": 0
+      }
+    }
+  ],
+  "settings": {
+    "sound": true,
+    "switchSec": 5,
+    "transSec": 10,
+    "planDates": {
+      "2026-11-04": [
+        {
+          "kind": "protocol",
+          "id": "pmw209280f41o6",
+          "to": "2026-11-04",
+          "extra": true
+        }
+      ],
+      "2026-11-05": [
+        {
+          "kind": "protocol",
+          "id": "pmw209280f41o6",
+          "to": "2026-11-05",
+          "extra": true
+        }
+      ]
+    }
+  },
+  "exercises": {
+    "emw2092804jnwc": {
+      "name": "Primjer potiska · provjera",
+      "alt": "",
+      "cat": "Snaga",
+      "phase": null,
+      "cord": "",
+      "zones": [
+        "Prsa",
+        "Ruke"
+      ],
+      "muscles": {
+        "prime": [
+          "front_chest"
+        ],
+        "sec": [
+          "back_triceps",
+          "front_shoulders"
+        ]
+      },
+      "equip": [],
+      "measure": "sets",
+      "sec": 30,
+      "sets": 3,
+      "reps": 10,
+      "rest": 60,
+      "kg": 25,
+      "sides": false,
+      "equipment": "",
+      "feel": "",
+      "steps": [],
+      "mistakes": [],
+      "note": "",
+      "media": null,
+      "mediaType": null,
+      "fav": false,
+      "order": 500,
+      "source": null,
+      "sourceTitle": null,
+      "id": "emw2092804jnwc"
+    }
+  },
+  "protocols": {
+    "pmw209280f41o6": {
+      "id": "pmw209280f41o6",
+      "name": "Primjer treninga · provjera",
+      "desc": "",
+      "items": [
+        {
+          "exId": "emw2092804jnwc",
+          "measure": "sets",
+          "sec": 30,
+          "sets": 3,
+          "reps": 10,
+          "rest": 60,
+          "sides": false,
+          "kg": 25
+        }
+      ],
+      "updatedAt": 1793790180000,
+      "home": null,
+      "tag": null,
+      "days": []
+    }
+  },
+  "field": {}
+}

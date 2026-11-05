@@ -79,7 +79,7 @@ test('saved LM1 and current session AU have distinct labels; invalidated LM is n
   const e={...entry(),load2:{v:'LM1',B:123,band:36.9,au:18}};
   const html=UI.render({mode:'detail',entry:e});assert.match(html,/Procjena napora LM1/);assert.match(html,/123 ± 36,9 bodova/);assert.match(html,/Napor × trajanje/);
   const invalid=UI.render({mode:'detail',entry:{...e,load2:undefined,load2Status:'needsProfile'}});
-  assert.match(invalid,/bodovi napora čekaju izvorni profil/);assert.match(invalid,/Napor × trajanje/);assert(!invalid.includes('123 ±'));
+  assert.match(invalid,/nedostaju izvorni podaci o vježbama/);assert.match(invalid,/Napor × trajanje/);assert(!invalid.includes('123 ±'));
 });
 
 test('exercise trials remain visible; standalone tests, missing rows and dynamic text stay safe',()=>{
