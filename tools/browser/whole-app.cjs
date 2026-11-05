@@ -39,10 +39,9 @@ async function basics(p){
   await home(p); assert.equal(await A(p,'monthOpen').count(),0);
   assert.equal(await p.locator('.tab').count(),3); assert.equal(await p.locator('.tab[data-tab="progress"]').count(),0);
   let count=(await store(p)).log.length;
-  const cards=p.locator('.home-categories .hcard');assert.equal(await cards.count(),5);
-  assert.equal(await p.locator('#car,#dots').count(),0);
-  await cards.filter({hasText:'Kondicija'}).focus();await p.keyboard.press('Enter');
-  await by(p,'openField',fieldId).first().waitFor();await noOverflow(p,'field list');
+  const dots=p.locator('#dots .dot'),cards=p.locator('#car .hcard');assert.equal(await dots.count(),5);
+  await dots.nth(3).focus();await p.keyboard.press('Enter');await p.waitForFunction(()=>document.querySelector('#dots [data-i="3"]').getAttribute('aria-current')==='true');
+  await cards.nth(3).click();await by(p,'openField',fieldId).first().waitFor();await noOverflow(p,'field list');
   await home(p);const lib=p.getByRole('button',{name:'Knjižnica vježbi',exact:true});await lib.focus();await p.keyboard.press('Enter');
   const q=p.locator('#libq');await q.fill('xzz-test-no-matches');assert.equal(await p.locator('#liblist [data-a="openEx"]').count(),0);
   await q.fill('bench');assert.ok(await p.locator('#liblist [data-a="openEx"]').count()>0);
@@ -56,7 +55,7 @@ async function basics(p){
   record('home-library-dashboard-progress',{cards:5,device:'375px',keyboard:'Home card & library via Enter',search:'empty + partial + filter clear',detailSlides:3});
 }
 async function fieldCatalogue(p){
-  await home(p);await p.locator('.home-categories [data-a="fieldList"]').click();
+  await home(p);await p.locator('#car [data-a="fieldList"]').click();
   await p.screenshot({path:path.join(artifacts,'field-catalogue-375.png')});
   await p.setViewportSize({width:320,height:812});await p.screenshot({path:path.join(artifacts,'field-catalogue-320.png')});await p.setViewportSize({width:375,height:812});
   const filter=(id)=>p.locator('[data-a="fieldCategory"][data-cat="'+id+'"]');
@@ -77,7 +76,7 @@ async function fieldCatalogue(p){
   const still=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.settings')).preFrom||0);assert.equal(still,previous);
   assert.match(shown,/1 od 14/);assert.ok(await A(p,'planReset').isVisible());record('plan-reset-refused',{storageUnchanged:true,UIshowsReset:false,display:shown.split('\n').map(v=>v.trim()).filter(v=>v&&(/14|termina|tjedan/.test(v))).slice(0,3)});
   await p.evaluate(()=>{Storage.prototype.setItem=window.auditSettingsSet;});
-  await home(p);await p.locator('.home-categories [data-a="fieldList"]').click();await p.locator('.field-modes [data-mode="plan"]').click();
+  await home(p);await p.locator('#car [data-a="fieldList"]').click();await p.locator('.field-modes [data-mode="plan"]').click();
   await A(p,'planAsk').click();await A(p,'planReset').click();assert.equal(await A(p,'planAsk').count(),0);
   assert.ok((await store(p)).log.some(l=>l.historyId==='audit-plan1a'));
   await p.locator('.field-modes [data-mode="catalogue"]').click();assert.equal(await filter('all').getAttribute('aria-pressed'),'true');
@@ -143,7 +142,7 @@ async function planner(p,pr){
 }
 async function toProtocol(p,pr){await home(p);await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await p.locator('.tile[data-a="tab"][data-tab="protocols"]').click();await by(p,'openPr',pr.id).click();await A(p,'startPr').click();}
 async function startField(p){
-  await home(p);await p.locator('.home-categories [data-a="fieldList"]').click();await by(p,'openField',fieldId).first().click();await p.locator('[data-a="startField"][data-dose="full"]').click();await A(p,'quitPlay').waitFor();
+  await home(p);await p.locator('#car [data-a="fieldList"]').click();await by(p,'openField',fieldId).first().click();await p.locator('[data-a="startField"][data-dose="full"]').click();await A(p,'quitPlay').waitFor();
 }
 async function fieldFlow(p,ctx){
   await startField(p);await A(p,'playSettings').click();
@@ -282,10 +281,7 @@ async function programNegative(p){
  await advance(p,2);
  await by(p,'progRestartAsk',id).first().click();await settingsBlocked(p,true);const before=await p.evaluate(()=>localStorage.getItem('mt.settings'));
  await by(p,'progRestart',id).click();assert.ok(await by(p,'progRestart',id).isVisible());assert.equal(await p.evaluate(()=>localStorage.getItem('mt.settings')),before);await settingsBlocked(p,false);await by(p,'progRestart',id).click();assert.equal(await p.locator('.pgrid .pcell.done').count(),0);
- await home(p);
- const makeups=p.locator('.home-plan-more');
- if(await makeups.count()&&!await makeups.evaluate(node=>node.open))await makeups.locator('summary').click();
- const skip=A(p,'skipSlot').first();await skip.waitFor();const expected=await p.evaluate(()=>localStorage.getItem('mt.skips'));await settingsBlocked(p,true);await skip.click();
+ await home(p);const skip=A(p,'skipSlot').first();await skip.waitFor();const expected=await p.evaluate(()=>localStorage.getItem('mt.skips'));await settingsBlocked(p,true);await skip.click();
  assert.equal(await p.evaluate(()=>localStorage.getItem('mt.skips')),expected);assert.ok(await skip.isVisible());assert.match(await p.locator('.toast').innerText(),/nije spremljena/i);await settingsBlocked(p,false);await skip.click();assert.ok(!await skip.isVisible());
  record('rejected-program-and-skip',{programRetry:true,priorLogRetained:!!(await store(p)).log.find(l=>l.historyId==='audit-pra'),skipRetry:true});
 }

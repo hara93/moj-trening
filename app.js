@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.15.1';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -1336,7 +1336,7 @@ function matchBox(note, i, mg){
     : lf ? '<button class="bt ghost" data-a="openField" data-id="' + esc(lf.f.id) + '">' + esc(lf.f.name_hr) + ' · ' + esc(fieldMin(lf.f)) + ' min</button>' : '';
   return '<div class="lift warn" style="margin:' + (mg || '0') + '"><div class="why" style="color:var(--text-body)">' + esc(note) + '</div>' + (bt ? '<div class="acts" style="grid-template-columns:1fr">' + bt + '</div>' : '') + '</div>';
 }
-function weekHtml(compact){
+function weekHtml(){
   if (S.dbState !== 'ready') return '';
   const now = Date.now(), ws = weekStart(now), today = dayIdx(now), wm = weekMatches(ws);
   const cur = planSlots(), st = weekStatus(ws, weekPlan(ws, cur)); notePlan(ws, st.slots);
@@ -1363,8 +1363,7 @@ function weekHtml(compact){
   const line = st.planned || st.slots.length
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today && s.done) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
-  const detail = rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '';
-  return strip + '<p class="week-summary">' + esc(line) + '</p>' + (compact && detail ? '<details class="home-plan-more"' + (S.homePlanOpen ? ' open' : '') + '><summary>' + (todo.length ? 'Danas u planu · ' + todo.length : 'Propušteni termini') + '</summary>' + detail + '</details>' : detail);
+  return strip + '<p class="week-summary">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
 }
 
 /* ---------- views ---------- */
@@ -1395,14 +1394,20 @@ VIEWS.home = function(){
     { k:'kondicija', t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
     { k:'knjiznica', t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }
   ].filter(Boolean);
-  return HomeView.render({
-    topbarHtml:topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING'),
-    infoIcon:I.info,
-    dateLabel:new Date().toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}),
-    daily:S.dbState === 'ready' ? dailyInput(Date.now()) : null,
-    stateHtml:stateNote(), weekHtml:weekHtml(true), dataHintHtml:dataHint(),
-    cards:cards.map(c=>({...c,iconHtml:pathIcon(c.ic,24)})), last,lastDate:last?shortDate(last.at):''
-  });
+  const attrs = o => Object.keys(o).map(k => (k==='a' ? 'data-a' : 'data-'+k) + '="' + esc(o[k]) + '"').join(' ');
+  // a card's cover picture (media.js EXCOVERS, portrait) fills the whole card under the same scrim; without one, or when it cannot
+  // load (offline before it was ever shown): colour and icon
+  const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" onerror="this.remove()" src="' + esc(covers[c.k]) + '">' : '';
+  return '<div class="view home" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
+    topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
+    '<div class="home-heading"><h1 class="greet">Bok, Tomislav</h1></div>' +
+    weekHtml() + dataHint() +
+    '<div class="carousel" id="car" aria-label="Kategorije treninga">' +
+      cards.map(c => '<button class="hcard' + (cover(c) ? ' cv' : '') + '" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span>' + cover(c) + '<span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
+    '</div>' +
+    '<div class="dots" id="dots" role="group" aria-label="Odaberi karticu">' + cards.map((c,i) => '<button class="dot" data-a="dot" data-i="'+i+'" aria-label="'+esc(c.t)+'"'+(i===0?' aria-current="true"':'')+'><i></i></button>').join('') + '</div>' +
+    (last ? '<p class="sub" style="text-align:center;margin:8px 0 0">Zadnji trening: ' + esc(last.name) + ' · ' + esc(shortDate(last.at)) + '</p>' : '') +
+  '</div>';
 };
 
 // A planned slot uses today's protocol. Completed work always uses the session's saved attribution.
@@ -4613,14 +4618,6 @@ function sheetHtml(){
   const s = S.sheet;
   let body = s.kind === 'credit' ? creditSheet(s) : '';
   if (s.kind === 'startingLoad') body=startingLoadHtml(s);
-  else if (s.kind === 'homeGuide') {
-    body='<h3>Gdje krenuti?</h3><div class="home-guide">'+
-      [[I.tabGrid,'Moj pregled','Otvori Danas za prijedlog prema povijesti i utakmicama. Ovdje su i planer i napredak.'],
-       [I.tabPlay,'Početna','Pogledaj današnji prijedlog, ispuni jutarnju provjeru ili odaberi kategoriju treninga.'],
-       [I.tabLib,'Knjižnica','Pronađi vježbu, pogledaj izvedbu ili je dodaj u svoj protokol.']].map(([icon,title,hint])=>
-        '<div><span aria-hidden="true">'+icon+'</span><div><b>'+title+'</b><p>'+hint+'</p></div></div>').join('')+
-      '</div><button class="btn sec" data-a="sheetDone">U redu</button>';
-  }
   else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
@@ -4760,6 +4757,14 @@ function sheetHtml(){
 /* ---------- after-render hooks ---------- */
 function after(t){
   refreshDailyAtMidnight(t);
+  if (t.v === 'home') {
+    const car = document.getElementById('car'), dots = document.getElementById('dots');
+    if (car && dots) car.addEventListener('scroll', () => {
+      const w = car.firstElementChild ? car.firstElementChild.getBoundingClientRect().width + 10 : 1;
+      const i = Math.round(car.scrollLeft / w);
+      dots.querySelectorAll('.dot').forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
+    }, { passive: true });
+  }
   if (t.v === 'ex') {
     // the card you were on comes back (no animation), the dots and S.exTab follow the swipe; a card scrolled inside keeps its place
     const r = document.getElementById('swrow'), dots = document.getElementById('swdots');
@@ -4784,7 +4789,6 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
-  homeGuide: () => {S.sheet={kind:'homeGuide'};render();},
   todayOpen: () => go({v:'today'}),
   morningOpen: (d={}) => {
     const date=MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
@@ -4916,6 +4920,7 @@ const A = {
   },
   leaveSave: () => { S.sheet = null; render(); const saveAction={build:'savePr',exEdit:'saveEx',teamEntry:'teamSave',historyEdit:'historySave',morning:'morningSave'}[top().v]; if(saveAction)A[saveAction]({}); },
   leaveDiscard: () => { S.sheet = null; if (S.draft) S.draftSig = draftSig(S.draft); if(EDIT_FORMS[top().v]) {top()._formBase=formValues(document.getElementById(EDIT_FORMS[top().v]));top()._formValues=top()._formBase;} A.back(); },
+  dot: d => { const car = document.getElementById('car'); const c = car && car.children[+d.i]; if (c) c.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); },
   libCat: d => { S.lib.cat = d.cat; lsSet('mt.libcat', d.cat); if (top().v !== 'library') { S.tab = 'library'; S.stack = [{v:'library'}]; } render(); },
   fieldList: () => { S.planAsk = false; go({ v:'fieldList' }); },   // the inline restart question never waits for a later visit
   fieldMode: d => { if (top().v !== 'fieldList' || !['catalogue','plan'].includes(d.mode)) return;
@@ -5522,7 +5527,6 @@ document.addEventListener('keydown', ev => {
   const next=current<0?(ev.shiftKey?controls.length-1:0):(current+(ev.shiftKey?-1:1)+controls.length)%controls.length;
   ev.preventDefault();controls[next].focus();
 });
-app.addEventListener('toggle',ev=>{if(ev.target.isConnected && ev.target.classList?.contains('home-plan-more'))S.homePlanOpen=ev.target.open;},true);
 // Register after the input binders, so a checkpoint includes the value just typed.
 app.addEventListener('input',checkpointDraft);
 app.addEventListener('change',checkpointDraft);

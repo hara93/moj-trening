@@ -20,9 +20,9 @@ async function run(){
  try{
   await p.clock.setFixedTime(new Date('2026-11-05T10:00:00+01:00'));
   await p.goto(server.url+'?previous=1');await p.getByRole('button',{name:'Moj pregled',exact:true}).waitFor();await p.goto(server.url);
-  await a(p,'homeGuide').focus();await p.keyboard.press('Enter');await p.getByRole('dialog',{name:'Gdje krenuti?'}).waitFor();
-  for(const key of ['Tab','Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'sheetDone');}
-  await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'homeGuide');
+  await a(p,'dataSheet').focus();await p.keyboard.press('Enter');await p.getByRole('dialog',{name:'Moji podaci'}).waitFor();
+  for(const key of ['Tab','Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.sheet')),true);}
+  await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'dataSheet');
   await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await p.locator('#libq').fill('bench');await named(p,'openEx','bench-press').click();await back(p);await waitView(p,'library');assert.equal(await p.locator('#libq').inputValue(),'bench');
   await home(p);await a(p,'dataSheet').click();const b=fixture();b.log=[];b.settings.sound=false;b.settings.planDates={};b.protocols['nav-timed']={id:'nav-timed',name:'Provjera vremenskih serija',items:[{exId:'side-plank',sets:2,sec:60,rest:5,measure:'time',sides:true}],days:[]};
   await p.locator('#importFile').setInputFiles({name:'synthetic-navigation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(b))});await a(p,'restoreApply').click();await a(p,'restoreApply').waitFor({state:'hidden'});

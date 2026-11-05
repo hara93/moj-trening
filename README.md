@@ -22,9 +22,9 @@ U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **�
 
 ## Nadogradnje
 
-Trenutna verzija je 1.15.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.15.1. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
-Na **Početnoj** otvori današnji prijedlog, jutarnju provjeru ili upiši ekipni trening. Kategorije treninga dostupne su u mreži, a tjedni raspored otvara pojedine dane. Propušteni termini nalaze se pod sažetkom tjedna.
+Na **Početnoj** je pozdrav **Bok, Tomislav**, tjedni raspored i velike kartice treninga koje listaš vodoravno. **Danas**, jutarnja provjera i ekipni dnevnik dostupni su u **Moj pregled**.
 
 U **Napretku → Što se promijenilo** uspoređuju se najbolje potpuno odrađene serije iste vježbe pri istoj zabilježenoj težini i načinu izvođenja po stranama. Kartica pokazuje datume, ponavljanja ili sekunde te poznatu rezervu. Promjena broja nije sama po sebi dokaz promjene snage. **Zadnjih 8 tjedana** prikazuje stvarno spremljene treninge, poznate minute i zaseban subjektivni napor. Cijeli trening i povijest vježbe dostupni su iz pregleda. Pokusi iz knjižnice i budući zapisi ne ulaze u ove nove usporedbe.
 

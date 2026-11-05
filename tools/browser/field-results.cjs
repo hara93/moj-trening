@@ -14,7 +14,7 @@ async function importData(page,data){
 }
 async function advance(page,seconds){const now=await page.evaluate(()=>Date.now());await page.clock.setFixedTime(new Date(now+seconds*1000));await page.waitForTimeout(300);}
 async function completeTest(page){
-  await home(page);await page.locator('.home-categories [data-a="fieldList"]').click();
+  await home(page);await page.locator('#car [data-a="fieldList"]').click();
   await page.locator('[data-a="openField"][data-id="mas-test-5-min"]').click();
   await page.locator('[data-a="startField"][data-dose="full"]').click();
   for(let i=0;i<12;i++){

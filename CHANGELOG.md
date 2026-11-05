@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.15.1 — 5. 11. 2026.
+
+- Vraćena je izvorna početna stranica s velikim slikovnim karticama, vodoravnim listanjem i tjednim rasporedom.
+- Naslov je **Bok, Tomislav**, a ikonica za uvodne upute uklonjena je s početne stranice.
+- Novi prikaz Napretka i ispravci podataka iz verzije 1.15.0 ostaju sačuvani.
+
 ## 1.15.0 — 5. 11. 2026.
 
 - Početna stranica ističe današnji prijedlog, jutarnju provjeru i unos ekipnog treninga. Pet kategorija treninga dostupno je u vidljivoj mreži, a tjedni raspored, povijest i protokoli ostaju na dodir.

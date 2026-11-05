@@ -89,9 +89,15 @@ async function importData(page, data) {
 }
 
 async function progress(page) {
-  await home(page);
-  await page.locator('.home [data-a="dashboardProgress"]').click();
+  await dashboard(page);
+  await action(page, 'dashboardProgress').click();
   await page.locator('.progress-view').waitFor();
+}
+
+async function dashboard(page) {
+  await home(page);
+  await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
+  await page.locator('.dashboard').waitFor();
 }
 
 async function noOverflow(page, label) {
@@ -125,8 +131,8 @@ async function activity(page) {
 }
 
 async function openHistory(page, id) {
-  await home(page);
-  await page.locator('.home [data-a="historyList"]').click();
+  await dashboard(page);
+  await action(page, 'historyList').click();
   await page.locator('[data-a="historyOpen"][data-id="' + id + '"]').click();
   await action(page, 'historyEdit').waitFor();
 }
@@ -135,40 +141,47 @@ async function homeChecks(page) {
   for (const width of [375, 320]) {
     await page.setViewportSize({ width, height: 850 });
     await home(page);
-    assert.equal(await page.locator('#car,#dots').count(), 0);
-    assert.equal(await page.locator('.home-categories .hcard').count(), 5);
+    await page.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor();
+    assert.equal(await action(page, 'homeGuide').count(), 0);
+    assert.equal(await page.locator('#dots .dot').count(), 5);
+    assert.equal(await page.locator('#car .hcard').count(), 5);
     assert.equal(await page.locator('.home .week [data-a="daySheet"]').count(), 7);
-    assert.equal(await page.locator('.home-today [data-a="todayOpen"]').count(), 1);
-    assert.equal(await page.locator('.home-checks button').count(), 2);
-    const columns = await page.locator('.home-categories').evaluate(node =>
-      getComputedStyle(node).gridTemplateColumns.split(' ').length);
-    assert.equal(columns, 2);
+    assert.equal(await page.locator('.home-categories,.home-today,.home-checks').count(), 0);
+    const overflow = await page.locator('#car').evaluate(node => getComputedStyle(node).overflowX);
+    assert.ok(['auto', 'scroll'].includes(overflow));
     await noOverflow(page, 'home-' + width);
     await screenshot(page, 'home-' + width);
   }
-  for (const category of ['rehab', 'teretana', 'aktivacija', 'kondicija', 'knjiznica']) {
+  const categories = ['Rehabilitacija', 'Teretana', 'Aktivacija', 'Kondicija', 'Knjižnica'];
+  for (const [index, category] of categories.entries()) {
     await home(page);
-    const card = page.locator('.home-categories [data-category="' + category + '"]');
+    const dot = page.locator('#dots .dot').nth(index);
+    await dot.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(index =>
+      document.querySelector('#dots [data-i="' + index + '"]').getAttribute('aria-current') === 'true', index);
+    const card = page.locator('#car .hcard').nth(index);
     await card.focus();
     await page.keyboard.press('Enter');
     await page.locator('.view.home').waitFor({ state: 'hidden' });
     assert.ok(await page.locator('.view').isVisible(), category + ' opens a screen');
     await noOverflow(page, 'category-' + category);
   }
-  await home(page);
-  await page.locator('.home [data-a="todayOpen"]').focus();
+  await dashboard(page);
+  await action(page, 'todayOpen').focus();
   await page.keyboard.press('Enter');
   await page.getByRole('heading', { name: 'Danas', exact: true }).waitFor();
-  await action(page, 'back').first().click();
-  await page.locator('.view.home').waitFor();
-  await page.locator('.home [data-a="morningOpen"]').click();
+  await action(page, 'morningOpen').click();
   await page.locator('#morning-form').waitFor();
   await action(page, 'back').first().click();
-  await page.locator('.view.home').waitFor();
-  await page.locator('.home [data-a="teamNew"]').click();
+  await page.getByRole('heading', { name: 'Danas', exact: true }).waitFor();
+  await action(page, 'teamNew').click();
   await page.locator('#team-entry-form').waitFor();
   await action(page, 'teamCancel').first().click();
-  await page.locator('.view.home').waitFor();
+  await page.getByRole('heading', { name: 'Danas', exact: true }).waitFor();
+  await action(page, 'back').first().click();
+  await page.locator('.dashboard').waitFor();
+  await home(page);
   await page.locator('.week [data-a="daySheet"][data-i="2"]').click();
   await page.getByRole('dialog').waitFor();
   await page.keyboard.press('Escape');
@@ -230,7 +243,8 @@ async function runScenarios(page) {
 
   await importData(page, fixture());
   await home(page);
-  assert.equal(await page.locator('.home-last').getAttribute('data-id'), 'hp-current');
+  assert.match(await page.locator('.home').innerText(), /Zadnji trening: Poznata izvedba i nepoznata serija/);
+  assert.doesNotMatch(await page.locator('.home').innerText(), /Budući zapis ne smije povećati rezultat/);
   await progress(page);
   const press = page.locator('.pg-comparison[data-id="bench-press"][data-kind="reps"]');
   const plank = page.locator('.pg-comparison[data-id="side-plank"][data-kind="time"]');
@@ -293,7 +307,7 @@ async function runScenarios(page) {
   assert.ok(await page.locator('.pg-comparison-empty').isVisible());
   assert.deepEqual((await activity(page))[0].slice(1), ['2', '70', '410']);
   await home(page);
-  assert.equal(await page.locator('.home-last').getAttribute('data-id'), 'hp-team');
+  assert.match(await page.locator('.home').innerText(), /Zadnji trening: Klupski trening/);
 
   const unknown = fixture();
   unknown.log[0].items[0].repsList = [null, null, null];
