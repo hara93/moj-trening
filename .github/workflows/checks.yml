@@ -34,7 +34,7 @@ jobs:
       matrix:
         browser: [chromium, webkit]
     env:
-      MT_TEST_OUTPUT: ${{ runner.temp }}/moj-trening-${{ matrix.browser }}
+      MT_TEST_OUTPUT: /tmp/moj-trening-${{ matrix.browser }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
