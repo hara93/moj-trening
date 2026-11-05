@@ -1,5 +1,14 @@
 # Promjene
 
+## 1.15.0 — 5. 11. 2026.
+
+- Početna stranica ističe današnji prijedlog, jutarnju provjeru i unos ekipnog treninga. Pet kategorija treninga dostupno je u vidljivoj mreži, a tjedni raspored, povijest i protokoli ostaju na dodir.
+- Napredak prikazuje prethodnu i posljednju usporedivu seriju iste vježbe pri istoj zabilježenoj težini i načinu izvođenja. Promjene ponavljanja i vremena prikazuju se s datumima i kontekstom; različite doze ostaju u punoj povijesti.
+- Novi graf aktivnosti prikazuje osam kalendarskih tjedana, odrađene treninge i poznato trajanje. Tablica sadrži iste brojke i zasebne jedinice subjektivnog napora. Nepoznati podaci i tjedan u tijeku jasno su označeni.
+- Pokusi pojedinačnih vježbi i budući zapisi ne stvaraju nove usporedbe ili odrađene tjedne. Ispravci i brisanje povijesti odmah mijenjaju pregled.
+- Detaljni grafovi, rekordi i postavke doziranja ostaju dostupni u odjeljcima ispod sažetka. Početna i Napredak osvježavaju današnje podatke pri promjeni dana.
+- Uređivanje poznate serije u povijesti čuva prazna mjesta drugih serija. Nepoznati broj ponavljanja može ostati nepoznat i nakon ispravka.
+
 ## 1.14.1 — 5. 11. 2026.
 
 - MAS test i povezani trening koriste istu prijavljenu udaljenost, uključujući naknadni ispravak u povijesti. Bez rezultata nema izmišljenih metara; prosječna brzina ne stvara pretpostavljene metre sprinta ili brzinskih zona. Raniji pogrešan izračun ispravlja se samo uz pouzdano povezan rezultat testa i bez prepisivanja ručnih ispravaka.

@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.14.1';
+const APP_VERSION = '1.15.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -1129,7 +1129,7 @@ const slotOpen = s => s.kind === 'field' ? 'data-a="openField" data-id="'+esc(s.
 const slotKey = s => (s.kind === 'field' ? 'f' : s.kind === 'program' ? 'g' : 'p') + ':' + s.id + ':' + s.day;
 const slotCounts = s => !s.skip && (s.f !== 0 || s.done);
 function weekStatus(ws, plan){
-  const we = calDay(ws, 7), log = S.log.filter(l => isTraining(l) && l.at >= ws && l.at < we), sk = skipSet(ws);
+  const we = calDay(ws, 7), log = S.log.filter(l => isTraining(l) && l.at >= ws && l.at < we && l.at <= Date.now()), sk = skipSet(ws);
   const upTo = ws === weekStart(Date.now()) ? dayIdx(Date.now()) : ws < Date.now() ? 7 : -1;   // the days before this one are past
   const used = {}, all = (plan || weekPlan(ws)).map(p => Object.assign({ done: false, f: 1 }, p, { skip: !!sk[slotKey(p)] }));
   const live = all.filter(s => !s.skip), fill = (list, sameDay) => list.forEach(s => { if (s.done) return;
@@ -1336,7 +1336,7 @@ function matchBox(note, i, mg){
     : lf ? '<button class="bt ghost" data-a="openField" data-id="' + esc(lf.f.id) + '">' + esc(lf.f.name_hr) + ' · ' + esc(fieldMin(lf.f)) + ' min</button>' : '';
   return '<div class="lift warn" style="margin:' + (mg || '0') + '"><div class="why" style="color:var(--text-body)">' + esc(note) + '</div>' + (bt ? '<div class="acts" style="grid-template-columns:1fr">' + bt + '</div>' : '') + '</div>';
 }
-function weekHtml(){
+function weekHtml(compact){
   if (S.dbState !== 'ready') return '';
   const now = Date.now(), ws = weekStart(now), today = dayIdx(now), wm = weekMatches(ws);
   const cur = planSlots(), st = weekStatus(ws, weekPlan(ws, cur)); notePlan(ws, st.slots);
@@ -1363,7 +1363,8 @@ function weekHtml(){
   const line = st.planned || st.slots.length
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today && s.done) ? ' • danas odrađeno' : '')
     : 'Odaberi dane u protokolu i složi svoj tjedni plan';
-  return strip + '<p class="week-summary">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
+  const detail = rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '';
+  return strip + '<p class="week-summary">' + esc(line) + '</p>' + (compact && detail ? '<details class="home-plan-more"' + (S.homePlanOpen ? ' open' : '') + '><summary>' + (todo.length ? 'Danas u planu · ' + todo.length : 'Propušteni termini') + '</summary>' + detail + '</details>' : detail);
 }
 
 /* ---------- views ---------- */
@@ -1374,13 +1375,13 @@ const gymSession = p => !p.program && (p.tag === 'Teretana' || gymProto(p)) && (
 // the gym session to do next: the one trained longest ago
 function nextGym(){
   const last = {};
-  S.log.forEach(l => { if (l.kind === 'protocol' && l.refId && !(last[l.refId] >= l.at)) last[l.refId] = l.at; });
+  S.log.forEach(l => { if (l.kind === 'protocol' && l.at <= Date.now() && l.refId && !(last[l.refId] >= l.at)) last[l.refId] = l.at; });
   return Object.values(S.pr).filter(gymSession).sort((a, b) => (last[a.id] || 0) - (last[b.id] || 0) || String(a.name).localeCompare(b.name, 'hr'))[0] || null;
 }
 VIEWS.home = function(){
   const rehab = Object.values(S.pr).find(p => p.home === 'rehab');
   const akt = Object.values(S.pr).find(p => p.home === 'aktivacija');
-  const last = S.log.find(isTraining);
+  const last = S.log.find(l => isTraining(l) && l.at <= Date.now());
   // the gym card is always there (1.8.1, Tomislav): it opens this week's planned gym session that is not done yet (today's first,
   // then the days to come, then a missed one), otherwise the gym session trained longest ago
   const today = dayIdx(Date.now()), rank = s => s.day === today ? 0 : s.day > today ? 1 : 2;
@@ -1394,20 +1395,14 @@ VIEWS.home = function(){
     { k:'kondicija', t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
     { k:'knjiznica', t:'Knjižnica', s: Object.keys(S.ex).length ? nVj(Object.keys(S.ex).length) : 'Moje vježbe', bg:'#2B2F37', ic:I.book, a:{a:'tab', tab:'library'} }
   ].filter(Boolean);
-  const attrs = o => Object.keys(o).map(k => (k==='a' ? 'data-a' : 'data-'+k) + '="' + esc(o[k]) + '"').join(' ');
-  // a card's cover picture (media.js EXCOVERS, portrait) fills the whole card under the same scrim; without one, or when it cannot
-  // load (offline before it was ever shown): colour and icon
-  const covers = window.EXCOVERS || {}, cover = c => typeof covers[c.k] === 'string' && covers[c.k] ? '<img class="cov" alt="" decoding="async" onerror="this.remove()" src="' + esc(covers[c.k]) + '">' : '';
-  return '<div class="view home" style="background:radial-gradient(circle at 100% 0%, #24314A 0%, #1C2230 28%, #191D25 52%)">' +
-    topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING') +
-    '<div class="home-heading"><h1 class="greet">Odaberi trening</h1><button type="button" class="ib" data-a="homeGuide" aria-label="Kako koristiti aplikaciju">'+I.info+'</button></div>' +
-    weekHtml() + dataHint() +
-    '<div class="carousel" id="car" aria-label="Kategorije treninga">' +
-      cards.map(c => '<button class="hcard' + (cover(c) ? ' cv' : '') + '" style="background:' + c.bg + '" ' + attrs(c.a) + '><span class="ic">' + pathIcon(c.ic, 96) + '</span>' + cover(c) + '<span class="sc"></span><span class="tt"><b>' + esc(c.t) + '</b><span>' + esc(c.s) + '</span></span></button>').join('') +
-    '</div>' +
-    '<div class="dots" id="dots" role="group" aria-label="Odaberi karticu">' + cards.map((c,i) => '<button class="dot" data-a="dot" data-i="'+i+'" aria-label="'+esc(c.t)+'"'+(i===0?' aria-current="true"':'')+'><i></i></button>').join('') + '</div>' +
-    (last ? '<p class="sub" style="text-align:center;margin:8px 0 0">Zadnji trening: ' + esc(last.name) + ' · ' + esc(shortDate(last.at)) + '</p>' : '') +
-  '</div>';
+  return HomeView.render({
+    topbarHtml:topbar('', '<button class="ib" data-a="dataSheet" aria-label="Podaci i sigurnosna kopija">' + I.gear + '</button>', 'MOJ TRENING'),
+    infoIcon:I.info,
+    dateLabel:new Date().toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}),
+    daily:S.dbState === 'ready' ? dailyInput(Date.now()) : null,
+    stateHtml:stateNote(), weekHtml:weekHtml(true), dataHintHtml:dataHint(),
+    cards:cards.map(c=>({...c,iconHtml:pathIcon(c.ic,24)})), last,lastDate:last?shortDate(last.at):''
+  });
 };
 
 // A planned slot uses today's protocol. Completed work always uses the session's saved attribution.
@@ -1539,7 +1534,7 @@ function writeMorning(entry) {
 let dailyTimer=null;
 function refreshDailyAtMidnight(t) {
   clearTimeout(dailyTimer);
-  if (!['today','dashboard'].includes(t.v)) return;
+  if (!['home','today','dashboard','progress'].includes(t.v)) return;
   const now=Date.now();
   t.dailyDate=dateKey(now);
   dailyTimer=setTimeout(()=>{
@@ -1836,7 +1831,7 @@ function creditSheet(s){
 }
 function historyOf(exId){
   const out = [];
-  S.log.forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId && !it.skipped) out.push(Object.assign({ at: l.at }, it)); }));
+  S.log.filter(l => l.at <= Date.now()).forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId && !it.skipped) out.push(Object.assign({ at: l.at }, it)); }));
   return out; // newest first, like the log (skipped exercises left out)
 }
 // the chips under the name: more sets, or longer holds; intervals (4 or more timed sets, e.g. 30/30) keep their work
@@ -3469,7 +3464,7 @@ function progSuggestions(){
 const e1rm = (kg, reps) => kg * (1 + reps / 30);   // Epley estimate of the one-rep max
 function progHistory(){
   const by = {};
-  S.log.slice().reverse().forEach(l => (l.items || []).forEach(x => { if (x.skipped) return; (by[x.exId] = by[x.exId] || []).push(Object.assign({ at: l.at }, x)); }));
+  S.log.filter(l => l.at <= Date.now()).slice().reverse().forEach(l => (l.items || []).forEach(x => { if (x.skipped) return; (by[x.exId] = by[x.exId] || []).push(Object.assign({ at: l.at }, x)); }));
   return by; // oldest first per exercise (exercises skipped in a session are not part of its history)
 }
 function sugCard(x){
@@ -4114,7 +4109,7 @@ function weekLoads(n){
   const ws = weekStart(Date.now()), out = [];
   for (let k = n - 1; k >= 0; k--) { const a = calDay(ws, -7 * k); out.push({ ws: a, we: calDay(a, 7), vl: 0, m: 0, hsr: 0 }); }
   S.log.forEach(l => {
-    if (!isTraining(l)) return; const w = out.find(o => l.at >= o.ws && l.at < o.we); if (!w) return;
+    if (!isTraining(l) || l.at > Date.now()) return; const w = out.find(o => l.at >= o.ws && l.at < o.we); if (!w) return;
     if (l.kind === 'field') {
       const fl = fieldLogLoad(l);
       const metres = fl && Number.isFinite(fl.m) && fl.m >= 0;
@@ -4305,8 +4300,9 @@ VIEWS.progress = function(){
   if (S.dbState === 'ready') notePlan(ws, wk.slots);
   const hasPlan = plan.length || Object.keys(S.settings.planDates || {}).length;
   let sk = hasPlan ? streakWeeks(plan) : 0;
-  if (!hasPlan) for (let w = ws, k = 0; k < 104; w = calDay(w, -7), k++) { const we = calDay(w, 7); if (S.log.some(l => isTraining(l) && l.at >= w && l.at < we)) sk++; else if (w !== ws) break; }
-  const thisWeek = S.log.filter(l => isTraining(l) && l.at >= ws).length, total = nTrainings(S.log);
+  if (!hasPlan) for (let w = ws, k = 0; k < 104; w = calDay(w, -7), k++) { const we = calDay(w, 7); if (S.log.some(l => isTraining(l) && l.at >= w && l.at < we && l.at <= Date.now())) sk++; else if (w !== ws) break; }
+  const recorded = S.log.filter(l => l.at <= Date.now());
+  const thisWeek = recorded.filter(l => isTraining(l) && l.at >= ws).length, total = nTrainings(recorded);
   const sugs = progSuggestions(), act = sugs.filter(x => x.kind === 'up' || x.kind === 'revert' || x.kind === 'variant'), way = sugs.filter(x => x.kind === 'way');
   const nokg = {}; sugs.filter(x => x.kind === 'nokg').forEach(x => { (nokg[x.p.id] = nokg[x.p.id] || { p: x.p, names: [] }).names.push(x.e.name); });
   const nokgHtml = Object.values(nokg).map(g => '<div class="lift"><div class="top"><b>Upiši početne težine</b><span>'+esc(g.p.name)+'</span></div><div class="why">'+esc(g.names.join(', '))+': bez kilograma ne mogu predložiti povećanje.</div><div class="acts" style="grid-template-columns:1fr"><button class="bt ghost" data-a="editPr" data-id="'+esc(g.p.id)+'">Upiši kilograme</button></div></div>').join('');
@@ -4329,7 +4325,7 @@ VIEWS.progress = function(){
     });
     return best && beaten && Date.now() - best.x.at < 30 * DAY_MS ? { id, best } : null; }).filter(Boolean).sort((a, b) => b.best.x.at - a.best.x.at).slice(0, 4);
   // consistency: one cell per calendar day (a clock change never shifts the grid)
-  const days = {}; S.log.forEach(l => { if (!isTraining(l)) return; const t = calDay(l.at); days[t] = (days[t] || 0) + 1; });
+  const days = {}; recorded.forEach(l => { if (!isTraining(l)) return; const t = calDay(l.at); days[t] = (days[t] || 0) + 1; });
   const start = calDay(ws, -77); let heat = '';
   for (let d = 0; d < 7; d++) for (let w = 0; w < 12; w++) { const t = calDay(start, w * 7 + d); const n = days[t] || 0; heat += '<i class="'+(t > Date.now() ? 'fut' : n >= 2 ? 'l3' : n === 1 ? 'l2' : '')+'"></i>'; }
   const weeks = weekLoads(8), current = weeks[weeks.length-1];
@@ -4339,6 +4335,7 @@ VIEWS.progress = function(){
     topbarHtml:topbar(backBtn(), '', 'NAPREDAK'), tab:S.progTab,
     dosingSections:S.progTab === 'doziranje' ? progressDosingSections() : [],
     zero:total === 0,
+    insights:ProgressModel.summarize({log:S.log,exercises:S.ex,now:Date.now()}),
     stats:[
       { value:wk.planned ? wk.done + '/' + wk.planned : thisWeek, label:wk.planned ? 'po planu ovaj tjedan' : 'treninga ovaj tjedan', note:wk.planned && thisWeek !== wk.done ? thisWeek + ' odrađeno ukupno' : '' },
       { value:sk, label:plural(sk,'tjedan','tjedna','tjedana') + ' zaredom', note:hasPlan ? 'po planu' : 's treningom' },
@@ -4619,7 +4616,7 @@ function sheetHtml(){
   else if (s.kind === 'homeGuide') {
     body='<h3>Gdje krenuti?</h3><div class="home-guide">'+
       [[I.tabGrid,'Moj pregled','Otvori Danas za prijedlog prema povijesti i utakmicama. Ovdje su i planer i napredak.'],
-       [I.tabPlay,'Početna','Odaberi trening. Prije pokretanja možeš pregledati vježbe i serije.'],
+       [I.tabPlay,'Početna','Pogledaj današnji prijedlog, ispuni jutarnju provjeru ili odaberi kategoriju treninga.'],
        [I.tabLib,'Knjižnica','Pronađi vježbu, pogledaj izvedbu ili je dodaj u svoj protokol.']].map(([icon,title,hint])=>
         '<div><span aria-hidden="true">'+icon+'</span><div><b>'+title+'</b><p>'+hint+'</p></div></div>').join('')+
       '</div><button class="btn sec" data-a="sheetDone">U redu</button>';
@@ -4763,14 +4760,6 @@ function sheetHtml(){
 /* ---------- after-render hooks ---------- */
 function after(t){
   refreshDailyAtMidnight(t);
-  if (t.v === 'home') {
-    const car = document.getElementById('car'), dots = document.getElementById('dots');
-    if (car && dots) car.addEventListener('scroll', () => {
-      const w = car.firstElementChild ? car.firstElementChild.getBoundingClientRect().width + 10 : 1;
-      const i = Math.round(car.scrollLeft / w);
-      dots.querySelectorAll('.dot').forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
-    }, { passive: true });
-  }
   if (t.v === 'ex') {
     // the card you were on comes back (no animation), the dots and S.exTab follow the swipe; a card scrolled inside keeps its place
     const r = document.getElementById('swrow'), dots = document.getElementById('swdots');
@@ -4927,7 +4916,6 @@ const A = {
   },
   leaveSave: () => { S.sheet = null; render(); const saveAction={build:'savePr',exEdit:'saveEx',teamEntry:'teamSave',historyEdit:'historySave',morning:'morningSave'}[top().v]; if(saveAction)A[saveAction]({}); },
   leaveDiscard: () => { S.sheet = null; if (S.draft) S.draftSig = draftSig(S.draft); if(EDIT_FORMS[top().v]) {top()._formBase=formValues(document.getElementById(EDIT_FORMS[top().v]));top()._formValues=top()._formBase;} A.back(); },
-  dot: d => { const car = document.getElementById('car'); const c = car && car.children[+d.i]; if (c) c.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); },
   libCat: d => { S.lib.cat = d.cat; lsSet('mt.libcat', d.cat); if (top().v !== 'library') { S.tab = 'library'; S.stack = [{v:'library'}]; } render(); },
   fieldList: () => { S.planAsk = false; go({ v:'fieldList' }); },   // the inline restart question never waits for a later visit
   fieldMode: d => { if (top().v !== 'fieldList' || !['catalogue','plan'].includes(d.mode)) return;
@@ -5534,6 +5522,7 @@ document.addEventListener('keydown', ev => {
   const next=current<0?(ev.shiftKey?controls.length-1:0):(current+(ev.shiftKey?-1:1)+controls.length)%controls.length;
   ev.preventDefault();controls[next].focus();
 });
+app.addEventListener('toggle',ev=>{if(ev.target.isConnected && ev.target.classList?.contains('home-plan-more'))S.homePlanOpen=ev.target.open;},true);
 // Register after the input binders, so a checkpoint includes the value just typed.
 app.addEventListener('input',checkpointDraft);
 app.addEventListener('change',checkpointDraft);
@@ -5560,7 +5549,7 @@ if (swContainer) {
 // iPhone: a home-screen app comes back from the background without reloading
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
-  if (['today','dashboard'].includes(top().v) && top().dailyDate!==dateKey(Date.now()) && !appBusy()) render();
+  if (['home','today','dashboard','progress'].includes(top().v) && top().dailyDate!==dateKey(Date.now()) && !appBusy()) render();
   let cur = null; try { cur = localStorage.getItem(STORE_KEY); } catch(e){}
   if (cur && savedJson != null && cur !== savedJson) { pendingExt = cur; if (!appBusy()) render(); }
   maybeReload();

@@ -37,7 +37,7 @@ test('failed last reps, per-set doses and timed work retain their units and exac
  assert.equal(M.sanitize(r.entry.muscleWork[0]).completedSets,3);
  const timed=protocol();timed.items[0]={...item(),measure:'time',sec:20,sides:true};
  const t=H.edit(timed,{items:[{index:0,setsDone:2,sec:15,sirList:[5,null]}]});assert.equal(H.timeTotal(t.entry.items[0]),60);assert.equal(H.repetitionTotal(t.entry.items[0]),null);
- assert.equal(H.edit(old,{items:[{index:0,rirList:[41]}]}).ok,false);assert.equal(H.edit(old,{items:[{index:0,repsList:[8,null,6]}]}).ok,false);
+ assert.equal(H.edit(old,{items:[{index:0,rirList:[41]}]}).ok,false);assert.equal(H.edit(old,{items:[{index:0,repsList:[8,null,6]}]}).ok,true);
 });
 test('confirming actual work clears old failure semantics and updates attribution even when raw set-position number is unchanged',()=>{
  const old=protocol();old.items[0]={...item(),setsDone:1,done:false,lastReps:0};old.muscleWork=[M.pack(M.completedItem(exercise,old.items[0]))];

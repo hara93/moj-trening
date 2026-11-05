@@ -102,6 +102,7 @@ async function expand(page, id) {
       await page.setViewportSize({width:375,height:850});
       await expand(page,'suggestions'); await expand(page,'load');
     }
+    await expand(page,'suggestions'); await expand(page,'load');
     await page.locator('#wk-vl [data-a="ltip"][data-i="7"]').click();
     assert.equal(await page.locator('#wk-vl .tipg.on').count(),1);
     const card=page.locator('.lc').filter({has:page.locator('#wk-vl')});

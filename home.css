@@ -1,0 +1,52 @@
+.view.home-simple{display:block;padding:0 16px 28px;background:radial-gradient(ellipse at 95% 0,#263449 0,transparent 42%),var(--bg)}
+.home-simple *{box-sizing:border-box}
+.home-simple>.topbar{margin:0 -16px}
+.home-simple .home-heading{padding:6px 0 18px;gap:8px;align-items:center}
+.home-date{margin:0 0 5px;color:#AAC2E7;font-size:12px}
+.home-date::first-letter{text-transform:uppercase}
+.home-heading h1{margin:0;font-size:28px;line-height:1.15;letter-spacing:-.035em;font-weight:600}
+.home-today{padding:20px;border-radius:23px;background:linear-gradient(135deg,#304762,#26384E);border:1px solid #4B6383}
+.home-today-label{display:flex;align-items:center;gap:7px;color:#BCEEDB;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.home-signal{width:6px;height:6px;border-radius:50%;background:#92E2C3}
+.home-today h2{font-size:23px;line-height:1.2;letter-spacing:-.02em;font-weight:600;margin:12px 0 8px;overflow-wrap:anywhere}
+.home-today p{font-size:13px;line-height:1.55;color:#CED9E8;margin:0 0 16px}
+.home-today[data-kind="caution"]{border-color:#AA845E;background:linear-gradient(135deg,#4E4134,#34303A)}
+.home-primary{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;padding:12px 15px;border:0;border-radius:13px;background:#D1E2FF;color:#172A44;font-family:inherit;font-size:14px;font-weight:600}
+.home-checks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 24px}
+.home-checks button{display:flex;align-items:flex-start;gap:8px;text-align:left;min-width:0;min-height:78px;padding:13px 11px;background:#242E3B;border:1px solid #3A485D;border-radius:16px;color:var(--text)}
+.home-small-icon{flex:none;font-size:19px;line-height:20px;color:#E8C588}
+.home-checks button:nth-child(2) .home-small-icon{color:#9FD8CC}
+.home-checks strong{display:block;font-size:12px;font-weight:600;line-height:1.35}
+.home-checks small{display:block;margin-top:5px;color:#AEBCCF;font-size:11px;line-height:1.4}
+.home-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 11px}
+.home-section-head h2{font-size:17px;line-height:1.3;font-weight:600;margin:0}
+.home-section-head button{font-family:inherit;background:none;border:0;color:#B7CFF8;font-size:11px;min-height:44px;padding:4px 0 4px 5px;flex:none}
+.home-week{margin-bottom:24px;padding:0 0 12px;border-bottom:1px solid #333F50}
+.home-simple .week{margin:0;gap:4px}
+.home-simple .week-summary{padding:10px 0 0;text-align:left;font-size:11px;color:#AABBD2}
+.home-plan-more{margin:8px 0 0;border-radius:13px;background:#222B37;overflow:hidden}
+.home-plan-more>summary{padding:12px;font-size:12px;color:#C6D5E9;cursor:pointer}
+.home-plan-more>.list{margin:0 10px 10px!important}
+.home-categories{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.home-simple .hcard{position:static;display:flex;align-items:center;flex:none;width:auto;height:auto;min-height:100px;min-width:0;padding:13px 11px;text-align:left;border-radius:17px;border:1px solid #3D495B;background:#273243;color:var(--text);gap:9px}
+.home-simple .hcard[data-category="rehab"]{background:#37332F;border-color:#574C42}
+.home-simple .hcard[data-category="aktivacija"]{background:#303449;border-color:#464F74}
+.home-simple .hcard[data-category="kondicija"]{background:#283A36;border-color:#3C5B51}
+.home-simple .hcard[data-category="knjiznica"]{grid-column:1/-1;min-height:66px;background:#252D38}
+.home-category-icon{flex:none;color:#AED0FF;align-self:flex-start;margin-top:3px}
+.home-category-icon svg{width:22px;height:22px}
+[data-category="rehab"] .home-category-icon{color:#E1BB89}
+[data-category="aktivacija"] .home-category-icon{color:#BFB6F5}
+[data-category="kondicija"] .home-category-icon{color:#9CD9C5}
+.home-category-text{min-width:0;flex:1}
+.home-category-text strong{display:block;font-size:15px;line-height:1.3;font-weight:600;overflow-wrap:anywhere}
+.home-category-text small{display:block;color:#BBC6D5;font-size:11px;line-height:1.45;margin-top:5px;overflow-wrap:anywhere}
+.home-category-arrow{font-size:20px;color:#9CABBE;display:none}
+[data-category="knjiznica"] .home-category-arrow{display:block}
+.home-recent{margin-top:24px}
+.home-last{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:14px 15px;gap:10px;border:1px solid #38475C;border-radius:16px;background:#242D3B;color:var(--text)}
+.home-last strong{display:block;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.home-last small{display:block;color:#AABBD2;font-size:11px;margin-top:5px}
+.home-empty{font-size:12px;color:#AABBD2;line-height:1.5;margin:0}
+.home-simple button:focus-visible,.home-plan-more>summary:focus-visible{outline:2px solid #A9CCFF;outline-offset:3px}
+@media(min-width:650px){.home-simple>section,.home-simple>.home-checks,.home-simple>.home-heading{max-width:760px;margin-left:auto;margin-right:auto}.home-categories{grid-template-columns:repeat(4,1fr)}.home-simple .hcard[data-category="knjiznica"]{grid-column:1/-1}.home-checks button{min-height:70px}.home-heading h1{font-size:32px}}

@@ -225,7 +225,7 @@
             const pos=Number(data.historySet),key={reps:'repsList',rir:'rirList',sir:'sirList',kg:'kgList',sec:'secList'}[field];
             if(!key||!Number.isInteger(pos)||pos<0||pos>=1000)throw new Error('Serija koju uređuješ nije valjana.');
             const label={reps:'Ponavljanja',kg:'Teret serije',sec:'Vrijeme serije',rir:'RIR',sir:'Rezerva u sekundama'}[field];
-            const value=numeric(raw,label,{integer:field==='reps',max:field==='sec'?86400:['reps','kg'].includes(field)?10000:40,optional:field!=='reps'});
+            const value=numeric(raw,label,{integer:field==='reps',max:field==='sec'?86400:['reps','kg'].includes(field)?10000:40});
             const mapKey=index+':'+key;
             if(!arrayChanges.has(mapKey)){
               const values=own(item,key)?array(item[key]).slice():key==='repsList'?Array.from({length:rowsCount(item)},(_,i)=>rowReps(item,i)):[];
@@ -256,7 +256,6 @@
         }
       }
       for(const change of arrayChanges.values()) {
-        if(change.key==='repsList'&&change.values.some(value=>number(value)==null))throw new Error('Za svaku seriju u popisu upiši broj ponavljanja. Nula je valjana vrijednost.');
         if(JSON.stringify(change.values)!==JSON.stringify(entry.items[change.index][change.key]))setItem(change.index,change.key,change.values);
       }
       if(items.size)patch.items=Array.from(items.values()).sort((a,b)=>a.index-b.index);

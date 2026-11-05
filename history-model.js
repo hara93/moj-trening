@@ -146,7 +146,7 @@
           ['repsList','kgList','secList','rirList','sirList'].forEach(function(k){
             if(has(edit,k)){
               var a=edit[k],limit=k==='kgList'?10000:k==='secList'?86400:40;
-              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return k==='repsList'?int(v,0,10000):v===null||finite(v)&&v>=0&&v<=limit;})))error(base+'.'+k,'Provjeri vrijednost za svaku seriju.');
+              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return v===null||(k==='repsList'?int(v,0,10000):finite(v)&&v>=0&&v<=limit);})))error(base+'.'+k,'Provjeri vrijednost za svaku seriju.');
               else if(a!==null && int(x.sets,1,1000) && a.length>x.sets)error(base+'.'+k,'Popis ima više serija od spremljenog plana.');
               else put(x,k,a,base+'.'+k);
             }
@@ -168,7 +168,9 @@
           }
           if(has(edit,'reps')||has(edit,'repsList')){
             delete x.historyRepsUnknown;
-            if(count>0 && repetitionTotal(x)===null && x.measure!=='time')x.historyRepsUnknown=true;else delete x.historyRepsUnknown;
+            // An authoritative per-set list can mix known rows and unknown
+            // positions. A blanket flag would erase its known observations.
+            if(!has(x,'repsList') && count>0 && repetitionTotal(x)===null && x.measure!=='time')x.historyRepsUnknown=true;
           }
           if(changes.length>startChanges||!equal(before,x))doseChanged=true;
           if(actualChanged && Array.isArray(out.muscleWork) && index<out.muscleWork.length){

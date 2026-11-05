@@ -22,7 +22,11 @@ U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **�
 
 ## Nadogradnje
 
-Trenutna verzija je 1.14.1. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.15.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+
+Na **Početnoj** otvori današnji prijedlog, jutarnju provjeru ili upiši ekipni trening. Kategorije treninga dostupne su u mreži, a tjedni raspored otvara pojedine dane. Propušteni termini nalaze se pod sažetkom tjedna.
+
+U **Napretku → Što se promijenilo** uspoređuju se najbolje potpuno odrađene serije iste vježbe pri istoj zabilježenoj težini i načinu izvođenja po stranama. Kartica pokazuje datume, ponavljanja ili sekunde te poznatu rezervu. Promjena broja nije sama po sebi dokaz promjene snage. **Zadnjih 8 tjedana** prikazuje stvarno spremljene treninge, poznate minute i zaseban subjektivni napor. Cijeli trening i povijest vježbe dostupni su iz pregleda. Pokusi iz knjižnice i budući zapisi ne ulaze u ove nove usporedbe.
 
 U **Jutarnjoj provjeri** ocijeni energiju (1–5), težinu nogu (1–5) ili bol (0–10). Neodgovorena polja ostaju nepoznata. **Ekipni dnevnik** prima trening ili odigranu utakmicu, vrijeme završetka, stvarne minute te opcionalnu ocjenu napora (0–10). Uz 80 minuta i napor 7 zapis pokazuje 560 jedinica procijenjenog opterećenja. Ekipni zapis ostaje odvojen od planirane utakmice i od rada po mišićima. Dnevni prijedlog izrađuju pravila na uređaju. Jutarnji i ekipni zapisi ulaze u tvoju sigurnosnu kopiju.
 
@@ -65,6 +69,7 @@ node tools/browser/progress.cjs
 node tools/browser/storage.cjs
 node tools/browser/field-results.cjs
 node tools/browser/navigation.cjs
+node tools/browser/home-progress.cjs
 ```
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.

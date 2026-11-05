@@ -97,3 +97,80 @@ test('help has explicitly labeled visual examples alongside text and retains cal
   }
   assert.match(View.infoHtml('exercises'), /ovo nisu tvoji rezultati/);
 });
+
+function comparison(overrides={}) {
+  return {id:'bench',name:'Potisak',kind:'reps',unit:'pon.',previous:6,current:8,delta:2,
+    previousAt:new Date(2026,9,27,18).getTime(),currentAt:new Date(2026,10,3,18).getTime(),
+    previousSessionId:'s1',currentSessionId:'s2',context:'20 kg u zapisu · obje strane · rezerva nije poznata',...overrides};
+}
+
+test('real before/after performance is visible before tools with dates, load context and full exercise route', () => {
+  const html=View.render({insights:{comparisons:[comparison()]},counts:{ready:1},suggestionsHtml:'<button data-a="sugUp">Prihvati</button>'});
+  assert.ok(html.indexOf('id="pg-performance"')<html.indexOf('id="pg-suggestions"'));
+  assert.match(html, /<section id="pg-performance"/);
+  assert.match(html, /class="pg-before">6 <small>pon\.<\/small>/);
+  assert.match(html, /class="pg-after">8 <small>pon\.<\/small>/);
+  assert.match(html, /class="pg-change pg-change-up">\+2 pon\./);
+  assert.match(html, /27\. 10\. 2026\./);
+  assert.match(html, /3\. 11\. 2026\./);
+  assert.match(html, /20 kg u zapisu · obje strane · rezerva nije poznata/);
+  assert.match(html, /data-a="openEx" data-id="bench"[^>]*aria-label="Otvori vježbu i povijest: Potisak"/);
+  assert.match(html, /id="pg-suggestions" open/,'a pending actionable suggestion stays open');
+  assert.doesNotMatch(html, /id="pg-load" open/,'advanced workload chart starts collapsed');
+});
+
+test('lower and unchanged performances remain neutral and invalid comparisons never become progress', () => {
+  const lower=View.render({insights:{comparisons:[comparison({current:4,delta:99})]}});
+  assert.match(lower, /class="pg-change">−2 pon\./);
+  assert.doesNotMatch(lower, /pg-change-up|bolji oporavak|oporavljen si|\+99/);
+  const unchanged=View.render({insights:{comparisons:[comparison({kind:'time',unit:'s',current:6})]}});
+  assert.match(unchanged, /Trajanje serije/);
+  assert.match(unchanged, /class="pg-change">Bez promjene/);
+  const invalid=View.render({insights:{comparisons:[comparison({current:null}),comparison({previousAt:NaN}),comparison({kind:'estimated'})]}});
+  assert.doesNotMatch(invalid, /<article class="pg-comparison"/);
+  assert.match(invalid, /Prva izvedba je polazište/);
+});
+
+test('the eight-week chart and accessible table show actual counts, known minutes and missing AU without fake zero bars', () => {
+  const weeks=Array.from({length:8},(_,i)=>({start:new Date(2026,8,14+i*7).getTime(),count:i===7?2:0,minutes:i===7?80.5:0,au:i===7?280:0,unrated:i===7?1:0}));
+  const html=View.render({insights:{weeks}});
+  assert.ok(html.indexOf('id="pg-activity"')<html.indexOf('id="pg-suggestions"'));
+  assert.match(html, /class="pg-activity-summary"><strong>2<span>spremljenih treninga/);
+  assert.match(html, /80,5 min zabilježeno/);
+  assert.match(html, /class="pg-activity-chart"[^>]*role="img"[^>]*aria-label="Broj spremljenih treninga po tjednima:/);
+  assert.equal((html.match(/class="pg-activity-bar/g)||[]).length,1);
+  assert.equal((html.match(/class="pg-activity-track"/g)||[]).length,8);
+  const table=html.slice(html.indexOf('<details class="pg-activity-table"'),html.indexOf('</table>',html.indexOf('<details class="pg-activity-table"')));
+  assert.equal((table.match(/scope="row"/g)||[]).length,8);
+  assert.match(table, /<td>2<\/td><td>80,5<\/td><td>280 poznato · 1 bez AU<\/td>/);
+  assert.match(html, /Zadnji tjedan još traje/);
+});
+
+test('unknown insight payloads are safe and all plain new labels are escaped', () => {
+  const html=View.render({insights:{comparisons:[comparison({id:'x" onclick="bad()',name:'<img src=x onerror=bad()>',context:'<svg onload=bad()>',unit:'<script>'})],weeks:null}});
+  assert.doesNotMatch(html, /<img|<svg onload|<script>|data-id="x" onclick/);
+  assert.match(html, /&lt;img src=x onerror=bad\(\)&gt;/);
+  assert.match(html, /&lt;svg onload=bad\(\)&gt;/);
+  assert.doesNotThrow(()=>View.render({insights:{comparisons:{},weeks:{}}}));
+  assert.match(View.infoHtml('performance'), /najbolju potpuno odrađenu seriju/);
+  assert.match(View.infoHtml('performance'), /ne dokazuje veću snagu/);
+  assert.match(View.infoHtml('activity'), /njegov doprinos AU nije poznat/);
+});
+
+test('unknown duration and AU remain missing while a recorded zero remains a real zero', () => {
+  const start=new Date(2026,10,2).getTime();
+  const render=week=>View.render({insights:{weeks:[{start,...week}]}});
+  const unknown=render({count:1,minutes:0,missingDuration:1,au:0,unrated:1});
+  assert.match(unknown, /— min · 1 bez trajanja/);
+  assert.match(unknown, /<td>1<\/td><td>— · 1 bez trajanja<\/td><td>— · 1 bez AU<\/td>/);
+  assert.doesNotMatch(unknown, /0 poznato|0 min zabilježeno|bez ocjene/);
+  const mixed=render({count:2,minutes:30,missingDuration:1,au:180,unrated:1});
+  assert.match(mixed, /30 min poznato · 1 bez trajanja/);
+  assert.match(mixed, /<td>2<\/td><td>30 · 1 bez trajanja<\/td><td>180 poznato · 1 bez AU<\/td>/);
+  const zero=render({count:1,minutes:0,missingDuration:0,au:0,unrated:0});
+  assert.match(zero, /0 min zabilježeno/);
+  assert.match(zero, /<td>1<\/td><td>0<\/td><td>0<\/td>/);
+  const ratedZeroMixed=render({count:2,minutes:30,missingDuration:0,au:0,unrated:1});
+  assert.match(ratedZeroMixed, /<td>0 poznato · 1 bez AU<\/td>/);
+  assert.match(View.infoHtml('activity'), /nema ocjenu napora ili trajanje/);
+});

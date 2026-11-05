@@ -28,8 +28,20 @@
   var INFO = {
     overview: {
       title: 'Kako čitati napredak',
-      paragraphs: ['Pregled pokazuje odrađene treninge, količinu rada i promjene u vježbama. Otvori samo dio koji te zanima.',
+      paragraphs: ['Na vrhu su usporedive zabilježene izvedbe i aktivnost kroz osam tjedana. Detaljni grafovi i pravila ostaju ispod.',
         'Tjedan po planu prati tvoje planirane treninge. Ekipni treninzi ulaze u ukupan broj odrađenih treninga, a isprobavanje vježbe iz knjižnice ostaje u povijesti te vježbe.']
+    },
+    performance: {
+      title: 'Što točno uspoređujemo',
+      paragraphs: ['Svaka kartica uspoređuje najbolju potpuno odrađenu seriju iste vježbe pri istoj zabilježenoj težini i istom načinu izvođenja po stranama. Vrijednost je broj ponavljanja ili trajanje jedne serije, a ne zbroj treninga.',
+        'Datumi i uvjeti stoje uz usporedbu. Ako rezerva ponavljanja ili sekundi nije ista ili nije poznata, to je označeno. Veći broj sam po sebi ne dokazuje veću snagu, bolji oporavak ili optimalan napor.',
+        'Prva izvedba postavlja polazište. Promjena se prikazuje tek kad postoji usporediv raniji zapis; niži rezultat i rezultat bez promjene jednako su dio povijesti.']
+    },
+    activity: {
+      title: 'Tvojih osam tjedana',
+      paragraphs: ['Svaki stupac pokazuje broj spremljenih treninga u jednom kalendarskom tjednu, od ponedjeljka do nedjelje. Uključeni su vlastiti i ekipni treninzi. Isprobavanja vježbi, testovi i budući zapisi nisu uključeni.',
+        'Zadnji tjedan još traje. Prazan stupac znači da nema spremljenog treninga. Broj treninga i minute mjere aktivnost, a ne kvalitetu ili fizički napredak.',
+        'Tablica prikazuje i poznate minute te zabilježeni sRPE × trajanje u AU. Ako neki trening nema ocjenu napora ili trajanje, njegov doprinos AU nije poznat i nije prikazan kao nula. Broj zapisa bez trajanja označen je i uz minute.']
     },
     load: {
       title: 'Količina rada kroz tjedne',
@@ -87,6 +99,91 @@
       content + '</div></details>';
   }
   function empty(message) { return '<p class="pg-empty-line">' + esc(message) + '</p>'; }
+  function finite(value) { return typeof value === 'number' && isFinite(value); }
+  function amount(value) { return new Intl.NumberFormat('hr-HR', { maximumFractionDigits: 2 }).format(value); }
+  function shortDate(value) {
+    return finite(value) && !isNaN(new Date(value).getTime()) ? new Intl.DateTimeFormat('hr-HR', {
+      day: 'numeric', month: 'numeric', year: 'numeric'
+    }).format(new Date(value)) : 'Datum nije zabilježen';
+  }
+  function weekDate(value) {
+    return finite(value) && !isNaN(new Date(value).getTime()) ? new Intl.DateTimeFormat('hr-HR', {
+      day: 'numeric', month: 'numeric'
+    }).format(new Date(value)) : '—';
+  }
+  function comparisonHtml(item) {
+    var delta = item.current - item.previous;
+    var change = delta === 0 ? 'Bez promjene' : (delta > 0 ? '+' : '−') + amount(Math.abs(delta)) + ' ' + item.unit;
+    return '<article class="pg-comparison" data-id="' + esc(item.id) + '" data-kind="' + esc(item.kind) + '">' +
+      '<div class="pg-comparison-top"><span>' + (item.kind === 'time' ? 'Trajanje serije' : 'Ponavljanja u seriji') +
+      '</span><span class="pg-change' + (delta > 0 ? ' pg-change-up' : '') + '">' + esc(change) + '</span></div>' +
+      '<h3>' + esc(item.name) + '</h3><div class="pg-comparison-values"><div><span>Prethodno</span>' +
+      '<strong class="pg-before">' + esc(amount(item.previous)) + ' <small>' + esc(item.unit) + '</small></strong>' +
+      '<time datetime="' + esc(new Date(item.previousAt).toISOString()) + '">' + esc(shortDate(item.previousAt)) + '</time></div>' +
+      '<span class="pg-comparison-arrow" aria-hidden="true">→</span><div><span>Posljednje usporedivo</span>' +
+      '<strong class="pg-after">' + esc(amount(item.current)) + ' <small>' + esc(item.unit) + '</small></strong>' +
+      '<time datetime="' + esc(new Date(item.currentAt).toISOString()) + '">' + esc(shortDate(item.currentAt)) + '</time></div></div>' +
+      '<p class="pg-context">' + esc(item.context) + '</p>' +
+      '<button type="button" class="pg-exercise-link" data-a="openEx" data-id="' + esc(item.id) +
+      '" aria-label="' + esc('Otvori vježbu i povijest: ' + item.name) + '">Vježba i puna povijest <span aria-hidden="true">↗</span></button></article>';
+  }
+  function performanceHtml(insights, zero) {
+    var comparisons = (Array.isArray(insights.comparisons) ? insights.comparisons : []).filter(function (item) {
+      return item && item.id && ['reps', 'time'].includes(item.kind) && finite(item.current) && item.current >= 0 &&
+        finite(item.previous) && item.previous >= 0 && finite(item.currentAt) && finite(item.previousAt) &&
+        !isNaN(new Date(item.currentAt).getTime()) && !isNaN(new Date(item.previousAt).getTime());
+    });
+    if (zero && !comparisons.length) return '';
+    return '<section id="pg-performance" class="pg-visible-panel" aria-labelledby="pg-performance-title">' +
+      '<div class="pg-panel-head"><div><p class="pg-eyebrow">Iz tvojih zapisa</p><h2 id="pg-performance-title">Što se promijenilo</h2></div>' +
+      info('performance', 'Kako uspoređujemo izvedbe') + '</div>' +
+      (comparisons.length ? '<div class="pg-comparisons">' + comparisons.map(comparisonHtml).join('') + '</div>' :
+        '<div class="pg-comparison-empty"><h3>Prva izvedba je polazište</h3><p>Za usporedbu trebaju dvije zabilježene izvedbe iste vježbe pri istoj težini i načinu izvođenja. Različite doze i dalje vidiš u punoj povijesti.</p></div>') + '</section>';
+  }
+  function activityHtml(insights) {
+    var weeks = (Array.isArray(insights.weeks) ? insights.weeks : []).filter(function (week) {
+      return week && finite(week.start) && !isNaN(new Date(week.start).getTime()) && finite(week.count) && week.count >= 0;
+    }).slice(-8);
+    if (!weeks.length) return '';
+    var total = weeks.reduce(function (sum, week) { return sum + week.count; }, 0);
+    var minutes = weeks.reduce(function (sum, week) { return sum + (finite(week.minutes) && week.minutes >= 0 ? week.minutes : 0); }, 0);
+    var missingDuration = weeks.reduce(function (sum, week) { return sum + (finite(week.missingDuration) && week.missingDuration > 0 ? week.missingDuration : 0); }, 0);
+    var minuteSummary = missingDuration > 0 ? (total > 0 && missingDuration >= total ? '— min' : amount(minutes) + ' min poznato') +
+      ' · ' + amount(missingDuration) + ' bez trajanja' : amount(minutes) + ' min zabilježeno';
+    var max = Math.max.apply(null, [1].concat(weeks.map(function (week) { return week.count; })));
+    var step = 320 / weeks.length;
+    var bars = weeks.map(function (week, index) {
+      var x = step * index + step / 2, height = week.count / max * 70;
+      return '<g><rect class="pg-activity-track" x="' + (x - 11) + '" y="24" width="22" height="70" rx="7"/>' +
+        (height ? '<rect class="pg-activity-bar' + (index === weeks.length - 1 ? ' pg-activity-current' : '') + '" x="' + (x - 11) + '" y="' + (94 - height) + '" width="22" height="' + height + '" rx="7"/>' : '') +
+        '<text class="pg-activity-count" x="' + x + '" y="15" text-anchor="middle">' + esc(amount(week.count)) + '</text>' +
+        '<text class="pg-activity-date" x="' + x + '" y="112" text-anchor="middle">' + esc(weekDate(week.start)) + '</text></g>';
+    }).join('');
+    function knownAu(week) {
+      var hasKnown = finite(week.au) && week.au >= 0 && !(week.count > 0 && week.unrated >= week.count);
+      var known = hasKnown ? amount(week.au) : '—';
+      return week.unrated > 0 ? known + (hasKnown ? ' poznato' : '') + ' · ' + amount(week.unrated) + ' bez AU' : known;
+    }
+    function knownMinutes(week) {
+      var hasKnown = finite(week.minutes) && week.minutes >= 0 && !(week.count > 0 && week.missingDuration >= week.count);
+      var known = hasKnown ? amount(week.minutes) : '—';
+      return week.missingDuration > 0 ? known + ' · ' + amount(week.missingDuration) + ' bez trajanja' : known;
+    }
+    return '<section id="pg-activity" class="pg-visible-panel pg-activity" aria-labelledby="pg-activity-title">' +
+      '<div class="pg-panel-head"><div><p class="pg-eyebrow">Ritam aktivnosti</p><h2 id="pg-activity-title">Zadnjih 8 tjedana</h2></div>' +
+      info('activity', 'Kako čitati aktivnost kroz tjedne') + '</div>' +
+      '<div class="pg-activity-summary"><strong>' + esc(amount(total)) + '<span>spremljenih treninga</span></strong>' +
+      '<span>' + esc(minuteSummary) + '</span></div>' +
+      '<svg class="pg-activity-chart" viewBox="0 0 320 119" role="img" aria-label="' +
+      esc('Broj spremljenih treninga po tjednima: ' + weeks.map(function (week) { return weekDate(week.start) + ' ' + week.count; }).join('; ') + '. Zadnji tjedan još traje. Iste vrijednosti su u tablici.') + '">' + bars + '</svg>' +
+      '<p class="pg-activity-note"><span aria-hidden="true"></span>Ovaj tjedan je u tijeku · više nije nužno bolje</p>' +
+      '<details class="pg-activity-table"><summary>Brojke po tjednima</summary><table><caption>Aktivnost iz spremljenih treninga</caption>' +
+      '<thead><tr><th scope="col">Tjedan od</th><th scope="col">Treninzi</th><th scope="col">Poznate min</th><th scope="col">AU</th></tr></thead><tbody>' +
+      weeks.slice().reverse().map(function (week) {
+        return '<tr><th scope="row">' + esc(shortDate(week.start)) + '</th><td>' + esc(amount(week.count)) + '</td><td>' +
+          esc(knownMinutes(week)) + '</td><td>' + esc(knownAu(week)) + '</td></tr>';
+      }).join('') + '</tbody></table></details></section>';
+  }
   function exampleFlow(caption, labels) {
     return '<div class="pg-help-visual"><small>' + esc(caption) + '</small><div class="pg-example-flow">' +
       labels.map(function (label, index) {
@@ -98,12 +195,13 @@
       '<div class="pg-example-load" role="img" aria-label="Primjer: 5 ponavljanja puta 20 kilograma jednako je 100 kilograma volumena tereta.">' +
       '<div><strong>5</strong><span>ponavljanja</span></div><b aria-hidden="true">×</b><div><strong>20</strong><span>kg</span></div>' +
       '<b aria-hidden="true">=</b><div class="pg-example-result"><strong>100</strong><span>kg volumena</span></div></div></div>';
+    if (topic === 'performance') return exampleFlow('Ilustracija · ista težina, jedna serija', ['Ranije 6 pon.', 'Kasnije 8 pon.']);
     if (topic === 'exercises') return '<div class="pg-help-visual"><small>Primjer · usporedive izvedbe</small>' +
       '<svg class="pg-example-chart" viewBox="0 0 260 86" role="img" aria-label="Ilustracija trenda kroz tri izvedbe; ovo nisu tvoji rezultati.">' +
       '<path class="pg-example-grid" d="M15 18H245 M15 44H245 M15 65H245"/>' +
       '<path class="pg-example-line" d="M27 56L130 35L233 23"/><circle cx="27" cy="56" r="4"/><circle cx="130" cy="35" r="4"/><circle cx="233" cy="23" r="4"/>' +
       '<text x="27" y="82" text-anchor="middle">1. izvedba</text><text x="130" y="82" text-anchor="middle">2.</text><text x="233" y="82" text-anchor="middle">3.</text></svg></div>';
-    if (topic === 'consistency') return '<div class="pg-help-visual"><small>Primjer · jedan tjedan</small><div class="pg-example-week" ' +
+    if (topic === 'consistency' || topic === 'activity') return '<div class="pg-help-visual"><small>Primjer · jedan tjedan</small><div class="pg-example-week" ' +
       'role="img" aria-label="Ilustracija: zabilježen trening u ponedjeljak, srijedu i subotu.">' +
       ['P','U','S','Č','P','S','N'].map(function (day, index) {
         return '<span><b>' + day + '</b><i' + ([0,2,5].includes(index) ? ' class="on"' : '') + '></i></span>';
@@ -151,6 +249,8 @@
         '<p>Spremi odrađeni trening. Ovdje ćeš pratiti svoj rad, trendove i prijedloge za sljedeći korak.</p>' +
         '<button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
     }
+    html += performanceHtml(vm.insights || {}, vm.zero) + activityHtml(vm.insights || {});
+    html += '<div class="pg-tools-heading"><h2>Detalji i alati</h2><p>Otvori ono što želiš istražiti.</p></div>';
     var ready = Number(counts.ready) || 0, missing = Number(counts.missing) || 0, way = Number(counts.way) || 0;
     var suggestions = heading('Ti odlučuješ o promjeni', '', 'suggestions') +
       (vm.suggestionsHtml || empty('Još nema prijedloga za promjenu doze.')) + (vm.missingWeightsHtml || '') +
@@ -161,7 +261,7 @@
     var load = heading('Količina rada', 'Zadnjih 8 kalendarskih tjedana', 'load') +
       (vm.weeklyHtml || empty('Nakon treninga s kilogramima ili terenskog treninga ovdje se vidi tjedni trend.'));
     html += section('load', 'Tjedni trendovi', vm.loadHint || 'Kilogrami i poznati metri', load,
-      { open: !vm.zero && !!vm.hasWeeklyData });
+      { open: false });
     var exercises = (vm.exercises || []).map(function (exercise) {
       return '<div class="pg-exercise">' + (exercise.html || '') +
         '<button type="button" class="pg-exercise-link" data-a="openEx" data-id="' + esc(exercise.id) +

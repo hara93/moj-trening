@@ -38,11 +38,12 @@ test('editing only the second uniform set seeds earlier and later recorded reps'
   assert.equal(Model.edit(e,result.patch).ok,true);assert.equal(e.items[0].repsList,undefined);
 });
 
-test('per-set reserves preserve untouched precision and null positions; reps cannot get holes',()=>{
+test('per-set reserves preserve precision and clearing recorded reps creates an explicit unknown position',()=>{
   const e=entry();
   const result=UI.readEdit(form([field('3','',{historyItem:'0',historySet:'1',historyField:'rir'})]),e);
   assert.deepEqual(result.patch.items[0].rirList,[1.234567891,3,2]);
-  assert.equal(UI.readEdit(form([field('','8',{historyItem:'0',historySet:'1',historyField:'reps'})]),e).ok,false);
+  const cleared=UI.readEdit(form([field('','8',{historyItem:'0',historySet:'1',historyField:'reps'})]),e);
+  assert.deepEqual(cleared.patch.items[0].repsList,[8,null,8]);assert.equal(Model.edit(e,cleared.patch).ok,true);
 });
 
 test('failed last attempt uses recorded position and separates attempted from completed sets',()=>{
