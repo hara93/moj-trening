@@ -80,6 +80,17 @@ async function run(){
  const ctx=await browser.newContext({viewport:{width:375,height:812},hasTouch:true,isMobile:true,deviceScaleFactor:1,locale:'hr-HR',timezoneId:'Europe/Zagreb',reducedMotion:'reduce',acceptDownloads:true});
  const p=await ctx.newPage();p.setDefaultTimeout(4500);const errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.clock.setFixedTime(new Date(moment));await p.goto('http://127.0.0.1:'+server.address().port+'/');
+ // Let the application's first load handler finish its offline installation
+ // before the scenarios repeatedly reload to exercise import and persistence.
+ try {await p.waitForFunction(()=>!!navigator.serviceWorker.controller,{},{timeout:30000});}
+ catch(error){
+   console.error('Cold offline installation:',await p.evaluate(async()=>({
+     controller:navigator.serviceWorker.controller?.scriptURL||null,
+     registrations:(await navigator.serviceWorker.getRegistrations()).map(r=>({scope:r.scope,active:r.active?.state,waiting:r.waiting?.state,installing:r.installing?.state})),
+     caches:await caches.keys(),readyState:document.readyState
+   })));
+   throw error;
+ }
  try {await scenarios(p,ctx);assert.deepEqual(errors,[]);}
  catch(e){const view=await p.locator('.view').allInnerTexts();console.error('View:',view.join().slice(0,1400));console.error('Dialog:',await p.getByRole('dialog').allInnerTexts());throw e;}
  finally {await ctx.close();fs.writeFileSync(path.join(artifacts,useWebKit?'today-webkit-audit.json':process.argv.includes('just-morning')?'today-morning-audit.json':'today-browser-audit.json'),JSON.stringify(records,null,2));}
