@@ -12,6 +12,14 @@ function between(start, end) {
 const status = new Function('S','g',between('function progSessions(', 'function progCover(')+'\nreturn progStatus(g);');
 const program = { id:'p',weeks:[{week:1,sessions:[{pr:'A'},{pr:'B'}]},{week:2,sessions:[{pr:'A'}]}] };
 const state = {settings:{}, pr:{A:{},B:{}},log:[]};
+test('future programme records cannot advance the next workout or fill earlier scheduled days',()=>{
+  const future={kind:'protocol',refId:'A',at:Date.now()+86400000};
+  const result=status({...state,log:[future]},program);
+  assert.equal(result.done,0);assert.equal(result.next.pr,'A');
+  const completedDays=new Function('S','weekStart','dayIdx','isTraining','slotHit','g',
+    between('function progDaysDone(', '// does log entry')+'\nreturn progDaysDone(g);');
+  assert.deepEqual(completedDays({log:[future]},()=>0,()=>0,()=>true,()=>true,{id:'p',days:[0]}),[]);
+});
 test('one completed workout satisfies one occurrence of a repeated programme protocol',()=>{
   const a={kind:'protocol',refId:'A',at:10};
   const one=status({...state,log:[a]},program);

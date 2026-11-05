@@ -1111,7 +1111,7 @@ function planSlots(){
 // the programme's days up to today that this week's sessions of it fill, matched as weekStatus does (the same day first)
 function progDaysDone(g){
   const ws = weekStart(Date.now()), today = dayIdx(Date.now()), days = g.days.filter(d => d <= today);
-  const left = S.log.filter(l => isTraining(l) && l.at >= ws && slotHit({ kind:'program', id:g.id }, l)).map(l => dayIdx(l.at));
+  const left = S.log.filter(l => isTraining(l) && l.at >= ws && l.at <= Date.now() && slotHit({ kind:'program', id:g.id }, l)).map(l => dayIdx(l.at));
   const keep = days.filter(d => { const k = left.indexOf(d); if (k === -1) return false; left.splice(k, 1); return true; });
   days.forEach(d => { if (keep.indexOf(d) === -1 && left.length) { left.pop(); keep.push(d); } });
   return keep.sort((x, y) => x - y);
@@ -2150,7 +2150,7 @@ function progSessions(g){ const out = []; (g.weeks || []).forEach(w => (w.sessio
 const progFrom = g => +((S.settings.progFrom || {})[g.id]) || 0;
 function progStatus(g){
   const all = progSessions(g), doneIds = Object.create(null), from = progFrom(g);
-  S.log.forEach(l => { if (l.kind === 'protocol' && l.refId && l.at >= from) doneIds[l.refId] = (doneIds[l.refId] || 0) + 1; });
+  S.log.forEach(l => { if (l.kind === 'protocol' && l.refId && l.at >= from && l.at <= Date.now()) doneIds[l.refId] = (doneIds[l.refId] || 0) + 1; });
   const items = all.map(x => {
     const done = doneIds[x.pr] > 0;
     if (done) doneIds[x.pr]--;
