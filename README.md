@@ -16,13 +16,17 @@ Na početnoj stranici **Kondicija** otvara terenski katalog. Filtriraj po **Brzi
 
 U protokolu se odmah vide pojedinačne serije. Treća kartica **Doziranje** dostupna je i u knjižnici vježbi i tijekom treninga. Kvačica uz aktivnu seriju na ponavljanja potvrđuje izvedbu. Kod izdržaja oznake prate odrađeno vrijeme i strane. Možeš promijeniti broj preostalih serija te ponavljanja, kilograme ili trajanje buduće serije. Uređivač za to vrijeme pauzira trening. Promjene vrijede za tu izvedbu. Povijest prikazuje odrađene serije s njihovim stvarnim dozama.
 
+U pregledu protokola vježbe su raspoređene u blokove sa sličicama, opremom i svim serijama. Dodirni naziv za panel s demonstracijom, uputama i prethodnom stvarnom izvedbom. Ondje možeš otvoriti punu povijest, urediti serije za to pokretanje ili postaviti ciljani RIR / rezervu u sekundama. Cilj ne zamjenjuje rezervu koju uneseš nakon serije.
+
+**Zamijeni vježbu** nudi odgovarajuće alternative iz tvoje knjižnice. Filter opreme sužava popis prema odabranoj oznaci; nije popis svega što imaš na raspolaganju. Potvrdi novu dozu i kilograme. Zamjena ostaje u toj izvedbi, a izvorni protokol ostaje sačuvan. Tijekom treninga zamjena je dostupna samo za buduću vježbu koja još nije započela. Propisane vježbe programa ne zamjenjuju se. Ako nema odgovarajuće alternative, prikazuje se prazan popis bez pretpostavljene zamjene.
+
 Ako vježba zahtijeva težinu koja još nije upisana, prije prve izvedbe unesi kilograme. Za bučice se upisuje težina jedne bučice, za šipku ukupna masa, a za landmine masa ploča. Spremljena težina odnosi se na taj protokol ili pojedinačnu vježbu.
 
 U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **ⓘ** za objašnjenje.
 
 ## Nadogradnje
 
-Trenutna verzija je 1.15.1. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.16.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 Na **Početnoj** je pozdrav **Bok, Tomislav**, tjedni raspored i velike kartice treninga koje listaš vodoravno. **Danas**, jutarnja provjera i ekipni dnevnik dostupni su u **Moj pregled**.
 
@@ -70,6 +74,7 @@ node tools/browser/storage.cjs
 node tools/browser/field-results.cjs
 node tools/browser/navigation.cjs
 node tools/browser/home-progress.cjs
+node tools/browser/workout.cjs
 ```
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.

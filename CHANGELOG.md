@@ -1,5 +1,14 @@
 # Promjene
 
+## 1.16.0 — 5. 11. 2026.
+
+- Pregled treninga sada prikazuje jasne blokove, sličice vježbi, opremu i sve pojedinačne serije. Gumb za pokretanje ostaje dostupan pri dnu.
+- Dodir na vježbu otvara panel s demonstracijom, uputama, doziranjima, bilješkama i prethodnom stvarno odrađenom izvedbom. Nepoznate vrijednosti i djelomično odrađene strane jasno su označene.
+- Ciljani RIR ili rezerva u sekundama mogu se postaviti za tu izvedbu prije početka. Cilj ostaje odvojen od rezerve zabilježene nakon serije.
+- Zamjena vježbe nudi alternative iste kategorije, mjere, glavne mišićne skupine i obrasca, uz filter opreme. Nova doza traži potvrdu; težina prethodne vježbe ne prenosi se. Zamjena vrijedi za tu izvedbu i ne mijenja izvorni protokol.
+- Tijekom treninga može se zamijeniti samo buduća, nezapočeta vježba. Već odrađeni koraci, vremena, rezerve i raspodjela mišićnog rada ostaju sačuvani. Zamjena propisanih vježbi programa ostaje zaključana; promjene stvarne doze tijekom izvođenja čuvaju izvorni plan.
+- Ako uređaj odbije prvo spremanje treninga, unos ostaje otvoren uz poruku i mogućnost ponovnog pokušaja.
+
 ## 1.15.1 — 5. 11. 2026.
 
 - Vraćena je izvorna početna stranica s velikim slikovnim karticama, vodoravnim listanjem i tjednim rasporedom.

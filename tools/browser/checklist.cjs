@@ -63,8 +63,8 @@ async function solo(p){
 async function superset(p){
   await protocols(p);await by(p,'openPr','audit-unknown').click();assert.match(await p.locator('.pre-sets').innerText(),/Početna težina nije upisana/);
   await protocols(p);await by(p,'openPr',prId).click();const panel=p.locator('.pre-sets');assert.equal(await panel.locator('.set-item').count(),4);assert.equal(await panel.locator('li[data-state="planned"]').count(),4);assert.equal(await A(p,'checklistDone').count(),0);
-  await by(p,'openEx','side-plank').click();await A(p,'back').first().click();assert.equal(await panel.locator('.set-item').count(),4);
-  await A(p,'toggleDosePlan').click();assert.equal(await panel.locator('.set-item').count(),0);await A(p,'toggleDosePlan').click();assert.equal(await panel.locator('.set-item').count(),4);
+  await p.locator('.workout-exercise-open[data-j="1"]').click();await p.locator('.workout-exercise-panel').waitFor();await A(p,'workoutClose').click();assert.equal(await panel.locator('.set-item').count(),4);
+  assert.equal(await A(p,'toggleDosePlan').count(),0);assert.equal(await panel.locator('.set-item:visible').count(),4);
   await fillEdit(p,0,2,{reps:4,kg:30});assert.match(await panel.locator('.set-item').nth(1).innerText(),/4 pon.*30 kg/);
   await p.setViewportSize({width:320,height:812});await layout(p,'.pre-sets');await p.setViewportSize({width:375,height:812});
   await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-prestart-webkit-375.png':'checklist-prestart-375.png')});

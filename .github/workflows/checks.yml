@@ -60,6 +60,7 @@ jobs:
           node tools/browser/field-results.cjs ${{ matrix.browser }}
           node tools/browser/navigation.cjs ${{ matrix.browser }}
           node tools/browser/home-progress.cjs ${{ matrix.browser }}
+          node tools/browser/workout.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

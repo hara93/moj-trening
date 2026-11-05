@@ -271,7 +271,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.15.1';
+const APP_VERSION = '1.16.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -350,6 +350,7 @@ let cleanFixes = 0;   // how many values the last checks had to drop or convert
 function cleanVal(k, v, depth){
   const drop = () => { cleanFixes++; return undefined; };
   if (v == null || depth > 12) return depth > 12 ? drop() : v;
+  if (k==='targetRir' || k==='targetSir') return Number.isInteger(v) && v>=0 && v<=(k==='targetSir'?40:10)?v:drop();
   if (k === 'muscleWorkEligible') return typeof v === 'boolean' ? v : drop();
   if (k === 'muscleWork') {
     if (!Array.isArray(v)) return drop();
@@ -953,6 +954,7 @@ function syncNavigation() {
 }
 function dismissSheet() {
   if (!S.sheet) return;
+  if (['workoutExercise','workoutSwap','workoutReplace'].includes(S.sheet.kind)) {workoutClose();return;}
   if (S.sheet.kind==='quit') {A.quitResume();return;}
   if (['playDose','playDoseHelp'].includes(S.sheet.kind)) {A.playDoseCancel();return;}
   S.sheet=null;render();
@@ -1913,10 +1915,11 @@ function checklistRow(item, row, index, heading, round, weightKind, live) {
   else if (StartingLoad.missingSet(item,row.set-1,weightKind)) weight = 'Početna težina nije upisana';
   else if (item.startingKgKnown || item.kgList?.some(v => v > 0)) weight = '0 kg';
   const info = [quantity + (item.sides ? ' po strani' : ''), weight];
+  let reserveHtml='';
   if (row.reserve != null) {
     const taps = timed ? LM.SIR_TAPS : LM.RIR_TAPS, labels = timed ? LM.SIR_TXT : LM.RIR_TXT;
     const value = labels[taps.indexOf(row.reserve)] || row.reserve.toLocaleString('hr-HR');
-    info.push(timed ? 'SIR '+value+' s' : 'RIR '+value);
+    reserveHtml='<span class="set-reserve" data-kind="'+(timed?'sir':'rir')+'">'+esc(timed?'SIR '+value+' s':'RIR '+value)+'</span>';
   }
   const sides = live && timed && item.sides ? '<span class="set-sides">'+
     (row.left ? '✓ Lijeva' : '○ Lijeva')+' · '+(row.right ? '✓ Desna' : '○ Desna')+'</span>' : '';
@@ -1924,7 +1927,7 @@ function checklistRow(item, row, index, heading, round, weightKind, live) {
     '<button type="button" class="set-mark" data-a="checklistDone" data-j="'+index+'" data-set="'+row.set+'" data-step="'+row.step+
     '" aria-label="'+esc('Označi kao odrađeno: '+heading+', '+label)+'"><span aria-hidden="true"></span></button>';
   return '<li class="set-item" data-state="'+row.state+'"'+(row.current ? ' aria-current="step"' : '')+'>'+marker+
-    '<span class="set-info"><b>'+esc(label)+'</b><span>'+esc(info.join(' · '))+'</span>'+sides+'</span>'+
+    '<span class="set-info"><b>'+esc(label)+'</b><span>'+esc(info.join(' · '))+'</span>'+reserveHtml+sides+'</span>'+
     '<small class="set-state">'+(row.step != null ? 'Potvrdi' : status)+'</small></li>';
 }
 function checklistHtml(items, player, editable, libraryLinks = false) {
@@ -1933,8 +1936,8 @@ function checklistHtml(items, player, editable, libraryLinks = false) {
     const exercise = S.ex[item.exId], group = rounds[j];
     const rows = PlayerDose.checklist(item,player,j);
     const heading = (group ? group.L+group.k+' · ' : '') + (exercise?.name || 'Obrisana vježba');
-    const edit = editable ? '<button class="set-edit" type="button" data-a="'+(player ? 'playDoseEdit' : 'previewDoseEdit')+
-      '" data-j="'+j+'" aria-label="'+esc('Uredi serije: '+heading)+'">Uredi</button>' : '';
+    const edit = (player?'<button class="set-edit" type="button" data-a="workoutExercise" data-j="'+j+'">Detalji</button>':'') + (editable ? '<button class="set-edit" type="button" data-a="'+(player ? 'playDoseEdit' : 'previewDoseEdit')+
+      '" data-j="'+j+'" aria-label="'+esc('Uredi serije: '+heading)+'">Uredi</button>' : '');
     const unit = group ? groupWord(group.size)+' '+group.L : 'Vježba '+(j+1);
     const title = '<small>'+esc(unit)+'</small><strong>'+esc(heading)+'</strong>';
     const updated = item.up && Date.now()-item.up < 21*DAY_MS ? '<small class="set-new">↑ Napredak</small>' : '';
@@ -1943,18 +1946,80 @@ function checklistHtml(items, player, editable, libraryLinks = false) {
     const weightKind=startLoadDescription(item.exId)?.kind;
     const count = player ? rows.filter(row => row.state==='done').length+' / '+rows.length+' odrađeno' :
       rows.length+' '+plural(rows.length,'planirana serija','planirane serije','planiranih serija');
+    if (libraryLinks) return WorkoutView.exercise({index:j,name:heading,thumbHtml:exercise?thumbHtml(exercise):'',equipment:exercise?exEquip(exercise):[],summary:count,rest:item.rest,rowsHtml:'<ol class="set-list">'+rows.map(row=>checklistRow(item,row,j,heading,group,weightKind,player)).join('')+'</ol>',actionsHtml:edit,targetHtml:workoutTargetHtml(item)});
     return '<section class="set-block"><header>'+name+edit+'</header><div class="set-count">'+count+
       (item.rest ? ' <span>· odmor '+esc(item.rest)+' s</span>' : '')+'</div><ol class="set-list">'+
       rows.map(row => checklistRow(item,row,j,heading,group,weightKind,player)).join('')+'</ol></section>';
   });
   if (!libraryLinks) return blocks.join('');
-  let section;
-  return groupsOf(items).map(g => {
-    const heading = items[g.idx[0]].section;
-    const title = heading && heading!==section ? '<div class="sechead">'+esc(heading)+'</div>' : '';
-    if (heading) section = heading;
-    return title+(g.ss ? groupHead(items,g,rounds[g.idx[0]].L) : '')+g.idx.map(j => blocks[j]).join('');
-  }).join('');
+  const sections=secOf(items), ordered=[];
+  groupsOf(items).forEach(g=>{
+    const label=sections[g.idx[0]] || 'Glavni dio';
+    const previous=ordered[ordered.length-1];
+    if (previous && previous.title===label) previous.groups.push(g); else ordered.push({title:label,groups:[g]});
+  });
+  return ordered.map(block=>WorkoutView.block({title:block.title,itemsHtml:block.groups.map(g=>
+    (g.ss?groupHead(items,g,rounds[g.idx[0]].L):'')+g.idx.map(j=>blocks[j]).join('')).join('')})).join('');
+}
+
+function workoutContext(s) {
+  const t=top(), live=!!s?.live;
+  if (live) return P?.mode==='ex' && !P.done ? {items:P.items,source:P.originalItems || P.items,program:!!S.pr[P.ref?.id]?.program,live:true} : null;
+  if (!['pr','ex'].includes(t.v)) return null;
+  const source=viewDoseSource(t);
+  return {items:viewDoseItems(t,source),source,program:t.v==='pr' && !!S.pr[t.id]?.program,live:false};
+}
+function workoutTargetHtml(item) {
+  const timed=item.measure==='time', value=item[timed?'targetSir':'targetRir'];
+  return Number.isFinite(value)?'<span class="workout-target">Cilj · '+(timed?'rezerva '+esc(value)+' s':'RIR '+esc(value))+'</span>':'';
+}
+function workoutCanSwap(c,j) {
+  if (!c || c.program || (!c.live && top().v!=='pr') || (c.live && P.ref?.kind!=='protocol')) return false;
+  return !c.live || !P.steps.some((step,i)=>step.g===j && (i<=P.i || P.doneSteps[i]));
+}
+function workoutValid(s,c) {
+  if (!c || mtCanon(c.live?c.items:c.source)!==s.base) return false;
+  try {return localStorage.getItem(STORE_KEY)===savedJson;} catch(e){return false;}
+}
+function workoutPreviousHtml(item) {
+  const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});
+  if (!previous) return '<p class="none">Još nema zabilježene izvedbe ove vježbe.</p>';
+  const value=(v,suffix='')=>v==null?'<span aria-label="Nije zabilježeno" title="Nije zabilježeno">—</span>':esc(v.toLocaleString('hr-HR'))+suffix;
+  return '<p class="workout-previous-date">'+esc(shortDate(previous.at))+' · '+esc(previous.sessionName || 'Trening')+'</p>'+
+    (previous.rows.length?'<div class="workout-previous-table"><table><thead><tr><th scope="col">Serija</th><th scope="col">Izvedba</th><th scope="col">kg</th><th scope="col">Rezerva</th></tr></thead><tbody>'+previous.rows.map(row=>
+      '<tr><th scope="row">'+esc(row.number || '—')+'</th><td>'+value(row.measure==='time'?row.sec:row.reps,row.measure==='time'?' s':' pon.')+(row.perSide?' po strani · '+(row.sides==null?'strane nisu zabilježene':row.sides+'/2 strane'+(row.sides<2?' · djelomično':'')):'')+(row.failed?' · nedovršeno':'')+'</td><td>'+value(row.kg)+'</td><td>'+value(row.measure==='time'?row.sir:row.rir,row.measure==='time'?' s':' RIR')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="none">'+esc(previous.skippedItems?'Vježba je preskočena.':'Pojedinačne serije nisu zabilježene.')+'</p>')+
+    '<p class="workout-unknown-key">— Nije zabilježeno.</p>'+
+    ((previous.unknownItems || previous.skippedItems) && previous.context?'<p class="none">'+esc(previous.context)+'</p>':'');
+}
+function workoutPanelHtml(s) {
+  const c=workoutContext(s), item=c?.items[s.j], e=item && S.ex[item.exId];
+  if (!e) return '<h3>Vježba nije dostupna</h3><button class="btn" data-a="workoutClose">Zatvori</button>';
+  const rows=PlayerDose.checklist(item,c.live?P:null,s.j), weightKind=startLoadDescription(item.exId)?.kind;
+  const targetKey=item.measure==='time'?'targetSir':'targetRir', target=item[targetKey], max=item.measure==='time'?40:10;
+  const targetHtml=(!c.live && !c.program?'<label class="workout-target-select">'+(item.measure==='time'?'Ciljana rezerva (s)':'Ciljani RIR')+'<select id="workout-target" data-j="'+s.j+'"><option value="">Nije postavljeno</option>'+Array.from({length:max+1},(_,i)=>'<option value="'+i+'"'+(target===i?' selected':'')+'>'+i+'</option>').join('')+'</select></label>':workoutTargetHtml(item))+
+    '<small class="workout-target-note">Planirani cilj i rezerva koju zabilježiš nakon serije zasebni su podaci.</small>';
+  const actions='<button type="button" data-a="workoutEdit"'+(c.program && !c.live?' disabled':'')+'>Uredi serije</button><button type="button" data-a="workoutHistory">Povijest</button>'+
+    (workoutCanSwap(c,s.j)?'<button type="button" data-a="workoutSwap">Zamijeni vježbu</button>':'')+
+    '<button type="button" data-a="workoutClose">Zatvori</button>';
+  return WorkoutView.panel({name:e.name,mediaHtml:mediaHtml(e),equipment:exEquip(e),summary:doseBase(item),targetHtml,
+    rowsHtml:'<ol class="set-list">'+rows.map(row=>checklistRow(item,{...row,step:null},s.j,e.name,false,weightKind,c.live)).join('')+'</ol>',
+    instructionsHtml:'<details class="workout-instructions"><summary>Upute za izvedbu</summary>'+(e.steps?.length?e.steps.map(step=>'<p>'+esc(step)+'</p>').join(''):'<p>Upute nisu dodane.</p>')+'</details>',
+    previousHtml:s.history?exOptHtml(e):workoutPreviousHtml(item),actionsHtml:actions,note:[item.note,e.note].filter(Boolean).join('\n')});
+}
+function workoutSwapHtml(s) {
+  const c=workoutContext(s), item=c?.items[s.j];
+  if (!item) return '<h3>Vježba nije dostupna</h3><button class="btn" data-a="workoutClose">Zatvori</button>';
+  const exercises=Object.fromEntries(Object.values(S.ex).map(e=>[e.id,{...e,equip:exEquip(e)}]));
+  const profiles=Object.fromEntries(Object.values(S.ex).map(e=>[e.id,loadFx(e)]));
+  const candidates=WorkoutModel.candidates({item,exercises,profiles}).filter(candidate=>!s.equipment || candidate.equipment.includes(s.equipment));
+  return '<h3>Zamijeni vježbu</h3><p class="play-dose-note">Odaberi alternativu i potvrdi njezine serije i težine. Zamjena vrijedi za ovaj trening.</p>'+
+    '<label class="workout-equipment">Oprema<select id="workout-equipment"><option value="">Sva oprema</option>'+EQUIP.map(name=>'<option'+(s.equipment===name?' selected':'')+'>'+esc(name)+'</option>').join('')+'</select></label>'+
+    '<div class="workout-alternatives">'+(candidates.length?candidates.map(candidate=>'<button type="button" class="row" data-a="workoutCandidate" data-id="'+esc(candidate.id)+'"><span class="thumb">'+thumbHtml(S.ex[candidate.id])+'</span><span class="tx"><b>'+esc(candidate.name)+'</b><small>'+esc(candidate.equipment.join(' · '))+'</small><small>'+esc(candidate.reason)+'</small></span>'+I.chev+'</button>').join(''):'<p class="none">Nema odgovarajuće alternative za taj odabir opreme.</p>')+'</div>'+
+    (s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button class="btn sec" data-a="workoutClose">Odustani</button>';
+}
+function workoutClose() {
+  if (P?.dosePause) {playDoseResumeEditing();return;}
+  S.sheet=null;render();
 }
 
 // The third library card previews the dose that the Play button starts.
@@ -1972,8 +2037,7 @@ function exCardsHtml(e,t){
       (fig ? '<div class="tf" role="img" aria-label="Mišići na tijelu: ' + esc(m.prime.concat(m.sec).map(muscleLabel).join(', ')) + '">' + fig + '</div>' : '') + '</div>' : '') +
     (e.note ? '<div class="sec">' + lb('Zašto') + '<p class="cn">'+esc(e.note)+'</p></div>' : (chips.length ? '' : '<p class="none">Dodaj objašnjenje u uređivanju.</p>')) +
     (SHOW_SOURCES && e.source ? '<p class="src">Izvor: '+a(e.source, e.sourceTitle || 'Otvori izvor')+'</p>' : '');
-  const c3 = checklistHtml(viewDoseItems(t),null,true)+
-    '<button class="set-load-link" type="button" data-a="exerciseLoad" data-id="'+esc(e.id)+'">Opterećenje i povijest vježbe</button>';
+  const c3 = checklistHtml(viewDoseItems(t),null,true);
   return '<section class="exswipe" aria-label="O vježbi"><div class="swrow" id="swrow">' + card('upute',0,'Upute',c1) + card('cilj',1,'Cilj',c2) + card('dose',2,'Doziranje',c3,lb('Doziranje')) + '</div>'+
     '<div class="dots swdots" id="swdots">'+['Upute','Cilj','Doziranje'].map((title,i)=>'<button class="dot" data-a="swGo" data-i="'+i+'" aria-label="'+title+'" aria-current="'+(EX_CARDS[i]===S.exTab)+'"><i></i></button>').join('')+'</div></section>';
 }
@@ -1989,6 +2053,7 @@ VIEWS.ex = function(t){
     '<div class="gut">' + topbar(backBtn(), '<button class="ib" data-a="fav" data-id="'+esc(e.id)+'" aria-pressed="'+(!!e.fav)+'" aria-label="Favorit">'+(e.fav?I.heartF:I.heart)+'</button><button class="ib" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'</button>') + '</div>' +
     mediaHtml(e, e.sides ? 'Lijeva i desna' : '') +
     '<div class="ttl gut">' + esc(e.name) + '</div>' +
+    '<div class="workout-library-tools gut"><button type="button" data-a="workoutExercise" data-j="0">Serije i prethodna izvedba</button><button type="button" data-a="exerciseLoad" data-id="'+esc(e.id)+'">Povijest</button></div>' +
     (exAlt(e) ? '<div class="meta gut">' + esc(exAlt(e)) + '</div>' : '') +
     '<div class="chips center dz" role="group" aria-label="Doziranje">' + opts.map((o,i) => '<button class="chip" data-a="dose" data-i="'+i+'" aria-pressed="'+(i===sel)+'">'+esc(o.label)+'</button>').join('') + '</div>' +
     // 1.8: everything about the exercise sits in the three swipe cards (1.6.2's tabs; nothing below them)
@@ -2267,24 +2332,14 @@ function featRows(p){
 VIEWS.pr = function(t){
   const p = S.pr[t.id];
   if (!p) return '<div class="view gut">' + topbar(backBtn()) + '<div class="empty">Ovaj protokol više ne postoji.</div></div>';
-  const first = p.items && p.items[0] && S.ex[p.items[0].exId];
-  const fm = exMedia(first, true);
-  const showDose=t.showDose!==false;
-  return '<div class="view" style="position:relative">' +
-    heroHtml(p, fm) +
-    '<div class="over gut">' + topbar(backBtn(), '<button class="ib" data-a="editPr" data-id="'+esc(p.id)+'" aria-label="Uredi protokol">'+I.edit+'</button>') + '</div>' +
-    '<div class="gut stack" style="gap:18px;margin-top:-6px">' +
-      '<h1 style="margin:0 17px;font-size:30px;line-height:36px;font-weight:600;text-wrap:balance">' + esc(p.name) + '</h1>' +
-      (p.desc ? '<p style="margin:0 17px;font-size:16px;line-height:24px;color:var(--text-body)">' + esc(p.desc) + '</p>' : '') +
-      '<div class="stack" style="gap:16px;margin:4px 17px 0">' + featRows(p) + '</div>' +
-      goalCard(p) +
-      protocolMusclePreview(p) +
-      (p.program ? '' : daysPicker('prDays', p.id, p.days)) +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:8px 17px 0"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2>' + (p.program ? '' : '<button class="txtbtn" data-a="progInfo" style="font-size:14px;padding:0">Kako napredujem?</button>') + '</div>' +
-      (p.items?.length ? '<section class="pre-sets"><button type="button" class="set-preview-toggle" data-a="toggleDosePlan" aria-expanded="'+showDose+'"><span><b>Serije i doziranje</b><small>'+nVj(p.items.length)+'</small></span><span aria-hidden="true">'+(showDose?'−':'+')+'</span></button>'+
-        (showDose?checklistHtml(viewDoseItems(t,p.items),null,!p.program,true):'')+'</section>' : '')+
-    '</div><div style="height:16px"></div></div>' +
-    '<div class="footer gut"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"' + ((p.items||[]).length ? '' : ' disabled') + '>Krenimo!</button></div>';
+  const items=viewDoseItems(t,p.items || []);
+  const details=goalCard(p)+protocolMusclePreview({items})+(p.program?'':daysPicker('prDays',p.id,p.days));
+  return WorkoutView.overview({
+    topbarHtml:topbar(backBtn(),'<button class="ib" data-a="editPr" data-id="'+esc(p.id)+'" aria-label="Uredi protokol">'+I.edit+'</button>','TRENING'),
+    title:p.name,description:p.desc,metaHtml:featRows({...p,items}),
+    blocksHtml:items.length?'<section class="pre-sets" aria-label="Vježbe i serije">'+checklistHtml(items,null,!p.program,true)+'</section>':'<p class="empty">Dodaj prvu vježbu u protokol.</p>',
+    detailsHtml:details
+  })+'<div class="footer gut"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"'+(items.length?'':' disabled')+'>Pokreni trening</button></div>';
 };
 
 VIEWS.exerciseLoad = function(t) {
@@ -2932,6 +2987,7 @@ function openStartingLoad(cfg,repeating){
   if (!rows.length) return false;
   const source=startSource(cfg);
   if (!source) {toast('Vježba ili protokol više nisu dostupni.',true);return true;}
+  if(cfg.ref.kind==='protocol' && cfg.items.some((it,j)=>it.exId!==source.items[j]?.exId))cfg={...cfg,sessionOnly:true};
   S.sheet={kind:'startingLoad',cfg,repeating,rows,values:{},sourceKey:mtCanon(source),proposal:top().v==='today'?top().proposalKey:null};
   render();return true;
 }
@@ -2970,12 +3026,16 @@ function confirmStartingLoad(){
     S.sheet=null;render();toast('Trening ili prijedlog se promijenio. Provjeri ga prije pokretanja.',true);return;
   }
   const protocol=cfg.ref.kind==='protocol', map=protocol?S.pr:S.ex;
-  const updated=protocol?{...source,items:source.items.map(fill)}:StartingLoad.fill(source,kgByIndex.get(0));
+  const updated=cfg.sessionOnly?source:protocol?{...source,items:source.items.map(fill)}:StartingLoad.fill(source,kgByIndex.get(0));
   map[source.id]=updated;
   if (!persist()) {map[source.id]=source;error('Početna težina nije spremljena. Tvoj je unos još otvoren.');return;}
-  const items=cfg.items.map(fill), baseline=(cfg.originalItems || cfg.items).map(fill);
-  S.sheet=null;
-  startPlayer({...cfg,items,originalItems:baseline},s.repeating);
+  const items=cfg.items.map(fill), baseline=cfg.sessionOnly?(cfg.originalItems || cfg.items):(cfg.originalItems || cfg.items).map((it,i)=>it.exId===cfg.items[i]?.exId?fill(it,i):it);
+  s.sourceKey=mtCanon(updated);
+  if(startPlayer({...cfg,items,originalItems:baseline},s.repeating)===false && updated!==source){
+    map[source.id]=source;
+    if(persist())s.sourceKey=mtCanon(source);else{map[source.id]=updated;s.sourceKey=mtCanon(updated);}
+    render();
+  }
 }
 function startPlayer(cfg, repeating=false){
   if (P) return;
@@ -2992,11 +3052,17 @@ function startPlayer(cfg, repeating=false){
     P.steps = stepsFromItems(P.items);
     P.liveDoseVersion = 1; P.cardIndex = 0;
   }
-  if (!P.steps.length) return;
-  enterStep(0);
+  if (!P.steps.length) {P=null;return false;}
+  if(enterStep(0)===false){
+    P=null;audioMode(false);
+    const message='Trening nije spremljen na uređaj. Tvoj unos je sačuvan; pokušaj ponovno.';
+    if(S.sheet?.kind==='startingLoad'){S.sheet.error=message;render();}else toast(message,true);
+    return false;
+  }
   S.stack.push({ v:'play' }); S.sheet = null; render();
   keepAwake(true).then(wakeHint);
   clearInterval(ticker); ticker = setInterval(tick, 200);
+  return true;
 }
 // t0: when the step really began (catching up after the page was frozen), otherwise now
 function enterStep(i, t0){
@@ -3007,7 +3073,7 @@ function enterStep(i, t0){
   if (st.kind === 'work' || st.kind === 'manual') { beep(880, 260, 0.22); buzz(120); }
   else if (st.kind === 'switch') { beep(660, 200); buzz([80,60,80]); }
   else if (st.kind === 'rest' || st.kind === 'ready') { beep(520, 220); buzz(60); }
-  savePlay();
+  return savePlay();
 }
 function remaining(){ const st = P.steps[P.i]; if (!st || !st.dur) return 0; return P.paused ? P.left : Math.max(0, (P.endAt - Date.now())/1000); }
 function tick(){
@@ -3167,7 +3233,7 @@ function savePlay(){
     startedAt:P.startedAt, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
     answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe || null,
     musclePlan:P.musclePlan, originalMusclePlan:P.originalMusclePlan, historyId:P.historyId, at: Date.now(),
-    originalItems:P.originalItems, liveDoseVersion:P.liveDoseVersion, cardIndex:P.cardIndex,
+    originalItems:P.originalItems, sessionOnly:!!P.sessionOnly, liveDoseVersion:P.liveDoseVersion, cardIndex:P.cardIndex,
     liveSchedule:P.mode === 'ex' && P.liveDoseVersion === 1 ? PlayerDose.packSteps(P.steps) : undefined };
   try { localStorage.setItem(PLAY_KEY,JSON.stringify(snapshot)); return true; } catch(e) { return false; }
 }
@@ -3205,8 +3271,8 @@ function restorePlay(s){
     steps: f ? stepsFromField(s.dose === 'season' ? fieldDose(f) : f) : stepsFromItems(s.items), startedAt:(s.startedAt || now) + away, doneSteps:s.doneSteps || {}, quit:!!s.quit, secs:s.secs || 0, finishedAt:s.finishedAt || 0 };
   if (!f) {
     P.items = PlayerDose.items(s.items);
-    const baseline = Array.isArray(s.originalItems) && s.originalItems.length === P.items.length && s.originalItems.every((it,j) => it && it.exId === P.items[j].exId) ? s.originalItems : s.items;
-    P.originalItems = clone(baseline); P.liveDoseVersion = 1;
+    const baseline = Array.isArray(s.originalItems) && s.originalItems.length === P.items.length && s.originalItems.every(it => it && typeof it.exId==='string') ? s.originalItems : s.items;
+    P.originalItems = clone(baseline); P.sessionOnly=!!s.sessionOnly; P.liveDoseVersion = 1;
     P.cardIndex = [0,1,2].includes(s.cardIndex) ? s.cardIndex : 0;
     if (s.liveSchedule) {
       const timeline = PlayerDose.restoreSteps(s.liveSchedule,P.items,id => S.ex[id] || { id, name:'Vježba', steps:[] });
@@ -3223,7 +3289,7 @@ function restorePlay(s){
   });
   if (P.done && P.ref.kind === 'protocol') P.originalMusclePlan = P.items.map((it,j) => {
     const snap = MuscleWork.sanitize(Array.isArray(s.originalMusclePlan) ? s.originalMusclePlan[j] : Array.isArray(s.musclePlan) && s.musclePlan[j]);
-    return snap && snap.source === 'planned' && snap.exerciseId === it.exId ? MuscleWork.pack(snap) : null;
+    return snap && snap.source === 'planned' && snap.exerciseId === (P.originalItems[j] || it).exId ? MuscleWork.pack(snap) : null;
   });
   if (isPlainObj(s.rir)) P.rir = s.rir; if (s.srpe >= 1 && s.srpe <= 10) P.srpe = s.srpe;
   S.stack.push({ v:'play' }); S.sheet = null;
@@ -3259,6 +3325,7 @@ function sessionEntry(){
   if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => {
     const a = P.answers && P.answers[j] != null ? P.answers[j] : autoAnswer(j), n = it.sets || 1, did = setsDoneOf(j);
     const x = { exId: it.exId, measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides, done: a === true || a === 'partial' };   // partly done (even no whole set, e.g. one side of a hold) = done + setsDone; a failure is only 'Nisam uspio'
+    for(const key of ['targetRir','targetSir'])if(Number.isFinite(it[key]))x[key]=it[key];
     if (Array.isArray(it.repsList)) x.repsList = it.repsList.slice();
     if (a === 'skip') { x.skipped = true; x.setsDone = 0; }
     else if (a !== true && did < n) x.setsDone = did;
@@ -3417,6 +3484,7 @@ function progCandidates(){
   (p.items || []).forEach((it, j) => {
     const e = S.ex[it.exId]; const was = P.items[j];
     if (!e || !was || was.exId !== it.exId) return;
+    if (doseSig(PlayerDose.items([was])[0])!==doseSig(PlayerDose.items([it])[0])) return;
     const answer = P.answers[j] != null ? P.answers[j] : autoAnswer(j);
     if (PlayerDose.logDose(P,j,answer).fields.liveDoseChanged) return;
     if (!PROG_CATS[e.cat] && !(it.kg > 0) && !(e.cat === 'Rehab' && it.measure === 'time' && +e.phase !== 1)) return;
@@ -4487,7 +4555,7 @@ function playDoseCardsHtml(e){
   const info = '<button type="button" class="dose-info" data-a="playDoseHelp" aria-label="Kako se bilježe serije" aria-haspopup="dialog"><span aria-hidden="true">i</span></button>';
   return '<section class="play-cards" aria-label="Vježba i doziranje"><div class="play-card-tabs" role="tablist" aria-label="Kartice playera">'+names.map((name,i) => '<button type="button" role="tab" id="play-tab-'+i+'" data-a="playDoseCard" data-i="'+i+'" aria-selected="'+(i===on)+'" tabindex="'+(i===on?0:-1)+'" aria-controls="play-card-'+i+'">'+name+'</button>').join('')+'</div><div class="play-card-row'+(on===2?' show-sets':'')+'" id="play-card-row">'+names.map((name,i) => '<section class="play-card" id="play-card-'+i+'" role="tabpanel" aria-labelledby="play-tab-'+i+'" aria-hidden="'+(i!==on)+'"'+(i===on?'':' inert')+'><div class="play-card-heading"><h3>'+name+'</h3>'+(i===2?info:'')+'</div><div class="play-card-content">'+contents[i]+'</div></section>').join('')+'</div><div class="play-card-dots">'+names.map((name,i) => '<button type="button" data-a="playDoseCard" data-i="'+i+'" aria-label="'+name+'" aria-current="'+(i===on)+'"><i></i></button>').join('')+'</div></section>';
 }
-function playDoseEditorHtml(s){
+function playDoseEditorHtml(s, options = {}){
   const it = s.draft, guard = s.kind==='previewDose'?{locked:[],minSets:1}:PlayerDose.locks(P,s.j), ex = S.ex[it.exId], unit = it.measure === 'time' ? 'sec' : 'reps';
   const rows = Array.from({length:it.sets},(_,i) => {
     const set = i+1, d = PlayerDose.at(it,set), locked = guard.closed || guard.locked.includes(set), raw = s.rawForm && s.rawForm.rows.find(r => r.set === set);
@@ -4496,7 +4564,7 @@ function playDoseEditorHtml(s){
     const kilograms = raw && raw.kg != null ? raw.kg : unknown ? '' : String(d.kg).replace('.',',');
     return '<div data-dose-set="'+set+'"><label>'+set+'.'+(locked ? '<small>zaključano</small>' : '')+'</label><input type="text" inputmode="numeric" data-dose-value="'+unit+'" aria-label="'+set+'. serija '+(unit==='sec'?'sekunde':'ponavljanja')+'" value="'+esc(quantity)+'"'+(locked?' disabled':'')+'><input type="text" inputmode="decimal" data-dose-value="kg"'+(unknown?' data-unknown-kg="true" placeholder="Pri pokretanju"':'')+' aria-label="'+set+'. serija kilogrami" value="'+esc(kilograms)+'"'+(locked?' disabled':'')+'></div>';
   }).join('');
-  return '<h3>Doziranje · '+esc(ex ? ex.name : 'Vježba')+'</h3><p class="play-dose-note">'+(s.kind==='previewDose'?'Odaberi serije za sljedeće pokretanje.':'Trening je pauziran dok uređuješ serije.')+' Promjene vrijede za ovu izvedbu.</p><form id="play-dose-form" class="play-dose-editor"><div class="play-dose-count"><label for="play-dose-sets">Serije</label><input id="play-dose-sets" name="sets" type="number" min="'+guard.minSets+'" max="20" value="'+esc(s.rawForm ? s.rawForm.sets : String(it.sets))+'"'+(guard.closed?' disabled':'')+'><button type="button" class="txtbtn" data-a="playDoseResize"'+(guard.closed?' disabled':'')+'>Prikaži</button></div><div class="play-dose-table"><div class="play-dose-head"><span>Serija</span><span>'+(unit==='sec'?'Sekunde':'Ponavljanja')+'</span><span>kg</span></div>'+rows+'</div>'+(s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button type="button" class="btn" data-a="playDoseApply"'+(guard.closed?' disabled':'')+'>Primijeni na ovaj trening</button><button type="button" class="btn sec" data-a="playDoseCancel">'+(guard.closed?'Zatvori':'Odustani')+'</button></form>';
+  return '<h3>Doziranje · '+esc(ex ? ex.name : 'Vježba')+'</h3><p class="play-dose-note">'+(s.kind==='previewDose'?'Odaberi serije za sljedeće pokretanje.':'Trening je pauziran dok uređuješ serije.')+' Promjene vrijede za ovu izvedbu.</p><form id="play-dose-form" class="play-dose-editor"><div class="play-dose-count"><label for="play-dose-sets">Serije</label><input id="play-dose-sets" name="sets" type="number" min="'+guard.minSets+'" max="20" value="'+esc(s.rawForm ? s.rawForm.sets : String(it.sets))+'"'+(guard.closed?' disabled':'')+'><button type="button" class="txtbtn" data-a="'+esc(options.resize || 'playDoseResize')+'"'+(guard.closed?' disabled':'')+'>Prikaži</button></div><div class="play-dose-table"><div class="play-dose-head"><span>Serija</span><span>'+(unit==='sec'?'Sekunde':'Ponavljanja')+'</span><span>kg</span></div>'+rows+'</div>'+(s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button type="button" class="btn" data-a="'+esc(options.apply || 'playDoseApply')+'"'+(guard.closed?' disabled':'')+'>'+esc(options.applyLabel || 'Primijeni na ovaj trening')+'</button><button type="button" class="btn sec" data-a="'+esc(options.cancel || 'playDoseCancel')+'">'+(guard.closed?'Zatvori':'Odustani')+'</button></form>';
 }
 function playDoseReadForm(s,form){
   s.rawForm={sets:form.querySelector('[name="sets"]').value,rows:Array.from(form.querySelectorAll('[data-dose-set]')).map(el => {
@@ -4566,7 +4634,7 @@ VIEWS.play = function(){
         '<span class="lb">Trening</span><p>'+esc(P.title)+'</p>' + (P.f.summary_hr ? '<p style="color:var(--text-body);font-size:15px">'+esc(fieldTxt(P.f.summary_hr))+'</p>' : '') +
         (SHOW_SOURCES ? '<span class="lb">Izvor</span><p style="font-size:14px">' + (P.f.source_url ? '<a href="'+esc(P.f.source_url)+'" target="_blank" rel="noopener">'+esc(P.f.source_title || 'STATSports')+'</a>' : esc(P.f.source_title || 'STATSports')) + '</p>' : '') + '</section>'
     : playDoseCardsHtml(v.e);
-  return '<div class="view">' +
+  return '<div class="view workout-live">' +
     '<div class="gut">' + topbar('<button class="ib" data-a="quitPlay" aria-label="Prekini trening">'+I.back+'</button>', '<button class="ib" data-a="playSettings" aria-label="Postavke playera">'+I.gear+'</button><button class="ib" data-a="playList" aria-label="Popis vježbi">'+I.list+'</button>') + '</div>' +
     '<div class="prog" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(prog*100)+'"><i id="progbar" style="width:'+(prog*100).toFixed(1)+'%"></i></div>' +
     media +
@@ -4617,7 +4685,10 @@ function playAfter(){
 function sheetHtml(){
   const s = S.sheet;
   let body = s.kind === 'credit' ? creditSheet(s) : '';
-  if (s.kind === 'startingLoad') body=startingLoadHtml(s);
+  if (s.kind === 'workoutExercise') body=workoutPanelHtml(s);
+  else if (s.kind === 'workoutSwap') body=workoutSwapHtml(s);
+  else if (s.kind === 'workoutReplace') body='<p class="play-dose-note">Potvrdi novu vježbu. Težina prethodne vježbe nije prenesena.</p>'+playDoseEditorHtml({...s,kind:'previewDose'},{apply:'workoutReplaceApply',resize:'workoutReplaceResize',cancel:'workoutClose',applyLabel:'Potvrdi zamjenu'});
+  else if (s.kind === 'startingLoad') body=startingLoadHtml(s);
   else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
@@ -4789,6 +4860,60 @@ function newExDraft(){
   return { id: uid('e'), name:'', alt:'', cat:'Snaga', phase:null, cord:'', zones:[], equip:[], measure:'sets', sec:30, sets:3, reps:10, rest:60, kg:0, sides:false, equipment:'', feel:'', stepsText:'', note:'', video:'', media:null, mediaType:null, fav:false };
 }
 const A = {
+  workoutExercise: d => {
+    const j=Number(d.j), live=top().v==='play';
+    const c=workoutContext({live});if(!c || !Number.isInteger(j) || !c.items[j])return;
+    const sheet={kind:'workoutExercise',j,live,base:mtCanon(live?c.items:c.source)};
+    if(live) {if(!S.sheet)openPlayDoseSheet(sheet);} else {S.sheet=sheet;render();}
+  },
+  workoutClose,
+  workoutHistory: () => {if(S.sheet?.kind==='workoutExercise'){S.sheet.history=!S.sheet.history;render();}},
+  workoutEdit: () => {
+    const s=S.sheet,c=workoutContext(s);if(!c || (c.program && !c.live) || !c.items[s.j])return;
+    S.sheet={kind:c.live?'playDose':'previewDose',j:s.j,draft:clone(c.items[s.j]),base:mtCanon(c.source)};render();
+  },
+  workoutTarget: d => {
+    const s=S.sheet,c=workoutContext(s);if(s?.kind!=='workoutExercise'||!c||c.live||c.program)return;
+    if(!workoutValid(s,c)){toast('Podaci su promijenjeni. Ponovno otvori trening.',true);return;}
+    const items=clone(c.items),item=items[s.j],key=item.measure==='time'?'targetSir':'targetRir',value=d.v===''?null:Number(d.v);
+    if(value!==null&&(!Number.isInteger(value)||value<0||value>(item.measure==='time'?40:10)))return;
+    if(value===null)delete item[key];else item[key]=value;
+    top().runDose={...top().runDose,base:mtCanon(c.source),items};render();
+  },
+  workoutSwap: () => {
+    const s=S.sheet,c=workoutContext(s);if(s?.kind!=='workoutExercise'||!workoutCanSwap(c,s.j))return;
+    s.kind='workoutSwap';delete s.history;render();
+  },
+  workoutEquipment: d => {if(S.sheet?.kind==='workoutSwap'){S.sheet.equipment=EQUIP.includes(d.v)?d.v:'';render();}},
+  workoutCandidate: d => {
+    const s=S.sheet,c=workoutContext(s),e=S.ex[d.id];if(s?.kind!=='workoutSwap'||!workoutCanSwap(c,s.j)||!e)return;
+    if(!workoutValid(s,c)){s.error='Podaci su promijenjeni. Ponovno otvori trening.';render();return;}
+    const exercises=Object.fromEntries(Object.values(S.ex).map(x=>[x.id,{...x,equip:exEquip(x)}]));
+    const profiles=Object.fromEntries(Object.values(S.ex).map(x=>[x.id,loadFx(x)]));
+    if(!WorkoutModel.candidates({item:c.items[s.j],exercises,profiles}).filter(candidate=>!s.equipment || candidate.equipment.includes(s.equipment)).some(x=>x.id===e.id))return;
+    const item=WorkoutModel.draftReplacement(c.items[s.j],exItem(e));if(!item)return;
+    s.kind='workoutReplace';s.draft=clone(item);s.candidateKey=mtCanon(e);delete s.error;render();
+  },
+  workoutReplaceResize: () => {
+    const s=S.sheet,form=document.getElementById('play-dose-form');if(s?.kind!=='workoutReplace'||!form)return;
+    const parsed=playDoseReadForm(s,form),result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,{allowMissingWeight:true}):parsed;
+    if(!result.ok)s.error=result.error;else{s.draft=result.item;delete s.error;delete s.rawForm;}render();
+  },
+  workoutReplaceApply: () => {
+    const s=S.sheet,c=workoutContext(s),form=document.getElementById('play-dose-form');if(s?.kind!=='workoutReplace'||!form||!c)return;
+    const fail=message=>{s.error=message;render();};
+    if(!workoutValid(s,c)||!workoutCanSwap(c,s.j)||mtCanon(S.ex[s.draft.exId])!==s.candidateKey){fail('Podaci ili izvedba su promijenjeni. Ponovno odaberi vježbu.');return;}
+    const parsed=playDoseReadForm(s,form),result=parsed.ok?PlayerDose.editItem(s.draft,parsed.patch,{allowMissingWeight:true}):parsed;
+    if(!result.ok){fail(result.error);return;}
+    const items=c.items.slice();items[s.j]=result.item;
+    if(!c.live){top().runDose={base:mtCanon(c.source),items,sessionOnly:true};S.sheet=null;render();toast('Zamjena je odabrana za ovaj trening.');return;}
+    if(StartingLoad.requests([result.item],startLoadDescription).length){fail('Unesi početnu težinu nove vježbe prije potvrde zamjene.');return;}
+    const before=P;
+    P={...P,...PlayerDose.rebuild(P,items,stepsFromItems),sessionOnly:true};
+    if(P.musclePlan){P.musclePlan=P.musclePlan.slice();P.musclePlan[s.j]=MuscleWork.pack(protocolMuscleWork({items})[s.j]);}
+    if(!savePlay()){P=before;fail('Zamjena nije spremljena. Tvoj je unos sačuvan; pokušaj ponovno.');return;}
+    workoutClose();toast('Vježba je zamijenjena za ovaj trening.');
+  },
   todayOpen: () => go({v:'today'}),
   morningOpen: (d={}) => {
     const date=MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
@@ -5099,7 +5224,7 @@ const A = {
   startPr: d => {
     const p=S.pr[d.id]; if (!p?.items?.length) return;
     const t=top(), items=t.v==='pr' && t.id===p.id && !p.program ? viewDoseItems(t,p.items) : p.items;
-    startPlayer({mode:'ex',title:p.name,items,originalItems:p.items,ref:{kind:'protocol',id:p.id}});
+    startPlayer({mode:'ex',title:p.name,items,originalItems:p.items,sessionOnly:!!t.runDose?.sessionOnly || items.some((it,j)=>it.exId!==p.items[j]?.exId),ref:{kind:'protocol',id:p.id}});
   },
   playEx: d => {
     const e=S.ex[d.id], t=top(); if (!e || t.v!=='ex' || t.id!==e.id) return;
@@ -5110,7 +5235,6 @@ const A = {
   startField: d => { const f = S.field[d.id]; if (!f) return; const sz = d.dose === 'season' && fieldLoad(f).type !== 'test';
     startPlayer({ mode:'field', title: f.name_hr, f, dose: sz ? 'season' : 'full', steps: stepsFromField(sz ? fieldDose(f) : f), ref: { kind:'field', id: f.id } }); },
   exerciseLoad: d => { if (S.ex[d.id]) go({v:'exerciseLoad',id:d.id}); },
-  toggleDosePlan: () => { const t=top(); if (t.v==='pr') {t.showDose=t.showDose===false;render();} },
   checklistDone: d => {
     if (!P || top().v!=='play' || S.sheet || P.done || P.paused) return;
     const step=P.steps[P.i];
@@ -5156,11 +5280,11 @@ const A = {
     if (!result.ok) {s.error=result.error;render();return;}
     if (s.kind==='previewDose') {
       const t=top(), source=viewDoseSource(t);
-      if (mtCanon(source)!==s.base || source[s.j]?.exId!==result.item.exId) {
+      if (mtCanon(source)!==s.base || viewDoseItems(t,source)[s.j]?.exId!==result.item.exId) {
         s.error='Izvorna doza se promijenila. Zatvori uređivanje i ponovno otvori serije.';render();return;
       }
       const items=viewDoseItems(t,source).slice();items[s.j]=result.item;
-      t.runDose={base:s.base,items};S.sheet=null;render();return;
+      t.runDose={...t.runDose,base:s.base,items};S.sheet=null;render();return;
     }
     const before=P, items=P.items.slice(); items[s.j]=result.item;
     P={...P,...PlayerDose.rebuild(P,items,stepsFromItems)};
@@ -5265,7 +5389,7 @@ const A = {
     if (p && (p.items || []).length) { cfg.items = p.items; cfg.title = p.name; }
     if (f) { cfg.f = f; cfg.title = f.name_hr; }
     cfg.steps = cfg.mode === 'field' ? stepsFromField(cfg.dose==='season'?fieldDose(cfg.f):cfg.f) : stepsFromItems(cfg.items);
-    P = null; S.stack.pop(); startPlayer(cfg,true);
+    P = null; S.stack.pop(); if(!startPlayer(cfg,true))return;
     toast(r.cut || (r.news.length ? newsMsg(r.news) : saved ? 'Trening je spremljen. Krećeš ispočetka.' : 'Krećeš ispočetka.'));
   },
   finishPlay: () => {
@@ -5467,6 +5591,8 @@ app.addEventListener('focusin', ev => { const t = ev.target; if (t.classList && 
 app.addEventListener('change', async ev => {
   actionSeq++;
   const t = ev.target;
+  if(t.id==='workout-equipment'){A.workoutEquipment({v:t.value});return;}
+  if(t.id==='workout-target'){A.workoutTarget({v:t.value});return;}
   // a backup only opens the preview sheet; nothing changes before "Zamijeni podatke"
   if ((t.id === 'importFile' || t.id === 'importFile2') && t.files && t.files[0]) {
     const f = t.files[0]; let d = null;
