@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.17.2 — 5. 11. 2026.
+
+- Pregled treninga i detalj vježbe usklađeni su s odabranim prototipom: ista naslovna fotografija kategorije, izvorna tipografija, razmaci, sličice, ikone, kružne oznake serija i donji gumb.
+- Vrijeme, broj vježbi i serija prikazuju se u jednom retku. Uređivanje treninga, raspored i planirani rad dostupni su preko **⋯**, bez dodatnih redaka u početnom pregledu treninga.
+- Ciljani RIR i odmor su u istom retku. Dodir na cilj otvara objašnjenje i postojeće postavke serija; prethodna izvedba sažima stvarno zabilježene težine i sva ponavljanja. Redoslijed ostaje serija, ponavljanja ili sekunde, kilogrami i stvarna rezerva.
+- Početna stranica i izračuni opterećenja ostali su sačuvani.
+
 ## 1.17.1 — 5. 11. 2026.
 
 - Offline instalacija pokreće se nakon pripreme dokumenta, ne čeka dovršetak svih slika. Sporo učitavanje naslovnih slika više ne odgađa spremanje aplikacije za offline rad. Početna stranica zadržava isti izgled.

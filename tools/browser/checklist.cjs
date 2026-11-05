@@ -107,14 +107,14 @@ async function mixedWeights(p){
   await gate.getByRole('button',{name:'Spremi i kreni'}).click();
   const active=await play(p);assert.deepEqual(active.items[0].kgList,[10,12,0]);assert.equal(active.items[0].repsList[0],7);assert.equal(active.originalItems[0].reps,5);
   await A(p,'quitPlay').click();await A(p,'quitDiscard').click();
-  const before=(await store(p)).protocols['audit-mixed'];await protocols(p);await by(p,'openPr','audit-mixed').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('#p-name').fill('Promijenjen naslov');await p.locator('.topbar [data-a="savePr"]').click();
+  const before=(await store(p)).protocols['audit-mixed'];await protocols(p);await by(p,'openPr','audit-mixed').click();await A(p,'workoutProtocolOptions').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('#p-name').fill('Promijenjen naslov');await p.locator('.topbar [data-a="savePr"]').click();
   const items=(await store(p)).protocols['audit-mixed'].items;assert.deepEqual(items[0].kgList,before.items[0].kgList);assert.deepEqual(items[1].secList,[20,15]);assert.equal(items[2].startingKgKnown,true);
-  await by(p,'editPr','audit-mixed').first().click();await p.locator('[data-a="itOpen"][data-i="0"]').click();
+  await A(p,'workoutProtocolOptions').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('[data-a="itOpen"][data-i="0"]').click();
   await p.locator('[data-ikg="0"]').fill('22');await p.locator('[data-ikg="0"]').press('Tab');
   await p.locator('[data-a="itOpen"][data-i="1"]').click();await p.locator('[data-a="istep"][data-k="sets"][data-i="1"][data-d="1"]').click();
   await p.locator('.topbar [data-a="savePr"]').click();const edited=(await store(p)).protocols['audit-mixed'].items;
   assert.equal(edited[0].kgList,undefined);assert.equal(edited[0].kg,22);assert.deepEqual(edited[1].secList,[20,15,15]);assert.equal(edited[2].startingKgKnown,true);
-  await by(p,'editPr','audit-mixed').first().click();await p.locator('[data-a="itOpen"][data-i="1"]').click();await p.locator('[data-a="istep"][data-k="sec"][data-i="1"][data-d="1"]').click();
+  await A(p,'workoutProtocolOptions').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('[data-a="itOpen"][data-i="1"]').click();await p.locator('[data-a="istep"][data-k="sec"][data-i="1"][data-d="1"]').click();
   await p.locator('.topbar [data-a="savePr"]').click();const uniform=(await store(p)).protocols['audit-mixed'].items[1];assert.equal(uniform.sec,25);assert.equal(uniform.secList,undefined);
   record('mixed-source-editor',{previewUnknownStillPrompts:true,afterConfirm:[10,12,0],landmine0:true,titlePreservesLists:true,adjustedScalarWins:true,alignedSeconds:[20,15,15]});
 }

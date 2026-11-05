@@ -43,7 +43,12 @@ jobs:
           cache: npm
           cache-dependency-path: tools/browser/package-lock.json
       - run: npm ci --prefix tools/browser --ignore-scripts --no-audit --no-fund
-      - run: npx --prefix tools/browser playwright install --with-deps ${{ matrix.browser }}
+      # The runner already supplies Chromium's runtime libraries. Avoid
+      # reinstalling optional language fonts from a slow apt mirror.
+      - if: matrix.browser == 'chromium'
+        run: npx --prefix tools/browser playwright install chromium
+      - if: matrix.browser == 'webkit'
+        run: npx --prefix tools/browser playwright install --with-deps webkit
       - name: Cijeli trening i postojeće funkcije
         run: node tools/browser/whole-app.cjs live ${{ matrix.browser }}
       - name: Danas i ekipni dnevnik
@@ -63,6 +68,7 @@ jobs:
           node tools/browser/workout.cjs ${{ matrix.browser }}
           node tools/browser/training-load.cjs ${{ matrix.browser }}
           node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
+          node tools/browser/workout-reference.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

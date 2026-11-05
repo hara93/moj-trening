@@ -13,6 +13,22 @@
     });
   }
   function html(value) { return typeof value === 'string' ? value : ''; }
+  // Exact Lucide glyphs used by the approved premium prototype.
+  var ICONS = {
+    ellipsis: "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/>",
+    "chevron-left": "<path d=\"m15 18-6-6 6-6\"/>",
+    "chevrons-up-down": "<path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/>",
+    "shuffle": "<path d=\"m18 14 4 4-4 4\"/><path d=\"m18 2 4 4-4 4\"/><path d=\"M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22\"/><path d=\"M2 6h1.972a4 4 0 0 1 3.6 2.2\"/><path d=\"M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45\"/>",
+    "notebook-text": "<path d=\"M2 6h4\"/><path d=\"M2 10h4\"/><path d=\"M2 14h4\"/><path d=\"M2 18h4\"/><rect width=\"16\" height=\"20\" x=\"4\" y=\"2\" rx=\"2\"/><path d=\"M9.5 8h5\"/><path d=\"M9.5 12H16\"/><path d=\"M9.5 16H14\"/>",
+    "chart-no-axes-combined": "<path d=\"M12 16v5\"/><path d=\"M16 14v7\"/><path d=\"M20 10v11\"/><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\"/><path d=\"M4 18v3\"/><path d=\"M8 14v7\"/>",
+    "clock-3": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6h4\"/>",
+    "dumbbell": "<path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"/><path d=\"m2.5 21.5 1.4-1.4\"/><path d=\"m20.1 3.9 1.4-1.4\"/><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"/><path d=\"m9.6 14.4 4.8-4.8\"/>",
+    "play": "<path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"/>",
+    "info": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4\"/><path d=\"M12 8h.01\"/>"
+  };
+  function icon(name) {
+    return ICONS[name] ? '<svg class="workout-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>' : '';
+  }
   function equipment(value) {
     var values = (Array.isArray(value) ? value : [value]).filter(function (item) {
       return typeof item === 'string' && item.trim();
@@ -32,11 +48,11 @@
     vm = vm || {};
     return '<div class="view workout-overview' + (vm.heroHtml ? ' workout-premium-overview' : '') + '">' +
       (vm.heroHtml ? '<div class="workout-overview-cover">' + html(vm.heroHtml) + '<div class="workout-cover-bar">' + html(vm.topbarHtml) + '</div></div>' : html(vm.topbarHtml)) +
-      '<header class="workout-heading"><p class="workout-eyebrow">Pregled treninga</p><h1>' + esc(vm.title) + '</h1>' +
+      '<header class="workout-heading"><p class="workout-eyebrow">' + esc(vm.eyebrow || 'Pregled treninga') + '</p><h1>' + esc(vm.title) + '</h1>' +
       (vm.description ? '<p class="workout-description">' + esc(vm.description) + '</p>' : '') +
       (vm.metaHtml ? '<div class="workout-meta">' + html(vm.metaHtml) + '</div>' : '') + '</header>' +
       '<div class="workout-blocks">' + (html(vm.blocksHtml) || '<p class="workout-empty">Dodaj vježbe kako bi se ovdje prikazale njihove serije.</p>') + '</div>' +
-      (vm.detailsHtml ? '<div class="workout-details">' + html(vm.detailsHtml) + '</div>' : '') + '</div>';
+      (vm.detailsHtml ? '<div class="workout-details">' + html(vm.detailsHtml) + '</div>' : '') + footer(vm.footerHtml) + '</div>';
   }
   function block(vm) {
     vm = vm || {};
@@ -97,7 +113,7 @@
       (vm.toolsHtml ? '<div class="workout-detail-tools" role="group" aria-label="Mogućnosti vježbe">' + html(vm.toolsHtml) + '</div>' : '') +
       (vm.targetHtml ? '<div class="workout-detail-target">' + html(vm.targetHtml) + '</div>' : '') +
       '<div class="workout-page-series">' + rows(vm.rowsHtml) + '</div>' +
-      (vm.note ? '<p class="workout-note">' + esc(vm.note) + '</p>' : '') + '</div></div>' + footer(vm.footerHtml);
+      (vm.note ? '<p class="workout-note">' + esc(vm.note) + '</p>' : '') + '</div>' + footer(vm.footerHtml) + '</div>';
   }
   function journal(vm) {
     vm = vm || {};
@@ -209,7 +225,7 @@
       (html(vm.chartsHtml) || '<p class="workout-empty">Još nema zabilježenih vrijednosti za trend.</p>') + html(vm.currentHtml) +
       (vm.note ? '<p class="workout-note">' + esc(vm.note) + '</p>' : '') + '</div>';
   }
-  return Object.freeze({ overview:overview, block:block, exercise:exercise, panel:panel, list:list,
+  return Object.freeze({ icon:icon, overview:overview, block:block, exercise:exercise, panel:panel, list:list,
     compactExercise:compactExercise, exercisePage:exercisePage, journal:journal, journalExercise:journalExercise,
     seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
 });

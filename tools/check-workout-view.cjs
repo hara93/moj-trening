@@ -100,6 +100,32 @@ test('premium overview retains supplied original hero and description with compa
   assert.doesNotMatch(row,/set-item|<input|data-state="done"/);
 });
 
+test('approved prototype typography, metrics and Lucide glyphs remain literal in runtime',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica/);
+  assert.match(css,/\.workout-premium-overview \.workout-heading\{margin:10px 20px 17px\}/);
+  assert.match(css,/\.workout-detail-main\{padding:17px 19px 22px\}/);
+  assert.match(css,/\.workout-series-table th:first-child\{width:39px/);
+  assert.match(css,/border:1px solid #41463f;border-radius:8px/);
+  assert.match(css,/width:26px;height:26px;border:1px solid #737b70/);
+  assert.match(css,/\.workout-cover-bar \.wordmark\{flex:1;text-align:left;font-size:12px;font-weight:600/);
+  assert.match(css,/\.workout-plan-options summary::before\{content:none\}/);
+  assert.match(css,/\.workout-overview-cover \.hero::before\{display:none\}/);
+  assert.match(css,/color:#d3d4d1;font-size:11px;line-height:26px/);
+  assert.match(css,/height:27px;line-height:26px/);
+  assert.match(css,/@media\(max-width:360px\)\{\.workout-premium-overview \.workout-heading h1\{font-size:23px\}/);
+  assert.match(css,/td:last-child input:disabled\{opacity:\.65;color:#b7bbb5/);
+  assert.match(View.icon('ellipsis'),/<circle cx="12" cy="12" r="1"/);
+  const html=View.overview({heroHtml:'<div></div>',eyebrow:'SNAGA · CIJELO TIJELO',title:'Teretana A'});
+  assert.match(html,/>SNAGA · CIJELO TIJELO<\/p>/);
+  assert.match(View.icon('shuffle'),/M2 18h1\.973/);
+  assert.match(View.icon('notebook-text'),/width="16" height="20"/);
+  assert.match(View.icon('chart-no-axes-combined'),/M12 16v5/);
+  assert.match(View.icon('play'),/aria-hidden="true"/);
+  assert.match(View.icon('play'),/class="workout-icon"[^>]*width="16" height="16"[^>]*stroke-width="1.6"/);
+  assert.equal(View.icon('<script>'), '');
+});
+
 test('real app toolbar wrappers, sheet primary action and secondary library actions retain premium layout',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
   const tools='<div class="workout-tools workout-tools-four"><button>Šipka</button><button>Zamjena</button><button>Povijest</button><button>Trendovi</button></div><section class="workout-equipment-menu">Varijante</section>';
@@ -109,6 +135,7 @@ test('real app toolbar wrappers, sheet primary action and secondary library acti
   assert.match(css,/\.workout-detail-tools>\.workout-equipment-menu\{grid-column:1\/-1/);
   assert.match(css,/\.sheet\.workout-fullscreen \.workout-footer \.btn:not\(\.sec\):not\(\.danger\)\{background:#dce88d/);
   assert.match(css,/\.workout-library-secondary\{display:flex;flex-wrap:wrap/);
+  assert.match(css,/\.sheet\[data-kind=workoutProtocolOptions\] \.opt>svg\{width:24px;height:24px;flex:none\}/);
 });
 
 test('app compact rows preserve varying doses, unknown weight and intentional zero without repeating sides',()=>{
@@ -118,13 +145,21 @@ test('app compact rows preserve varying doses, unknown weight and intentional ze
   const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc',body+';return workoutCompactHtml;')(
     items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x));
   let html=render([{exId:'bench',sets:2,measure:'sets',reps:5,repsList:[5,3],kg:20,kgList:[20,30]}]);
-  assert.match(html,/2 × 5\/3 pon\. · 20\/30 kg/);
+  assert.match(html,/5 \/ 3 pon\. · 20 \/ 30 kg/);
   html=render([{exId:'hold',sets:2,measure:'time',sec:12,secList:[12,8],kg:0,sides:true}]);
-  assert.match(html,/2 × 12\/8 s po strani/);assert.equal((html.match(/po strani/g)||[]).length,1);
+  assert.match(html,/12 \/ 8 s po strani/);assert.equal((html.match(/po strani/g)||[]).length,1);
   html=render([{exId:'bench',sets:3,reps:5,kg:0,kgList:[10,null,0]}]);
-  assert.match(html,/10\/—\/0 kg · dio težina nije upisan/);
+  assert.match(html,/10 \/ — \/ 0 kg · dio težina nije upisan/);
   html=render([{exId:'bench',sets:2,reps:5,kg:0}]);assert.match(html,/težina nije upisana/);
   html=render([{exId:'bench',sets:5,reps:5,repsList:[8,7,6,5,4],kg:20,kgList:[20,20,25,25,30]}]);assert.match(html,/5 serija · 4–8 pon\. · 20–30 kg/);
+});
+
+test('read-only actual set markers retain the same completed and partial evidence as actionable markers',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/tr\[data-state=done\] \.set-mark>span,\.workout-series-table tr\[data-state=done\] \.workout-set-number>span\{background:#91dfb4;color:#183126;border-color:transparent/);
+  assert.match(css,/tr\[data-state=partial\] \.set-mark>span,\.workout-series-table tr\[data-state=partial\] \.workout-set-number>span\{color:#e8ca96;border-color:#aa9168/);
+  assert.match(css,/tr\[data-state=skipped\] \.workout-set-number>span\{color:#b5b5b4/);
+  assert.doesNotMatch(css,/tr\[data-state=(?:planned|skipped|partial)\] \.workout-set-number>span\{[^}]*background:#91dfb4/);
 });
 
 test('journal info sits over its thumbnail as a separate accessible button with a 44px target',()=>{
@@ -147,6 +182,21 @@ test('full exercise page preserves high-resolution media and the sole info slot 
   assert.ok(html.indexOf(toolbar)<html.indexOf(table));
   assert.match(html,/<div class="workout-footer"><button data-a="startPr"/);
   assert.doesNotMatch(html,/swrow|play-card-row|workout-panel-media/);
+});
+
+test('approved CTA follows the content inside the scrolling overview and exercise surface',()=>{
+  const button='<button data-a="startPr">Pokreni trening</button>';
+  const overview=View.overview({heroHtml:'<div class="hero"></div>',blocksHtml:'<div id="sets"></div>',footerHtml:button});
+  const detail=View.exercisePage({rowsHtml:'<table id="sets"></table>',footerHtml:button});
+  for(const html of [overview,detail]){
+    assert.ok(html.indexOf('id="sets"')<html.indexOf('class="workout-footer"'));
+    assert.ok(html.endsWith('<div class="workout-footer">'+button+'</div></div>'));
+  }
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/padding:15px 20px 10px/);
+  assert.doesNotMatch(css,/safe-area-inset-bottom/);
+  assert.match(fs.readFileSync(path.join(__dirname,'../style.css'),'utf8'),/#app\{[^}]*padding-bottom:max\(0px, calc\(env\(safe-area-inset-bottom, 0px\) - 14px\)\)/);
+  assert.doesNotMatch(overview+detail,/home-indicator/);
 });
 
 test('series tables adapt seconds/SIR while preserving every actual editable state, side detail and unknown field',()=>{

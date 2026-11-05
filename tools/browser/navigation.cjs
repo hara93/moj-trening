@@ -35,7 +35,7 @@ async function run(){
   console.log('navigation: browser Back guard, picker return, refresh recovery, save and no stale Forward form passed');
 
   // An external change while the draft is open must not be overwritten by recovery.
-  await named(p,'openPr',saved.id).click();await named(p,'editPr',saved.id).click();await p.locator('#p-name').fill('Moj nespremljeni ispravak');
+  await named(p,'openPr',saved.id).click();await a(p,'workoutProtocolOptions').click();await named(p,'editPr',saved.id).click();await p.locator('#p-name').fill('Moj nespremljeni ispravak');
   const other=await ctx.newPage();await other.goto(server.url);await other.evaluate(id=>{const d=JSON.parse(localStorage.getItem('mt.data.v1'));d.protocols[id].name='Novije spremljeno u drugoj kartici';localStorage.setItem('mt.data.v1',JSON.stringify(d));},saved.id);
   await p.reload();await waitView(p,'build');assert.match(await p.locator('#p-name').inputValue(),/Moj nespremljeni ispravak \(oporavljeni nacrt\)/);assert.equal((await data(p)).protocols[saved.id].name,'Novije spremljeno u drugoj kartici');await discard(p);await other.close();
 

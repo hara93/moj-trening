@@ -132,6 +132,7 @@ async function expectation(page) {
   await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
   await action(page, 'dashboardProtocols').first().click();
   await page.locator('[data-a="openPr"][data-id="' + protocolId + '"]').click();
+  await action(page, 'workoutProtocolOptions').click();
   return page.locator('[data-load-expectation]').evaluate(node => ({ ...node.dataset }));
 }
 

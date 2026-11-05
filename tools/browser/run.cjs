@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawnSync}=require('node:child_process');
 const engine=process.argv.includes('webkit')?'webkit':'chromium';
 const output=process.env.MT_TEST_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(),'moj-trening-'+engine+'-'));
-const suites=[['whole-app','live'],['today'],['checklist'],['checklist','just-mixed'],['starting-load'],['progress'],['storage'],['field-results'],['navigation'],['home-progress'],['workout'],['training-load'],['offline-bootstrap']];
+const suites=[['whole-app','live'],['today'],['checklist'],['checklist','just-mixed'],['starting-load'],['progress'],['storage'],['field-results'],['navigation'],['home-progress'],['workout'],['training-load'],['offline-bootstrap'],['workout-reference']];
 const requested=process.argv.slice(2).filter(value=>!['webkit','chromium'].includes(value));
 const selected=requested.length?suites.filter(([name])=>requested.includes(name)):suites;
 if(!selected.length)throw new Error('Unknown suite name');
