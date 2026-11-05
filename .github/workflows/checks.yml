@@ -62,6 +62,7 @@ jobs:
           node tools/browser/home-progress.cjs ${{ matrix.browser }}
           node tools/browser/workout.cjs ${{ matrix.browser }}
           node tools/browser/training-load.cjs ${{ matrix.browser }}
+          node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

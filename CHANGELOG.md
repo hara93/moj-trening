@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.17.1 — 5. 11. 2026.
+
+- Offline instalacija pokreće se nakon pripreme dokumenta, ne čeka dovršetak svih slika. Sporo učitavanje naslovnih slika više ne odgađa spremanje aplikacije za offline rad. Početna stranica zadržava isti izgled.
+- Cjelovita preglednička provjera dovršava početnu offline instalaciju prije niza uvoza i osvježavanja. Čekanje ima rok i ispis dijagnostike umjesto neograničenog zastoja.
+
 ## 1.17.0 — 5. 11. 2026.
 
 - Zadržana je postojeća početna stranica. Pregled treninga čuva naslovnu fotografiju i opis te dobiva kompaktan popis vježbi s punim sličicama.

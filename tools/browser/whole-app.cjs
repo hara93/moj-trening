@@ -35,6 +35,13 @@ async function importTest(p){const data=baseFixture();
 }
 async function noOverflow(p,ctx){const d=await p.evaluate(()=>({width:innerWidth,doc:document.documentElement.scrollWidth,view:document.querySelector('.view').scrollWidth,vw:document.querySelector('.view').clientWidth}));
   assert.ok(d.doc<=d.width+1 && d.view<=d.vw+1,ctx+' '+JSON.stringify(d));}
+async function offlineReady(p,phase){
+  try {await p.waitForFunction(()=>!!navigator.serviceWorker.controller,null,{timeout:30000});}
+  catch(error){
+    console.error('Offline worker state ('+phase+'):',await p.evaluate(async()=>({readyState:document.readyState,registrations:(await navigator.serviceWorker.getRegistrations()).map(r=>({scope:r.scope,active:r.active?.state,installing:r.installing?.state,waiting:r.waiting?.state})),controller:navigator.serviceWorker.controller?.scriptURL||null})));
+    throw error;
+  }
+}
 async function basics(p){
   await home(p); assert.equal(await A(p,'monthOpen').count(),0);
   assert.equal(await p.locator('.tab').count(),3); assert.equal(await p.locator('.tab[data-tab="progress"]').count(),0);
@@ -182,7 +189,7 @@ async function mixedCharts(p,ctx,pr){
   const mixedText=await p.locator('.view:not([inert])').innerText();const chartLabel=await p.locator('#wk-vl').getAttribute('aria-label');
   assert.match(mixedText,/Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad/);
   record('mixed-weights-and-unknown',{originalVolume:190,originalMeaning:'5×20 + 3×30; independent trial excluded',unrecordedSet2kg:chartLabel,partialNotice:/nepotpun|dijelom|djelomič|dio .*nije|nedosta|poznati podaci/i.test(mixedText)});
-  await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);
+  await offlineReady(p,'before outage');
   await withOffline(ctx,server,async()=>{
     const response=await home(p);assert.equal(response.fromServiceWorker(),true);
     await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'historyList').click();await by(p,'historyOpen','mix01').click();await A(p,'historyEdit').waitFor();
@@ -311,6 +318,8 @@ async function run(){
     await ctx.addInitScript(()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false});});
     const p=await ctx.newPage();p.setDefaultTimeout(4000);const errors=[];p.on('pageerror',e=>errors.push(e.message));
     await p.clock.setFixedTime(new Date(fixed));await p.goto('http://127.0.0.1:'+server.address().port+'/');
+    // Let the first offline install complete before repeated import/reload scenarios.
+    await offlineReady(p,'cold start');
     try {await importTest(p);if(process.argv.includes('just-program')){await programNegative(p);assert.deepEqual(errors,[]);return;}if(process.argv.includes('just-live')){const pr=await createSuperset(p);await liveFlow(p,pr);assert.deepEqual(errors,[]);return;}
     await basics(p);await fieldCatalogue(p);await persistNegative(p);const pr=await createSuperset(p);await planner(p,pr);await fieldFlow(p,ctx);await exerciseTrial(p);await bodyRound(p,pr);if(process.argv.includes('live'))await liveFlow(p,pr);await mixedCharts(p,ctx,pr);await programNegative(p);assert.deepEqual(errors,[]);}
     catch(e){console.error('Current view:',(await p.locator('.view:not([inert])').innerText()).slice(0,1100));console.error('Dialog:',await p.getByRole('dialog').allInnerTexts());throw e;}

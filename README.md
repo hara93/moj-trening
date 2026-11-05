@@ -26,7 +26,7 @@ U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **�
 
 ## Nadogradnje
 
-Trenutna verzija je 1.17.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.17.1. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 U **Moj pregled → Opterećenje** odvojeno se prate zabilježene serije po mišićima, subjektivni napor i današnja jutarnja provjera. Graf posljednjih sedam dana uspoređuje se s prethodna četiri tjedna vlastite povijesti, bez univerzalnog cilja. Ocjena napora (0–10) množi se sa spremljenim sekundama podijeljenima sa 60; nepoznato nije nula. U novim treninzima izričita pauza i vrijeme izvan aplikacije nakon spremljene kontrolne točke ne ulaze u trajanje, a redoviti odmori između serija ulaze. U pregledu protokola očekivani napor prikazuje se tek nakon najmanje dvije izvedbe iste pune doze. LM1 je zasebna unaprijed zadana procjena, bez kalibracije prema osobi i bez izračuna iz stvarnih kilograma; ne predstavlja točan stres na tijelo niti jamstvo optimalnog podražaja. WHOOP još nije povezan.
 
@@ -78,6 +78,7 @@ node tools/browser/navigation.cjs
 node tools/browser/home-progress.cjs
 node tools/browser/workout.cjs
 node tools/browser/training-load.cjs
+node tools/browser/offline-bootstrap.cjs
 ```
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.

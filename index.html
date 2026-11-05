@@ -57,7 +57,7 @@
 <script src="training-load-view.js"></script>
 <script src="app.js"></script>
 <script>
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) document.addEventListener('DOMContentLoaded', () => navigator.serviceWorker.register('sw.js').catch(() => {}), { once: true });
 </script>
 </body>
 </html>
