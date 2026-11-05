@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const {launch,repo,artifacts,engine,fixture:baseFixture}=require('./runtime.cjs');
+const {launch,repo,artifacts,engine,withOffline,fixture:baseFixture}=require('./runtime.cjs');
 const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.mp4':'video/mp4'};
 const server = http.createServer((req,res)=>{
   const url = new URL(req.url,'http://127.0.0.1');
@@ -22,7 +22,7 @@ const by=(p,name,id)=>p.locator('[data-a="'+name+'"][data-id="'+id+'"]');
 const store=(p)=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')));
 const play=(p)=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
 const record=(key,facts)=>{results.push({key,...facts});console.log(key,JSON.stringify(facts));};
-async function home(p){await p.reload({waitUntil:'domcontentloaded'});await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).waitFor();}
+async function home(p){const response=await p.reload({waitUntil:'domcontentloaded'});await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).waitFor();return response;}
 async function tab(p,name){await p.locator('.tab[data-tab="'+name+'"]').click();}
 async function advance(p,secs){const n=await p.evaluate(()=>Date.now());await p.clock.setFixedTime(new Date(n+secs*1000));await p.waitForTimeout(320);}
 async function importTest(p){const data=baseFixture();
@@ -179,11 +179,15 @@ async function mixedCharts(p,ctx,pr){
   const mixedText=await p.locator('.view').innerText();const chartLabel=await p.locator('#wk-vl').getAttribute('aria-label');
   assert.match(mixedText,/Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad/);
   record('mixed-weights-and-unknown',{originalVolume:190,originalMeaning:'5×20 + 3×30; independent trial excluded',unrecordedSet2kg:chartLabel,partialNotice:/nepotpun|dijelom|djelomič|dio .*nije|nedosta|poznati podaci/i.test(mixedText)});
-  await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);await ctx.setOffline(true);await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'historyList').click();await by(p,'historyOpen','mix01').click();await A(p,'historyEdit').waitFor();
-  await home(p);await A(p,'dataSheet').click();const [download]=await Promise.all([p.waitForEvent('download'),p.getByRole('dialog').locator('[data-a="exportData"]').click()]);
-  const fp=path.join(artifacts,'whole-app-offline-backup.json');await download.saveAs(fp);const restored=JSON.parse(fs.readFileSync(fp,'utf8'));assert.deepEqual(restored.log.find(l=>l.historyId==='mix01').items[0].kgList,[20,null]);await backupRows(p,restored);
-  assert.deepEqual((await store(p)).log.find(l=>l.historyId==='mix01').items[0].kgList,[20,null]);await ctx.setOffline(false);
-  record('offline-roundtrip',{workouts:restored.log.length,preserves:[20,null]});
+  await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>!!navigator.serviceWorker.controller);
+  await withOffline(ctx,server,async()=>{
+    const response=await home(p);assert.equal(response.fromServiceWorker(),true);
+    await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'historyList').click();await by(p,'historyOpen','mix01').click();await A(p,'historyEdit').waitFor();
+    await home(p);await A(p,'dataSheet').click();const [download]=await Promise.all([p.waitForEvent('download'),p.getByRole('dialog').locator('[data-a="exportData"]').click()]);
+    const fp=path.join(artifacts,'whole-app-offline-backup.json');await download.saveAs(fp);const restored=JSON.parse(fs.readFileSync(fp,'utf8'));assert.deepEqual(restored.log.find(l=>l.historyId==='mix01').items[0].kgList,[20,null]);await backupRows(p,restored);
+    assert.deepEqual((await store(p)).log.find(l=>l.historyId==='mix01').items[0].kgList,[20,null]);
+    record('offline-roundtrip',{workouts:restored.log.length,preserves:[20,null],outage:engine==='webkit'?'origin-stopped':'browser-offline'});
+  });
 }
 async function editDose(p,j){
   await p.locator('[data-a="playDoseCard"][data-i="2"]').first().click();

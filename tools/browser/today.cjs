@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const {launch,repo,artifacts,appVersion,fixture:baseFixture}=require('./runtime.cjs');
+const {launch,repo,artifacts,appVersion,withOffline,fixture:baseFixture}=require('./runtime.cjs');
 const useWebKit=process.argv.includes('webkit');
 const screenshot=path.resolve(artifacts,useWebKit?'today-webkit-375.png':'today-regression.png');
 const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.mp4':'video/mp4'};
@@ -31,7 +31,7 @@ function seed(options={}){
   data.log=options.cold?[]:[log];
   return data;
 }
-async function home(p){await p.reload({waitUntil:'domcontentloaded'});await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).waitFor();}
+async function home(p){const response=await p.reload({waitUntil:'domcontentloaded'});await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).waitFor();return response;}
 async function dashboard(p){await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await p.locator('.dashboard').waitFor();}
 async function history(p){await dashboard(p);await action(p,'historyList').click();await p.locator('#history-query').waitFor();}
 async function importBackup(p,data){
@@ -188,13 +188,16 @@ async function integrity(p,ctx,example){
     '2026-02-30':{date:'2026-02-30',pain:8},'2026-11-03':{date:'2026-11-02',pain:7}
   };await importBackup(p,basic);const cleaned=await settings(p);assert.deepEqual(cleaned.morningChecks,{[day]:{date:day,energy:5}});
   await importBackup(p,backup);assert.equal((await data(p)).log.length,material.log.length);
-  await p.waitForFunction(()=>!!navigator.serviceWorker.controller,{},{timeout:15000});await ctx.setOffline(true);
-  await today(p);assert.equal((await advise(p)).kind,current.kind);
-  await history(p);await p.locator('[data-a="historyOpen"][data-id="'+example.team.historyId+'"]').click();await action(p,'historyDeleteAsk').click();await action(p,'historyDeleteCancel').click();assert.ok((await data(p)).log.some(l=>l.historyId===example.team.historyId));
-  await action(p,'historyDeleteAsk').click();await action(p,'historyDeleteConfirm').click();assert.ok(!(await data(p)).log.some(l=>l.historyId===example.team.historyId));
-  await today(p);await cleanCheckin(p);assert.equal((await settings(p)).morningChecks?.[day],undefined);
-  await importBackup(p,backup);const restored=await data(p);assert.ok(restored.log.some(l=>l.historyId===example.team.historyId));assert.deepEqual((await settings(p)).morningChecks,backup.settings.morningChecks);await today(p);assert.equal((await advise(p)).kind,current.kind);
-  await ctx.setOffline(false);record('backup-offline',{version:backup.app,morning:backup.settings.morningChecks[day],teamBeforeAndAfterRestoration:example.team.historyId,kind:current.kind});
+  await p.waitForFunction(()=>!!navigator.serviceWorker.controller,{},{timeout:15000});
+  await withOffline(ctx,server,async()=>{
+    const response=await home(p);assert.equal(response.fromServiceWorker(),true);
+    await today(p);assert.equal((await advise(p)).kind,current.kind);
+    await history(p);await p.locator('[data-a="historyOpen"][data-id="'+example.team.historyId+'"]').click();await action(p,'historyDeleteAsk').click();await action(p,'historyDeleteCancel').click();assert.ok((await data(p)).log.some(l=>l.historyId===example.team.historyId));
+    await action(p,'historyDeleteAsk').click();await action(p,'historyDeleteConfirm').click();assert.ok(!(await data(p)).log.some(l=>l.historyId===example.team.historyId));
+    await today(p);await cleanCheckin(p);assert.equal((await settings(p)).morningChecks?.[day],undefined);
+    await importBackup(p,backup);const restored=await data(p);assert.ok(restored.log.some(l=>l.historyId===example.team.historyId));assert.deepEqual((await settings(p)).morningChecks,backup.settings.morningChecks);await today(p);assert.equal((await advise(p)).kind,current.kind);
+    record('backup-offline',{version:backup.app,morning:backup.settings.morningChecks[day],teamBeforeAndAfterRestoration:example.team.historyId,kind:current.kind,outage:useWebKit?'origin-stopped':'browser-offline'});
+  });
 }
 async function sources(p){
   const own=seed();await importBackup(p,own);await today(p);

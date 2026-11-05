@@ -34,6 +34,43 @@ async function serve(){
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
   return {server,url:'http://127.0.0.1:'+server.address().port+'/',close:async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}};
 }
+async function withOffline(context,server,check){
+  if(engine!=='webkit'){
+    await context.setOffline(true);
+    try{return await check();}
+    finally{await context.setOffline(false);}
+  }
+  // WebKit's offline emulation can reject even a literal SW response:
+  // https://github.com/microsoft/playwright/issues/42775
+  // Stop the real origin instead; this proves origin-unavailable operation,
+  // while Chromium retains coverage of browser-level offline emulation.
+  const address=server.address();
+  if(!address||address.address!=='127.0.0.1')throw new Error('Offline checks require a running loopback origin');
+  await new Promise((resolve,reject)=>{
+    server.close(error=>error?reject(error):resolve());
+    server.closeAllConnections();
+  });
+  try{
+    // Probe outside the browser and its service worker/cache.
+    await new Promise((resolve,reject)=>{
+      const request=http.get('http://127.0.0.1:'+address.port+'/',{agent:false},response=>{
+        response.resume();
+        reject(new Error('Offline origin is still reachable'));
+      });
+      request.once('error',error=>error.code==='ECONNREFUSED'?resolve():reject(error));
+      request.setTimeout(3000,()=>request.destroy(new Error('Offline origin probe timed out')));
+    });
+    return await check();
+  }finally{
+    await new Promise((resolve,reject)=>{
+      const failed=error=>{server.removeListener('listening',ready);reject(error);};
+      const ready=()=>{server.removeListener('error',failed);resolve();};
+      server.once('error',failed);
+      server.once('listening',ready);
+      server.listen(address.port,address.address);
+    });
+  }
+}
 function fixture(){
   const ctx={window:{}};
   vm.runInNewContext(fs.readFileSync(path.join(repo,'data.js'),'utf8'),ctx);
@@ -45,4 +82,4 @@ function fixture(){
   }
   return {...seed,kind:additions.kind,v:additions.v,app:additions.app,exportedAt:additions.exportedAt,programs:{},_deleted:[],log:additions.log,settings:additions.settings};
 }
-module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,fixture};
+module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture};

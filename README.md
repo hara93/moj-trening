@@ -69,4 +69,6 @@ node tools/browser/navigation.cjs
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.
 
+Chromium provjerava rad uz isključenu mrežu u pregledniku. WebKit provjerava rad uz stvarno ugašen lokalni poslužitelj, jer njegova [simulacija rada bez mreže ima poznatu grešku](https://github.com/microsoft/playwright/issues/42775). Test potvrđuje da poslužitelj nije dostupan te da aplikaciju isporučuje service worker; zatim provjerava povijest i obnovu sigurnosne kopije.
+
 Nakon objave `node tools/browser/published.cjs` uspoređuje javno isporučene datoteke s lokalnom provjerenom verzijom i prolazi ključne funkcije na postojećoj adresi. `MT_BASE_URL` može zadati drugu adresu za tu provjeru ili ciljane provjere koje koriste zajednički `serve()` alat. Koristi ih samo s izdvojenim probnim profilom, kao što rade priložene skripte.
