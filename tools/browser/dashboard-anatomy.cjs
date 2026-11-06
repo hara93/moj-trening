@@ -50,6 +50,11 @@ async function importData(page) {
 
 async function dashboard(page) {
   await home(page); await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
+  await page.locator('.db-home').waitFor();
+  assert.equal(await page.locator('.tabbar .tab').count(),4,'four main navigation destinations');
+  assert.equal(await page.locator('.db-home .db-muscle,.db-home .db-activity,.db-home .db-quality,.db-home .db-schedule').count(),0,'daily dashboard keeps detailed analytics out of its initial view');
+  await A(page,'dashboardAnalytics').click();
+  await page.locator('.db-analytics').waitFor();
   await page.locator(body).waitFor();
 }
 

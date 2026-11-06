@@ -79,8 +79,8 @@ async function importData(page, data) {
 
 async function loadView(page) {
   await home(page);
-  await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
-  await action(page, 'trainingLoadOpen').click();
+  await page.locator('.tab[data-tab="analytics"]').click();
+  await page.locator('[data-a="analyticsOpen"][data-section="load"]').click();
   await page.locator('.view.training-load').waitFor();
 }
 
@@ -207,6 +207,15 @@ async function runScenarios(page) {
   assert.equal(baseline.activeWeeks, '2');
   closeNumber(baseline.knownAu, 63, 'previous 28 days');
   closeNumber(baseline.weeklyAverageAu, 15.75, 'recorded four-week average');
+  const effortSummary=page.locator('.tl-effort-total');
+  await effortSummary.click();
+  assert.equal(await page.locator('#training-load-info').evaluate(node=>node.open),true);
+  assert.equal(await page.locator('#training-load-info-title').innerText(),'Napor treninga');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#training-load-info').evaluate(node=>node.open),false);
+  assert.equal(await effortSummary.evaluate(node=>node===document.activeElement),true);
+  assert.equal(await page.locator('svg.tl-days').getAttribute('role'),'img');
+  assert.match(await page.locator('svg.tl-days').getAttribute('aria-label'),/AU poznato/);
   const boundary = page.locator('[data-load-day="2026-10-30"]');
   closeNumber(await boundary.getAttribute('data-total-au'), 10.266667, '88 seconds × 7 / 60');
   const chest = page.locator('[data-load-group="chest"]');

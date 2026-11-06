@@ -100,20 +100,12 @@ test('premium overview retains supplied original hero and description with compa
   assert.doesNotMatch(row,/set-item|<input|data-state="done"/);
 });
 
-test('approved prototype typography, metrics and Lucide glyphs remain literal in runtime',()=>{
+test('workout surfaces keep scoped typography and accessible Lucide controls',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
   assert.match(css,/font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica/);
-  assert.match(css,/\.workout-premium-overview \.workout-heading\{margin:10px 20px 17px\}/);
-  assert.match(css,/\.workout-detail-main\{padding:17px 19px 22px\}/);
-  assert.match(css,/\.workout-series-table th:first-child\{width:39px/);
-  assert.match(css,/border:1px solid #41463f;border-radius:8px/);
-  assert.match(css,/width:26px;height:26px;border:1px solid #737b70/);
   assert.match(css,/\.workout-cover-bar \.wordmark\{flex:1;text-align:left;font-size:12px;font-weight:600/);
   assert.match(css,/\.workout-plan-options summary::before\{content:none\}/);
   assert.match(css,/\.workout-overview-cover \.hero::before\{display:none\}/);
-  assert.match(css,/color:#d3d4d1;font-size:11px;line-height:26px/);
-  assert.match(css,/height:27px;line-height:26px/);
-  assert.match(css,/@media\(max-width:360px\)\{\.workout-premium-overview \.workout-heading h1\{font-size:23px\}/);
   assert.match(css,/td:last-child input:disabled\{opacity:\.65;color:#b7bbb5/);
   assert.match(View.icon('ellipsis'),/<circle cx="12" cy="12" r="1"/);
   const html=View.overview({heroHtml:'<div></div>',eyebrow:'SNAGA · CIJELO TIJELO',title:'Teretana A'});
@@ -124,6 +116,23 @@ test('approved prototype typography, metrics and Lucide glyphs remain literal in
   assert.match(View.icon('play'),/aria-hidden="true"/);
   assert.match(View.icon('play'),/class="workout-icon"[^>]*width="16" height="16"[^>]*stroke-width="1.6"/);
   assert.equal(View.icon('<script>'), '');
+});
+
+test('five-set density keeps every editable row and excludes bilateral detail rows from its count',()=>{
+  const row=n=>'<tr class="workout-set-row" data-state="planned"><td>'+n+'</td><td><input data-field="reps" value="8"></td><td><input data-field="kg" placeholder="—" value=""></td><td><input data-field="rir" value="0"></td></tr>';
+  const details='<tr class="workout-set-details"><td colspan="4">Lijeva i desna strana</td></tr>';
+  const three=Array.from({length:3},(_,i)=>row(i+1)+details).join('');
+  const five=Array.from({length:5},(_,i)=>row(i+1)+details).join('');
+  const comfortable=View.seriesTable({name:'Tri serije',rowsHtml:three});
+  const compact=View.seriesTable({name:'Pet serija',rowsHtml:five});
+  assert.match(comfortable,/data-set-count="3" data-row-density="comfortable"/);
+  assert.match(compact,/workout-series-compact" data-set-count="5" data-row-density="compact"/);
+  assert.ok(comfortable.includes(three)); assert.ok(compact.includes(five));
+  assert.equal((compact.match(/data-field="reps"/g)||[]).length,5);
+  assert.equal((compact.match(/data-field="kg" placeholder="—" value=""/g)||[]).length,5);
+  assert.equal((compact.match(/data-field="rir" value="0"/g)||[]).length,5);
+  assert.match(compact,/<th scope="col">Serija<\/th><th scope="col">Pon\.<\/th><th scope="col">kg<\/th><th scope="col">RIR<\/th>/);
+  assert.match(View.seriesTable(),/data-set-count="0"/);
 });
 
 test('real app toolbar wrappers, sheet primary action and secondary library actions retain premium layout',()=>{

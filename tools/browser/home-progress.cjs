@@ -97,7 +97,7 @@ async function progress(page) {
 async function dashboard(page) {
   await home(page);
   await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
-  await page.locator('.dashboard').waitFor();
+  await page.locator('.db-home').waitFor();
 }
 
 async function noOverflow(page, label) {
@@ -151,6 +151,23 @@ async function homeChecks(page) {
     assert.ok(['auto', 'scroll'].includes(overflow));
     await noOverflow(page, 'home-' + width);
     await screenshot(page, 'home-' + width);
+    await dashboard(page);
+    assert.equal(await page.locator('.tabbar .tab').count(),4);
+    assert.deepEqual(await page.locator('.db-quick button').evaluateAll(nodes=>nodes.map(n=>n.dataset.a)),['dashboardProtocols','dashboardCalendar','historyList']);
+    assert.equal(await page.locator('.db-home .db-muscle,.db-home .db-activity,.db-home .db-quality,.db-home .db-schedule').count(),0);
+    assert.equal(await action(page,'todayOpen').count(),1);
+    assert.equal(await page.locator('.db-overview>div').count(),2);
+    await noOverflow(page,'compact-dashboard-'+width);
+    await screenshot(page,'compact-dashboard-'+width);
+    await page.getByRole('button',{name:'Napredak',exact:true}).click();
+    await page.locator('.analytics-hub').waitFor();
+    assert.deepEqual(await action(page,'analyticsOpen').evaluateAll(nodes=>nodes.map(n=>n.dataset.section)),['progress','load','muscles','trends']);
+    assert.equal(await page.locator('.analytics-hub .db-muscle,.analytics-hub .training-load,.analytics-hub .pg-comparison').count(),0);
+    await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
+    await page.locator('.db-analytics .db-muscle').waitFor();
+    assert.equal(await page.locator('.db-comparison-row').count(),18);
+    await action(page,'back').first().click();
+    await page.locator('.analytics-hub').waitFor();
   }
   const categories = ['Rehabilitacija', 'Teretana', 'Aktivacija', 'Kondicija', 'Knjižnica'];
   for (const [index, category] of categories.entries()) {

@@ -44,7 +44,7 @@ async function offlineReady(p,phase){
 }
 async function basics(p){
   await home(p); assert.equal(await A(p,'monthOpen').count(),0);
-  assert.equal(await p.locator('.tab').count(),3); assert.equal(await p.locator('.tab[data-tab="progress"]').count(),0);
+  assert.equal(await p.locator('.tab').count(),4); assert.equal(await p.locator('.tab[data-tab="analytics"]').count(),1);
   let count=(await store(p)).log.length;
   const dots=p.locator('#dots .dot'),cards=p.locator('#car .hcard');assert.equal(await dots.count(),5);
   await dots.nth(3).focus();await p.keyboard.press('Enter');await p.waitForFunction(()=>document.querySelector('#dots [data-i="3"]').getAttribute('aria-current')==='true');
@@ -57,9 +57,9 @@ async function basics(p){
   for(const [action,close] of [['workoutInfo','workoutPanelBack'],['workoutHistory','workoutPanelBack'],['workoutTrends','workoutPanelBack']]){await A(p,action).first().click();await p.locator('.workout-fullscreen').waitFor();await A(p,close).click();if(await A(p,'workoutClose').count())await A(p,'workoutClose').first().click();}
   assert.equal(await p.locator('.exswipe,.play-cards').count(),0);
   await noOverflow(p,'bench details');
-  await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardForecast').click();if(!await p.locator('.db-comparison-row').first().isVisible())await p.locator('.db-groups summary').click();await p.locator('.db-comparison-row').first().click();await noOverflow(p,'dashboard');await p.setViewportSize({width:320,height:812});await noOverflow(p,'dashboard 320');await p.setViewportSize({width:375,height:812});
+  await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();assert.equal(await p.locator('.db-muscle').count(),0);await A(p,'dashboardAnalytics').click();await A(p,'dashboardForecast').click();if(!await p.locator('.db-comparison-row').first().isVisible())await p.locator('.db-groups summary').click();await p.locator('.db-comparison-row').first().click();await noOverflow(p,'dashboard');await p.setViewportSize({width:320,height:812});await noOverflow(p,'dashboard 320');await p.setViewportSize({width:375,height:812});
   await p.locator('.db-daily [data-date="2026-11-06"]').click();assert.match(await p.locator('.view:not([inert])').innerText(),/6\. 11\.|6\. studen|petak,? 6/i);await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
-  await A(p,'dashboardProgress').click();assert.match(await p.locator('.view:not([inert])').innerText(),/Napredak/);await noOverflow(p,'progress');await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
+  await A(p,'back').first().click();await A(p,'dashboardProgress').click();assert.match(await p.locator('.view:not([inert])').innerText(),/Napredak/);await noOverflow(p,'progress');await A(p,'back').first().click();await p.locator('.dashboard').waitFor();
   assert.equal((await store(p)).log.length,count);
   record('home-library-dashboard-progress',{cards:5,device:'375px',keyboard:'Home card & library via Enter',search:'empty + partial + filter clear',fullpageExercise:true});
 }
@@ -137,7 +137,7 @@ async function createSuperset(p){
   return pr;
 }
 async function planner(p,pr){
-  await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await p.getByRole('button',{name:'Otvori mjesečni planer',exact:true}).click();await A(p,'monthAdd').click();await by(p,'monthPick',pr.id).click();
+  await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await p.locator('.db-quick [data-a="dashboardCalendar"]').click();await A(p,'monthAdd').click();await by(p,'monthPick',pr.id).click();
   await A(p,'monthAdd').click();const dup=by(p,'monthPick',pr.id);assert.ok(await dup.isDisabled());
   await A(p,'monthAdd').click();await by(p,'monthMenu',pr.id).click();await by(p,'monthMove',pr.id).click();await p.locator('[data-a="monthDate"][data-date="2026-11-05"]').click();
   const settings=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.settings')));
@@ -200,7 +200,7 @@ async function mixedCharts(p,ctx,pr){
   });
 }
 async function editDose(p,j){
-  await p.locator('[data-a="playDoseEdit"][data-j="'+j+'"]').click();await p.locator('#play-dose-form').waitFor();
+  const button=p.locator('[data-a="playDoseEdit"][data-j="'+j+'"]');if(!await button.isVisible()&&await A(p,'workoutShowAll').count())await A(p,'workoutShowAll').click();await button.click();await p.locator('#play-dose-form').waitFor();
 }
 async function swipePlayer(p){
   await p.locator('.workout-journal').waitFor();

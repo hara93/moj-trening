@@ -1,5 +1,14 @@
 # Promjene
 
+## 1.19.0 — 6. 11. 2026.
+
+- Početna stranica sa sliderima ostaje sačuvana. Donja navigacija ima četiri tipke: **Moj pregled**, **Početna**, **Knjižnica** i **Napredak**.
+- **Moj pregled** prikazuje dnevni prijedlog, sažetke plana i bitne prečace. Detaljna analiza mišićnog tjedna, aktivnosti i rasporeda otvara se zasebno. Nova tipka **Napredak** objedinjuje napredak, opterećenje, mišićni tjedan i trendove vježbi.
+- Fotografije u pregledu treninga i vježbe prikazuju se cijele. Info ikona na slici je diskretna, uz dodirnu plohu od 44 px.
+- Redovi serija prilagođavaju gustoću broju serija i visini ekrana. Unosi zadržavaju tekst od 16 px i dodirne plohe od najmanje 44 px, uključujući prikaz pet serija.
+- Player prvo prikazuje vježbu koju pratiš, uz mogućnost otvaranja cijelog popisa. Glavna komanda ima vidljiv naziv radnje. Tijekom prijelaza ostaje dostupan RIR prethodne serije.
+- Grafovi koriste tamnu podlogu te cijan, zelenu, tirkiznu i žutu. Detalji i objašnjenja dostupni su na dodir. Izračuni, spremljene doze i povijest ostaju sačuvani.
+
 ## 1.18.2 — 6. 11. 2026.
 
 - **Moj pregled** označava svaki odvojeni šrafirani oblik mišića, kao knjižnica. Uklonjen je zajednički okvir oko starih dodirnih ploha; i fokus tipkovnice prati pojedinačne oblike.

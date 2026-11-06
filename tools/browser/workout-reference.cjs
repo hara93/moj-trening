@@ -1,14 +1,14 @@
 'use strict';
 
-// Geometry taken from the approved trening-premium-refined preview, excluding
-// its outer phone frame. Synthetic records match the example's visible dose.
-// The application still derives duration from its actual executable steps.
+// Actual workout surfaces, including full-frame media and editable dense plans.
+// Synthetic records preserve known, unknown and intentional zero values.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
 
 const protocolId = 'reference-teretana';
+const denseProtocolId = 'reference-five-sets';
 const action = (page, name) => page.locator('[data-a="' + name + '"]');
 const fixed = new Date('2026-11-04T10:00:00+01:00');
 
@@ -32,6 +32,10 @@ function fixture() {
   data.protocols[protocolId] = {
     id: protocolId, name: 'Teretana A', home: 'teretana', tag: 'Teretana', days: [], items,
     desc: 'Potisak, povlačenje i noge. Kontrolirana izvedba i kvalitetne radne serije.'
+  };
+  data.protocols[denseProtocolId] = {
+    id: denseProtocolId, name: 'Pet serija', home: 'teretana', tag: 'Teretana', days: [],
+    items: [{ ...items[0], sets: 5, kg: 0, repsList: [8, 8, 8, 8, 8], kgList: [50, 0, null, 55, 50] }]
   };
   data.log = [{
     historyId: 'reference-previous', kind: 'protocol', refId: protocolId, name: 'Teretana A',
@@ -76,6 +80,35 @@ async function screenshot(page, name) {
   await page.screenshot({ path: path.join(artifacts, 'reference-' + engine + '-' + name + '.png') });
 }
 
+async function wholeImage(locator) {
+  return locator.evaluate(image => {
+    const r = image.getBoundingClientRect(), css = getComputedStyle(image);
+    const scale = Math.min(r.width / image.naturalWidth, r.height / image.naturalHeight);
+    return { fit: css.objectFit, width: r.width, height: r.height,
+      naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight,
+      renderedWidth: image.naturalWidth * scale, renderedHeight: image.naturalHeight * scale };
+  });
+}
+
+function contained(image, label) {
+  assert.equal(image.fit, 'contain', label + ' keeps the entire source frame');
+  assert.ok(image.naturalWidth > 0 && image.naturalHeight > 0, label + ' decoded');
+  assert.ok(image.renderedWidth <= image.width + .1 && image.renderedHeight <= image.height + .1, label + ' has no crop');
+}
+
+async function fieldMetrics(table) {
+  return table.locator('[data-field="reps"]').first().evaluate(input => {
+    const td = input.closest('td'), frame = getComputedStyle(td, '::after');
+    return { touchHeight: input.getBoundingClientRect().height,
+      visibleHeight: td.getBoundingClientRect().height - parseFloat(frame.top) - parseFloat(frame.bottom) };
+  });
+}
+
+function editableSize(size) {
+  assert.ok(size.touchHeight >= 44 && size.touchHeight <= 48, 'editable touch target: ' + JSON.stringify(size));
+  assert.ok(size.visibleHeight >= 32 && size.visibleHeight <= 40, 'compact visible field: ' + JSON.stringify(size));
+}
+
 async function run() {
   const origin = await serve();
   const browser = await launch();
@@ -83,7 +116,7 @@ async function run() {
   try {
     const context = await browser.newContext({ viewport: { width: 375, height: 812 },
       isMobile: true, hasTouch: true, deviceScaleFactor: 1, locale: 'hr-HR',
-      timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce' });
+      timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
     const page = await context.newPage();
     page.setDefaultTimeout(8000);
     const errors = [];
@@ -97,7 +130,8 @@ async function run() {
     await overview.locator('.hero img').evaluate(image => image.decode());
     const hero = await metrics(overview.locator('.hero'));
     near(hero.width, 375, 'Overview content width');
-    near(hero.height, 176, 'Overview hero height');
+    assert.ok(hero.height >= 150 && hero.height <= 224, 'Overview cover respects the responsive cap');
+    contained(await wholeImage(overview.locator('.hero img')), 'Overview image');
     assert.match(await overview.locator('.hero img').getAttribute('src'), /assets\/covers\/teretana\.webp$/);
     assert.equal(await overview.locator('.hero').evaluate(node => getComputedStyle(node, '::before').display), 'none');
     const title = await metrics(overview.locator('h1'));
@@ -128,7 +162,8 @@ async function run() {
     await detail.waitFor();
     await detail.locator('.workout-detail-cover img').evaluate(image => image.decode());
     const cover = await metrics(detail.locator('.workout-detail-cover'));
-    near(cover.height, 184, 'Exercise illustration height');
+    contained(await wholeImage(detail.locator('.workout-detail-cover img')), 'Exercise illustration');
+    assert.ok(cover.height >= 200 && cover.height <= 300, 'Exercise cover includes the unobstructed navigation row');
     const heading = await metrics(detail.locator('h1'));
     assert.equal(await detail.locator('h1').innerText(), 'Potisak s klupe');
     assert.equal(heading.fontSize, '22px');
@@ -143,12 +178,14 @@ async function run() {
     // the physical first-row anchor, which matches the reference in both engines.
     const tableTop = await metrics(table);
     const firstSet = await metrics(table.locator('.workout-set-row').first());
-    near(firstSet.y - tableTop.y, 35, 'Reference first set position');
+    assert.ok(firstSet.y - tableTop.y >= 20 && firstSet.y - tableTop.y <= 34, 'Set labels remain beside their rows');
     assert.equal(await table.locator('.workout-set-row').count(), 3);
     assert.equal(await table.locator('.workout-set-row').first().locator('td').first().innerText(), '1');
     const reps = table.locator('[data-field="reps"]').first();
     const input = await metrics(reps);
-    near(input.height, 44, 'Mobile numeric control height');
+    editableSize(await fieldMetrics(table));
+    assert.ok(input.height >= 44 && input.height <= 48, 'Mobile numeric controls retain a full touch target');
+    assert.equal(input.fontSize, '16px', 'Inputs avoid Safari focus zoom');
     assert.equal(input.borderRadius, '8px');
     assert.deepEqual(await table.locator('[data-field="reps"]').evaluateAll(inputs => inputs.map(input => input.value)), ['8', '8', '8']);
     assert.deepEqual(await table.locator('[data-field="kg"]').evaluateAll(inputs => inputs.map(input => input.value)), ['50', '50', '50']);
@@ -164,28 +201,79 @@ async function run() {
     const cta = await metrics(detail.locator('.workout-footer .btn').first());
     const tableBounds = await metrics(table);
     const detailFooter = await metrics(detail.locator(':scope > .workout-footer'));
-    near(detailFooter.y - tableBounds.y - tableBounds.height, 22, 'Exercise footer follows the table');
-    near(cta.y - detailFooter.y, 16, 'Start button inset after footer border');
-    near(cta.height, 49, 'Reference start button height');
-    assert.equal(cta.fontSize, '14px');
+    assert.ok(detailFooter.y - tableBounds.y - tableBounds.height >= 12 && detailFooter.y - tableBounds.y - tableBounds.height <= 24, 'Exercise footer follows the complete table');
+    assert.ok(cta.y - detailFooter.y >= 12 && cta.y - detailFooter.y <= 17, 'Start button has a compact inset');
+    assert.ok(cta.height >= 48 && cta.height <= 52, 'Start button remains easy to tap');
+    assert.equal(cta.fontSize, '13px');
     assert.equal(cta.fontWeight, '600');
     assert.equal(cta.borderRadius, '28px');
     await screenshot(page, 'exercise-375');
     evidence.exercise = { cover, heading, input, glyph, cta, footer: detailFooter };
     await page.setViewportSize({ width: 320, height: 812 });
     assert.equal((await metrics(detail.locator('h1'))).fontSize, '21px');
-    near((await metrics(detail.locator('.workout-detail-cover'))).height, 174, 'Narrow exercise cover');
+    contained(await wholeImage(detail.locator('.workout-detail-cover img')), 'Narrow exercise illustration');
     const narrow = await detail.evaluate(node => ({ width: node.clientWidth, scroll: node.scrollWidth }));
     assert.ok(narrow.scroll <= narrow.width + 1, '320px exercise remains within the viewport');
     await screenshot(page, 'exercise-320');
     await detail.locator('[data-a="workoutClose"]').click();
     await overview.waitFor();
-    near((await metrics(overview.locator('.hero'))).height, 164, 'Narrow overview hero');
+    assert.ok((await metrics(overview.locator('.hero'))).height <= 190, 'Narrow overview cover stays capped');
     assert.equal((await metrics(overview.locator('h1'))).fontSize, '23px');
     await screenshot(page, 'overview-320');
+    // The portrait has marked head and feet at opposite source edges. Replacing
+    // only this disposable image's source exercises the actual application CSS,
+    // without changing media metadata, source styles or stored exercise data.
+    const portrait = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="400"><rect width="200" height="400" fill="#334752"/><circle cx="100" cy="25" r="15" fill="#ffad9e"/><path d="M100 46V330M100 90L50 170M100 90L150 170M100 330L70 380M100 330L130 380" stroke="#6bc9e8" stroke-width="18"/><circle cx="70" cy="380" r="10" fill="#2dd85a"/><circle cx="130" cy="380" r="10" fill="#2dd85a"/></svg>').toString('base64');
+    await page.locator('.view [data-a="back"]').first().click();
+    await page.locator('[data-a="openPr"][data-id="' + denseProtocolId + '"]').first().click();
+    await page.locator('.workout-compact-row').first().click();
+    const dense = page.locator('.workout-exercise-page'), denseTable = dense.locator('.workout-set-table');
+    assert.equal(await denseTable.getAttribute('data-set-count'), '5');
+    assert.equal(await denseTable.getAttribute('data-row-density'), 'compact');
+    assert.equal(await denseTable.locator('.workout-set-row').count(), 5);
+    assert.deepEqual(await denseTable.locator('[data-field="kg"]').evaluateAll(inputs => inputs.map(input => input.value)), ['50', '0', '', '55', '50']);
+    const historyBefore = await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('mt.data.v1')).log));
+    const denseEvidence = [];
+    for (const [width, height] of [[375,812], [320,568]]) {
+      await page.setViewportSize({ width, height });
+      await dense.locator('.workout-detail-cover img').evaluate(async (image, src) => { image.src = src; await image.decode(); }, portrait);
+      await dense.evaluate(node => { node.scrollTop = 0; });
+      const image = await wholeImage(dense.locator('.workout-detail-cover img'));
+      contained(image, width + ' px portrait');
+      const visible = await dense.locator('.workout-detail-cover img').evaluate(image => {
+        const r = image.getBoundingClientRect(), scale = Math.min(r.width / image.naturalWidth, r.height / image.naturalHeight);
+        const x = r.x + (r.width - image.naturalWidth * scale) / 2, y = r.y + (r.height - image.naturalHeight * scale) / 2;
+        return { head: document.elementFromPoint(x + 100*scale, y + 25*scale) === image,
+          feet: document.elementFromPoint(x + 70*scale, y + 380*scale) === image };
+      });
+      assert.ok(visible.head && visible.feet, 'Portrait source edges stay visible and clear of navigation controls');
+      const size = await fieldMetrics(denseTable); editableSize(size);
+      assert.equal((await metrics(denseTable.locator('[data-field="reps"]').first())).fontSize, '16px');
+      const infoButton = dense.locator('.workout-media-info button');
+      near((await metrics(infoButton)).height, 44, 'Info touch height');
+      near((await metrics(infoButton)).width, 44, 'Info touch width');
+      near((await metrics(infoButton.locator('svg'))).width, 24, 'Quiet info glyph');
+      const rowBounds = await denseTable.locator('.workout-set-row').evaluateAll(rows => rows.map(row => {
+        const r = row.getBoundingClientRect(); return { top:r.top, bottom:r.bottom, height:r.height };
+      }));
+      assert.ok(rowBounds.every(row => row.height >= 44), 'Every set remains separately editable');
+      assert.ok(rowBounds.at(-1).bottom <= height + 1, 'Five complete set rows fit ' + width + '×' + height + ': ' + JSON.stringify(rowBounds));
+      const bounds = await dense.evaluate(node => ({ available:node.clientWidth, content:node.scrollWidth }));
+      assert.ok(bounds.content <= bounds.available + 1, 'Dense form does not overflow horizontally');
+      await screenshot(page, 'portrait-five-' + width);
+      denseEvidence.push({ width, height, image, visible, fields:size, rows:rowBounds });
+    }
+    await denseTable.locator('[data-field="reps"]').last().fill('12');
+    await denseTable.locator('[data-field="kg"]').nth(2).fill('12.5');
+    await denseTable.locator('[data-field="kg"]').nth(2).blur();
+    assert.equal(await denseTable.locator('[data-field="reps"]').last().inputValue(), '12');
+    assert.equal(await denseTable.locator('[data-field="kg"]').nth(1).inputValue(), '0', 'Intentional zero stays distinct from the formerly unknown field');
+    assert.ok((await denseTable.locator('[data-field="rir"]').evaluateAll(inputs => inputs.map(input => input.value))).every(value => value === ''), 'Unknown actual RIR is not invented');
+    assert.equal(await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('mt.data.v1')).log)), historyBefore, 'Plan edits never rewrite recorded history');
+    evidence.densePortrait = denseEvidence;
     assert.deepEqual(errors, []);
     fs.writeFileSync(path.join(artifacts, 'reference-' + engine + '-metrics.json'), JSON.stringify(evidence, null, 2));
-    console.log('Passed approved reference geometry (' + engine + '): 375/320px, matched records, assets, fonts, compact list, table and controls.');
+    console.log('Passed workout presentation (' + engine + '): whole images, portrait head/feet, three/five set density, 375×812 and 320×568, editable values and history.');
   } finally {
     await browser.close();
     await origin.close();

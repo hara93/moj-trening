@@ -1,0 +1,39 @@
+/* Application structure. Home carousel styles intentionally remain in style.css. */
+.tabbar{grid-template-columns:repeat(4,minmax(0,1fr))}
+.analytics-hub{--hub-cyan:#1E9ED2;--hub-green:#2DD85A;--hub-teal:#19C7A0;--hub-amber:#E4D638;padding:0 18px 24px;background:#182126;color:#EEF3F4}
+.analytics-heading{padding:25px 2px 18px}
+.analytics-heading p{margin:0 0 5px;color:#8EA3AC;font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+.analytics-heading h1{font-size:30px;letter-spacing:-.035em;font-weight:600;margin:0}
+.analytics-summary{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 20px;margin-bottom:20px;background:#243037;border:1px solid #354149;border-radius:20px}
+.analytics-summary>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.analytics-summary>div+div{border-left:1px solid #3A474E;padding-left:22px}
+.analytics-summary strong{font-size:31px;line-height:1;font-weight:500;font-variant-numeric:tabular-nums}
+.analytics-summary span{font-size:11px;line-height:1.4;color:#A7B8C0}
+.analytics-links{display:grid;gap:12px}
+.analytics-link{--tile:#1E9ED2;display:grid;grid-template-columns:42px minmax(0,1fr) 14px;gap:13px;align-items:center;width:100%;min-height:88px;padding:16px;border:1px solid #36434B;border-radius:19px;background:#253138;color:#EFF3F4;text-align:left}
+.analytics-link.teal{--tile:#19C7A0}.analytics-link.green{--tile:#2DD85A}.analytics-link.amber{--tile:#E4D638}
+.analytics-icon{display:flex;align-items:center;justify-content:center;width:42px;height:42px;color:var(--tile);background:#1B272D;border-radius:13px}
+.analytics-icon svg{width:23px;height:23px}
+.analytics-link strong{display:block;font-size:16px;font-weight:550;line-height:1.35}
+.analytics-link small{display:block;font-size:11px;line-height:1.45;margin-top:5px;color:#A4B6BE}
+.analytics-link>span:last-child{color:#90A3AD;font-size:23px}
+.analytics-history{display:flex;align-items:center;gap:10px;width:100%;padding:17px 3px;margin-top:13px;border:0;border-bottom:1px solid #36444C;background:transparent;color:#C7D5DC;font-size:13px;text-align:left}
+.analytics-history svg{width:18px;height:18px}.analytics-history span{margin-left:auto;font-size:21px}
+.analytics-hub button:focus-visible{outline:2px solid #5FCAF2;outline-offset:3px}
+.workout-player-focus .workout-player-exercise[data-current="false"]{display:none}
+.workout-player-focus.show-all .workout-player-exercise[data-current="false"]{display:block}
+.workout-player-exercise+.workout-player-exercise{margin-top:12px}
+.workout-previous-reserve{margin-top:10px;padding:10px 12px;background:#233239;border:1px solid #3A4A50;border-radius:15px}
+.workout-player-switch{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:44px;padding:12px 2px;margin:0;border:0;background:transparent;color:#B4C7CF;font-size:12px;text-align:left}
+.workout-player-switch span:last-child{color:#45BCD9;font-size:11px}
+.workout-player-focus .workout-journal-heading{padding-top:10px;padding-bottom:8px}
+.workout-player-focus .workout-journal-heading h1{font-size:16px;line-height:1.4;color:#B6C8CF;font-weight:500}
+.workout-player-focus .workout-journal-heading .workout-eyebrow{display:none}
+.workout-player-focus .workout-now{border:1px solid #3A4A50;border-radius:18px;padding:14px 15px;background:#233239}
+.workout-player-focus .workout-now strong{font-size:19px;line-height:1.25;letter-spacing:-.02em;font-weight:550}
+.workout-player-focus .workout-now>span{font-size:12px;color:#B9CCD5;line-height:1.4}
+.workout-player-focus .workout-now .hint{font-size:11px;line-height:1.5;color:#8FA9B4;margin-top:6px}
+.workout-player-controls .ring{background:#263B43;color:#F0F7F8}
+.workout-player-controls{padding-bottom:25px;min-height:112px}
+.workout-player-controls .workout-control-action{position:absolute;left:50%;top:calc(100% + 4px);transform:translateX(-50%);color:#C4D8E0;font-size:10px;line-height:14px;font-weight:550;white-space:nowrap;pointer-events:none}
+@media(max-width:340px){.analytics-hub{padding-inline:14px}.analytics-link{min-height:80px;padding:13px;gap:11px}.analytics-link strong{font-size:15px}.analytics-heading{padding-top:20px}}

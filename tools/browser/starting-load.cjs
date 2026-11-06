@@ -25,7 +25,7 @@ async function run(){
     const context=await browser.newContext({viewport:{width:375,height:812},isMobile:true,hasTouch:true,locale:'hr-HR'});
     const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));p.setDefaultTimeout(6000);
     await p.goto('http://127.0.0.1:'+server.address().port+'/');await p.getByRole('heading',{name:'Bok, Tomislav'}).waitFor();
-    assert.deepEqual(await p.locator('.tab span').allInnerTexts(),['Moj pregled','Početna','Knjižnica']);
+    assert.deepEqual(await p.locator('.tab span').allInnerTexts(),['Moj pregled','Početna','Knjižnica','Napredak']);
     assert.equal(await select(p,'homeGuide').count(),0);
     await library(p,'bench-press');await select(p,'playEx').click();
     const form=p.locator('#starting-load-form'), weight=form.locator('input').first();

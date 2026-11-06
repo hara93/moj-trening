@@ -1,11 +1,12 @@
 /* Moj pregled is a pure renderer. The app supplies the current local week's prepared
    model; this module never reads a store, infers a prescription, or saves a forecast.
-   TrainingDashboard.render({ range, today, forecast, selectedGroup, summary,
-     coverage, groups, sessions, days, quality, loading, error }) -> .view HTML.
+   TrainingDashboard.render(vm) -> compact daily dashboard.
+   TrainingDashboard.analytics(vm) -> detailed weekly work, using the same
+     {range,today,forecast,selectedGroup,summary,coverage,groups,sessions,days,quality}.
    A group's actual/planned values are {direct, indirect, equivalent, days}; planned
    means remaining occurrences from today through Sunday, not completed sessions.
    Session contributions are {exerciseId, name, groupId, direct, indirect}.
-   The caller owns dashboardGroup/Joint/Forecast/Protocols/Calendar/Progress actions. */
+   The caller owns dashboardGroup/Joint/Forecast/Protocols/Calendar/Progress/Analytics actions. */
 (function(root) {
   'use strict';
 
@@ -24,6 +25,7 @@
   };
   const icon = name => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ({
     calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18M7 14h2M15 14h2M7 17h2"/>',
+    history:'<path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7M12 7v5l3 2"/>',
     protocol:'<rect x="5" y="4" width="14" height="17" rx="3"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/>',
     chart:'<path d="M4 4v16h16M8 15l4-5 4 2 4-7"/>',
     arrow:'<path d="m9 5 7 7-7 7"/>',
@@ -35,13 +37,13 @@
   function quickLinks() {
     return '<nav class="db-quick" aria-label="Prečaci iz pregleda">' +
       '<button type="button" data-a="dashboardProtocols">'+icon('protocol')+'<span>Moji protokoli</span></button>' +
-      '<button type="button" data-a="historyList">'+icon('calendar')+'<span>Povijest treninga</span></button>' +
-      '<button type="button" data-a="dashboardProgress">'+icon('chart')+'<span>Napredak</span></button><button type="button" data-a="trainingLoadOpen">'+icon('chart')+'<span>Opterećenje</span></button></nav>';
+      '<button type="button" data-a="dashboardCalendar">'+icon('calendar')+'<span>Kalendar</span></button>' +
+      '<button type="button" data-a="historyList" aria-label="Povijest treninga">'+icon('history')+'<span>Povijest</span></button></nav>';
   }
 
-  function stateView(vm) {
+  function stateView(vm, detailed) {
     const error = !!vm.error;
-    return '<div class="view dashboard"><header class="db-heading"><p class="db-kicker">Tvoj trening na jednom mjestu</p><h1>Moj pregled</h1></header>' + quickLinks() +
+    return '<div class="view dashboard '+(detailed?'db-analytics':'db-home')+'"><header class="db-heading"><h1>'+(detailed?'Analiza tjedna':'Moj pregled')+'</h1></header>' + (detailed?'<button type="button" class="db-back" data-a="back" aria-label="Natrag">'+icon('arrow')+'</button>':quickLinks()) +
       '<section class="db-state" role="'+(error?'alert':'status')+'">'+icon(error?'info':'chart')+'<h2>'+(error?'Pregled trenutačno nije dostupan':'Učitavam tvoj tjedan')+'</h2><p>'+
       (error?'Podaci se nisu mogli pripremiti za pregled. Svojim treninzima možeš pristupiti kroz Moje protokole.':'Pripremam zabilježene treninge i preostali raspored.')+'</p></section></div>';
   }
@@ -196,16 +198,14 @@
       }).join('')+'</ul>':'<p class="db-empty-copy">Još nema odrađenih treninga ovog tjedna.'+(vm.forecast?' U preostalom rasporedu nema treninga.':' Uključi plan za pregled budućih termina.')+'</p><button type="button" class="db-primary" data-a="dashboardProtocols">'+icon('plus')+'Otvori Moje protokole</button>')+'</section>';
   }
 
-  function render(input) {
+  function analytics(input) {
     const vm=input || {loading:true};
-    if (vm.loading || vm.error) return stateView(vm);
-    const groups=list(vm.groups), range=vm.range || {}, summary=vm.summary || {}, coverage=vm.coverage || {};
+    if (vm.loading || vm.error) return stateView(vm,true);
+    const groups=list(vm.groups), range=vm.range || {}, coverage=vm.coverage || {};
     const group=groups.find(g=>g.id===vm.selectedGroup) || groups.find(g=>val((g.actual||{}).equivalent)>0) || groups[0];
     const selected=group && group.id;
     const hasKnownWork=groups.some(g=>val((g.actual||{}).equivalent)>0);
-    return '<div class="view dashboard"><header class="db-heading"><p class="db-kicker">Tvoj tjedan</p><div><h1>Moj pregled</h1><button type="button" class="db-calendar-button" data-a="dashboardCalendar" aria-label="Otvori mjesečni planer">'+icon('calendar')+'</button></div><p class="db-period">'+esc(range.label || '')+'</p></header>'+quickLinks()+
-      (vm.daily?root.TodayView.card(vm.daily):'')+
-      '<section class="db-overview" aria-label="Izvedba plana"><div><small>Ovaj tjedan</small><strong>'+fmt(summary.done)+'<span> / '+fmt(summary.planned)+'</span></strong><p>'+(val(summary.planned)?'termina iz plana odrađeno':'Nema termina u tjednom planu')+'</p></div><div><small>Danas</small><strong>'+fmt(summary.todayDone)+'<span> / '+fmt(summary.todayPlanned)+'</span></strong><p>'+(val(summary.todayPlanned)?'termina iz plana odrađeno':'Nema termina u današnjem planu')+'</p></div></section>'+
+    return '<div class="view dashboard db-analytics"><header class="db-heading db-analytics-heading"><div><button type="button" class="db-back" data-a="back" aria-label="Natrag">'+icon('arrow')+'</button><div><h1>Analiza tjedna</h1><p class="db-period">'+esc(range.label || '')+'</p></div><details class="db-info"><summary aria-label="Kako čitati analizu tjedna">'+icon('info')+'</summary><div><strong>Rad iz dnevnika</strong><p>Odrađeno dolazi iz spremljenih treninga. Preostali plan prikazan je zasebno. Procijenjene serije opisuju količinu rada, a ne rast mišića.</p></div></details></div></header>'+
       '<section class="db-panel db-muscle" aria-labelledby="db-muscle-title"><div class="db-section-head"><div><p class="db-kicker">Zabilježeni podražaj</p><h2 id="db-muscle-title">Mišićni tjedan</h2></div></div><div class="db-anatomy-row"><div class="db-anatomy">'+bodyFigure(groups,selected,!!vm.forecast)+'</div>'+coverageRing(coverage,!!vm.forecast)+'</div>'+
       '<p class="db-map-hint">Dodirni figuru ili odaberi skupinu iz usporedbe.</p><div class="db-legend"><span><i class="db-swatch db-swatch-selected"></i>Odabrano</span><span><i class="db-swatch db-swatch-direct"></i>Izravni rad</span><span><i class="db-swatch db-swatch-indirect"></i>Neizravni rad</span>'+(vm.forecast?'<span><i class="db-swatch db-swatch-plan"></i>Samo u planu</span>':'')+'<span><i class="db-swatch db-swatch-empty"></i>Bez zapisa</span></div>'+
       '<button type="button" class="db-forecast" role="switch" aria-checked="'+!!vm.forecast+'" data-a="dashboardForecast"><span><b>Uključi preostali plan</b><small>Od danas do nedjelje · bez promjene dnevnika</small></span><i aria-hidden="true"></i></button>'+
@@ -213,7 +213,26 @@
       groupDetail(vm,group)+groupPicker(groups,selected,!!vm.forecast)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';
   }
 
-  const api={render};
+  function upcoming(vm) {
+    const next = list(vm.sessions).filter(s => s.status === 'planned' && /^\d{4}-\d{2}-\d{2}$/.test(s.date || '') && (!vm.today || s.date >= vm.today))
+      .slice().sort((a,b) => a.date.localeCompare(b.date))[0];
+    if (!next) return '<button type="button" class="db-next db-next-empty" data-a="dashboardCalendar"><span class="db-next-icon">'+icon('plus')+'</span><span class="db-next-text"><small>Sljedeći trening</small><strong>Dodaj u kalendar</strong></span>'+icon('arrow')+'</button>';
+    const action = sessionAction(next) || ' data-a="dashboardCalendar"';
+    return '<button type="button" class="db-next"'+action+'><span class="db-next-icon">'+icon(next.kind === 'field'?'calendar':'protocol')+'</span><span class="db-next-text"><small>'+esc(dateLabel(next.date,vm.today))+(next.kind==='field'?' · Na terenu':'')+'</small><strong>'+esc(next.label || 'Planirani trening')+'</strong></span>'+icon('arrow')+'</button>';
+  }
+
+  function render(input) {
+    const vm=input || {loading:true};
+    if (vm.loading || vm.error) return stateView(vm,false);
+    const summary=vm.summary || {}, range=vm.range || {};
+    const today = vm.daily && root.TodayView && typeof root.TodayView.card === 'function' ? root.TodayView.card(vm.daily) :
+      '<button type="button" class="db-today-fallback" data-a="todayOpen"><span><small>Danas</small><strong>Otvori dnevni pregled</strong></span>'+icon('arrow')+'</button>';
+    return '<div class="view dashboard db-home"><header class="db-heading"><p class="db-kicker">Tvoj dan</p><h1>Moj pregled</h1>'+(range.label?'<p class="db-period">'+esc(range.label)+'</p>':'')+'</header>'+today+
+      '<section class="db-overview" aria-label="Izvedba plana"><div><small>Ovaj tjedan</small><strong>'+fmt(summary.done)+'<span> / '+fmt(summary.planned)+'</span></strong><p>'+(val(summary.planned)?'termina iz plana odrađeno':'Nema tjednog plana')+'</p></div><div><small>Danas</small><strong>'+fmt(summary.todayDone)+'<span> / '+fmt(summary.todayPlanned)+'</span></strong><p>'+(val(summary.todayPlanned)?'termina iz plana odrađeno':'Nema današnjeg plana')+'</p></div></section>'+
+      upcoming(vm)+quickLinks()+'<nav class="db-detail-links" aria-label="Detaljniji pregledi"><button type="button" data-a="dashboardProgress"><span class="db-detail-icon">'+icon('chart')+'</span><span><strong>Napredak</strong><small>Trendovi i opterećenje</small></span>'+icon('arrow')+'</button><button type="button" data-a="dashboardAnalytics"><span class="db-detail-icon">'+icon('protocol')+'</span><span><strong>Analiza tjedna</strong><small>Rad po mišićima</small></span>'+icon('arrow')+'</button></nav></div>';
+  }
+
+  const api={render,analytics};
   root.TrainingDashboard=api;
   if (typeof module!=='undefined' && module.exports) module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

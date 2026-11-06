@@ -114,6 +114,12 @@
   function comparisonHtml(item) {
     var delta = item.current - item.previous;
     var change = delta === 0 ? 'Bez promjene' : (delta > 0 ? '+' : '−') + amount(Math.abs(delta)) + ' ' + item.unit;
+    var low = Math.min(item.previous, item.current), high = Math.max(item.previous, item.current), spread = high - low;
+    var y = function (v) { return spread ? 37 - (v - low) / spread * 22 : 26; };
+    var trend = '<svg class="pg-comparison-trend" viewBox="0 0 240 54" role="img" aria-label="' +
+      esc(shortDate(item.previousAt) + ': ' + amount(item.previous) + ' ' + item.unit + '; ' + shortDate(item.currentAt) + ': ' + amount(item.current) + ' ' + item.unit) +
+      '"><path class="pg-trend-grid" d="M12 44H228"/><path class="pg-trend-line" d="M22 ' + y(item.previous) + 'L218 ' + y(item.current) +
+      '"/><circle class="pg-trend-point" cx="22" cy="' + y(item.previous) + '" r="3.5"/><circle class="pg-trend-point pg-trend-latest" cx="218" cy="' + y(item.current) + '" r="4.5"/></svg>';
     return '<article class="pg-comparison" data-id="' + esc(item.id) + '" data-kind="' + esc(item.kind) + '">' +
       '<div class="pg-comparison-top"><span>' + (item.kind === 'time' ? 'Trajanje serije' : 'Ponavljanja u seriji') +
       '</span><span class="pg-change' + (delta > 0 ? ' pg-change-up' : '') + '">' + esc(change) + '</span></div>' +
@@ -123,7 +129,7 @@
       '<span class="pg-comparison-arrow" aria-hidden="true">→</span><div><span>Posljednje usporedivo</span>' +
       '<strong class="pg-after">' + esc(amount(item.current)) + ' <small>' + esc(item.unit) + '</small></strong>' +
       '<time datetime="' + esc(new Date(item.currentAt).toISOString()) + '">' + esc(shortDate(item.currentAt)) + '</time></div></div>' +
-      '<p class="pg-context">' + esc(item.context) + '</p>' +
+      trend + '<p class="pg-context">' + esc(item.context) + '</p>' +
       '<button type="button" class="pg-exercise-link" data-a="openEx" data-id="' + esc(item.id) +
       '" aria-label="' + esc('Otvori vježbu i povijest: ' + item.name) + '">Vježba i puna povijest <span aria-hidden="true">↗</span></button></article>';
   }
@@ -151,14 +157,17 @@
     var minuteSummary = missingDuration > 0 ? (total > 0 && missingDuration >= total ? '— min' : amount(minutes) + ' min poznato') +
       ' · ' + amount(missingDuration) + ' bez trajanja' : amount(minutes) + ' min zabilježeno';
     var max = Math.max.apply(null, [1].concat(weeks.map(function (week) { return week.count; })));
-    var step = 320 / weeks.length;
+    var step = 292 / weeks.length;
     var bars = weeks.map(function (week, index) {
-      var x = step * index + step / 2, height = week.count / max * 70;
+      var x = 20 + step * index + step / 2, height = week.count / max * 70;
       return '<g><rect class="pg-activity-track" x="' + (x - 11) + '" y="24" width="22" height="70" rx="7"/>' +
+        (index === weeks.length - 1 ? '<rect class="pg-activity-selection" x="' + (x - 15) + '" y="20" width="30" height="79" rx="10"/>' : '') +
         (height ? '<rect class="pg-activity-bar' + (index === weeks.length - 1 ? ' pg-activity-current' : '') + '" x="' + (x - 11) + '" y="' + (94 - height) + '" width="22" height="' + height + '" rx="7"/>' : '') +
         '<text class="pg-activity-count" x="' + x + '" y="15" text-anchor="middle">' + esc(amount(week.count)) + '</text>' +
         '<text class="pg-activity-date" x="' + x + '" y="112" text-anchor="middle">' + esc(weekDate(week.start)) + '</text></g>';
     }).join('');
+    var activityGrid = '<path class="pg-activity-grid" d="M20 24H312M20 59H312M20 94H312"/>' +
+      '<text class="pg-activity-axis" x="9" y="27" text-anchor="middle">' + esc(amount(max)) + '</text><text class="pg-activity-axis" x="9" y="97" text-anchor="middle">0</text>';
     function knownAu(week) {
       var hasKnown = finite(week.au) && week.au >= 0 && !(week.count > 0 && week.unrated >= week.count);
       var known = hasKnown ? amount(week.au) : '—';
@@ -175,8 +184,8 @@
       '<div class="pg-activity-summary"><strong>' + esc(amount(total)) + '<span>spremljenih treninga</span></strong>' +
       '<span>' + esc(minuteSummary) + '</span></div>' +
       '<svg class="pg-activity-chart" viewBox="0 0 320 119" role="img" aria-label="' +
-      esc('Broj spremljenih treninga po tjednima: ' + weeks.map(function (week) { return weekDate(week.start) + ' ' + week.count; }).join('; ') + '. Zadnji tjedan još traje. Iste vrijednosti su u tablici.') + '">' + bars + '</svg>' +
-      '<p class="pg-activity-note"><span aria-hidden="true"></span>Ovaj tjedan je u tijeku · više nije nužno bolje</p>' +
+      esc('Broj spremljenih treninga po tjednima: ' + weeks.map(function (week) { return weekDate(week.start) + ' ' + week.count; }).join('; ') + '. Zadnji tjedan još traje. Iste vrijednosti su u tablici.') + '">' + activityGrid + bars + '</svg>' +
+      '<p class="pg-activity-note"><span aria-hidden="true"></span>Ovaj tjedan je u tijeku</p>' +
       '<details class="pg-activity-table"><summary>Brojke po tjednima</summary><table><caption>Aktivnost iz spremljenih treninga</caption>' +
       '<thead><tr><th scope="col">Tjedan od</th><th scope="col">Treninzi</th><th scope="col">Poznate min</th><th scope="col">AU</th></tr></thead><tbody>' +
       weeks.slice().reverse().map(function (week) {
@@ -240,8 +249,9 @@
         }).join('') + '</div>' + dialog() + '</div>';
     }
     html += '<section class="pg-overview" aria-label="Brzi pregled">' + stats.map(function (stat, index) {
-      return '<div' + (index === 0 ? ' class="pg-stat-main"' : '') + '><strong>' + esc(stat.value) +
-        '</strong><span>' + esc(stat.label) + '</span>' + (stat.note ? '<small>' + esc(stat.note) + '</small>' : '') + '</div>';
+      var action = index === 2 ? 'data-a="historyList"' : 'data-a="progressInfo" data-topic="' + (index === 0 ? 'activity' : 'consistency') + '"';
+      return '<button type="button"' + (index === 0 ? ' class="pg-stat-main"' : '') + ' ' + action + ' aria-label="' + esc(stat.value + ' ' + stat.label + '. Otvori detalje') + '"><strong>' + esc(stat.value) +
+        '</strong><span>' + esc(stat.label) + '</span>' + (stat.note ? '<small>' + esc(stat.note) + '</small>' : '') + '</button>';
     }).join('') + '</section><div class="pg-shortcuts"><button type="button" data-a="historyList">Povijest treninga <span aria-hidden="true">↗</span></button>' +
       '<button type="button" data-a="tab" data-tab="dashboard">Moj pregled <span aria-hidden="true">↗</span></button></div>';
     if (vm.zero) {
@@ -250,7 +260,7 @@
         '<button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
     }
     html += performanceHtml(vm.insights || {}, vm.zero) + activityHtml(vm.insights || {});
-    html += '<div class="pg-tools-heading"><h2>Detalji i alati</h2><p>Otvori ono što želiš istražiti.</p></div>';
+    html += '<div class="pg-tools-heading"><h2>Detalji i alati</h2></div>';
     var ready = Number(counts.ready) || 0, missing = Number(counts.missing) || 0, way = Number(counts.way) || 0;
     var suggestions = heading('Ti odlučuješ o promjeni', '', 'suggestions') +
       (vm.suggestionsHtml || empty('Još nema prijedloga za promjenu doze.')) + (vm.missingWeightsHtml || '') +

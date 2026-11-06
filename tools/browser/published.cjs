@@ -54,7 +54,7 @@ async function main() {
     report.checks.versionVisible=true;
     await page.keyboard.press('Escape');
 
-    assert.equal(await page.locator('.tabbar [data-tab]').count(),3);
+    assert.equal(await page.locator('.tabbar [data-tab]').count(),4);
     assert.equal(await page.locator('[data-a="monthOpen"]').count(),0);
     await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
     await page.getByRole('heading',{name:'Moj pregled',exact:true}).waitFor();
@@ -72,9 +72,9 @@ async function main() {
     await page.getByRole('heading',{name:'Danas',exact:true}).waitFor();
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     report.checks.dailyMorningTeamOnLive=true;
-    assert.equal(await page.locator('.db-calendar-button').count(),1);
-    assert.equal(await page.locator('.db-quick [data-a="dashboardCalendar"]').count(),0);
-    await page.locator('.db-quick [data-a="dashboardProgress"]').click();
+    assert.equal(await page.locator('.db-muscle').count(),0);
+    assert.equal(await page.locator('.db-quick [data-a="dashboardCalendar"]').count(),1);
+    await page.locator('[data-a="dashboardProgress"]').click();
     await page.getByRole('heading',{name:'Napredak',exact:true}).waitFor();
     assert.ok(await page.locator('.pg-section').count()>=3);
     const progressHelp=page.locator('[data-a="progressInfo"]:visible').first();
@@ -84,6 +84,7 @@ async function main() {
     report.checks.progressDetailsAndHelp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     report.checks.simplifiedNavigation=true;
+    await page.locator('[data-a="dashboardAnalytics"]').click();
     assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),19,'18 muscle groups across 19 selectable front/back regions');
     assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardJoint"]').count(),4,'four visible joint regions, including both hip views');
     assert.equal(await page.locator('.db-comparison-row').count(),18,'18 comparison rows including disclosure');
@@ -113,7 +114,7 @@ async function main() {
       selected:await page.locator('#db-group-title').innerText(),
       total:await page.locator('.db-detail-total strong').innerText(),
       counts:await page.locator('.db-counts').innerText(),
-      summary:await page.locator('.db-overview').innerText()
+      summary:await page.locator('.db-ring strong').innerText()
     });
     const toggle=page.getByRole('switch',{name:'Uključi preostali plan',exact:false});
     if (await toggle.getAttribute('aria-checked')==='true') await toggle.click();
@@ -145,6 +146,7 @@ async function main() {
     report.checks.dayOpensExactDate={clickedDate,agendaDate};
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
 
+    await page.locator('.db-analytics [data-a="back"]').click();
     await page.locator('[data-a="historyList"]').click();
     await page.getByRole('heading',{name:'Povijest treninga',exact:true}).waitFor();
     report.checks.historyOpensOnLiveApp=true;

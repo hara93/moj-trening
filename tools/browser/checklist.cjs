@@ -43,11 +43,12 @@ async function layout(p,scope){
 }
 async function protocols(p){await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProtocols').first().click();}
 async function exercise(p,j){
+  if(!await p.locator('[data-a="workoutExercise"][data-j="'+j+'"]').first().isVisible()&&await A(p,'workoutShowAll').count())await A(p,'workoutShowAll').click();
   await p.locator('[data-a="workoutExercise"][data-j="'+j+'"]').first().click();await p.locator('.workout-exercise-page').waitFor();
 }
 function row(p,j,set,scope='.workout-exercise-page'){return p.locator(scope).last().locator('.workout-set-row[data-set="'+set+'"]:has([data-j="'+j+'"])');}
 async function inline(p,j,set,key,value,scope='.workout-exercise-page'){
-  const input=row(p,j,set,scope).locator('[data-field="'+key+'"]');await input.fill(String(value));await input.press('Tab');
+  const input=row(p,j,set,scope).locator('[data-field="'+key+'"]');if(!await input.isVisible()&&await A(p,'workoutShowAll').count())await A(p,'workoutShowAll').click();await input.fill(String(value));await input.press('Tab');
 }
 async function fillEdit(p,j,set,vals,live=false){
   await exercise(p,j);
@@ -96,7 +97,7 @@ async function superset(p){
 async function longList(p){
   await protocols(p);await by(p,'openPr','audit-long').click();await p.setViewportSize({width:320,height:700});await layout(p,'.workout-overview');assert.equal(await p.locator('.workout-compact-row').count(),2);
   await exercise(p,1);const planned=p.locator('.workout-exercise-page .workout-set-row');assert.equal(await planned.count(),12);await planned.last().scrollIntoViewIfNeeded();assert.equal(await planned.last().getAttribute('data-set'),'12');await layout(p,'.workout-exercise-page');await A(p,'workoutClose').click();
-  await A(p,'startPr').click();const live=p.locator('.workout-journal .workout-set-row');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'.workout-journal');assert.equal(await live.last().getAttribute('data-set'),'12');const scroll=await p.locator('.workout-journal').evaluate(el=>el.scrollTop);assert.ok(scroll>1000,'the page scrolls to every set: '+scroll);assert.equal(await p.locator('.workout-set-row[data-state=done]').count(),0);
+  await A(p,'startPr').click();await A(p,'workoutShowAll').click();const live=p.locator('.workout-journal .workout-set-row');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'.workout-journal');assert.equal(await live.last().getAttribute('data-set'),'12');const scroll=await p.locator('.workout-journal').evaluate(el=>el.scrollTop);assert.ok(scroll>0,'the compact page scrolls to every set: '+scroll);assert.equal(await p.locator('.workout-set-row[data-state=done]').count(),0);
   await A(p,'quitPlay').click();await A(p,'quitDiscard').click();record('long-default-checklist',{rows:24,width:320,pageScroll:scroll,fabricatedCompletions:0});
 }
 async function mixedWeights(p){

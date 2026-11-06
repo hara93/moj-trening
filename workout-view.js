@@ -138,7 +138,13 @@
   function seriesTable(vm) {
     vm = vm || {};
     var timed = vm.measure === 'time';
-    return '<table class="workout-series-table workout-set-table" aria-label="' + esc('Serije za ' + (vm.name || 'vježbu')) + '">' +
+    // Rows and their controls remain owned by the app. Count only actual set
+    // rows, so bilateral notes do not make a three-set plan look like six sets.
+    var setCount = (html(vm.rowsHtml).match(/<tr\b[^>]*>/gi) || []).filter(function (row) {
+      return !/\bworkout-set-details\b/.test(row);
+    }).length;
+    var density = setCount >= 5 ? 'compact' : 'comfortable';
+    return '<table class="workout-series-table workout-set-table' + (density === 'compact' ? ' workout-series-compact' : '') + '" data-set-count="' + setCount + '" data-row-density="' + density + '" aria-label="' + esc('Serije za ' + (vm.name || 'vježbu')) + '">' +
       (vm.caption ? '<caption>' + esc(vm.caption) + '</caption>' : '') +
       '<thead><tr><th scope="col">Serija</th><th scope="col">' + (timed ? 'Sek.' : 'Pon.') + '</th><th scope="col">' + esc(vm.weightLabel || 'kg') +
       '</th><th scope="col">' + (timed ? 'SIR (s)' : 'RIR') + '</th></tr></thead><tbody>' +

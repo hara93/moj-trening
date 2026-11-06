@@ -111,6 +111,7 @@ async function openProtocol(page, id = ids.protocol) {
 
 async function exercise(page, index) {
   const button = page.locator('[data-a="workoutExercise"][data-j="' + index + '"]').first();
+  if(!await button.isVisible()&&await action(page,'workoutShowAll').count())await action(page,'workoutShowAll').click();
   await button.focus();
   await page.keyboard.press('Enter');
   await page.locator('.workout-exercise-page').waitFor();

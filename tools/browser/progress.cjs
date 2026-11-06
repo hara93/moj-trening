@@ -57,8 +57,8 @@ async function importData(page, data) {
   await A(page,'restoreApply').click(); await A(page,'restoreApply').waitFor({state:'hidden'});
 }
 async function progress(page) {
-  await home(page); await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
-  await A(page,'dashboardProgress').click(); await page.locator('.progress-view').waitFor();
+  await home(page); await page.locator('.tab[data-tab="analytics"]').click();
+  await page.locator('[data-a="analyticsOpen"][data-section="progress"]').click(); await page.locator('.progress-view').waitFor();
 }
 async function noOverflow(page, label) {
   const bounds = await page.evaluate(() => {
@@ -88,6 +88,12 @@ async function expand(page, id) {
     assert.ok(await A(page,'editPr').count());
     assert.match(await page.locator('#wk-vl').getAttribute('aria-label'),/190 kg/);
     assert.match(await page.locator('#wk-m').getAttribute('aria-label'),/1 km/);
+    const activitySummary=page.locator('.pg-overview > button').first();
+    await activitySummary.click();
+    assert.equal(await page.locator('#progress-info').evaluate(node=>node.open),true);
+    assert.equal(await page.locator('#progress-info-title').innerText(),'Tvojih osam tjedana');
+    await page.keyboard.press('Escape');
+    assert.equal(await activitySummary.evaluate(node=>node===document.activeElement),true);
     await noOverflow(page,'overview375');
     await page.screenshot({path:path.join(artifacts,prefix+'-overview375.png')});
     if (!isWebKit) {

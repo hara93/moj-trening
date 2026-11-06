@@ -245,6 +245,11 @@ async function instructionAndDashboard(page, width) {
   await noOverflow(page, '.workout-instructions-body', 'instructions-' + width);
   await page.screenshot({ path: path.join(artifacts, 'body-' + engine + '-instructions-' + width + '.png') });
   await home(page); await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
+  await page.locator('.db-home').waitFor();
+  assert.equal(await page.locator('.tabbar .tab').count(),4);
+  assert.equal(await page.locator('.db-home .db-muscle,.db-home .db-activity').count(),0);
+  await A(page,'dashboardAnalytics').click();
+  await page.locator('.db-analytics').waitFor();
   const dashboard = '.db-body-svg';
   await page.locator(dashboard).waitFor();
   assert.equal(await page.locator(dashboard + ' .db-region-joint[data-region="hip_joints"]').count(), 2);
