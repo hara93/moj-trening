@@ -6,13 +6,14 @@
 })(typeof window!=='undefined'?window:null,function(){
   'use strict';
   const finite=n=>typeof n==='number'&&Number.isFinite(n);
-  function sections(items,exercises){
-    let label='';
+  // Parts belong to this occurrence in the authored workout. The exercise's
+  // library category (and its warmup metadata) never chooses a part for it.
+  // Older sparse plans retain the title until the next authored title.
+  function sections(items){
+    let label='Glavni dio';
     return (items||[]).map(item=>{
       label=String(item.section||'').trim()||label;
-      if(label)return label;
-      const cat=exercises?.[item.exId]?.cat||'';
-      return item.warmup||['Aktivacija','Mobilnost','Zagrijavanje'].includes(cat)?'Priprema':cat==='Kondicija'?'Kondicija':cat==='Rehab'?'Rehabilitacija':cat==='Trup'?'Trup':cat==='Eksplozivnost'?'Eksplozivnost':'Snaga';
+      return label;
     });
   }
   function shifted(map,index){return Object.fromEntries(Object.entries(map||{}).map(([k,v])=>[Number(k)>=index?Number(k)+1:k,v]));}

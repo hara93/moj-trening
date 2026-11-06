@@ -73,6 +73,8 @@ jobs:
           node tools/browser/dashboard-anatomy.cjs ${{ matrix.browser }}
           node tools/browser/structure.cjs ${{ matrix.browser }}
           node tools/browser/cinema.cjs ${{ matrix.browser }}
+          node tools/browser/sections.cjs ${{ matrix.browser }}
+          node tools/browser/sheet-gesture.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

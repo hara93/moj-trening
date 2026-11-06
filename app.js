@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.1';
+const APP_VERSION = '1.20.2';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -1065,6 +1065,7 @@ function render(){
   const ws=app.querySelector('.workout-fullscreen');if(ws){const wv=ws.querySelector('.view');if(wv)wv.scrollTop=S.workoutScroll?.[ws.dataset.workoutKey]||0;}
   const cj=app.querySelector('.cinema-journal .workout-journal-blocks');if(cj&&S.playerJournal?.scroll!=null)cj.scrollTop=S.playerJournal.scroll;
   after(t);
+  attachSheetGestures();
   refocus(fk, key);
   checkpointDraft();
   syncNavigation();
@@ -2350,7 +2351,7 @@ function stepRow(act, label, key, shown, o){
 }
 function stepper(label, key, val, shown, o){ return stepRow('dstep', label, key, shown, o); }
 // unsaved changes: everything in the draft except the screen's own keys (_open, _uploading …); no plan days = none chosen
-const draftSig = d => JSON.stringify(d, (k, v) => k.charAt(0) === '_' || (k === 'days' && Array.isArray(v) && !v.length) ? undefined : v);
+const draftSig = d => JSON.stringify(d, (k, v) => (k.charAt(0) === '_' && !(['_sectionCustom','_sectionName'].includes(k) && String(d?._sectionName||'').trim())) || (k === 'days' && Array.isArray(v) && !v.length) ? undefined : v);
 // the dose of a protocol item; when you change it by hand its "sessions in a row" start again
 const doseSig = it => JSON.stringify([it.measure || 'sets', it.sets || 1, it.reps || 10, it.repsList || null, it.sec || 30, it.secList || null, it.kg || 0, it.kgList || null, !!it.startingKgKnown, !!it.sides]);
 const PROG_STATE = ['ok', 'fail', 'snoozeOk', 'prev', 'up', 'easy'];
@@ -2378,8 +2379,6 @@ function paintMedia(dr){
 }
 function grow(t){ t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
 // structural changes typed into a field show at the next tap, or a moment after the field is left (never under a finger)
-let lazyT = null;
-function lazyRender(){ clearTimeout(lazyT); lazyT = setTimeout(() => { lazyT = null; const a = document.activeElement; if (a && app.contains(a) && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return; if (top().v === 'build') render(); }, 600); }
 VIEWS.exEdit = function(t){
   const d = S.draft; if (!d) return VIEWS.home();
   const isNew = !S.ex[d.id];
@@ -2591,11 +2590,10 @@ function featRows(p){
     '<div class="feat">'+I.bars+'<span>Oprema: ' + esc(Object.keys(eq).join(', ') || 'bez opreme') + '</span></div>';
 }
 function workoutOverviewEyebrow(items) {
-  const cats={},muscles=new Set();
-  items.forEach(item=>{const e=S.ex[item.exId];if(!e)return;cats[e.cat]=(cats[e.cat]||0)+(item.sets||1);const m=exMuscles(e);m.prime.concat(m.sec).forEach(id=>muscles.add(id));});
-  const cat=Object.keys(cats).sort((a,b)=>cats[b]-cats[a])[0]||'Trening';
+  const muscles=new Set();
+  items.forEach(item=>{const e=S.ex[item.exId];if(!e)return;const m=exMuscles(e);m.prime.concat(m.sec).forEach(id=>muscles.add(id));});
   const upper=UPPER_SET.some(id=>muscles.has(id)),lower=LEG_M.some(id=>muscles.has(id));
-  return cat+(upper||lower?' · '+(upper&&lower?'Cijelo tijelo':lower?'Donji dio':'Gornji dio'):'');
+  return 'Moj trening'+(upper||lower?' · '+(upper&&lower?'Cijelo tijelo':lower?'Donji dio':'Gornji dio'):'');
 }
 function workoutOverviewMeta(p,items) {
   const minutes=protoMin({...p,items}),sets=items.reduce((n,item)=>n+(item.sets||1),0);
@@ -2638,7 +2636,7 @@ VIEWS.build = function(){
   const d = S.draft; if (!d) return VIEWS.home();
   const isNew = !S.pr[d.id];
   const total = protoMin(d);
-  const eff = secOf(d.items), anySec = eff.some(Boolean);
+  const eff = CinemaModel.sections(d.items);
   return '<div class="view gut">' +
     topbar(backBtn(), '<button class="txtbtn" data-a="savePr">Spremi</button>', '') +
     '<h1 class="h1">' + (isNew ? 'Novi protokol' : 'Uredi protokol') + '</h1>' +
@@ -2647,13 +2645,11 @@ VIEWS.build = function(){
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:28px 17px 14px"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2><span style="font-size:14px;color:var(--text-body)">'+nVj(d.items.length)+' • ≈ '+total+' min</span></div>' +
     '<div class="list">' + (function(){
       const lab = ssLetters(d.items), N = d.items.length;
-      const runEnd = i => { let k = i; while (k + 1 < N && eff[k + 1] === eff[i]) k++; return k; };
-      // part titles (e.g. ZAGRIJAVANJE): typed on the exercise where a part begins, they apply down to the next title
-      // (data-from/to: the exercises the title covers; data-fb: what they fall back to when the field is emptied)
       const secField = i => {
-        const start = !!eff[i] && (i === 0 || eff[i] !== eff[i - 1]);
-        return '<div class="field" style="gap:6px;margin-top:12px"><label class="label" for="isec-'+i+'" style="padding-left:0">' + (start ? 'Naslov dijela' : anySec && i > 0 ? 'Novi dio počinje ovdje (po želji)' : 'Naslov dijela (po želji)') + '</label>' +
-          '<input id="isec-'+i+'" class="input bsec" data-isec="'+i+'" data-from="'+i+'" data-to="'+runEnd(i)+'" data-fb="'+esc(start ? (i > 0 ? eff[i - 1] : '') : eff[i])+'" value="'+(start ? esc(eff[i]) : '')+'" placeholder="'+(start ? 'bez naslova' : anySec && i > 0 ? 'npr. Snaga' : 'npr. Zagrijavanje')+'" autocomplete="off" enterkeyhint="done"></div>';
+        const names = [...new Set(WORKOUT_PARTS.concat(eff))], custom = d._sectionCustom === i;
+        return '<div class="builder-part field"><label for="builder-section-'+i+'">Dio treninga</label>'+
+          '<select id="builder-section-'+i+'" class="input" data-builder-section="'+i+'" aria-label="Dio treninga">'+names.map(name=>'<option value="'+esc(name)+'"'+(eff[i]===name?' selected':'')+'>'+esc(name)+'</option>').join('')+'<option value="_custom">Vlastiti naziv…</option></select>'+
+          (custom?'<div class="builder-part-custom"><input id="builder-section-name" class="input" data-bind="_sectionName" maxlength="80" value="'+esc(d._sectionName||'')+'" placeholder="npr. Glavni trening" aria-label="Vlastiti naziv dijela" autocomplete="off" enterkeyhint="done"><button type="button" class="chip" data-a="builderSectionApply" data-i="'+i+'">Primijeni</button></div>':'')+'</div>';
       };
       const card = (it, i) => {
         const e = S.ex[it.exId]; const open = d._open === i; const l = lab[i];
@@ -2667,6 +2663,7 @@ VIEWS.build = function(){
             '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate('+(open?'-90':'90')+'deg)"><path d="M9 4.5l7.5 7.5L9 19.5"/></svg>' +
           '</button>' +
           (open ? '<div style="padding:0 16px 16px;border-top:1px solid var(--border)">' +
+            (!l || l.k === 1 ? secField(i) : '<p class="builder-part-inherited">'+esc(eff[i])+'</p>') +
             '<div class="seg" style="margin-top:12px"><button class="chip" data-a="iset" data-k="measure" data-v="time" aria-pressed="'+(it.measure==='time')+'">Na vrijeme</button><button class="chip" data-a="iset" data-k="measure" data-v="sets" aria-pressed="'+(it.measure!=='time')+'">Na ponavljanja</button></div>' +
             (it.measure === 'time'
               ? istep('Trajanje','sec',i,it.sec+' s') + istep(inGroup ? 'Krugovi' : 'Serije','sets',i,n) + rest
@@ -2677,7 +2674,6 @@ VIEWS.build = function(){
                 rest) +
             '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="iflag" data-i="'+i+'" aria-checked="'+(!!it.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>' +
             (i < N - 1 && (linked || eff[i] === eff[i + 1]) ? '<div class="prow"><span class="k">Superset sa sljedećom vježbom<br><span style="font-size:13px;color:var(--text-2)">Radiš ih naizmjence, odmor tek nakon kruga</span></span><button class="switch" role="switch" data-a="ilink" data-i="'+i+'" aria-checked="'+linked+'" aria-label="Superset sa sljedećom vježbom"></button></div>' : '') +
-            (!l || l.k === 1 ? secField(i) : '') +   // a part begins with a whole superset, never inside one
             '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">' +
               '<button class="chip" data-a="imove" data-i="'+i+'" data-d="-1"'+(i===0?' disabled style="opacity:.35"':'')+'>↑ Gore</button>' +
               '<button class="chip" data-a="imove" data-i="'+i+'" data-d="1"'+(i===N-1?' disabled style="opacity:.35"':'')+'>↓ Dolje</button>' +
@@ -2703,6 +2699,22 @@ function istep(label, key, i, shown, o){ return stepRow((o && o.act) || 'istep',
 // a part title applies to every exercise below it until the next title
 const secOf = items => { let s = ''; return items.map(it => (s = String(it.section || '').trim() || s)); };
 function secSet(items, eff){ items.forEach((it, k) => { if (eff[k]) it.section = eff[k]; else delete it.section; }); return items; }
+const WORKOUT_PARTS = ['Glavni dio','Priprema','Snaga','Kondicija','Trup','Mobilnost','Rehabilitacija','Oporavak'];
+function builderSetSection(index,label){
+  const items=S.draft?.items;
+  if(!items || !Number.isInteger(index) || !items[index] || typeof label!=='string' || !label.trim())return false;
+  const group=groupsOf(items).find(g=>g.idx.includes(index));
+  const labels=CinemaModel.sections(items);
+  (group?.idx||[index]).forEach(i=>{labels[i]=label.trim();});
+  secSet(items,labels);
+  delete S.draft._sectionCustom;delete S.draft._sectionName;
+  return true;
+}
+function builderCommitSection(){
+  const d=S.draft,name=String(d?._sectionName||'').trim();
+  if(Number.isInteger(d?._sectionCustom)&&name)builderSetSection(d._sectionCustom,name.slice(0,80));
+  else if(d){delete d._sectionCustom;delete d._sectionName;}
+}
 // supersets stay well formed after a change, and an exercise that now ends a round or stands alone gets a rest again
 // (inside a superset its rest is 0: the round rest belongs to the last exercise of the round)
 function regroup(items, op){
@@ -4969,6 +4981,60 @@ function paintPlayer(full){
 }
 // The screen is rebuilt at every step; the demo video (or photo) of the same exercise is moved over from the old screen,
 // so it keeps playing instead of loading and starting again at every set, rest and side change.
+// The visible grab bars are also real, keyboard-accessible close controls.
+// Only their hit area owns the gesture, so scrolling/editing the sheet body
+// never dismisses it. Reuse the normal close path for nested sheets and pause.
+let sheetGestureClickUntil=0;
+function attachSheetGestures(){
+  if(!attachSheetGestures.bound){
+    attachSheetGestures.bound=true;
+    app.addEventListener('click',ev=>{
+      if(ev.detail>0&&performance.now()<sheetGestureClickUntil){sheetGestureClickUntil=0;ev.preventDefault();ev.stopImmediatePropagation();}
+    },true);
+  }
+  const sheets=app.querySelectorAll('.sheet,dialog.pg-dialog,dialog.tl-dialog');
+  sheets.forEach(node=>{
+    if(node.querySelector(':scope > .sheet-drag-handle'))return;
+    const native=node.tagName==='DIALOG';
+    if(!native&&!node.querySelector(':scope > .grab,:scope > .cinema-journal .cinema-journal-heading'))return;
+    const handle=document.createElement('button');
+    handle.type='button';handle.className='sheet-drag-handle';handle.setAttribute('aria-label','Zatvori prozor');
+    handle.title='Povuci dolje ili dodirni za zatvaranje';
+    node.prepend(handle);
+    const current=()=>node.isConnected&&(native?node.open:!!S.sheet&&app.querySelector('.sheet')===node);
+    const close=()=>{if(!current())return;if(!native)dismissSheet();else if(node.id==='progress-info')ProgressView.closeInfo();else if(node.id==='training-load-info')TrainingLoadView.closeInfo();};
+    const reset=()=>{node.classList.remove('is-sheet-dragging');node.style.removeProperty('transform');node.style.removeProperty('transition');};
+    let drag=null;
+    handle.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();close();});
+    handle.addEventListener('pointerdown',ev=>{
+      if(!current()||ev.isPrimary===false||(ev.pointerType==='mouse'&&ev.button!==0))return;
+      drag={id:ev.pointerId,x:ev.clientX,y:ev.clientY,dx:0,dy:0};
+      node.classList.remove('is-opening');node.classList.add('is-sheet-dragging');node.style.transition='none';
+      try{handle.setPointerCapture(ev.pointerId);}catch(e){}
+    });
+    handle.addEventListener('pointermove',ev=>{
+      if(!drag||drag.id!==ev.pointerId||!current())return;
+      drag.dx=ev.clientX-drag.x;drag.dy=ev.clientY-drag.y;
+      if(drag.dy>6&&drag.dy>Math.abs(drag.dx)){ev.preventDefault();node.style.transform='translate3d(0,'+Math.min(drag.dy,node.clientHeight)+'px,0)';}
+    },{passive:false});
+    const end=(ev,cancelled)=>{
+      if(!drag||drag.id!==ev.pointerId)return;
+      const move=drag;drag=null;
+      try{handle.releasePointerCapture(ev.pointerId);}catch(e){}
+      const travelled=Math.max(Math.abs(move.dx),Math.abs(move.dy));
+      if(travelled>8){sheetGestureClickUntil=performance.now()+350;ev.preventDefault();}
+      const threshold=Math.min(110,Math.max(56,node.clientHeight*.16));
+      if(!cancelled&&current()&&move.dy>=threshold&&move.dy>Math.abs(move.dx)*1.25){
+        node.style.transition=stillMotion()?'none':'transform .16s ease-out';
+        node.style.transform='translate3d(0,'+(node.clientHeight+24)+'px,0)';
+        setTimeout(()=>{close();reset();},stillMotion()?0:160);
+      }else reset();
+    };
+    handle.addEventListener('pointerup',ev=>end(ev,false));
+    handle.addEventListener('pointercancel',ev=>end(ev,true));
+    handle.addEventListener('lostpointercapture',ev=>end(ev,true));
+  });
+}
 function playAfter(){
   P._lastI = P.i;
   const slot = document.getElementById('keepmedia');
@@ -5565,7 +5631,8 @@ const A = {
   addToNew: () => { const e = S.ex[S.sheet.exId]; S.sheet = null; S.draft = { id: uid('p'), name:'', desc:'', items: e ? [newItem(e)] : [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   newPr: () => { S.draft = { id: uid('p'), name:'', desc:'', items: [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   editPr: d => { const p = S.pr[d.id]; if (!p) return; S.draft = Object.assign(clone(p), { _open: null }); S.draft.items = S.draft.items || []; S.draft.items.forEach(it => { it._d0 = doseSig(it); }); S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
-  itOpen: d => { const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
+  builderSectionApply: d => { const name=String(S.draft?._sectionName||'').trim();if(!name){toast('Upiši naziv dijela.');document.getElementById('builder-section-name')?.focus();return;}if(builderSetSection(+d.i,name.slice(0,80)))render(); },
+  itOpen: d => { builderCommitSection(); const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
   iset: d => { const it = S.draft.items[S.draft._open]; it[d.k] = d.v; render(); },
   istep: d => {
     const items = S.draft.items, it = items[+d.i], k = d.k, dir = +d.d; if (!it) return;
@@ -5592,6 +5659,7 @@ const A = {
   },
   iflag: d => { const it = S.draft.items[+d.i]; it.sides = !it.sides; render(); },
   imove: d => {
+    builderCommitSection();
     const i = +d.i, dir = +d.d, j = i + dir, items = S.draft.items; if (j < 0 || j >= items.length) return;
     const eff = secOf(items), gs = groupsOf(items), gOf = k => gs.find(g => g.idx.indexOf(k) !== -1), gi = gOf(i), gj = gOf(j);
     const swap = () => { const t = items[i]; items[i] = items[j]; items[j] = t; S.draft._open = j; };
@@ -5608,7 +5676,7 @@ const A = {
     if (eff.some(Boolean)) secSet(items, eff);
     render();
   },
-  idel: d => { dropItems(S.draft.items, (it, k) => k === +d.i); S.draft._open = null; render(); },
+  idel: d => { builderCommitSection(); dropItems(S.draft.items, (it, k) => k === +d.i); S.draft._open = null; render(); },
   pickStart: () => { S.pick = { ids: [] }; S.lib.q = ''; S.stack.push({ v:'library' }); render(); },
   pickToggle: d => { const ids = S.pick.ids, i = ids.indexOf(d.id); if (i === -1) ids.push(d.id); else ids.splice(i,1); const list = document.getElementById('liblist'); const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   pickCancel: () => { S.pick = null; S.lib.q = ''; S.stack.pop(); render(); },
@@ -5620,6 +5688,7 @@ const A = {
   },
   savePr: async d => {
     const dr = S.draft; const name = (dr.name||'').trim();
+    builderCommitSection();
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     if (!dr.items.length) { toast('Dodaj barem jednu vježbu.'); return; }
     const isNew = !S.pr[dr.id];
@@ -5939,7 +6008,9 @@ const A = {
   progDays: async d => { const g = S.prog[d.id]; if (!g) return; const n = clone(g); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.prog[d.id].days = ds; planSaved(); render(); await save('programs', d.id, n); },
   ddays: d => { const ds = S.draft.days = (S.draft.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); render(); },
   ilink: d => {
+    builderCommitSection();
     const items = S.draft.items, i = +d.i, a = items[i], b = items[i + 1]; if (!a || !b) return;
+    const parts=CinemaModel.sections(items);if(!(a.ss&&b.ss===a.ss)&&parts[i]!==parts[i+1]){toast('Za superset odaberi isti dio treninga za obje vježbe.');render();return;}
     regroup(items, () => {
       // switching off inside a circuit splits it in two: the exercises after this one stay together under one new key
       if (a.ss && b.ss === a.ss) { const old = a.ss, nk = uid('s'); for (let k = i + 1; k < items.length && items[k].ss === old; k++) items[k].ss = nk; }
@@ -5948,7 +6019,7 @@ const A = {
     render();
   },
   // a copy is your own protocol: not part of a programme or the pack, and its progress starts from zero
-  copyPr: () => { const d = S.draft; const c = clone(d); c.id = uid('p'); c.name = (d.name || 'Protokol') + ' (kopija)'; c.home = null; c.days = []; c._confirmDel = false; c._open = null;
+  copyPr: () => { builderCommitSection(); const d = S.draft; const c = clone(d); c.id = uid('p'); c.name = (d.name || 'Protokol') + ' (kopija)'; c.home = null; c.days = []; c._confirmDel = false; c._open = null;
     ['program','week','slot','pack','goalSkip'].forEach(k => delete c[k]); (c.items || []).forEach(it => ['ok','fail','snoozeOk','up','prev','easy'].forEach(k => delete it[k]));
     S.draft = c; render(); toast('Kopija je spremna. Promijeni naziv i spremi.'); },
   dequip: d => { const z = S.draft.equip = (S.draft.equip || []).slice(); const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i, 1); render(); },
@@ -5993,15 +6064,11 @@ app.addEventListener('input', ev => {
     const it = t.dataset.ikg != null ? S.draft.items[+t.dataset.ikg] : S.draft, v = kgVal(t.value);
     if (it && v != null) { if (t.dataset.ikg!=null) builderWeight(it,v,t.value.trim()!==''); else it.kg=v; const el = t.dataset.ikg != null && document.getElementById('dose-' + t.dataset.ikg); if (el) el.textContent = dose(it); }
   }
-  // a part title: renames the part that starts here, or starts a new part here; empty = this part joins the one above
-  if (t.dataset.isec != null) {
-    const items = S.draft.items, val = t.value.trim() || t.dataset.fb || '';
-    for (let k = +t.dataset.from; k <= +t.dataset.to && k < items.length; k++) { if (val) items[k].section = val; else delete items[k].section; }
-    const h = document.getElementById('sec-' + t.dataset.from); if (h && val) h.textContent = val;
-  }
+
 });
 app.addEventListener('keydown', ev => {
   const t=ev.target, list=t.closest('[role="tablist"]');
+  if(ev.key==='Enter'&&t.id==='builder-section-name'){ev.preventDefault();A.builderSectionApply({i:S.draft?._sectionCustom});return;}
   if(ev.key==='Enter'&&t.classList?.contains('workout-set-input')){ev.preventDefault();workoutInlineChange(t);return;}
   if (t.getAttribute('role')==='tab' && list && ['ArrowLeft','ArrowRight','Home','End'].includes(ev.key)) {
     const tabs=Array.from(list.querySelectorAll('[role="tab"]:not([disabled])'));
@@ -6009,13 +6076,19 @@ app.addEventListener('keydown', ev => {
     ev.preventDefault();const key=focusKey(tabs[next]);tabs[next].click();(focusEl(key)||tabs[next]).focus();return;
   }
   if ((ev.key==='Enter'||ev.key===' ') && t.classList?.contains('body-tap')) {ev.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}));return;}
-  if (ev.key==='Enter' && t.dataset && (t.id==='topkmh'||t.dataset.ikg!=null||t.dataset.dkg!=null||t.dataset.isec!=null)) {ev.preventDefault();t.blur();}
+  if (ev.key==='Enter' && t.dataset && (t.id==='topkmh'||t.dataset.ikg!=null||t.dataset.dkg!=null)) {ev.preventDefault();t.blur();}
 });
 app.addEventListener('focusin', ev => { const t = ev.target; if (t.classList && t.classList.contains('kgin')) setTimeout(() => { try { t.select(); } catch(e){} }, 0); });
 app.addEventListener('change', async ev => {
   actionSeq++;
   const t = ev.target;
   if(t.classList?.contains('workout-set-input')){workoutInlineChange(t);return;}
+  if(t.dataset.builderSection!=null && S.draft && top().v==='build'){
+    const index=Number(t.dataset.builderSection);
+    if(t.value==='_custom'){S.draft._sectionCustom=index;S.draft._sectionName='';render();document.getElementById('builder-section-name')?.focus();}
+    else if(builderSetSection(index,t.value))render();
+    return;
+  }
   if(t.id==='workout-equipment'){A.workoutEquipment({v:t.value});return;}
   if(t.id==='workout-target'){A.workoutTarget({v:t.value,j:t.dataset.j});return;}
   // a backup only opens the preview sheet; nothing changes before "Zamijeni podatke"
@@ -6046,7 +6119,6 @@ app.addEventListener('change', async ev => {
   }
   // typed kilograms are shown back the app's way (62,5) when the field is left; a new part title shows a moment later
   if (t.dataset && (t.dataset.ikg != null || t.dataset.dkg != null)) { const it = !S.draft ? null : t.dataset.ikg != null ? S.draft.items[+t.dataset.ikg] : S.draft; if (it) t.value = kgText(it.kg); return; }
-  if (t.dataset && t.dataset.isec != null) { lazyRender(); return; }
   if (t.id !== 'mfile' || !t.files || !t.files[0] || !S.draft) return;
   const file = t.files[0], dr = S.draft, isImg = /^image\//.test(file.type); t.value = '';
   if (dr._uploading) { toast('Pričekaj, još spremam prethodnu datoteku.'); return; }

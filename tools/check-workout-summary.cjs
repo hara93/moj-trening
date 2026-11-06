@@ -68,7 +68,8 @@ test('the actual protocol writer preserves saved zero and nonzero RIR/SIR target
     clone,normGroups:rows=>rows,doseSig:()=> 'same-recorded-dose',PROG_STATE:[],Date,
     save:async(coll,id,body)=>{context.written={coll,id,body:clone(body)};return true;},planSaved(){},render(){},toast(){}};
   context.top=()=>context.S.stack.at(-1);context.S.draft.items.forEach(row=>{row._d0='same-recorded-dose';});
-  vm.createContext(context);vm.runInContext('globalThis.A={'+source.slice(begin,end)+'}',context);
+  const commit=source.slice(source.indexOf('function builderCommitSection(){'),source.indexOf('// supersets stay well formed'));
+  vm.createContext(context);vm.runInContext(commit+'\nglobalThis.A={'+source.slice(begin,end)+'}',context);
   await context.A.savePr({});
   assert.equal(context.written.coll,'protocols');assert.equal(context.written.id,'p');assert.equal(context.written.body.name,'Novi naziv');
   assert.deepEqual(context.written.body.items.map(row=>[row.targetRir??null,row.targetSir??null]),[[0,null],[2,null],[null,0],[null,2]]);

@@ -517,3 +517,9 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .workout-cinema-clock::before{border-color:var(--cinema-timer);opacity:.55}
 .workout-cinema .workout-cinema-clock .workout-control-action{color:var(--cinema-timer)}
 @media(max-width:350px),(max-height:670px){.workout-cinema{--cinema-media-top:56px}}
+
+/* Parts belong to this occurrence in the workout, independent of the library. */
+.builder-part{gap:7px;margin-top:13px}.builder-part>label{font-size:12px;color:var(--text-2)}
+.builder-part select{height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);font-size:16px;padding:0 12px}
+.builder-part-custom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.builder-part-custom input{height:46px;padding:0 12px;border-radius:12px}.builder-part-custom .chip{height:46px;font-size:12px;padding:0 10px}
+.builder-part-inherited{font-size:12px;color:var(--text-2);margin:12px 0 0}

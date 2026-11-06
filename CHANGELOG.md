@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.20.2 — 6. 11. 2026.
+
+- Dijelovi treninga određuju se pri slaganju protokola. Uklonjeno je automatsko razvrstavanje prema kategoriji vježbe: Dead bug ili Copenhagen mogu biti u Pripremi, Snazi ili vlastitom dijelu. Vježbe bez naslova pripadaju neutralnom Glavnom dijelu.
+- Uređivanje vježbe ima odabir **Dio treninga** i unos vlastitog naziva. Promjena jedne stavke čuva susjedne dijelove; cijeli superset ostaje zajedno. Nazivi se zadržavaju pri spremanju, ponovnom otvaranju i nastavku playera.
+- Vlastiti naziv ulazi u zaštitu nespremljenih promjena i oporavak nacrta. Premještanje ili uklanjanje vježbe ne može primijeniti naziv na pogrešnu stavku.
+- Gornja crtica prozora sada podržava zatvaranje povlačenjem dolje i dodirom, uz postojeće tipke. Kratki, bočni i prekinuti potezi vraćaju prozor; listanje sadržaja i unos ostaju dostupni. Zatvaranje koristi postojeći povratak, zaštitu nacrta i stanje pauze treninga.
+- Dodane su mobilne provjere ručnih dijelova, ponovljene vježbe, superseta, oporavka nacrta i zatvaranja prozora u oba preglednika.
+
 ## 1.20.1 — 6. 11. 2026.
 
 - Slika u filmskom playeru počinje ispod vremena i napretka treninga. Jedna faza vježbe i dalje zauzima cijelu širinu, uz postupno zatamnjenje gornjeg i donjeg ruba u izvornu podlogu aplikacije.

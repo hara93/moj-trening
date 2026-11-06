@@ -4,10 +4,26 @@ const Cinema=require('../cinema-model.js'),Dose=require('../player-dose.js');
 const ex={id:'bench',name:'Potisak'},item={exId:'bench',sets:3,reps:8,kg:20,measure:'sets',sides:false};
 const manual=set=>({kind:'manual',g:0,set,it:item,e:ex});
 const base=()=>({mode:'ex',i:1,paused:false,left:0,endAt:0,items:[item],steps:[manual(1),manual(2),manual(3)],doneSteps:{0:1,2:1},rir:{0:0,2:2}});
-test('section labels preserve authored order, inherit titles and infer missing preparation/strength/conditioning',()=>{
- const list=[{exId:'a'},{exId:'b'},{exId:'c'},{exId:'b',section:'Snaga A'},{exId:'c'}],ex={a:{cat:'Mobilnost'},b:{cat:'Snaga'},c:{cat:'Kondicija'}};
- assert.deepEqual(Cinema.sections(list,ex),['Priprema','Snaga','Kondicija','Snaga A','Snaga A']);
- assert.equal(list[0].section,undefined);assert.equal(list.length,5);
+test('authored parts preserve sparse title inheritance and custom names without changing items',()=>{
+ const list=[{exId:'a'},{exId:'b',section:'  Priprema  '},{exId:'c'},
+  {exId:'b',section:'Snaga A'},{exId:'c',section:'  '},{exId:'d',section:'Moj blok <B>'},{exId:'e'}];
+ const before=JSON.stringify(list);
+ assert.deepEqual(Cinema.sections(list),['Glavni dio','Priprema','Priprema','Snaga A','Snaga A','Moj blok <B>','Moj blok <B>']);
+ assert.equal(JSON.stringify(list),before);
+ assert.deepEqual(Cinema.sections([]),[]);
+});
+test('the same exercise can appear in preparation and strength regardless of its library category',()=>{
+ const exercises={copenhagen:{cat:'Rehab'},deadbug:{cat:'Trup'}};
+ const list=[{exId:'deadbug',section:'Priprema'},{exId:'copenhagen'},
+  {exId:'copenhagen',section:'Snaga'},{exId:'deadbug'}];
+ assert.deepEqual(Cinema.sections(list,exercises),['Priprema','Priprema','Snaga','Snaga']);
+});
+test('unassigned parts stay generic rather than being inferred from categories or warmup flags',()=>{
+ const categories=['Mobilnost','Aktivacija','Zagrijavanje','Rehab','Trup','Snaga','Kondicija','Eksplozivnost','Vlastita kategorija'];
+ const exercises=Object.fromEntries(categories.map((cat,index)=>[String(index),{cat}]));
+ const list=categories.map((cat,index)=>({exId:String(index),warmup:index===0}));
+ assert.deepEqual(Cinema.sections(list,exercises),categories.map(()=>'Glavni dio'));
+ assert.equal(list[0].section,undefined);
 });
 test('extra preparation preserves past and later evidence across checkpoint restore',()=>{
  const p=base(),changed=Cinema.prepare(p,30,10000);

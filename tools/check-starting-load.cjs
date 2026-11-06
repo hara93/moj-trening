@@ -64,7 +64,8 @@ test('unrelated protocol editor save retains weights, seconds and remembered zer
   const sig=src.slice(src.indexOf('const doseSig ='),src.indexOf('\n',src.indexOf('const doseSig =')));
   const adjust=src.slice(src.indexOf('function fitSetLists'),src.indexOf('// an exercise added',src.indexOf('function fitSetLists')));
   const save=src.slice(src.indexOf('  savePr: async'),src.indexOf('  delPr:',src.indexOf('  savePr: async')));
-  vm.runInContext(sig+'\n'+adjust+'\nglobalThis.A={'+save+'};globalThis.signature=doseSig;',ctx);
+  const commit=src.slice(src.indexOf('function builderCommitSection(){'),src.indexOf('// supersets stay well formed'));
+  vm.runInContext(sig+'\n'+adjust+'\n'+commit+'\nglobalThis.A={'+save+'};globalThis.signature=doseSig;',ctx);
   const it={exId:'press',measure:'time',sets:2,kg:0,startingKgKnown:true,kgList:[10,0],sec:20,secList:[20,15],ok:2};
   const base={...it};it._d0=ctx.signature(it);ctx.S.draft={id:'pr',name:'Novi naslov',items:[it]};
   await ctx.A.savePr({});const saved=ctx.S.pr.pr.items[0];
