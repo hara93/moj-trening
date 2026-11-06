@@ -38,9 +38,9 @@ async function home(p) {
   await p.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor();
 }
 
-async function importData(p) {
+async function importData(p, data = fixture()) {
   await A(p, 'dataSheet').click();
-  await p.locator('#importFile').setInputFiles({ name: 'cinema-synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(fixture())) });
+  await p.locator('#importFile').setInputFiles({ name: 'cinema-synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   await A(p, 'restoreApply').click(); await A(p, 'restoreApply').waitFor({ state: 'hidden' });
 }
 
@@ -49,11 +49,11 @@ async function noOverflow(p, scope, label) {
   assert.ok(d.document <= d.viewport + 1 && d.scroll <= d.width + 1, label + ': ' + JSON.stringify(d));
 }
 
-async function openJournal(p) {
+async function openJournal(p, rows = 7) {
   if (!await sheet(p).isVisible()) await A(p, 'cinemaJournal').click();
   await sheet(p).waitFor();
   assert.equal((await player(p)).clock.paused, true, 'journal pauses the actual session clock');
-  assert.equal(await sheet(p).locator('.workout-set-row').count(), 7);
+  assert.equal(await sheet(p).locator('.workout-set-row').count(), rows);
 }
 
 async function closeJournal(p) {
@@ -100,6 +100,59 @@ async function hero(p) {
   assert.ok(value.media?.src, 'cinema has actual exercise media');
   assert.ok(value.media.width >= value.width * .9 && value.media.height >= Math.min(280, value.height * .4), 'media dominates the player: ' + JSON.stringify(value));
   return value;
+}
+
+async function portraitPresentation(p, width, height) {
+  const data=fixture();
+  data.protocols[id].items=[{exId:'goblet-squat',measure:'sets',sets:3,reps:10,kg:20,rest:60,sides:false,targetRir:2}];
+  await importData(p,data);await checkHome(p,width);
+  await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
+  await A(p,'dashboardProtocols').click();await p.locator('[data-a="openPr"][data-id="'+id+'"]').click();
+  await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();await manual(p,1);await hero(p);
+  assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'goblet-squat');
+  const layout=await p.locator('.workout-cinema').evaluate(view=>{
+    const box=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height};};
+    const media=view.querySelector('.cinema-single-media'),image=media.querySelector('img');
+    return {view:box(view),header:box(view.querySelector('.workout-cinema-progress')),media:box(media),
+      natural:{width:image.naturalWidth,height:image.naturalHeight},image:box(image),fit:getComputedStyle(image).objectFit,
+      mediaFade:getComputedStyle(view.querySelector('.workout-cinema-media'),'::after').backgroundImage,
+      stageFade:getComputedStyle(view.querySelector('.workout-cinema-stage'),'::after').backgroundImage,
+      timerColor:getComputedStyle(view.querySelector('#ringN')).color};
+  });
+  assert.ok(layout.media.top>=layout.header.bottom-1,'standing portrait begins below timer/progress header: '+JSON.stringify(layout));
+  assert.ok(Math.abs(layout.media.width-layout.view.width)<=1,'portrait retains full viewport width');
+  assert.ok(Math.abs(layout.media.height/layout.media.width-4/3)<.01,'portrait phase keeps its natural 3:4 proportions');
+  assert.equal(layout.fit,'contain','exercise image is not cropped to fill a box');
+  assert.ok(Math.abs(layout.image.width/layout.image.height-layout.natural.width/layout.natural.height)<.01,'image is not stretched');
+  assert.match(layout.mediaFade+' '+layout.stageFade,/linear-gradient/,'image has a gradual edge fade');
+  assert.ok((layout.mediaFade+' '+layout.stageFade).split('rgba(').length>=4,'fade includes intermediate opacity stops');
+  await noOverflow(p,'.workout-cinema','standing portrait '+width+'x'+height);
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-'+width+'x'+height+'.png')});
+  // A filter on the static stage creates a new containing block for its absolute
+  // media descendant. Pausing must leave the portrait anchored to the same header.
+  const portrait=()=>p.locator('.workout-cinema .cinema-single-media').boundingBox();
+  const runningRect=await portrait();
+  await A(p,'cinemaPause').click();assert.equal((await player(p)).clock.paused,true);
+  const pausedRect=await portrait();
+  assert.deepEqual(pausedRect,runningRect,'pausing keeps the image below the same header without moving or resizing it');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-paused-'+width+'x'+height+'.png')});
+  await A(p,'cinemaPause').click();assert.equal((await player(p)).clock.paused,false);
+  assert.deepEqual(await portrait(),runningRect,'resuming preserves the standing portrait geometry');
+  await A(p,'cinemaMain').click();await closeCompletionPanel(p);
+  assert.equal(step(await player(p)).kind,'rest');
+  const restColor=await p.locator('#ringN').evaluate(node=>getComputedStyle(node).color);
+  assert.notEqual(restColor,layout.timerColor,'work and rest counters are visually distinct');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-rest-'+width+'x'+height+'.png')});
+  await openJournal(p,3);
+  const completed=row(p,0,1).locator('.workout-set-number');
+  const mark=await completed.evaluate(node=>{const circle=node.querySelector('span'),r=circle.getBoundingClientRect();return {
+    cellBackground:getComputedStyle(node).backgroundColor,circleRadius:getComputedStyle(circle).borderRadius,width:r.width,height:r.height};});
+  assert.match(mark.cellBackground,/rgba\(0, 0, 0, 0\)|transparent/,'completed mark does not color its whole table cell');
+  assert.ok(mark.circleRadius==='50%'||parseFloat(mark.circleRadius)>=Math.min(mark.width,mark.height)/2,'completed mark remains circular');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-journal-'+width+'x'+height+'.png')});
+  await closeJournal(p);await A(p,'cinemaMenu').click();await A(p,'cinemaExit').click();await A(p,'quitDiscard').click();
+  results.push({width,height,standingPortraitBelowHeader:true,fullWidthNaturalProportions:true,gradualEdgeFade:true,
+    distinctWorkRestColors:true,circularCompletedMark:true,pauseResumePreservesPortrait:true,layout});
 }
 
 async function checkHome(p, width) {
@@ -331,7 +384,7 @@ async function notesAndUndo(p,width) {
 (async () => {
   const host = await serve(), browser = await launch();
   try {
-    for (const width of [375, 320]) {
+    if(!process.argv.includes('just-portrait'))for (const width of [375, 320]) {
       const context = await browser.newContext({ viewport: { width, height: 850 }, isMobile: true, hasTouch: true,
         deviceScaleFactor: 1, serviceWorkers: 'block', locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce' });
       const p = await context.newPage(), errors = []; p.on('pageerror', e => errors.push(e.message));
@@ -344,6 +397,18 @@ async function notesAndUndo(p,width) {
         await p.screenshot({ path: path.join(artifacts, 'cinema-' + engine + '-failure-' + width + '.png') }).catch(() => {});
         console.error('Current screen:', (await p.locator('.view,.sheet').allInnerTexts()).join('\n').slice(0, 1800)); throw error;
       } finally { await context.close(); }
+    }
+    if(!process.argv.includes('just-notes'))for(const [width,height] of [[375,812],[320,568]]){
+      const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1,
+        serviceWorkers:'block',locale:'hr-HR',timezoneId:'Europe/Zagreb',reducedMotion:'reduce'});
+      const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+      p.setDefaultTimeout(7000);await p.clock.setFixedTime(fixed);
+      try{
+        await p.goto(host.url,{waitUntil:'domcontentloaded'});await p.getByRole('heading',{name:'Bok, Tomislav',exact:true}).waitFor();
+        await portraitPresentation(p,width,height);assert.deepEqual(errors,[]);
+      }catch(error){
+        await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-failure-'+width+'x'+height+'.png')}).catch(()=>{});throw error;
+      }finally{await context.close();}
     }
     const report = { engine, passed: true, results, artifacts };
     fs.writeFileSync(path.join(artifacts, 'cinema-' + engine + '-report.json'), JSON.stringify(report, null, 2));

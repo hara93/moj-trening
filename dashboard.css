@@ -1,5 +1,5 @@
 /* The dashboard owns only db-* selectors and stays inside the existing app shell. */
-.dashboard{--db-blue:#7BD8DA;--db-blue-fill:#3A9FA8;--db-card:#182126;--db-muted:#A4B0B7;--db-line:#303D43;padding:0 16px 24px;box-sizing:border-box;color:#EAF0F1;background:#121B20}
+.dashboard{--db-blue:var(--accent-text);--db-blue-fill:var(--accent-fill);--db-card:var(--surface);--db-muted:var(--text-2);--db-line:var(--border);padding:0 16px 24px;box-sizing:border-box;color:var(--text);background:var(--bg)}
 .dashboard *{box-sizing:border-box}
 .dashboard button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .dashboard button:focus-visible,.dashboard summary:focus-visible,.dashboard .body-tap:focus-visible{outline:2px solid #A6C5FF;outline-offset:3px}
@@ -17,9 +17,9 @@
 .db-overview>div{padding:13px 14px 12px;min-width:0}
 .db-overview>div+div{border-left:1px solid var(--db-line)}
 .db-overview small{font-size:11px;color:#ACBBC1}
-.db-overview strong{display:block;margin-top:5px;font-size:29px;line-height:1.1;letter-spacing:-.035em;font-weight:600;font-variant-numeric:tabular-nums;color:#8BDBCA}
-.db-overview>div+div strong{color:#80D5DC}
-.db-overview strong span{font-size:17px;color:#92A5AE;font-weight:450}
+.db-overview strong{display:block;margin-top:5px;font-size:29px;line-height:1.1;letter-spacing:-.035em;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.db-overview>div+div strong{color:var(--text)}
+.db-overview strong span{font-size:17px;color:var(--text-2);font-weight:450}
 .db-overview p{margin:5px 0 0;font-size:10px;line-height:1.4;color:var(--db-muted)}
 .db-panel{margin-top:16px;padding:18px 16px;border:1px solid var(--db-line);border-radius:22px;background:var(--db-card)}
 .db-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -157,30 +157,30 @@
 .db-state p{margin:0;font-size:13px;line-height:1.6}
 .db-home .db-heading h1{font-size:29px;letter-spacing:-.035em}
 .db-home .db-period{font-size:12px;margin-top:5px}
-.db-home .dy-dash-card,.db-today-fallback{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:90px;width:100%;margin:15px 0 0;padding:16px;border:1px solid #36555D;border-left:3px solid #7BD8DA;border-radius:18px;background:linear-gradient(115deg,#1B353C,#18262D);color:#EDF5F4;text-align:left}
+.db-home .dy-dash-card,.db-today-fallback{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:90px;width:100%;margin:15px 0 0;padding:16px;border:1px solid var(--db-line);border-left:3px solid var(--accent);border-radius:18px;background:var(--surface);color:#EDF5F4;text-align:left}
 .db-home .dy-dash-card>span,.db-today-fallback>span{min-width:0}
-.db-home .dy-dash-card small,.db-today-fallback small{display:block;margin:0 0 7px;color:#85D6D9;font-size:10px;line-height:1.3;font-weight:600;letter-spacing:.04em}
+.db-home .dy-dash-card small,.db-today-fallback small{display:block;margin:0 0 7px;color:var(--accent-text);font-size:10px;line-height:1.3;font-weight:600;letter-spacing:.04em}
 .db-home .dy-dash-card strong,.db-today-fallback strong{display:block;color:#EDF5F4;font-size:17px;line-height:1.3;font-weight:600;letter-spacing:-.02em;overflow-wrap:anywhere}
-.db-home .dy-dash-card>span>span{display:block;margin-top:7px;font-size:11px;line-height:1.4;color:#B3C4CA}
-.db-home .dy-dash-card>b{font-size:27px;color:#87CED1;font-weight:400}
-.db-today-fallback>svg{width:18px;height:18px;flex:none;color:#87CED1}
+.db-home .dy-dash-card>span>span{display:block;margin-top:7px;font-size:11px;line-height:1.4;color:var(--text-2)}
+.db-home .dy-dash-card>b{font-size:27px;color:var(--text-2);font-weight:400}
+.db-today-fallback>svg{width:18px;height:18px;flex:none;color:var(--text-2)}
 .db-next{display:flex;align-items:center;gap:11px;width:100%;min-height:76px;padding:13px 14px;border:1px solid var(--db-line);border-radius:17px;background:var(--db-card);color:#EAF0F1;text-align:left}
-.db-next-icon{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:11px;background:#203A40;color:#83D3D6}
+.db-next-icon{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:11px;background:var(--surface-2);color:var(--accent-text)}
 .db-next-icon svg{width:18px;height:18px}
 .db-next-text{min-width:0;flex:1}
 .db-next-text small{display:block;font-size:10px;line-height:1.4;color:var(--db-muted)}
 .db-next-text strong{display:block;margin-top:4px;font-size:13px;line-height:1.35;font-weight:550;overflow-wrap:anywhere}
-.db-next>svg{width:15px;height:15px;flex:none;color:#8FA7B0}
-.db-next-empty .db-next-icon{background:#29362E;color:#B5D199}
+.db-next>svg{width:15px;height:15px;flex:none;color:var(--text-2)}
+.db-next-empty .db-next-icon{background:var(--surface-2);color:var(--accent-text)}
 .db-detail-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 .db-detail-links button{display:grid;grid-template-columns:minmax(0,1fr) 14px;align-items:start;gap:10px 5px;min-width:0;min-height:102px;padding:13px 12px;border:1px solid var(--db-line);border-radius:16px;background:transparent;color:#EAF0F1;text-align:left}
-.db-detail-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;color:#E2BD74}
+.db-detail-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;color:var(--accent-text)}
 .db-detail-icon svg{width:21px;height:21px}
-.db-detail-links button+button .db-detail-icon{color:#7CD4C2}
+.db-detail-links button+button .db-detail-icon{color:var(--accent-text)}
 .db-detail-links button>span+span{grid-column:1/-1;grid-row:2;min-width:0}
 .db-detail-links strong{display:block;font-size:13px;line-height:1.3;font-weight:550}
 .db-detail-links small{display:block;margin-top:4px;font-size:10px;line-height:1.4;color:var(--db-muted)}
-.db-detail-links button>svg{grid-column:2;grid-row:1;width:14px;height:14px;align-self:center;color:#8FA7B0}
+.db-detail-links button>svg{grid-column:2;grid-row:1;width:14px;height:14px;align-self:center;color:var(--text-2)}
 .db-back{display:flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:1px solid var(--db-line);border-radius:14px;background:transparent;color:#C2D6DD}
 .db-back svg{width:19px;height:19px;transform:rotate(180deg)}
 .db-analytics-heading>div{align-items:flex-start;gap:11px}
@@ -191,8 +191,8 @@
 .dashboard .db-info>summary{display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:44px;padding:0;border:1px solid var(--db-line);border-radius:14px;color:#A8BEC7}
 .db-info>summary svg{width:19px;height:19px}
 .db-info>summary:after{display:none}
-.db-info>div{position:absolute;top:calc(100% + 9px);right:0;z-index:4;width:min(260px,calc(100vw - 40px));padding:16px;border:1px solid #48616B;border-radius:16px;background:#213039;box-shadow:0 12px 35px #0008}
+.db-info>div{position:absolute;top:calc(100% + 9px);right:0;z-index:4;width:min(260px,calc(100vw - 40px));padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--surface-2);box-shadow:0 12px 35px #0008}
 .db-info>div strong{display:block;font-size:12px;line-height:1.4;color:#EAF0F1}
-.db-info>div p{margin:7px 0 0;font-size:12px;line-height:1.6;color:#BDCDD3}
+.db-info>div p{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--text-body)}
 @media(max-width:350px){.dashboard{padding-left:12px;padding-right:12px}.db-panel{padding:16px 13px}.db-quick{gap:5px}.db-quick button{font-size:10px;gap:4px}.db-quick svg{width:15px;height:15px}.db-anatomy-row{grid-template-columns:minmax(0,1fr) 91px;gap:7px}.db-ring{width:91px;height:91px}.db-ring strong{font-size:30px}.db-ring small{font-size:15px}.db-coverage>b{font-size:10px}.db-detail-heading h3{font-size:17px}.db-counts dt{font-size:9px}.db-daily{gap:5px}.db-section-head h2{font-size:18px}.db-legend{column-gap:9px;font-size:9px}.db-comparison-row{grid-template-columns:76px minmax(0,1fr) 29px;gap:6px;padding-left:4px;padding-right:4px}.db-comparison-name{font-size:10px}.db-comparison-axis{padding-left:87px;padding-right:32px}}
 @media(prefers-reduced-motion:reduce){.db-region,.db-forecast>i:after{transition:none}}

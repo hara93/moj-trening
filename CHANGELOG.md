@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.20.1 — 6. 11. 2026.
+
+- Slika u filmskom playeru počinje ispod vremena i napretka treninga. Jedna faza vježbe i dalje zauzima cijelu širinu, uz postupno zatamnjenje gornjeg i donjeg ruba u izvornu podlogu aplikacije.
+- Brojač i luk jasno prate stanje: zelena za rad, koraljno crvena za odmor, plava za pripremu i neutralna oznaka pauze. Tekst stanja ostaje vidljiv.
+- Moj pregled, Napredak, Opterećenje, dnevnik i povezani prozori koriste iste tamne podloge kao Početna i Knjižnica. Boje ostaju u grafovima i oznakama.
+- Oznaka odrađene serije ponovno je krug, bez zelenog pravokutnika iza njega. Povijest vježbe ima uredne rubove i veličinu naslova.
+- Dodane su provjere uspravnog vježbača, položaja slike, rubnog prijelaza, boja brojača i oznake serije na ekranima 320 × 568 i 375 × 812.
+
 ## 1.20.0 — 6. 11. 2026.
 
 - Filmski player s jednom fazom vježbe preko pune širine, kontrolama pri dnu, brojačem stvarnog trajanja ručne serije i odbrojavanjem vremenskih vježbi. Dodir slike/brojača pauzira; glavna tipka potvrđuje seriju. Slike zadržavaju proporcije i vidljivog vježbača.
