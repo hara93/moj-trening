@@ -84,7 +84,8 @@ async function main() {
     report.checks.progressDetailsAndHelp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     report.checks.simplifiedNavigation=true;
-    assert.equal(await page.locator('.db-region[role="button"]').count(),18,'18 selectable muscle regions');
+    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),18,'18 selectable muscle regions');
+    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardJoint"]').count(),4,'four visible joint regions, including both hip views');
     assert.equal(await page.locator('.db-comparison-row').count(),18,'18 comparison rows including disclosure');
     assert.equal(await page.locator('.db-body-svg g[data-view="front"]').count(),1);
     assert.equal(await page.locator('.db-body-svg g[data-view="back"]').count(),1);
