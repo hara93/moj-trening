@@ -66,20 +66,21 @@ const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stra
 const exZoneLabel = z => z === 'Core' ? 'Trup' : z;
 const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
 const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Sobni bicikl','Bez opreme'];
-// 1.8: the muscle figure (body.js: Tomislav's drawing, front and back). Each region stands for one zone of the data, so an
-// exercise's zones (filters, the progression's LOWER_ZONES, the load model's rw by zones) follow its muscles; 'Kuk' and 'Cijelo
-// tijelo' have no region of their own. `muscles` = { prime: [region ids], sec: [region ids] }; an exercise without it (your own,
+// The front/back figure preserves stored region IDs. Exercise zones follow its selected regions;
+// 'Cijelo tijelo' has no region of its own, while hip_joints marks both hip joints, not a muscle.
+// `muscles` = { prime: [region ids], sec: [region ids] }; an exercise without it (your own,
 // or one you edited before 1.8) is drawn from its zones: the first zone's regions as the main ones, the others' as secondary.
 const MUSCLE_ZONE = { front_chest:'Prsa', front_shoulders:'Ramena', front_biceps:'Ruke', front_forearms:'Ruke', front_abs:'Core', front_obliques:'Core',
   front_hip_flexors:'Fleksori kuka', front_adductors:'Aduktori', front_quadriceps:'Kvadriceps', front_knees:'Koljeno', front_shins_ankles:'Gležanj',
   back_upper_back_trapezius:'Leđa', back_latissimus:'Leđa', back_lower_back:'Leđa', back_rear_shoulders:'Ramena', back_triceps:'Ruke',
-  back_glutes:'Gluteus', back_gluteus_medius:'Gluteus medius', back_hamstrings:'Stražnja loža', back_calves:'Lisni mišić' };
+  back_glutes:'Gluteus', back_gluteus_medius:'Gluteus medius', back_hamstrings:'Stražnja loža', back_calves:'Lisni mišić', hip_joints:'Kuk' };
 const MUSCLES = Object.keys(MUSCLE_ZONE);
-const ZONE_MUSCLES = { 'Kuk': ['front_hip_flexors', 'back_gluteus_medius'], 'Cijelo tijelo': MUSCLES.slice() };
-MUSCLES.forEach(r => (ZONE_MUSCLES[MUSCLE_ZONE[r]] = ZONE_MUSCLES[MUSCLE_ZONE[r]] || []).push(r));
-const ZONE_ONLY = ['Kuk', 'Cijelo tijelo'];   // zones no region stands for: they stay as they are when the muscles change
+const ZONE_MUSCLES = { 'Kuk': ['front_hip_flexors', 'back_gluteus_medius'], 'Cijelo tijelo': MUSCLES.filter(r => r !== 'hip_joints') };
+// Keep the established fallback for old exercises; a new hip marker is always explicit.
+MUSCLES.filter(r => r !== 'hip_joints').forEach(r => (ZONE_MUSCLES[MUSCLE_ZONE[r]] = ZONE_MUSCLES[MUSCLE_ZONE[r]] || []).push(r));
+const ZONE_ONLY = ['Cijelo tijelo'];   // zones without a selectable region survive muscle edits
 const UPPER_M = ['front_chest','front_shoulders','back_rear_shoulders','front_biceps','back_triceps','front_forearms','back_upper_back_trapezius','back_latissimus'];
-const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves'];
+const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves','hip_joints'];
 // 1.8.1: the filter's shortcuts like GOWOD: "Cijelo tijelo" (every region), "Gornji dio" (arms, shoulders, chest, back and the trunk)
 // and "Donji dio" (the legs and hips) select their whole region set; a set selected in full shows as ONE chip that removes it (all
 // regions: only "Cijelo tijelo"). 1.8's 'cijelo' (exercises that work the upper body and the legs together) is gone: a saved one
@@ -103,7 +104,7 @@ function exMuscles(e){
   zs.slice(1).forEach(z => (ZONE_MUSCLES[z] || []).forEach(r => { if (prime.indexOf(r) === -1 && sec.indexOf(r) === -1) sec.push(r); }));
   return { prime, sec, own: false };
 }
-// the zones of a set of muscles: the main ones first (zones[0] decides upper or lower body), then 'Kuk' / 'Cijelo tijelo' kept
+// Main regions first (zones[0] decides upper or lower body), with regionless zones retained.
 function musclesZones(m, old){
   const out = [];
   (m.prime || []).concat(m.sec || []).forEach(r => { const z = MUSCLE_ZONE[r]; if (z && out.indexOf(z) === -1) out.push(z); });
@@ -113,16 +114,17 @@ function musclesZones(m, old){
 // the figure (both views in one SVG), or nothing when body.js is missing (an older saved copy). act: the regions become
 // buttons with that action; under each one a wider transparent hit area (drawn below the regions, so a region's own shape always
 // wins) takes the taps in the gaps and around the outline, and the knees and gluteus medius get a ring above their neighbours
-const BODY_HIT_UNDER = 64, BODY_HIT_OVER = { front_knees: 34, back_gluteus_medius: 22 };
+const BODY_HIT_UNDER = 64, BODY_HIT_OVER = { front_knees: 34, back_gluteus_medius: 22, hip_joints:50 };
 function bodyFig(m, o){
   if (!window.BODY || !BODY.svg) return '';
   o = o || {};
-  let svg = BODY.svg({ prime: m.prime || [], on: m.sec || [], size: o.size || 140, tappable: !!o.act, cls: o.cls || '' });
+  let svg = BODY.svg({ prime: m.prime || [], on: m.sec || [], selected:o.selected, size: o.size || 140, tappable: !!o.act, cls: o.cls || '' });
   if (!o.act) return svg;
   svg = svg.replace(/ data-region="([a-z_]+)"/g, ' data-region="$1" data-a="' + o.act + '" data-v="$1" tabindex="0"');
   // per view: the hit areas go in front of the first region (under) and in front of the outline group (over)
   return svg.replace(/(<g data-view="[a-z]+"[^>]*>)([\s\S]*?)(<g class="body-ln")/g, (all, g, regs, ln) => {
-    const hit = (id, d, w) => '<path class="body-hit" data-a="' + o.act + '" data-v="' + id + '" aria-hidden="true" fill="none" stroke="transparent" stroke-width="' + w + '" stroke-linejoin="round" pointer-events="stroke" d="' + d + '"/>';
+    const scale=(BODY.geom?.H||1120)/1120;
+    const hit = (id, d, w) => '<path class="body-hit" data-a="' + o.act + '" data-v="' + id + '" aria-hidden="true" fill="none" stroke="transparent" stroke-width="' + w*scale + '" stroke-linejoin="round" pointer-events="stroke" d="' + d + '"/>';
     const under = [], over = [];
     regs.replace(/<path class="body-rg[^"]*" data-region="([a-z_]+)"[^>]*? d="([^"]+)"\/>/g, (x, id, d) => { under.push(hit(id, d, BODY_HIT_UNDER)); if (BODY_HIT_OVER[id]) over.push(hit(id, d, BODY_HIT_OVER[id])); return x; });
     return g + under.join('') + regs + over.join('') + ln;
@@ -271,7 +273,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.17.2';
+const APP_VERSION = '1.18.0';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
@@ -1731,7 +1733,7 @@ function libFiltered(){
   // 1.8, the filter: OR inside a section, AND between sections; Zona by the exercise's muscles (main or secondary), the exercises that work a chosen muscle as a main one first
   // (review) the joints have no muscle of their own: an exercise tagged Koljeno / Gležanj (rehab, landings) is found under the
   // knee / ankle region too, as a secondary one, like the list and the search show it
-  const JOINT = { front_knees: 'Koljeno', front_shins_ankles: 'Gležanj' };
+  const JOINT = { front_knees: 'Koljeno', front_shins_ankles: 'Gležanj', hip_joints:'Kuk' };
   const muHit = e => { const m = exMuscles(e); return mu.some(r => m.prime.indexOf(r) !== -1 || m.sec.indexOf(r) !== -1 || (!!JOINT[r] && (e.zones || []).indexOf(JOINT[r]) !== -1)); };
   const muRank = e => { if (!mu.length) return 0; const m = exMuscles(e); return mu.some(r => m.prime.indexOf(r) !== -1) ? 0 : 1; };
   const syn = a => a.map(x => LIB_SYN[x] || '').join(' ');
@@ -2084,7 +2086,10 @@ function workoutPrescriptionHtml(s,c) {
 }
 function workoutInstructionsHtml(e) {
   const muscles=exMuscles(e);
-  return WorkoutView.instructions({name:e.name,why:e.note||'',steps:e.steps||[],figureHtml:bodyFig(muscles,{size:275,cls:'workout-anatomy'}),primary:muscles.prime.map(muscleLabel),secondary:muscles.sec.map(muscleLabel)});
+  const selected=S.sheet?.muscleRegion,region=window.BODY?.regions[selected],isJoint=id=>window.BODY?.regions[id]?.kind==='joint';
+  const role=isJoint(selected)?'Zglobno područje · ne daje zasebne mišićne bodove.':muscles.prime.includes(selected)?'Glavni mišić u ovoj vježbi.':muscles.sec.includes(selected)?'Pomoćni mišić u ovoj vježbi.':'Nije označen u ovoj vježbi.';
+  const caption='<p class="workout-region-caption" role="status">'+(region?'<strong>'+esc(region.label_hr)+'</strong> '+esc(role):'Dodirni područje za naziv i njegovu ulogu.')+'</p>';
+  return WorkoutView.instructions({name:e.name,why:e.note||'',steps:e.steps||[],figureHtml:bodyFig(muscles,{size:275,cls:'workout-anatomy',act:'workoutMuscle',selected}),figureCaptionHtml:caption,primary:muscles.prime.filter(id=>!isJoint(id)).map(muscleLabel),secondary:muscles.sec.filter(id=>!isJoint(id)).map(muscleLabel)});
 }
 function workoutTrendsHtml(item) {
   const e=S.ex[item.exId],series=exLoadSeries(e.id,0),rows=historyOf(e.id).filter(x=>x.measure===item.measure);
@@ -2368,7 +2373,7 @@ function setDraftMuscles(dr, prime, sec){
   const b = dr._mz || (dr._mz = { raw: dr.muscles === undefined ? undefined : clone(dr.muscles), m: exMuscles(dr), z: (dr.zones || []).slice() });
   const zOf = a => a.reduce((s, r) => { const z = MUSCLE_ZONE[r]; if (z && s.indexOf(z) === -1) s.push(z); return s; }, []);
   const set = a => a.slice().sort().join();
-  const only = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1);   // Kuk / Cijelo tijelo as their chips say now
+  const only = (dr.zones || []).filter(z => ZONE_ONLY.indexOf(z) !== -1);
   if (set(prime) === set(b.m.prime) && set(sec) === set(b.m.sec)) {
     if (b.raw === undefined) delete dr.muscles; else dr.muscles = clone(b.raw);
     dr.zones = b.z.filter(z => ZONE_ONLY.indexOf(z) === -1 || only.indexOf(z) !== -1).concat(only.filter(z => b.z.indexOf(z) === -1)); return;
@@ -4901,6 +4906,7 @@ function sheetHtml(){
   else if (s.kind === 'workoutSwap') body=workoutSwapHtml(s);
   else if (s.kind === 'workoutReplace') body='<p class="play-dose-note">Potvrdi novu vježbu. Težina prethodne vježbe nije prenesena.</p>'+playDoseEditorHtml({...s,kind:'previewDose'},{apply:'workoutReplaceApply',resize:'workoutReplaceResize',cancel:'workoutClose',applyLabel:'Potvrdi zamjenu'});
   else if (s.kind === 'startingLoad') body=startingLoadHtml(s);
+  else if (s.kind === 'bodyRegion') body='<h3>'+esc(muscleLabel(s.region))+'</h3><p class="sub">Zglobno područje. Oznaka pomaže pronaći i opisati vježbe za to područje; ne dodaje zasebne bodove mišićnog opterećenja.</p>'+bodyFig({prime:[s.region],sec:[]},{size:300})+'<button class="btn sec" data-a="sheetDone">Zatvori</button>';
   else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
@@ -5081,6 +5087,7 @@ const A = {
   workoutClose,
   workoutPanelBack: () => {if(S.sheet?.kind==='workoutExercise'){delete S.sheet.panel;render();}},
   workoutInfo: d => workoutOpenPanel('instructions',d),
+  workoutMuscle: d => {if(S.sheet?.kind==='workoutExercise'&&S.sheet.panel==='instructions'&&window.BODY?.regions[d.v]){S.sheet.muscleRegion=d.v;render();}},
   workoutHistory: d => workoutOpenPanel('history',d),
   workoutTrends: d => workoutOpenPanel('trends',d),
   workoutEdit: () => {
@@ -5234,6 +5241,7 @@ const A = {
     if (changeHistory(original,null)) { back(); toast('Trening je obrisan iz povijesti.'); }
   },
   dashboardForecast: () => { const t = top(); t.forecast = !t.forecast; render(); },
+  dashboardJoint: d => {const region=d.id||d.v;if(window.BODY?.regions[region]?.kind==='joint'){S.sheet={kind:'bodyRegion',region};render();}},
   dashboardGroup: d => {
     if (!MuscleWork.groups.some(g => g.id === d.id)) return;
     top().selectedGroup = d.id;

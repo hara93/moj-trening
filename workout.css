@@ -309,10 +309,13 @@ span.workout-exercise-open{cursor:default}
 .workout-muscle-figure>img{display:block;width:100%;height:274px;object-fit:contain}
 .workout-muscle-figure .figs{display:flex;justify-content:center;gap:8px;width:100%;min-width:0}
 .workout-muscle-figure svg{display:block;width:100%;max-width:100%;height:274px;min-width:0}
-.workout-anatomy .body-rg{fill:#282c33!important;fill-opacity:1!important}
+.workout-anatomy .body-rg{fill:#282c33!important;fill-opacity:0!important}
 .workout-anatomy .body-rg.is-on{fill:#a7c1ee!important;fill-opacity:1!important}
 .workout-anatomy .body-rg.is-prime{fill:#4f7ccd!important;fill-opacity:1!important}
 .workout-anatomy .body-ln{stroke:#969da7!important;opacity:.55}
+.workout-region-caption{min-height:36px;margin:0 0 12px!important;font-size:11px!important;line-height:1.6!important}
+.workout-region-caption strong{color:#edf3e7;font-weight:550}
+.workout-anatomy .body-rg.is-selected{stroke:#dce88d;stroke-width:1.4;vector-effect:non-scaling-stroke}
 .workout-muscle-key{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .workout-muscle-key>div{display:flex;align-items:flex-start;gap:8px;min-width:0}
 .workout-muscle-key>div>span{display:block;flex:none;width:11px;height:11px;margin-top:4px;border-radius:3px}

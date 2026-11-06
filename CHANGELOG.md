@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.18.0 — 6. 11. 2026.
+
+- Nova odobrena figura sprijeda i straga, s cijelim nogama, zadržava izvorne konture i šrafuru. Mišićne skupine imaju zasebne dodirne plohe u filtrima, uređivanju i prikazu vježbe.
+- Jedna oznaka **Kukovi** označava oba kuka na obje figure. Kukovi su odvojeno zglobno područje, uz postojeće pregibače kuka, aduktore i gluteuse.
+- U uputama za vježbu dodir područja prikazuje naziv i ulogu. Glavni mišići ostaju tamniji, pomoćni svjetliji; povijest i trendovi ostaju na dosadašnjem mjestu.
+- Oznaka kuka sama ne donosi mišićne bodove. Postojećih 18 skupina, izračuni ranijih treninga i spremljena povijest zadržavaju svoje značenje. Obje figure spremaju se za offline rad pri instalaciji nadogradnje.
+- Početna stranica ostaje kakva je bila.
+
 ## 1.17.2 — 5. 11. 2026.
 
 - Pregled treninga i detalj vježbe usklađeni su s odabranim prototipom: ista naslovna fotografija kategorije, izvorna tipografija, razmaci, sličice, ikone, kružne oznake serija i donji gumb.

@@ -21,6 +21,8 @@ async function main() {
   assert.equal(/const APP_VERSION\s*=\s*'([^']+)'/.exec(appSource)?.[1], expectedVersion, 'local app must be the intended release');
   const html = fs.readFileSync(path.join(repo,'index.html'),'utf8');
   const runtime = new Set(['index.html','sw.js']);
+  const bodySource = JSON.parse(fs.readFileSync(path.join(repo,'tools/build/body-regions.json'),'utf8'));
+  Object.values(bodySource.images).forEach(file => runtime.add(file));
   for (const match of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const match of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const required of ['app.js','body.js','month-plan.js','muscle-work.js','dashboard.js','dashboard.css','style.css','today-model.js','today-view.js','team.js','today.css','team.css','history-model.js','progress-view.js','progress.css','starting-load.js','starting-load.css','workout-view.js','workout.css','training-load.js','training-load-view.js','training-load.css','session-clock.js']) assert(runtime.has(required),'missing local runtime dependency '+required);
@@ -167,10 +169,12 @@ async function main() {
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
     await page.getByRole('button',{name:'Filter vježbi',exact:true}).click();
     await page.locator('.filtfig').waitFor();
-    assert.equal(await page.locator('.filtfig [data-region]').count(),20);
+    assert.equal(await page.locator('.filtfig [data-region]').count(),22);
+    assert.equal(await page.locator('.filtfig [data-region="hip_joints"]').count(),2);
+    assert.equal(await page.locator('.filtfig .body-art').count(),2);
     assert.equal(await page.locator('.filtfig [data-region="front_shoulders"]').count(),1);
     assert.equal(await page.locator('.filtfig [data-region="back_rear_shoulders"]').count(),1);
-    report.checks.existingAnatomy20=true;
+    report.checks.anatomy21RegionsBothHips=true;
     await page.keyboard.press('Escape');
     await page.locator('.tabbar [data-tab="dashboard"]').click();
     await page.locator('.db-quick [data-a="dashboardProtocols"]').click();

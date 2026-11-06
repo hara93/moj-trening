@@ -157,6 +157,7 @@
         '<p>Upute nisu dodane.</p>') + '</section>' +
       (vm.figureHtml || primary || secondary ? '<section><h2>Mišići u pokretu</h2>' +
         (vm.figureHtml ? '<div class="workout-muscle-figure workout-anatomy">' + html(vm.figureHtml) + '</div>' : '') +
+        html(vm.figureCaptionHtml) +
         '<div class="workout-muscle-key">' + (primary ? '<div><span class="workout-primary-muscle" aria-hidden="true"></span><p><strong>Glavni</strong>' + esc(primary) + '</p></div>' : '') +
         (secondary ? '<div><span class="workout-secondary-muscle" aria-hidden="true"></span><p><strong>Pomoćni</strong>' + esc(secondary) + '</p></div>' : '') + '</div></section>' : '') + '</div>';
   }

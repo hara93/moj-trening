@@ -1,11 +1,11 @@
-/* BODY: the supplied front/back anatomy, with the existing region/filter API.
-   No image requests, IDs, DOM lookups or runtime dependencies. */
+/* BODY: approved front/back artwork with separately selectable vector regions.
+   Local artwork and all geometry are included in the offline app shell. */
 (function (root) {
   'use strict';
   var DATA = /* BODY_DATA */;
-  var G = { W: 480, H: 1120, GAP: 40 };
+  var G = DATA.geom || { W: 480, H: 1120, GAP: 40 };
   var R = DATA.regions, regions = {}, ids = Object.keys(R);
-  ids.forEach(function (id) { regions[id] = { label_hr:R[id][1], view:R[id][0] }; });
+  ids.forEach(function (id) { regions[id] = { label_hr:R[id][1], view:R[id][0], kind:R[id][3] || 'muscle' }; });
   function toSet(v) {
     var s = {};
     if (v) (Array.isArray(v) ? v : (typeof v === 'string' ? [v] : Array.from(v))).forEach(function (id) { s[id] = 1; });
@@ -25,22 +25,29 @@
     views.forEach(function (view, index) {
       out += '<g data-view="' + view + '"' + (index ? ' transform="translate(' + index * (G.W + G.GAP) + ' 0)"' : '') + '>';
       ids.forEach(function (id) {
-        if (R[id][0] !== view) return;
+        if (R[id][0] !== view && R[id][0] !== 'both') return;
+        var d = typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view];
         var state = prime[id] ? 'prime' : on[id] ? 'on' : '';
         var opacity = state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
         // Keep this ordering and the body-ln group: app.js expands these paths into touch targets.
-        out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (state ? ' is-' + state : '') + '" data-region="' + id + '"' +
+        out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (state ? ' is-' + state : '') + (o.selected === id ? ' is-selected' : '') + (R[id][3] === 'joint' ? ' body-joint' : '') + '" data-region="' + id + '"' +
           (tap ? ' role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + !!state + '"' : '') +
-          ' style="fill:var(--accent,#5789E8)" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + R[id][2] + '"/>';
+          ' style="fill:var(--accent,#5789E8)" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + d + '"/>';
       });
-      out += '<g class="body-ln" fill="none" style="stroke:var(--body-line,#C9CED8)" stroke-opacity=".8" stroke-width="' + sw +
-        '" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"><path vector-effect="non-scaling-stroke" d="' + DATA.lines[view] + '"/></g></g>';
+      // Transparent artwork sits over the fills, retaining its original muscle hatching.
+      if (DATA.images) out += '<image class="body-art" href="' + esc(DATA.images[view]) + '" x="0" y="0" width="' + G.W + '" height="' + G.H + '" pointer-events="none"/>';
+      var outline = DATA.lines ? DATA.lines[view] : ids.filter(function (id) { return R[id][0] === view || R[id][0] === 'both'; }).map(function (id) { return typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view]; }).join('');
+      out += '<g class="body-ln" fill="none" style="stroke:var(--body-line,#8995A3)" stroke-opacity="' + (DATA.images ? '.28' : '.8') + '" stroke-width="' + (DATA.images ? sw * .55 : sw) +
+        '" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"><path vector-effect="non-scaling-stroke" d="' + outline + '"/></g></g>';
     });
     return out + '</svg>';
   }
   var css = '.body-fig{display:block;overflow:visible}' +
     '.body-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;transition:fill-opacity .15s}' +
     '.body-tap:not(.is-on):not(.is-prime):hover{fill-opacity:.18}' +
-    '.body-tap:active{fill-opacity:.6}.body-tap:focus-visible{fill-opacity:.3}';
+    '.body-tap:active{fill-opacity:.6}.body-tap:focus-visible{fill-opacity:.3}' +
+    '.body-rg.is-selected{stroke:var(--accent,#b8ccff);stroke-width:1.4;vector-effect:non-scaling-stroke}' +
+    '.body-rg[data-region="hip_joints"]{stroke:var(--body-line,#a3aebc);stroke-width:1;vector-effect:non-scaling-stroke}' +
+    '.body-rg[data-region="hip_joints"].is-on,.body-rg[data-region="hip_joints"].is-prime{stroke:var(--accent,#b8ccff);stroke-width:1.6}';
   root.BODY = { regions:regions, ids:ids, svg:svg, css:css, geom:G };
 })(typeof window !== 'undefined' ? window : this);

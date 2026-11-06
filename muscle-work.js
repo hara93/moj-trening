@@ -27,7 +27,8 @@
   var ELIGIBLE = ['Snaga','Trup'];
   var EXCLUDED = ['Rehab','Rehabilitacija','Mobilnost','Aktivacija','Eksplozivnost','Skokovi i bacanja','Kondicija'];
   var ELIGIBILITY = ['excluded','eligible','unknown'];
-  var ELIGIBILITY_SOURCE = ['explicit','category','unknown','warmup'];
+  // Packed snapshots store these positions. New reasons must be appended.
+  var ELIGIBILITY_SOURCE = ['explicit','category','unknown','warmup','joint'];
   var COMPLETION = ['complete','partial','skipped','unknown','planned'];
   var SOURCE = ['completed','planned'];
   var has = function (o,k) { return Object.prototype.hasOwnProperty.call(o,k); };
@@ -51,13 +52,18 @@
     var muscle = plain(e.muscles) ? e.muscles : {};
     var primes = Array.isArray(muscle.prime) ? muscle.prime.filter(function (r) { return typeof r === 'string'; }) : [];
     var seconds = Array.isArray(muscle.sec) ? muscle.sec.filter(function (r) { return typeof r === 'string'; }) : [];
+    var regions = unique(primes.concat(seconds));
+    // A hip joint is selectable anatomy, not a nineteenth muscle group. Only
+    // new profiles use this rule; replay never reclassifies stored snapshots.
+    var jointOnly = regions.length === 1 && regions[0] === 'hip_joints';
+    if (jointOnly) eligibility = 'excluded';
     var primary = unique(primes.filter(function (r) { return has(regionToGroup,r); }).map(function (r) { return regionToGroup[r]; }));
     var secondary = unique(seconds.filter(function (r) { return has(regionToGroup,r); }).map(function (r) { return regionToGroup[r]; }))
       .filter(function (g) { return primary.indexOf(g) === -1; });
     return freeze({ category:category, eligibility:eligibility,
-      eligibilitySource:explicit ? 'explicit' : eligibility === 'unknown' ? 'unknown' : 'category',
+      eligibilitySource:jointOnly ? 'joint' : explicit ? 'explicit' : eligibility === 'unknown' ? 'unknown' : 'category',
       primary:groupOrder(primary), secondary:groupOrder(secondary),
-      unassignedRegions:unique(primes.concat(seconds).filter(function (r) { return !has(regionToGroup,r); })) });
+      unassignedRegions:regions.filter(function (r) { return !has(regionToGroup,r) && (r !== 'hip_joints' || jointOnly); }) });
   }
   function credits(s) {
     var direct = {}, secondary = {};
@@ -162,6 +168,8 @@
     if (x.eligibilitySource === 'unknown' && x.eligibility !== 'unknown') return null;
     if (x.eligibilitySource === 'explicit' && x.eligibility === 'unknown') return null;
     if (x.eligibilitySource === 'warmup' && x.eligibility !== 'excluded') return null;
+    if (x.eligibilitySource === 'joint' && (x.eligibility !== 'excluded' || x.primary.length || x.secondary.length ||
+      x.unassignedRegions.length !== 1 || x.unassignedRegions[0] !== 'hip_joints')) return null;
     if (x.source === 'planned') {
       if (x.completedSets !== null || (x.plannedSets === null ? x.completion !== 'unknown' : x.completion !== 'planned')) return null;
     } else {

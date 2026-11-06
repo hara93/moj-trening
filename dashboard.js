@@ -5,7 +5,7 @@
    A group's actual/planned values are {direct, indirect, equivalent, days}; planned
    means remaining occurrences from today through Sunday, not completed sessions.
    Session contributions are {exerciseId, name, groupId, direct, indirect}.
-   The caller owns dashboardGroup/Forecast/Protocols/Calendar/Progress actions. */
+   The caller owns dashboardGroup/Joint/Forecast/Protocols/Calendar/Progress actions. */
 (function(root) {
   'use strict';
 
@@ -54,13 +54,28 @@
     html = html.replace(/<path class="body-rg[^\"]*" data-region="([a-z_]+)"([^>]*?)\/>/g, (all, region, rest) => {
       const path = / d="([^"]+)"/.exec(rest);
       if (!path) return all;
+      const meta = root.BODY.regions && root.BODY.regions[region];
+      if (meta && meta.kind === 'joint') {
+        return '<path class="body-tap db-region db-region-joint" data-region="'+esc(region)+'" data-a="dashboardJoint" data-id="'+esc(region)+'" tabindex="0" role="button" aria-haspopup="dialog" aria-label="'+esc(meta.label_hr)+'" fill="#9AABC2" fill-opacity=".22" fill-rule="evenodd" d="'+path[1]+'"/>';
+      }
       const g = byRegion[region];
       if (!g) return '<path class="db-region db-region-context" data-region="'+esc(region)+'" fill="transparent" pointer-events="none" fill-rule="evenodd" d="'+path[1]+'"/>';
       const actual = val((g.actual || {}).equivalent), planned = forecast && val((g.planned || {}).equivalent) > 0;
       const state = actual > 0 ? 'recorded' : planned ? 'forecast' : 'empty';
-      const regionLabel = root.BODY.regions && root.BODY.regions[region] ? root.BODY.regions[region].label_hr : g.label;
+      const regionLabel = meta ? meta.label_hr : g.label;
       const label = regionLabel + ': ' + fmt((g.actual || {}).equivalent) + ' procijenjenih serija' + (planned ? ', ima preostali plan' : '') + '. Prikaži skupinu ' + g.label;
       return '<path class="body-tap db-region db-region-'+state+(g.id===selected?' db-region-selected':'')+'" data-region="'+esc(region)+'" data-a="dashboardGroup" data-id="'+esc(g.id)+'" tabindex="0" role="button" aria-label="'+esc(label)+'" aria-pressed="'+(g.id===selected)+'" fill="'+(state==='forecast'?'url(#db-forecast-fill)':state==='recorded'?(val((g.actual||{}).direct)>0?'#68D0BC':'#89B3FC'):'#768293')+'" fill-opacity="'+(state==='empty'?'.16':'.86')+'" fill-rule="evenodd" d="'+path[1]+'"/>';
+    });
+    // Expand small joint targets in screen pixels. Muscle paths stay above these
+    // invisible targets so selecting a muscle centre always selects that muscle.
+    html = html.replace(/(<g data-view="(?:front|back)"[^>]*>)([\s\S]*?)(?=<g class="body-ln")/g, (all, start, content) => {
+      let targets = '';
+      content.replace(/<path class="body-tap db-region db-region-joint"([^>]*?)\/>/g, (joint, attrs) => {
+        const region = / data-region="([a-z_]+)"/.exec(attrs), path = / d="([^"]+)"/.exec(attrs);
+        if (region && path) targets += '<path class="body-tap db-joint-hit" data-region="'+region[1]+'" data-a="dashboardJoint" data-id="'+region[1]+'" aria-hidden="true" focusable="false" fill="transparent" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" pointer-events="all" fill-rule="evenodd" d="'+path[1]+'"/>';
+        return joint;
+      });
+      return start + targets + content;
     });
     html = html.replace(/(<svg\b[^>]*>)/, '$1<defs><pattern id="db-forecast-fill" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#514169"/><path d="M-5 5 5-5M0 22 22 0M17 27 27 17" stroke="#C7ACFF" stroke-width="6"/></pattern></defs>');
     return html;

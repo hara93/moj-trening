@@ -53,6 +53,86 @@ test('custom names do not determine eligibility or infer anatomical coverage', (
   assert.deepEqual(unknown.primary,[]); assert.equal(M.sumSnapshots([unknown]).coverage.unassignedItems,1);
   assert.deepEqual(unknown.unassignedRegions,['front_knees','front_shins_ankles','new_region']);
 });
+test('hip-only targets are excluded joint work, including explicit opt-in, and survive planning and packing', () => {
+  for (const muscles of [
+    {prime:['hip_joints'],sec:[]}, {prime:[],sec:['hip_joints']},
+    {prime:['hip_joints','hip_joints'],sec:['hip_joints']}
+  ]) {
+    for (const props of [{cat:'Snaga'},{cat:'Trup'},{cat:'Mobilnost'},{cat:'Moj tip'},{muscleWorkEligible:true},{muscleWorkEligible:false}]) {
+      const e = ex({...props,muscles}), profile = M.profile(e);
+      assert.equal(profile.eligibility,'excluded'); assert.equal(profile.eligibilitySource,'joint');
+      assert.deepEqual(profile.primary,[]); assert.deepEqual(profile.secondary,[]);
+      assert.deepEqual(profile.unassignedRegions,['hip_joints']);
+      for (const fn of [M.completedItem,M.plannedItem]) {
+        const snapshot = fn(e,done());
+        assert.deepEqual(snapshot.credits,{direct:{},secondary:{}});
+        assert.equal(M.pack(snapshot)[6],4,'new reason follows all four existing packed reasons');
+        assert.deepEqual(M.sanitize(copy(M.pack(snapshot))),snapshot);
+        const summary = M.sumSnapshots([snapshot]);
+        assert.equal(summary.coverage.excludedItems,1); assert.equal(summary.coverage.unassignedItems,0);
+        assert.ok(Object.values(summary.groups).every(g => g.equivalent === 0));
+      }
+    }
+  }
+  const e = ex({muscles:{prime:['hip_joints'],sec:[]}});
+  const pinned = M.pack(M.plannedItem(e,done()));
+  e.muscles = {prime:['front_chest'],sec:[]};
+  const completed = M.completedFromPlan(pinned,done({setsDone:1}));
+  assert.equal(completed.eligibilitySource,'joint'); assert.deepEqual(completed.credits.direct,{});
+  const item = done({measure:'sets'}), joint = ex({muscles:{prime:['hip_joints'],sec:[]}});
+  const entry = {kind:'protocol',at:1000,secs:1200,items:[item],muscleWork:[M.pack(M.completedItem(joint,item))]};
+  const edited = require('../history-model.js').edit(entry,{items:[{index:0,setsDone:1}]});
+  assert.equal(edited.ok,true);
+  const saved = M.sanitize(edited.entry.muscleWork[0]);
+  assert.equal(saved.eligibilitySource,'joint'); assert.equal(saved.completedSets,1);
+  assert.deepEqual(saved.credits,{direct:{},secondary:{}});
+  const warmup = M.completedItem(ex({muscles:{prime:['hip_joints'],sec:[]}}),done({warmup:true}));
+  assert.equal(warmup.eligibilitySource,'warmup'); assert.equal(M.pack(warmup)[6],3);
+  assert.deepEqual(M.sanitize(copy(M.pack(warmup))),warmup);
+});
+test('a hip marker beside real muscles adds no credits or unassigned warning and does not hide unknown anatomy', () => {
+  const mixed = ex({muscles:{prime:['hip_joints','front_chest'],sec:['hip_joints','back_triceps']}});
+  const snapshot = M.completedItem(mixed,done());
+  assert.equal(snapshot.eligibility,'eligible'); assert.equal(snapshot.eligibilitySource,'category');
+  assert.deepEqual(snapshot.credits,{direct:{chest:3},secondary:{triceps:3}});
+  assert.deepEqual(snapshot.unassignedRegions,[]);
+  assert.equal(M.sumSnapshots([snapshot]).coverage.unassignedItems,0);
+  assert.deepEqual(M.sanitize(copy(M.pack(snapshot))),snapshot);
+  const unknown = M.completedItem(ex({muscles:{prime:['hip_joints','new_region'],sec:[]}}),done());
+  assert.equal(unknown.eligibility,'eligible'); assert.deepEqual(unknown.unassignedRegions,['new_region']);
+  assert.equal(M.sumSnapshots([unknown]).coverage.unassignedItems,1);
+  const legacy = M.profile(ex({zones:['Kuk'],muscles:undefined}));
+  assert.equal(legacy.eligibilitySource,'category'); assert.deepEqual(legacy.primary,[]);
+});
+test('legacy group masks, eligibility indices and unassigned hip history replay byte for byte', () => {
+  assert.deepEqual(M.groups.map(g => g.id),['chest','frontDelts','biceps','forearms','abs','obliques','hipFlexors','adductors','quadriceps','upperBack','lats','lowerBack','rearDelts','triceps','glutes','gluteMedius','hamstrings','calves']);
+  assert.equal(Object.hasOwn(M.regionToGroup,'hip_joints'),false);
+  const legacy = [
+    ['mw1','category','Stara snaga','Snaga',0,1,1,1,8192,[],3,2,1],
+    ['mw1','explicit','Stara uključena mobilnost','Mobilnost',0,1,0,262143,0,[],3,3,0],
+    ['mw1','unknown','Stara nepoznata','Moj tip',0,2,2,0,0,['new_region'],3,null,3],
+    ['mw1','warmup','Staro zagrijavanje','Snaga',1,0,3,1,0,[],3,null,4],
+    ['mw1','legacy-hip','Stari neraspoređeni kuk','Snaga',0,1,1,0,0,['hip_joints'],3,3,0]
+  ];
+  for (const packed of legacy) {
+    const snapshot = M.sanitize(copy(packed));
+    assert.ok(snapshot,packed[1]); assert.deepEqual(M.pack(snapshot),packed);
+  }
+  assert.equal(M.sanitize(legacy[1]).primary.length,18);
+  const historicalHip = M.sanitize(legacy[4]);
+  assert.equal(historicalHip.eligibility,'eligible'); assert.equal(historicalHip.eligibilitySource,'category');
+  assert.deepEqual(historicalHip.unassignedRegions,['hip_joints']);
+  assert.equal(M.sumSnapshots([historicalHip]).coverage.unassignedItems,1,'historical attribution is not reclassified');
+});
+test('joint snapshot reason rejects credited muscles, eligibility changes and missing or unrelated joint attribution', () => {
+  const good = M.completedItem(ex({muscles:{prime:['hip_joints'],sec:[]}}),done());
+  for (const mutate of [s=>s.eligibility='eligible',s=>s.primary.push('chest'),s=>s.secondary.push('triceps'),s=>s.unassignedRegions=[],s=>s.unassignedRegions.push('new_region'),s=>s.unassignedRegions=['front_knees']]) {
+    const snapshot = copy(good); mutate(snapshot); assert.equal(M.sanitize(snapshot),null);
+  }
+  for (const mutate of [s=>s[5]=1,s=>s[7]=1,s=>s[8]=1,s=>s[9]=[],s=>s[9]=['hip_joints','new_region'],s=>s[9]=['front_knees']]) {
+    const packed = copy(M.pack(good)); mutate(packed); assert.equal(M.sanitize(packed),null);
+  }
+});
 test('completed snapshots are detached and deeply immutable; later edits do not rewrite history', () => {
   const e = ex(), x = done(), s = M.completedItem(e,x);
   e.name = 'Novo'; e.muscles.prime[0] = 'back_glutes'; x.sets = 10;

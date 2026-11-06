@@ -27,9 +27,12 @@
 .db-anatomy-row{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:12px;align-items:center;margin-top:17px}
 .db-anatomy{display:flex;min-width:0;justify-content:center}
 .db-anatomy .db-body-svg{width:100%;height:auto;max-height:258px;--body-line:#C3CDDB}
-.db-region{transition:fill-opacity .15s,stroke .15s;cursor:pointer;outline:none}
-.db-region-selected{stroke:#DCE9FF;stroke-width:8;stroke-linejoin:round}
-.db-region:focus-visible{stroke:#FFFFFF;stroke-width:12}
+.db-anatomy .body-art{pointer-events:none}
+.db-region{transition:fill-opacity .15s,stroke .15s;cursor:pointer;outline:none;vector-effect:non-scaling-stroke}
+.db-region-selected{stroke:#DCE9FF;stroke-width:1.8;stroke-linejoin:round}
+.db-region:focus-visible{stroke:#FFFFFF;stroke-width:2.6}
+.db-region-joint{stroke:#A9B8CE;stroke-width:1}
+.db-joint-hit{cursor:pointer;touch-action:manipulation;vector-effect:non-scaling-stroke}
 .dashboard .db-body-svg .db-region.body-tap:hover,.dashboard .db-body-svg .db-region.body-tap:focus-visible{fill-opacity:1}
 .db-region-context{cursor:default}
 .db-figure-fallback{color:var(--db-muted);font-size:13px;line-height:1.5}
