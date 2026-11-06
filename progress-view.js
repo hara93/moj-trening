@@ -231,7 +231,7 @@
       'data-a="progressInfoClose" aria-label="Zatvori objašnjenje">×</button></div>' +
       '<div id="progress-info-body"></div><button type="button" class="pg-dialog-done" data-a="progressInfoClose">Jasno</button></dialog>';
   }
-  function render(vm) {
+  function renderLegacy(vm) {
     vm = vm || {};
     if (typeof document !== 'undefined') rememberPanels(document.querySelector('.progress-view'));
     activeTab = vm.tab === 'doziranje' ? 'doziranje' : 'pregled';
@@ -296,6 +296,75 @@
       }).join('') + '</div><button type="button" class="pg-text-link" data-a="progInfo">Sve o pravilima i dozama ↗</button>');
     return html + dialog() + '</div>';
   }
+  var lastVM = {};
+  function comparisons(vm) {
+    return (Array.isArray((vm.insights || {}).comparisons) ? vm.insights.comparisons : []).filter(function(item) {
+      return item && item.id && ['reps','time'].includes(item.kind) && finite(item.previous) && item.previous >= 0 && finite(item.current) && item.current >= 0 && finite(item.previousAt) && finite(item.currentAt) && !isNaN(new Date(item.previousAt).getTime()) && !isNaN(new Date(item.currentAt).getTime());
+    });
+  }
+  function choices(vm) {
+    var out=[];
+    comparisons(vm).concat(Array.isArray(vm.exercises)?vm.exercises:[]).forEach(function(item){if(item && item.id && !out.some(function(e){return e.id===item.id;}))out.push({id:item.id,name:item.name || 'Vježba'});});
+    return out;
+  }
+  function modeTabs(mode) {
+    return '<nav class="pg-mode-tabs" aria-label="Prikaz analize"><button type="button" data-a="analyticsMode" data-v="progress" aria-pressed="'+(mode==='progress')+'">Napredak</button><button type="button" data-a="analyticsMode" data-v="load" aria-pressed="'+(mode==='load')+'">Opterećenje</button></nav>';
+  }
+  function drill(topic,title,subtitle,action) {
+    return '<button type="button" class="pg-drill-row" '+(action || 'data-a="progressDetail" data-topic="'+topic+'"')+'><span><strong>'+esc(title)+'</strong>'+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</span><span aria-hidden="true">›</span></button>';
+  }
+  function mainPerformance(item) {
+    if(!item)return '<div class="pg-main-empty"><span aria-hidden="true">↗</span><h3>Prva izvedba je polazište</h3><p>Za ovaj trend trebaju dvije usporedive izvedbe. Količina rada i puna povijest dostupne su zasebno.</p></div>';
+    var min=Math.min(item.previous,item.current),max=Math.max(item.previous,item.current),padding=Math.max(1,max-min)*.25,lo=Math.max(0,min-padding),hi=max+padding;
+    var y=function(v){return 115-(v-lo)/(hi-lo)*84;};
+    var text=''+item.name+': '+shortDate(item.previousAt)+' '+amount(item.previous)+' '+item.unit+'; '+shortDate(item.currentAt)+' '+amount(item.current)+' '+item.unit+'. '+(item.context||'');
+    var graph='<svg class="pg-main-line" viewBox="0 0 320 150" role="img" aria-label="'+esc(text)+'">';
+    [lo,(lo+hi)/2,hi].forEach(function(v){graph+='<line class="pg-main-grid" x1="32" x2="306" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="pg-main-axis" x="25" y="'+(y(v)+3)+'" text-anchor="end">'+esc(amount(v))+'</text>';});
+    graph+='<path class="pg-main-path" d="M48 '+y(item.previous)+' L289 '+y(item.current)+'"/><circle class="pg-main-dot" cx="48" cy="'+y(item.previous)+'" r="4"/><circle class="pg-main-dot pg-main-current" cx="289" cy="'+y(item.current)+'" r="5"/><text class="pg-main-axis" x="48" y="143" text-anchor="middle">'+esc(weekDate(item.previousAt))+'</text><text class="pg-main-axis" x="289" y="143" text-anchor="middle">'+esc(weekDate(item.currentAt))+'</text></svg>';
+    var hits='<div class="pg-point-hits">'+['previous','current'].map(function(point,index){return '<button type="button" class="pg-point-hit" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" style="left:'+(index?90.3125:15)+'%;top:'+(y(item[point])/150*100)+'%" aria-label="'+esc(shortDate(item[point+'At'])+', '+amount(item[point])+' '+item.unit+'. Prikaži zapis')+'"></button>';}).join('')+'</div>';
+    return '<div id="pg-performance" class="pg-main-performance"><p class="pg-main-context">'+esc(item.context||'')+'</p><div class="pg-performance-plot">'+graph+hits+'</div><div class="pg-point-buttons">'+['previous','current'].map(function(point){var n=item[point],at=item[point+'At'];return '<button type="button" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" aria-label="'+esc(shortDate(at)+', '+amount(n)+' '+item.unit+'. Prikaži zapis')+'"><span>'+esc(weekDate(at))+'</span><strong>'+esc(amount(n))+' <small>'+esc(item.unit)+'</small></strong><i aria-hidden="true">↗</i></button>';}).join('')+'</div></div>';
+  }
+  function render(vm) {
+    vm=vm || {};lastVM=vm;
+    if(vm.tab==='doziranje')return renderLegacy(vm);
+    var old=renderLegacy(vm),items=choices(vm),selected=items.find(function(e){return e.id===vm.chartExerciseId;}) || items[0],id=selected && selected.id;
+    var comparison=comparisons(vm).find(function(e){return e.id===id;}),exercise=(Array.isArray(vm.exercises)?vm.exercises:[]).find(function(e){return e.id===id;}),metric=['performance','volume'].includes(vm.chartMetric)?vm.chartMetric:comparison?'performance':'volume';
+    var stats=Array.isArray(vm.stats)?vm.stats:[],week=stats[0] || {value:'—',label:'Ovaj tjedan'},secondary=stats[1] || {value:'—',label:'Kontinuitet'},delta=comparison?comparison.current-comparison.previous:null;
+    var secondaryValue=delta===null?secondary.value:delta===0?'Bez promjene':(delta>0?'+':'−')+amount(Math.abs(delta));
+    var secondaryLabel=comparison?comparison.name:secondary.label,secondaryNote=comparison?comparison.unit+' · usporediva serija':secondary.note || '';
+    var content='<div class="view progress-view pg-cinema" data-progress-tab="pregled">'+(vm.topbarHtml || '')+'<header class="pg-heading"><div><p class="pg-kicker">Tvoj rad, kroz vrijeme</p><h1>Napredak</h1></div>'+info('overview','Kako čitati Napredak')+'</header>'+modeTabs('progress')+
+      '<section class="pg-summary-pair" aria-label="Kratki pregled"><button type="button" data-a="progressDetail" data-topic="activity"><span>'+esc(week.label)+'</span><strong>'+esc(week.value)+'</strong>'+(week.note?'<small>'+esc(week.note)+'</small>':'')+'</button><button type="button" data-a="progressDetail" data-topic="'+(comparison?'performance':'activity')+'"><span>'+esc(secondaryLabel)+'</span><strong'+(delta>0?' class="pg-summary-up"':'')+'>'+esc(secondaryValue)+'</strong>'+(secondaryNote?'<small>'+esc(secondaryNote)+'</small>':'')+'</button></section>';
+    if(vm.zero)content+='<section class="pg-zero pg-cinema-zero"><h2>Prvi trening, prvi pomak</h2><p>Spremi odrađeni trening i postavi svoje polazište.</p><button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
+    content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2><button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button></div><div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
+      (metric==='performance'?mainPerformance(comparison):exercise&&exercise.html?'<div class="pg-main-volume">'+exercise.html+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka za graf</h3><p>Kad spremiš dovoljno izvedbi, ovdje će se prikazati zabilježena količina rada.</p></div>')+
+      (selected?'<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button>':'')+'</section>';
+    content+='<nav class="pg-drill-list" aria-label="Detaljni pregledi">'+drill('','Mišićni tjedan','Izravne i pomoćne serije','data-a="analyticsOpen" data-section="muscles"')+drill('records','Rekordi','Osobni rezultati iz dnevnika')+drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+'</nav><div class="pg-compact-tools">'+drill('activity','Aktivnost i kontinuitet','')+drill('suggestions','Plan i prijedlozi',(vm.counts||{}).ready?vm.counts.ready+' čeka potvrdu':'')+'<button type="button" data-a="progTab" data-v="doziranje">Doziranje i pravila <span aria-hidden="true">›</span></button></div>';
+    return content+'<template id="progress-detail-cache">'+old+'</template>'+dialog()+'</div>';
+  }
+  function showDetail(topic,trigger,data) {
+    var element=document.getElementById('progress-info'),cache=document.getElementById('progress-detail-cache');if(!element || !cache)return;
+    var title='Detalji napretka',body='',source=null;
+    if(topic==='choose') {
+      title='Odaberi vježbu';var list=choices(lastVM);
+      body=list.length?'<div class="pg-picker-list">'+list.map(function(e){return '<button type="button" data-a="progressExercise" data-id="'+esc(e.id)+'"><strong>'+esc(e.name)+'</strong><span aria-hidden="true">›</span></button>';}).join('')+'</div>':empty('Još nema dovoljno zapisa za trend vježbe.');
+    } else if(topic==='point') {
+      var item=comparisons(lastVM).find(function(e){return e.id===(data||{}).id;}),point=(data||{}).point==='previous'?'previous':'current';
+      if(item){title=shortDate(item[point+'At']);body='<h3>'+esc(item.name)+'</h3><div class="pg-point-detail"><span>Najbolja potpuno odrađena serija</span><strong>'+esc(amount(item[point]))+' '+esc(item.unit)+'</strong><p>'+esc(item.context||'')+'</p></div><button type="button" class="pg-exercise-link" data-a="openEx" data-id="'+esc(item.id)+'">Vježba i puna povijest <span aria-hidden="true">↗</span></button>';}
+      else body=empty('Zapis za ovu točku nije dostupan.');
+    } else {
+      var keys={activity:'Aktivnost i kontinuitet',performance:'Usporedive izvedbe',suggestions:'Plan i prijedlozi',load:'Tjedni trendovi',exercises:'Trendovi vježbi',records:'Rekordi',rules:'Pravilo napredovanja'};
+      title=keys[topic] || 'Detalji napretka';source=cache.content.querySelector('#pg-'+topic);
+      if(source)body=source.outerHTML;
+      if(topic==='activity'){var heat=cache.content.querySelector('#pg-consistency');if(heat)body+=heat.outerHTML;}
+      if(topic==='suggestions'){['load','exercises','rules'].forEach(function(key){var extra=cache.content.querySelector('#pg-'+key);if(extra)body+=extra.outerHTML;});}
+      if(!body)body=empty('Za ovaj prikaz još nema dovoljno zapisa.');
+    }
+    if(!element.open || !element.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
+    element.querySelector('#progress-info-title').textContent=title;element.querySelector('#progress-info-body').innerHTML=body;
+    var panel=element.querySelector('details.pg-section');if(panel)panel.open=true;
+    element.onclick=function(event){if(event.target===element)closeInfo();};element.oncancel=function(event){event.preventDefault();closeInfo();};element.onclose=restoreInfoFocus;
+    if(typeof element.showModal==='function')element.showModal();else element.setAttribute('open','');element.querySelector('button').focus();
+  }
   function restoreInfoFocus() {
     if (focusBeforeInfo && focusBeforeInfo.isConnected) focusBeforeInfo.focus();
   }
@@ -303,7 +372,7 @@
     var content = INFO[topic] || INFO.overview;
     var element = document.getElementById('progress-info');
     if (!element) return;
-    focusBeforeInfo = trigger && typeof trigger.focus === 'function' ? trigger : document.activeElement;
+    if(!element.open || !element.contains(trigger)) focusBeforeInfo = trigger && typeof trigger.focus === 'function' ? trigger : document.activeElement;
     element.querySelector('#progress-info-title').textContent = content.title;
     element.querySelector('#progress-info-body').innerHTML = infoHtml(topic);
     element.onclick = function (event) { if (event.target === element) closeInfo(); };
@@ -320,5 +389,5 @@
     else element.removeAttribute('open');
     restoreInfoFocus();
   }
-  return { render: render, showInfo: showInfo, closeInfo: closeInfo, infoHtml: infoHtml };
+  return { render: render, showInfo: showInfo, showDetail: showDetail, closeInfo: closeInfo, infoHtml: infoHtml };
 });

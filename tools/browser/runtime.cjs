@@ -82,4 +82,16 @@ function fixture(){
   }
   return {...seed,kind:additions.kind,v:additions.v,app:additions.app,exportedAt:additions.exportedAt,programs:{},_deleted:[],log:additions.log,settings:additions.settings};
 }
-module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture};
+async function openJournal(page,all=false){
+  if(!await page.locator('.sheet[data-kind="cinemaJournal"]').count())await page.locator('[data-a="cinemaJournal"]').click();
+  if(all&&await page.locator('.cinema-journal [data-a="workoutShowAll"]').getAttribute('aria-expanded')!=='true')await page.locator('.cinema-journal [data-a="workoutShowAll"]').click();
+}
+async function closeJournal(page){if(await page.locator('.sheet[data-kind="cinemaJournal"]').count())await page.locator('[data-a="cinemaJournalClose"]').click();}
+async function openQuit(page){
+  await closeJournal(page);
+  if(await page.locator('.workout-cinema').count()){
+    if(!await page.locator('.sheet[data-kind="cinemaMenu"]').count())await page.locator('[data-a="cinemaMenu"]').click();
+    await page.locator('[data-a="cinemaExit"]').click();
+  }else await page.locator('[data-a="quitPlay"]').click();
+}
+module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture,openJournal,closeJournal,openQuit};

@@ -1,4 +1,5 @@
 'use strict';
+const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
 
 // Run after publishing. Uses a new disposable browser context, no imported backup,
 // no user's browser profile. Test weights stay in the disposable browser context.
@@ -76,7 +77,11 @@ async function main() {
     assert.equal(await page.locator('.db-quick [data-a="dashboardCalendar"]').count(),1);
     await page.locator('[data-a="dashboardProgress"]').click();
     await page.getByRole('heading',{name:'Napredak',exact:true}).waitFor();
-    assert.ok(await page.locator('.pg-section').count()>=3);
+    assert.equal(await page.locator('.pg-main-card').count(),1);
+    assert.equal(await page.locator('.pg-summary-pair>button').count(),2);
+    await page.locator('[data-a="progressDetail"][data-topic="activity"]').first().click();
+    await page.locator('#progress-info[open] #pg-activity').waitFor();
+    await page.locator('#progress-info [data-a="progressInfoClose"]').first().click();
     const progressHelp=page.locator('[data-a="progressInfo"]:visible').first();
     await progressHelp.click();
     await page.locator('#progress-info[open]').waitFor();
@@ -200,15 +205,20 @@ async function main() {
       for(let i=0;i<await fields.count();i++)await fields.nth(i).fill('10');
       await page.locator('#starting-load-form button[type="submit"]').click();
     }
+    await page.locator('.workout-cinema').waitFor();
+    await page.locator('.workout-cinema .cinema-single-media img').evaluate(img=>img.decode());
+    await page.screenshot({path:path.join(artifacts,'published-cinema-player-375.png'),animations:'disabled'});
+    report.checks.cinematicPlayer=true;
     await page.locator('[data-a="playDoseEdit"]').first().click();
     await page.locator('#play-dose-form').waitFor();
     assert.ok(await page.locator('#play-dose-form input').count()>=2);
     await page.screenshot({path:path.join(artifacts,'published-release-dose-proof.png'),animations:'disabled'});
     await page.locator('[data-a="playDoseCancel"]').click();
     report.checks.liveDoseEditor=true;
+    await openJournal(page,true);
     const count=await page.locator('.workout-journal .workout-set-row').count();
     assert.ok(count>0);report.checks.liveIndividualSets=count;
-    await page.locator('[data-a="quitPlay"]').click();
+    await openQuit(page);
     await page.locator('[data-a="quitDiscard"]').click();
     await page.goto(base,{waitUntil:'domcontentloaded'});
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
@@ -219,7 +229,7 @@ async function main() {
     await page.getByRole('heading',{name:'Unesi početnu težinu'}).waitFor();
     await page.locator('#starting-load-form input').first().fill('17,5');
     await page.locator('#starting-load-form button[type="submit"]').click();
-    await page.locator('[data-a="quitPlay"]').waitFor();
+    await page.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
     assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')).items[0].kg),17.5);
     report.checks.liveInitialWeightAndExercisePreview=true;
     assert.deepEqual(report.errors,[],'public runtime errors');

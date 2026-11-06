@@ -116,6 +116,7 @@ test('workout surfaces keep scoped typography and accessible Lucide controls',()
   assert.match(View.icon('play'),/aria-hidden="true"/);
   assert.match(View.icon('play'),/class="workout-icon"[^>]*width="16" height="16"[^>]*stroke-width="1.6"/);
   assert.equal(View.icon('<script>'), '');
+  for(const name of ['timer','pause','pencil','notebook-pen','chevron-up','chevron-down','chevrons-up','share-2','settings-2','volume-2','book-open','circle-check'])assert.match(View.icon(name),/<svg[^>]+aria-hidden="true"/);
 });
 
 test('five-set density keeps every editable row and excludes bilateral detail rows from its count',()=>{
@@ -135,6 +136,33 @@ test('five-set density keeps every editable row and excludes bilateral detail ro
   assert.match(View.seriesTable(),/data-set-count="0"/);
 });
 
+test('cinematic player preserves all app-owned controls and phase data without creating engine state',()=>{
+  const slots={topbarHtml:'<button data-a="cinemaMenu">Izbornik</button>',progressHtml:'<div role="progressbar" aria-valuenow="25"></div>',
+    mediaHtml:'<div class="media cinema-single-media two"><img src="pair.webp" alt=""></div>',infoHtml:'<button data-a="workoutInfo">Upute</button>',
+    metricsHtml:'<button class="workout-cinema-metric" data-a="playDoseEdit">8 pon.</button><button id="ring" data-a="ring"><span id="ringN">0:40</span><svg id="ringArc"></svg></button><button data-a="playDoseEdit">20kg</button>',
+    controlsHtml:'<button data-a="jump" data-d="-1">Prethodna</button><button data-a="ring">Pauziraj</button><button data-a="jump" data-d="1">Sljedeća</button>',
+    restAdjustHtml:'<button data-a="cinemaRest" data-d="-15">−15s</button><span>Odmor</span><button data-a="cinemaRest" data-d="15">+15s</button>',
+    nextHtml:'<div>Sljedeća serija8pon. · RIR nije upisan</div>',journalHtml:'<button data-a="cinemaJournal">Dnevnik</button>',noticeHtml:'<button data-a="cinemaPrep">Priprema</button>'};
+  const rendered=View.cinema({...slots,phase:'rest',paused:true,name:'Veslanje',subtitle:'Snaga · 2. serija',exerciseId:'row'});
+  for(const fragment of Object.values(slots))assert.equal(rendered.split(fragment).length-1,1,'app fragment is retained exactly once');
+  assert.match(rendered,/class="view workout-cinema is-rest is-paused" data-phase="rest" data-ex-id="row"/);
+  assert.match(rendered,/<h1>Veslanje<\/h1>/);assert.match(rendered,/Snaga · 2\. serija/);
+  assert.equal((rendered.match(/id="ring"/g)||[]).length,1);
+  assert.equal((rendered.match(/id="ringN"/g)||[]).length,1);
+  assert.doesNotMatch(rendered,/data-state="done"|localStorage|setInterval|onclick=/);
+  assert.match(View.cinema({phase:'unknown'}),/is-work" data-phase="work"/);
+});
+
+test('cinematic plain strings are escaped and empty media never invents a photo or dose',()=>{
+  const unsafe='\"><img src=x onerror=bad()>';
+  const rendered=View.cinema({name:unsafe,subtitle:unsafe,exerciseId:unsafe,phase:unsafe});
+  assert.doesNotMatch(rendered,/<img src=x|onerror="/);
+  assert.match(rendered,/&lt;img src=x onerror=bad\(\)&gt;/);
+  assert.match(rendered,/workout-cinema-media-empty/);
+  assert.doesNotMatch(rendered,/id="ring"|data-a="ring"|20kg|0:40/);
+  assert.doesNotThrow(()=>View.cinema());
+});
+
 test('real app toolbar wrappers, sheet primary action and secondary library actions retain premium layout',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
   const tools='<div class="workout-tools workout-tools-four"><button>Šipka</button><button>Zamjena</button><button>Povijest</button><button>Trendovi</button></div><section class="workout-equipment-menu">Varijante</section>';
@@ -151,8 +179,9 @@ test('app compact rows preserve varying doses, unknown weight and intentional ze
   const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
   const body=app.slice(app.indexOf('function workoutCompactHtml(items) {'),app.indexOf('\nfunction workoutCandidates('));
   const StartingLoad=require('../starting-load.js');
-  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc',body+';return workoutCompactHtml;')(
-    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x));
+  const CinemaModel=require('../cinema-model.js');
+  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc','CinemaModel',body+';return workoutCompactHtml;')(
+    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x),CinemaModel);
   let html=render([{exId:'bench',sets:2,measure:'sets',reps:5,repsList:[5,3],kg:20,kgList:[20,30]}]);
   assert.match(html,/5 \/ 3 pon\. · 20 \/ 30 kg/);
   html=render([{exId:'hold',sets:2,measure:'time',sec:12,secList:[12,8],kg:0,sides:true}]);

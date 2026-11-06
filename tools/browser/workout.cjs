@@ -1,4 +1,5 @@
 'use strict';
+const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
 
 // Isolated synthetic workouts; never opens an existing browser profile.
 const assert = require('node:assert/strict');
@@ -15,6 +16,7 @@ const ids = {
 const fixed = new Date('2026-11-04T10:00:00+01:00');
 const action = (page, name) => page.locator('[data-a="' + name + '"]');
 const detailAction = (page, name) => page.locator('.workout-exercise-page [data-a="' + name + '"]');
+const variantAction = page => page.locator('.workout-exercise-page [data-a="workoutSwap"],.workout-exercise-page [data-a="workoutUndoSwap"]');
 const byId = (page, name, id) => page.locator('[data-a="' + name + '"][data-id="' + id + '"]');
 const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')));
 const player = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -110,8 +112,8 @@ async function openProtocol(page, id = ids.protocol) {
 }
 
 async function exercise(page, index) {
-  const button = page.locator('[data-a="workoutExercise"][data-j="' + index + '"]').first();
-  if(!await button.isVisible()&&await action(page,'workoutShowAll').count())await action(page,'workoutShowAll').click();
+  if (await page.locator('.workout-cinema').count()) await openJournal(page, true);
+  const button = page.locator((await page.locator('.sheet[data-kind="cinemaJournal"]').count() ? '.workout-journal-open' : '') + '[data-a="workoutExercise"][data-j="' + index + '"]').first();
   await button.focus();
   await page.keyboard.press('Enter');
   await page.locator('.workout-exercise-page').waitFor();
@@ -120,6 +122,7 @@ async function exercise(page, index) {
 
 async function closeSheet(page) {
   await page.keyboard.press('Escape');
+  await closeJournal(page);
   await page.getByRole('dialog').waitFor({ state: 'hidden' });
 }
 
@@ -132,8 +135,17 @@ async function advance(page, seconds) {
 async function resume(page, reload = true) {
   if (reload) await page.reload();
   await action(page, 'resumeGo').click();
-  const continueTimer = page.getByRole('button', { name: 'Nastavi', exact: true });
+  const continueTimer = page.locator('.workout-cinema .cinema-primary').filter({ hasText: /^Nastavi$/ });
   if (await continueTimer.isVisible()) await continueTimer.click();
+}
+
+async function completeManual(page) {
+  await closeJournal(page);
+  const current = await player(page);
+  assert.equal(current.liveSchedule[current.i].kind, 'manual', 'Visible primary action completes the current manual set');
+  const primary = page.locator('.workout-cinema .cinema-primary[data-a="cinemaMain"]');
+  assert.equal(await primary.innerText(), 'Serija gotova');
+  await primary.click();
 }
 
 async function noOverflow(page, scope, label) {
@@ -162,7 +174,7 @@ async function refuseStorage(page, key, refuse) {
 }
 
 async function discardPlayer(page) {
-  await action(page, 'quitPlay').click();
+  await openQuit(page);
   await action(page, 'quitDiscard').click();
 }
 
@@ -184,10 +196,10 @@ async function replacement(page, index, id, equipment) {
 }
 
 async function savePartial(page) {
-  await action(page, 'quitPlay').click();
+  await openQuit(page);
   await action(page, 'quitSave').click();
   if (await action(page, 'finishPlay').isVisible()) await action(page, 'finishPlay').click();
-  await action(page, 'quitPlay').waitFor({ state: 'hidden' });
+  await page.locator('.workout-cinema').waitFor({ state: 'hidden' });
 }
 
 async function panelBack(page) {
@@ -219,6 +231,7 @@ async function draftIsolation(page) {
   await discardPlayer(page);
   // No reload: a discarded player's failed draft must not contaminate the next.
   await action(page, 'startPr').click();
+  await openJournal(page, true);
   await page.locator('.workout-journal').waitFor();
   assert.equal(await page.locator('.workout-journal input[data-j="0"][data-set="1"][data-field="reps"]').inputValue(), '5');
   assert.equal((await player(page)).items[0].repsList[0], 5);
@@ -276,22 +289,35 @@ async function activeDuration(page) {
   await openProtocol(page, ids.clock);
   await action(page, 'startPr').click();
   await advance(page, 10);
+  const timer = page.locator('#ring[data-a="cinemaTimer"]');
+  const stepBeforePause = (await player(page)).i;
+  await timer.click();
+  assert.equal(await page.locator('.workout-cinema.is-paused').count(), 1);
+  assert.equal(await timer.getAttribute('aria-label'), 'Nastavi brojač');
+  assert.match(await timer.locator('.workout-control-action').innerText(), /pauza/);
+  assert.equal(await page.locator('.workout-cinema .cinema-primary').innerText(), 'Nastavi');
+  await advance(page, 4);
+  assert.equal((await player(page)).clock.seconds, 10);
+  assert.equal((await player(page)).i, stepBeforePause, 'Timer pause does not complete a manual set');
+  await timer.click();
+  assert.equal(await page.locator('.workout-cinema.is-paused').count(), 0);
+  assert.equal(await timer.getAttribute('aria-label'), 'Pauziraj brojač');
   await exercise(page, 0);
   assert.equal((await player(page)).clock.seconds, 10);
   await advance(page, 120);
   assert.equal((await player(page)).clock.seconds, 10);
   await closeSheet(page);
   await advance(page, 5);
-  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
+  await completeManual(page);
   assert.equal((await player(page)).clock.seconds, 15);
   const beginSecond = page.getByRole('button', { name: 'Kreni', exact: true });
   if (await beginSecond.isVisible()) await beginSecond.click();
-  await action(page, 'quitPlay').click();
+  await openQuit(page);
   await advance(page, 60);
   await action(page, 'quitResume').click();
   assert.equal((await player(page)).clock.seconds, 15);
   await advance(page, 3);
-  await action(page, 'quitPlay').click();
+  await openQuit(page);
   await action(page, 'quitResume').click();
   assert.equal((await player(page)).clock.seconds, 18);
   // Leave first: pagehide saves the real checkpoint before time away begins.
@@ -304,12 +330,12 @@ async function activeDuration(page) {
   await resume(page, false);
   assert.equal((await player(page)).clock.seconds, 18);
   await advance(page, 2);
-  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="2"]').click();
+  await completeManual(page);
   await action(page, 'finishPlay').click();
   const saved = (await store(page)).log.find(row => row.refId === ids.clock);
   assert.ok(saved);
   assert.equal(saved.secs, 20);
-  results.push({ label: 'active-duration', activeSeconds: 20, editorSecondsExcluded: 120, pauseSecondsExcluded: 60, timeAwayExcluded: 3600 });
+  results.push({ label: 'active-duration', activeSeconds: 20, editorSecondsExcluded: 120, pauseSecondsExcluded: 60, timerPauseSecondsExcluded: 4, timerDoesNotCompleteSet: true, timeAwayExcluded: 3600 });
 }
 
 async function infoAndHistory(page) {
@@ -427,7 +453,7 @@ async function preview(page, baseline) {
   assert.equal(await player(page), null);
   await refuseStorage(page, 'mt.play', false);
   await starting.locator('button[type="submit"]').click();
-  await action(page, 'quitPlay').waitFor();
+  await page.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
   const prepared = await player(page);
   assert.equal(prepared.items[0].exId, ids.replacement);
   assert.deepEqual(prepared.items[0].repsList, [8, 6]);
@@ -440,9 +466,9 @@ async function preview(page, baseline) {
   await resume(page);
   await noSliders(page);
   await advance(page, 6);
-  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
+  await completeManual(page);
   await exercise(page, 0);
-  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await variantAction(page).isDisabled());
   assert.ok(await doseField(page, 1, 'kg').isDisabled());
   assert.equal(await doseField(page, 1, 'rir').inputValue(), '');
   await inline(page, 1, 'rir', 1);
@@ -462,13 +488,15 @@ async function preview(page, baseline) {
 async function live(page, baseline) {
   await openProtocol(page);
   await action(page, 'startPr').click();
-  await action(page, 'quitPlay').waitFor();
+  await page.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
   await noSliders(page);
+  await openJournal(page, true);
   assert.equal(await page.locator('.workout-journal-exercise').count(), 2);
   assert.equal(await page.locator('.workout-journal .workout-set-row').count(), 4);
+  await closeJournal(page);
   await advance(page, 6);
   await exercise(page, 0);
-  assert.equal(await detailAction(page, 'workoutSwap').isDisabled(), false, 'an untouched current manual set remains replaceable');
+  assert.equal(await variantAction(page).isDisabled(), false, 'an untouched current manual set remains replaceable');
   await inline(page, 1, 'reps', 6);
   await inline(page, 1, 'kg', 22);
   assert.equal((await player(page)).liveSchedule.filter(step => step.kind === 'manual' && step.g === 0 && step.set === 1).length, 1);
@@ -491,7 +519,7 @@ async function live(page, baseline) {
   assert.equal(replaced.items[1].ss, baseline.items[1].ss);
   assert.equal(replaced.items[1].rest, baseline.items[1].rest);
   await resume(page);
-  await page.locator('[data-a="workoutSetDone"][data-j="0"][data-set="1"]').click();
+  await completeManual(page);
   for (let attempt = 0; attempt < 15; attempt++) {
     const current = await player(page), step = current.liveSchedule[current.i];
     if (step?.kind === 'work' && step.g === 1) break;
@@ -501,7 +529,7 @@ async function live(page, baseline) {
   const working = await player(page);
   assert.equal(working.liveSchedule[working.i].kind, 'work');
   await exercise(page, 1);
-  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await variantAction(page).isDisabled());
   const paused = await player(page);
   await detailAction(page, 'workoutHistory').click();
   await advance(page, 30);
@@ -509,7 +537,7 @@ async function live(page, baseline) {
   assert.equal((await player(page)).left, paused.left);
   await panelBack(page);
   await closeSheet(page);
-  assert.ok(await page.getByRole('button', { name: 'Pauziraj', exact: true }).isVisible());
+  assert.equal(await page.locator('#ring[data-a="cinemaTimer"]').getAttribute('aria-label'), 'Pauziraj brojač');
   await advance(page, paused.left + 0.2);
   await savePartial(page);
   const saved = (await store(page)).log.find(row => row.items?.[1]?.exId === ids.hold);
@@ -528,14 +556,14 @@ async function frozen(page) {
   await openProtocol(page, ids.frozen);
   const baseline = (await store(page)).protocols[ids.frozen];
   await exercise(page, 0);
-  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await variantAction(page).isDisabled());
   assert.ok(await doseField(page, 1, 'reps').isDisabled());
   assert.ok(await doseField(page, 1, 'kg').isDisabled());
   await closeSheet(page);
   await action(page, 'startPr').click();
-  await action(page, 'quitPlay').waitFor();
+  await page.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
   await exercise(page, 1);
-  assert.ok(await detailAction(page, 'workoutSwap').isDisabled());
+  assert.ok(await variantAction(page).isDisabled());
   assert.equal(await doseField(page, 1, 'sec').isDisabled(), false);
   await inline(page, 1, 'sec', 11);
   assert.deepEqual((await player(page)).items[1].secList, [11, 8]);

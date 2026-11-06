@@ -87,6 +87,7 @@ function seed(){
       assert.equal(data.log.filter(l=>l.kind==='test').length,1);
       await detail(page,missing.historyId);assert.match(await page.locator('.history').innerText(),/Nije zabilježeno/);
       await home(page);await page.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(page,'dashboardProgress').click();
+      await page.locator('[data-a="progressDetail"][data-topic="suggestions"]').click();
       const panel=page.locator('#pg-load');if(!await panel.evaluate(el=>el.open))await panel.locator(':scope > summary').click();
       assert.match(await page.locator('#wk-m').getAttribute('aria-label'),/1,7 km|1\.700 m/);
       assert.match(await panel.innerText(),/Raspodjela brzog trčanja nije potpuno zabilježena/);

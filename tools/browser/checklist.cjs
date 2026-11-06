@@ -1,4 +1,5 @@
 'use strict';
+const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -64,7 +65,7 @@ async function solo(p){
   await A(p,'workoutTrends').last().click();assert.equal(await p.locator('.workout-chart').count(),1);assert.equal(await p.locator('.workout-chart svg').count(),0);await A(p,'workoutPanelBack').click();
   await p.setViewportSize({width:320,height:812});await layout(p,'.workout-exercise-page');await p.setViewportSize({width:375,height:812});
   await by(p,'playEx','bench-press').last().click();const draft=await play(p);assert.equal(draft.items[0].sets,3);assert.deepEqual(draft.items[0].kgList,[20,20,27.5]);assert.equal(draft.originalItems[0].kg,20);
-  await A(p,'quitPlay').click();await A(p,'quitDiscard').click();assert.equal((await store(p)).log.length,0);
+  await openQuit(p);await A(p,'quitDiscard').click();assert.equal((await store(p)).log.length,0);
   record('solo',{sets:3,plannedOnly:true,thirdDose:'3×27.5',historyAndTrendsAvailable:true,sourceKg:20});
 }
 async function superset(p){
@@ -74,31 +75,48 @@ async function superset(p){
   await fillEdit(p,0,2,{reps:4,kg:30});
   await p.setViewportSize({width:320,height:812});await layout(p,'.workout-overview');await p.setViewportSize({width:375,height:812});
   await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-prestart-webkit-375.png':'checklist-prestart-375.png')});
-  await A(p,'startPr').click();const live=p.locator('.workout-journal');assert.equal(await live.locator('.workout-set-row').count(),4);assert.equal(await A(p,'workoutSetDone').count(),0);
-  await advance(p,6);const active=A(p,'workoutSetDone');assert.equal(await active.count(),1);assert.equal(await active.getAttribute('data-j'),'0');assert.equal(await active.getAttribute('data-set'),'1');
-  const beforeRefusal=await play(p);await p.evaluate(()=>{window.realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='mt.play')throw new DOMException('Synthetic refusal','QuotaExceededError');return window.realSet.call(this,k,v);};});await active.click();assert.equal((await play(p)).i,beforeRefusal.i);assert.deepEqual((await play(p)).doneSteps,beforeRefusal.doneSteps);assert.equal(await row(p,0,1,'.workout-journal').getAttribute('data-state'),'active');assert.match(await p.locator('.toast').innerText(),/nije spremljena/);await p.evaluate(()=>{Storage.prototype.setItem=window.realSet;});await active.click();
-  const rir=p.locator('[data-a=rir][data-v="0"]');if(await rir.count())await rir.first().click();
+  await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();
+  await openJournal(p,true);const live=p.locator('.sheet[data-kind="cinemaJournal"]');
+  assert.equal(await live.locator('.workout-set-row').count(),4);assert.equal(await live.locator('[data-a="workoutSetDone"]').count(),0);
+  assert.equal((await play(p)).clock.paused,true);await closeJournal(p);
+  await advance(p,6);await openJournal(p,true);
+  const active=live.locator('[data-a="workoutSetDone"]');assert.equal(await active.count(),1);assert.equal(await active.getAttribute('data-j'),'0');assert.equal(await active.getAttribute('data-set'),'1');
+  const beforeRefusal=await play(p);await p.evaluate(()=>{window.realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='mt.play')throw new DOMException('Synthetic refusal','QuotaExceededError');return window.realSet.call(this,k,v);};});
+  await active.click();assert.equal((await play(p)).i,beforeRefusal.i);assert.deepEqual((await play(p)).doneSteps,beforeRefusal.doneSteps);assert.equal(await row(p,0,1,'.workout-journal').getAttribute('data-state'),'active');assert.match(await p.locator('.toast').innerText(),/nije spremljena/);await p.evaluate(()=>{Storage.prototype.setItem=window.realSet;});await active.click();
   const marked=row(p,0,1,'.workout-journal');assert.equal(await marked.getAttribute('data-state'),'done');
-  await inline(p,0,1,'rir','0','.workout-journal');assert.equal(await marked.locator('[data-field=rir]').inputValue(),'0');assert.equal(await A(p,'workoutSetDone').count(),0);
-  const start=p.getByRole('button',{name:'Kreni',exact:true}),firstHold=row(p,1,1,'.workout-journal');
-  for(let i=0;i<18 && await firstHold.getAttribute('data-state')!=='active';i++){if(await start.isVisible())await start.click();else await advance(p,2);}
-  assert.equal(await firstHold.getAttribute('data-state'),'active');await advance(p,3);
-  const help=live.locator('[data-a=workoutInfo][data-j="1"]');await help.click();await p.locator('.workout-instructions-body').waitFor();const paused=await play(p);await advance(p,35);assert.equal((await play(p)).i,paused.i);
-  await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.ok(await p.getByRole('button',{name:'Pauziraj',exact:true}).isVisible());
-  await p.getByRole('button',{name:'Pauziraj',exact:true}).click();await help.click();await advance(p,28);await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});assert.ok(await p.getByRole('button',{name:'Nastavi',exact:true}).isVisible());assert.equal((await play(p)).left,paused.left);
-  await p.getByRole('button',{name:'Nastavi',exact:true}).click();record('instructionsPause',{elapsedWhileOpen:63,sameRemainingSeconds:paused.left,runningAndPausedRestored:true});
-  assert.equal(await A(p,'workoutSetDone').count(),0);await advance(p,16);assert.equal(await firstHold.getAttribute('data-state'),'partial');assert.match(await firstHold.locator('xpath=following-sibling::tr[1]').innerText(),/✓ lijeva · ○ desna/);
-  const before=await play(p);await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,before.doneSteps);assert.equal(await firstHold.getAttribute('data-state'),'partial');
+  await inline(p,0,1,'rir','0','.workout-journal');assert.equal(await marked.locator('[data-field=rir]').inputValue(),'0');assert.equal(await live.locator('[data-a="workoutSetDone"]').count(),0);
+  await closeJournal(p);
+  for(let guard=0;guard<18;guard++){
+    const saved=await play(p),step=saved.liveSchedule[saved.i];
+    if(step.kind==='work'&&step.g===1&&step.set===1)break;
+    if(step.kind==='ready')await p.locator('.cinema-primary').click();
+    else if(step.dur)await advance(p,saved.left+.1);
+    else assert.fail('Unexpected step before bilateral hold: '+JSON.stringify(step));
+  }
+  let snapshot=await play(p);assert.equal(snapshot.liveSchedule[snapshot.i].kind,'work');assert.equal(snapshot.liveSchedule[snapshot.i].g,1);
+  await openJournal(p,true);const firstHold=row(p,1,1,'.workout-journal');assert.equal(await firstHold.getAttribute('data-state'),'active');await closeJournal(p);await advance(p,3);
+  const help=p.locator('.workout-cinema [data-a=workoutInfo][data-j="1"]');await help.click();await p.locator('.workout-instructions-body').waitFor();const paused=await play(p);assert.equal(paused.clock.paused,true);await advance(p,35);assert.equal((await play(p)).i,paused.i);
+  await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});await p.locator('.workout-cinema').waitFor();
+  const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.equal(runningAgain.clock.paused,false);assert.match(await A(p,'cinemaPause').getAttribute('aria-label'),/^Pauziraj/);
+  await A(p,'cinemaPause').click();await help.click();await advance(p,28);await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});
+  assert.match(await A(p,'cinemaPause').getAttribute('aria-label'),/^Nastavi/);assert.equal((await play(p)).left,paused.left);assert.equal((await play(p)).clock.paused,true);
+  await A(p,'cinemaPause').click();record('instructionsPause',{elapsedWhileOpen:63,sameRemainingSeconds:paused.left,runningAndPausedRestored:true});
+  await advance(p,16);await openJournal(p,true);
+  assert.equal(await firstHold.getAttribute('data-state'),'partial');assert.match(await firstHold.locator('xpath=following-sibling::tr[1]').innerText(),/✓ lijeva · ○ desna/);
+  const before=await play(p);await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,before.doneSteps);
+  await openJournal(p,true);assert.equal(await firstHold.getAttribute('data-state'),'partial');
   await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-live-webkit-375.png':'checklist-live-375.png')});await p.setViewportSize({width:320,height:812});await layout(p,'.workout-journal');await p.setViewportSize({width:375,height:812});
-  await p.locator('[data-a="jump"][data-d="1"]').click();if(await start.isVisible())await start.click();const second=live.locator('[data-a=workoutSetDone][data-j="0"][data-set="2"]');await second.waitFor();await second.click();
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const d=await store(p),entry=d.log[0];assert.deepEqual(entry.items[0].kgList,[20,30]);assert.deepEqual(entry.items[0].repsList,[5,4]);assert.deepEqual(entry.items[1].sideCounts,[1]);assert.equal(d.protocols[prId].items[0].kg,20);
+  await closeJournal(p);await p.locator('[data-a="jump"][data-d="1"]').click();snapshot=await play(p);
+  assert.equal(snapshot.liveSchedule[snapshot.i].kind,'manual');assert.equal(snapshot.liveSchedule[snapshot.i].g,0);assert.equal(snapshot.liveSchedule[snapshot.i].set,2);
+  await p.locator('.cinema-primary').click();
+  await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const d=await store(p),entry=d.log[0];assert.deepEqual(entry.items[0].kgList,[20,30]);assert.deepEqual(entry.items[0].repsList,[5,4]);assert.deepEqual(entry.items[1].sideCounts,[1]);assert.equal(d.protocols[prId].items[0].kg,20);
   record('superset',{realCheckboxes:2,originalBenchKg:20,done:entry.items[0].kgList,partialTimed:entry.items[1].sideCounts,sourceRows:4});
 }
 async function longList(p){
   await protocols(p);await by(p,'openPr','audit-long').click();await p.setViewportSize({width:320,height:700});await layout(p,'.workout-overview');assert.equal(await p.locator('.workout-compact-row').count(),2);
   await exercise(p,1);const planned=p.locator('.workout-exercise-page .workout-set-row');assert.equal(await planned.count(),12);await planned.last().scrollIntoViewIfNeeded();assert.equal(await planned.last().getAttribute('data-set'),'12');await layout(p,'.workout-exercise-page');await A(p,'workoutClose').click();
-  await A(p,'startPr').click();await A(p,'workoutShowAll').click();const live=p.locator('.workout-journal .workout-set-row');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'.workout-journal');assert.equal(await live.last().getAttribute('data-set'),'12');const scroll=await p.locator('.workout-journal').evaluate(el=>el.scrollTop);assert.ok(scroll>0,'the compact page scrolls to every set: '+scroll);assert.equal(await p.locator('.workout-set-row[data-state=done]').count(),0);
-  await A(p,'quitPlay').click();await A(p,'quitDiscard').click();record('long-default-checklist',{rows:24,width:320,pageScroll:scroll,fabricatedCompletions:0});
+  await A(p,'startPr').click();await openJournal(p,true);const live=p.locator('.workout-journal .workout-set-row');assert.equal(await live.count(),24);await live.last().scrollIntoViewIfNeeded();await layout(p,'.workout-journal');assert.equal(await live.last().getAttribute('data-set'),'12');const scroll=await p.locator('.workout-journal-blocks').evaluate(el=>el.scrollTop);assert.ok(scroll>0,'the journal scroll child reaches every set: '+scroll);assert.equal(await p.locator('.workout-set-row[data-state=done]').count(),0);assert.equal((await play(p)).clock.paused,true);
+  await openQuit(p);await A(p,'quitDiscard').click();record('long-default-checklist',{rows:24,width:320,pageScroll:scroll,fabricatedCompletions:0});
 }
 async function mixedWeights(p){
   await protocols(p);await by(p,'openPr','audit-mixed').click();
@@ -107,7 +125,7 @@ async function mixedWeights(p){
   assert.equal(await gate.locator('[data-start-kg]').count(),1);await gate.locator('[data-start-kg]').fill('12');
   await gate.getByRole('button',{name:'Spremi i kreni'}).click();
   const active=await play(p);assert.deepEqual(active.items[0].kgList,[10,12,0]);assert.equal(active.items[0].repsList[0],7);assert.equal(active.originalItems[0].reps,5);
-  await A(p,'quitPlay').click();await A(p,'quitDiscard').click();
+  await openQuit(p);await A(p,'quitDiscard').click();
   const before=(await store(p)).protocols['audit-mixed'];await protocols(p);await by(p,'openPr','audit-mixed').click();await A(p,'workoutProtocolOptions').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('#p-name').fill('Promijenjen naslov');await p.locator('.topbar [data-a="savePr"]').click();
   const items=(await store(p)).protocols['audit-mixed'].items;assert.deepEqual(items[0].kgList,before.items[0].kgList);assert.deepEqual(items[1].secList,[20,15]);assert.equal(items[2].startingKgKnown,true);
   await A(p,'workoutProtocolOptions').click();await by(p,'editPr','audit-mixed').first().click();await p.locator('[data-a="itOpen"][data-i="0"]').click();

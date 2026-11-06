@@ -80,7 +80,7 @@ async function importData(page, data) {
 async function loadView(page) {
   await home(page);
   await page.locator('.tab[data-tab="analytics"]').click();
-  await page.locator('[data-a="analyticsOpen"][data-section="load"]').click();
+  if (await page.locator('.pg-cinema').count()) await page.locator('[data-a="analyticsMode"][data-v="load"]').click();
   await page.locator('.view.training-load').waitFor();
 }
 
@@ -218,21 +218,27 @@ async function runScenarios(page) {
   assert.match(await page.locator('svg.tl-days').getAttribute('aria-label'),/AU poznato/);
   const boundary = page.locator('[data-load-day="2026-10-30"]');
   closeNumber(await boundary.getAttribute('data-total-au'), 10.266667, '88 seconds × 7 / 60');
-  const chest = page.locator('[data-load-group="chest"]');
-  assert.equal(await chest.getAttribute('data-direct'), '4');
-  assert.equal(await chest.getAttribute('data-equivalent'), '4');
-  const muscleDetails = page.locator('[data-load-section="muscles"] details');
+  assert.equal(await page.locator('.tl-cinema > .tl-effort svg').count(),1,'one AU graph on the overview');
+  await page.locator('[data-a="trainingLoadDetail"][data-topic="day"][data-date="2026-10-30"]').click();
+  assert.ok(await page.locator('[data-load-day-detail="2026-10-30"]').isVisible());
+  assert.match(await page.locator('#training-load-info-body').innerText(),/Protokoli/);
+  await page.keyboard.press('Escape');
+  const musclesRow=page.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]');
+  await musclesRow.click();
+  const chest=page.locator('#training-load-info [data-load-group="chest"]');
+  assert.equal(await chest.getAttribute('data-direct'),'4');assert.equal(await chest.getAttribute('data-equivalent'),'4');
+  const muscleDetails=page.locator('#training-load-info [data-load-section="muscles"] details');
   await muscleDetails.locator('summary').click();
-  const triceps = muscleDetails.locator('tbody tr').filter({ has: page.getByRole('rowheader', { name: 'Triceps', exact: true }) });
-  assert.deepEqual(await triceps.locator('th,td').allTextContents(), ['Triceps', '0', '4', '2']);
-  assert.ok(await page.locator('[data-load-section="readiness"]').isVisible());
-  for (const width of [375, 320]) {
-    await layout(page, width, 'mixed-' + width);
-    await screenshot(page, 'mixed-' + width);
-  }
-  await muscleDetails.locator('summary').click();
-  await screenshot(page, 'muscles-320', '[data-load-section="muscles"]');
-  await screenshot(page, 'readiness-320', '[data-load-section="readiness"]');
+  const triceps=muscleDetails.locator('tbody tr').filter({has:page.getByRole('rowheader',{name:'Triceps',exact:true})});
+  assert.deepEqual(await triceps.locator('th,td').allTextContents(),['Triceps','0','4','2']);
+  await page.keyboard.press('Escape');
+  assert.equal(await musclesRow.evaluate(node=>node===document.activeElement),true);
+  assert.ok(await page.locator('.tl-checkin[data-load-section="readiness"]').isVisible());
+  for(const width of [375,320]){await layout(page,width,'mixed-'+width);await screenshot(page,'mixed-'+width);}
+  await musclesRow.click();await page.screenshot({path:path.join(artifacts,'training-load-'+engine+'-muscles-320.png')});await page.keyboard.press('Escape');
+  await page.locator('.tl-checkin').click();
+  assert.match(await page.locator('#training-load-info .tl-readiness').innerText(),/Bez boli/);
+  await page.screenshot({path:path.join(artifacts,'training-load-'+engine+'-readiness-320.png')});await page.keyboard.press('Escape');
   const comparable = await expectation(page);
   assert.equal(comparable.status, 'available');
   assert.equal(comparable.sampleCount, '4');

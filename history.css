@@ -105,3 +105,5 @@
 .hy-editor-actions{padding-bottom:10px}
 .hy-loading{padding:25px 5px}
 @media(max-width:350px){.history{padding-left:12px;padding-right:12px}.hy-heading h1{font-size:24px}.hy-card{padding-left:12px;padding-right:12px}.hy-row{padding-left:10px;padding-right:10px;gap:8px}.hy-row-text>b{font-size:13px}.hy-row-icon{width:30px;height:32px}.hy-form-grid{column-gap:9px}.hy-field>span{font-size:10px}.hy-field>input[type="datetime-local"]{font-size:12px}.hy-actions{gap:7px}.hy-actions button{font-size:11px}.hy-sets{font-size:9px}.hy-sets th,.hy-sets td{padding-left:3px;padding-right:3px}}
+
+.hy-session-note{white-space:pre-wrap}

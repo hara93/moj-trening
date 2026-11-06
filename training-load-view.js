@@ -26,13 +26,13 @@
     var line='',previousKnown=false;
     days.forEach(function(day,i){var known=day.rated>0&&finite(day.knownAU);if(known)line+=(previousKnown?'L':'M')+x(i).toFixed(2)+' '+y(day.knownAU).toFixed(2)+' ';previousKnown=known;});
     var label='Poznati napor po danima. '+days.map(function(day){return date(day.from)+': '+(day.sessions?day.rated?number(day.knownAU)+' AU poznato':'napor nije poznat':'nema zapisa')+(day.missingAU?', nepotpun zapis':'');}).join('; ');
-    return '<svg class="tl-days" viewBox="0 0 320 145" role="img" aria-label="'+esc(label)+'"><path class="tl-grid" d="M26 34H310M26 73H310M26 112H310"/><text class="tl-axis" x="1" y="16">AU</text><text class="tl-axis" x="18" y="37" text-anchor="end">'+number(max,0)+'</text><text class="tl-axis" x="18" y="115" text-anchor="end">0</text>'+days.map(function(day,i){
+    return '<div class="tl-chart-wrap"><svg class="tl-days" viewBox="0 0 320 145" role="img" aria-label="'+esc(label)+'"><path class="tl-grid" d="M26 34H310M26 73H310M26 112H310"/><text class="tl-axis" x="1" y="16">AU</text><text class="tl-axis" x="18" y="37" text-anchor="end">'+number(max,0)+'</text><text class="tl-axis" x="18" y="115" text-anchor="end">0</text>'+days.map(function(day,i){
       var known=day.rated>0&&finite(day.knownAU),height=known&&day.knownAU>0?day.knownAU/max*78:0,cx=x(i),top=y(day.knownAU||0);
       var display=day.missingAU?(day.rated?number(day.knownAU,0)+'*':'?'):day.sessions?number(day.knownAU,0):'·';
       return '<g class="tl-day" data-load-day="'+esc(day.date)+'" data-total-au="'+value(day.totalAU)+'" data-known-au="'+value(day.knownAU)+'"'+(i===days.length-1?' aria-current="date"':'')+'><title>'+esc(date(day.from)+': '+(known?number(day.knownAU)+' AU'+(day.missingAU?' poznato, nepotpun zapis':''):day.sessions?'napor nije poznat':'nema zapisa'))+'</title>'+
         (i===days.length-1?'<rect class="tl-day-selected" x="'+(cx-15)+'" y="26" width="30" height="94" rx="9"/>':'')+'<rect class="tl-day-track" x="'+(cx-9)+'" y="34" width="18" height="78" rx="5"/>'+
         (height?'<rect class="tl-day-fill" x="'+(cx-9)+'" y="'+top+'" width="18" height="'+height+'" rx="4"/>':'')+'<text class="tl-day-value" x="'+cx+'" y="19" text-anchor="middle">'+display+'</text><text class="tl-day-date" x="'+cx+'" y="137" text-anchor="middle">'+esc(date(day.from))+'</text></g>';
-    }).join('')+'<path class="tl-day-line" d="'+line+'"/>'+days.map(function(day,i){return day.rated>0&&finite(day.knownAU)?'<circle class="tl-day-dot'+(day.missingAU?' tl-day-partial':'')+'" cx="'+x(i)+'" cy="'+y(day.knownAU)+'" r="3.3"/>':'';}).join('')+'</svg>'+(days.some(function(day){return day.missingAU;})?'<p class="tl-chart-note">* Poznati dio napora · ? nedostaju podaci</p>':'');
+    }).join('')+'<path class="tl-day-line" d="'+line+'"/>'+days.map(function(day,i){return day.rated>0&&finite(day.knownAU)?'<circle class="tl-day-dot'+(day.missingAU?' tl-day-partial':'')+'" cx="'+x(i)+'" cy="'+y(day.knownAU)+'" r="3.3"/>':'';}).join('')+'</svg><div class="tl-day-controls">'+days.map(function(day){return '<button type="button" data-a="trainingLoadDetail" data-topic="day" data-date="'+esc(day.date)+'" aria-label="'+esc(date(day.from)+': '+(day.sessions?day.rated?number(day.knownAU)+' AU poznato':'napor nije poznat':'nema zapisa')+'. Prikaži detalje')+'"><span>'+esc(date(day.from))+'</span></button>';}).join('')+'</div></div>'+(days.some(function(day){return day.missingAU;})?'<p class="tl-chart-note">* Poznati dio napora · ? nedostaju podaci</p>':'');
   }
   function effort(summary){
     var current=summary.effort.current,baseline=summary.effort.baseline;
@@ -69,7 +69,7 @@
     return '<section class="tl-card tl-readiness" data-load-section="readiness" data-date="'+esc(summary.today)+'">'+title('03','Kako si danas','Jutarnje stanje',known===3?'Uneseno':'Nepotpuno')+
       '<div class="tl-readiness-grid">'+fields+'</div><details class="tl-details"><summary>Kako čitati ove odgovore</summary><p class="tl-note">'+(known?'Ovo su tvoji današnji odgovori, ne ukupna ocjena spremnosti.':'Za danas nema jutarnjih podataka. Spremnost se ne zaključuje iz količine rada.')+'</p></details><button type="button" class="tl-button" data-a="morningOpen">'+(known?'Dopuni jutarnju provjeru':'Unesi jutarnju provjeru')+'<span aria-hidden="true">↗</span></button></section>';
   }
-  function render(vm){
+  function renderLegacy(vm){
     vm=vm||{};var summary=vm.summary;
     var head='<header class="tl-heading"><button type="button" data-a="back" aria-label="Natrag">‹</button><div><p class="tl-eyebrow">Tvoj trening, jasniji podaci</p><h1>Opterećenje</h1></div></header>';
     if(!summary||summary.status!=='ready')return '<div class="view training-load">'+head+'<p class="tl-empty">Podaci za prikaz još nisu dostupni.</p></div>';
@@ -77,8 +77,42 @@
       effort(summary)+muscles(summary)+readiness(summary,vm.morning)+
       '<details class="tl-model-note"><summary>A što znače stari LM1 bodovi?</summary><p>LM1 je zaseban model s unaprijed zadanim faktorima. Nema osobnu kalibraciju i ne koristi unesene kilograme. Njegovi bodovi nisu ovdje prikazani kao stvarni napor, točan umor ili oporavak.</p><p>Ni mišićne serije ni sRPE × trajanje sami ne određuju što moraš trenirati sutra. Jutarnji odgovori ostaju odvojeni.</p></details>'+dialog()+'</div>';
   }
+  var lastVM={};
+  function modeTabs(){return '<nav class="tl-mode-tabs" aria-label="Prikaz analize"><button type="button" data-a="analyticsMode" data-v="progress" aria-pressed="false">Napredak</button><button type="button" data-a="analyticsMode" data-v="load" aria-pressed="true">Opterećenje</button></nav>';}
+  function drill(topic,title,subtitle,action){return '<button type="button" class="tl-drill-row" '+(action || 'data-a="trainingLoadDetail" data-topic="'+topic+'"')+'><span><strong>'+esc(title)+'</strong>'+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</span><span aria-hidden="true">›</span></button>';}
+  function checkin(vm){
+    var summary=vm.summary,current=vm.morning&&vm.morning.date===summary.today?vm.morning:{},fields=[['energy','Energija',1,5],['legs','Noge',1,5],['pain','Bol',0,10]];
+    return '<button type="button" class="tl-checkin" data-a="trainingLoadDetail" data-topic="readiness" data-load-section="readiness" data-date="'+esc(summary.today)+'"><span class="tl-checkin-title">Jutarnja provjera <i aria-hidden="true">›</i></span><span class="tl-checkin-values">'+fields.map(function(spec){var n=current[spec[0]],valid=Number.isInteger(n)&&n>=spec[2]&&n<=spec[3];return '<span data-load-readiness="'+spec[0]+'" data-value="'+(valid?n:'')+'">'+spec[1]+' <b>'+(valid?n+'/'+spec[3]:'—')+'</b></span>';}).join('')+'</span></button>';
+  }
+  function render(vm){
+    vm=vm||{};lastVM=vm;var summary=vm.summary;
+    if(!summary||summary.status!=='ready')return renderLegacy(vm);
+    var model=summary.muscles,known=model.recordedSets>0||model.coverage.coveredSessions>0;
+    return '<div class="view training-load tl-cinema"><header class="tl-heading"><button type="button" data-a="back" aria-label="Natrag">‹</button><div><p class="tl-eyebrow">Zadnjih 7 dana</p><h1>Opterećenje</h1></div>'+info('effort','Kako računamo opterećenje')+'</header>'+modeTabs()+'<div class="tl-intro"><p>'+esc(date(summary.range.from))+' – '+esc(date(summary.range.to-1))+'</p><span>Samo zabilježeno</span></div>'+
+      effort(summary)+checkin(vm)+'<nav class="tl-drill-list" aria-label="Detalji opterećenja">'+drill('muscles','Rad po mišićima',known?number(model.recordedSets,0)+' radnih serija · '+number(model.coveredGroups,0)+' skupina':'Raspodjela još nije poznata')+drill('effort','Treninzi i utakmice','Brojke i izvori napora')+drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+'</nav><button type="button" class="tl-model-link" data-a="trainingLoadDetail" data-topic="model">Model i pretpostavke <span aria-hidden="true">›</span></button><template id="training-load-detail-cache">'+renderLegacy(vm)+'</template>'+dialog()+'</div>';
+  }
+  function showDetail(topic,trigger,data){
+    var el=document.getElementById('training-load-info'),cache=document.getElementById('training-load-detail-cache');if(!el||!cache)return;
+    var title='Detalji opterećenja',body='',summary=lastVM.summary,source;
+    if(topic==='day'){
+      var day=summary.effort.days.find(function(day){return day.date===(data||{}).date;});
+      if(day){title=date(day.from)+' · dnevni napor';body='<div class="tl-day-detail" data-load-day-detail="'+esc(day.date)+'"><span>Zabilježeni napor</span><strong>'+number(day.totalAU,1)+' <small>AU</small></strong>'+(day.missingAU?'<p>Zbroj nije potpun. '+(day.rated?number(day.knownAU)+' AU poznato':'Napor još nije poznat')+'.</p>':'')+'<dl><div><dt>Spremljeni treninzi</dt><dd>'+number(day.sessions,0)+'</dd></div><div><dt>Poznate minute</dt><dd>'+(day.sessions&&day.missingDuration>=day.sessions?'—':number(day.knownMinutes,1))+'</dd></div></dl></div>';
+        if(!day.sessions)body+='<p>Nema zabilježenog treninga za ovaj dan.</p>';
+        else body+='<div class="tl-session-kinds">'+day.byKind.map(function(kind){return '<div><strong>'+esc(kind.label)+'</strong><span>'+number(kind.sessions,0)+' zapisa · '+(kind.totalAU===null?kind.rated?number(kind.knownAU)+' AU poznato':'napor nije poznat':number(kind.totalAU)+' AU')+'</span></div>';}).join('')+'</div>';
+        body+='<button type="button" class="tl-link" data-a="historyList">Otvori povijest treninga <span aria-hidden="true">↗</span></button>';
+      }else body='<p>Podaci za odabrani dan nisu dostupni.</p>';
+    }else{
+      var names={effort:'Treninzi i napor',muscles:'Rad po mišićima',readiness:'Jutarnja provjera',model:'Model i pretpostavke'};title=names[topic]||title;
+      source=topic==='model'?cache.content.querySelector('.tl-model-note'):cache.content.querySelector('[data-load-section="'+({'effort':'effort','muscles':'muscles','readiness':'readiness'}[topic]||'effort')+'"]');
+      body=source?source.outerHTML:'<p>Za ovaj prikaz još nema podataka.</p>';
+    }
+    if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
+    el.querySelector('#training-load-info-title').textContent=title;el.querySelector('#training-load-info-body').innerHTML=body;
+    if(topic==='effort'||topic==='model'){var detail=el.querySelector('details');if(detail)detail.open=true;}
+    el.onclick=function(e){if(e.target===el)closeInfo();};el.oncancel=function(e){e.preventDefault();closeInfo();};el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');el.querySelector('button').focus();
+  }
   function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><div class="tl-dialog-head"><h2 id="training-load-info-title"></h2><button type="button" data-a="trainingLoadInfoClose" aria-label="Zatvori objašnjenje">×</button></div><div id="training-load-info-body"></div><button type="button" class="tl-dialog-done" data-a="trainingLoadInfoClose">Jasno</button></dialog>';}
   function closeInfo(){var el=document.getElementById('training-load-info');if(!el)return;if(typeof el.close==='function')el.close();else el.removeAttribute('open');if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();}
-  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');el.onclick=function(e){if(e.target===el)closeInfo();};el.oncancel=function(e){e.preventDefault();closeInfo();};el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');el.querySelector('button').focus();}
-  return Object.freeze({render:render,showInfo:showInfo,closeInfo:closeInfo});
+  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');el.onclick=function(e){if(e.target===el)closeInfo();};el.oncancel=function(e){e.preventDefault();closeInfo();};el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');el.querySelector('button').focus();}
+  return Object.freeze({render:render,showInfo:showInfo,showDetail:showDetail,closeInfo:closeInfo});
 });

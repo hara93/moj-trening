@@ -1,4 +1,5 @@
 'use strict';
+const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -98,7 +99,7 @@ async function exerciseTrial(p){
   await advance(p,6);
   await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
   const before=(await play(p)).doneSteps;await p.reload();await A(p,'resumeGo').click();assert.deepEqual((await play(p)).doneSteps,before);
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
+  await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const trial=(await store(p)).log.find(l=>l.kind==='exercise'&&l.refId==='bench-press');assert.ok(trial);assert.equal(trial.items[0].setsDone,1);
   await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'historyList').click();await by(p,'historyOpen',trial.historyId).click();assert.match(await p.locator('.history').innerText(),/Bench press/i);
   record('exercise-trial',{realEntry:'Knjižnica > Bench press > Pokreni vježbu',doneSets:1,reload:'preserved',history:'individual exercise row'});
@@ -157,11 +158,11 @@ async function fieldFlow(p,ctx){
   await startField(p);await A(p,'playSettings').click();
   const option=p.locator('[data-a="setSetting"][aria-pressed="false"]').first();const pair={key:await option.getAttribute('data-k'),value:await option.getAttribute('data-v')};
   const saved=await p.evaluate(()=>localStorage.getItem('mt.settings'));await settingsBlocked(p,true);await option.click();assert.equal(await p.evaluate(()=>localStorage.getItem('mt.settings')),saved);assert.equal(await p.locator('[data-a="setSetting"][data-k="'+pair.key+'"][data-v="'+pair.value+'"]').getAttribute('aria-pressed'),'false');await settingsBlocked(p,false);
-  await p.keyboard.press('Escape');await A(p,'quitPlay').click();await A(p,'quitDiscard').click();assert.equal((await store(p)).log.filter(x=>x.refId===fieldId).length,0);
+  await p.keyboard.press('Escape');await openQuit(p);await A(p,'quitDiscard').click();assert.equal((await store(p)).log.filter(x=>x.refId===fieldId).length,0);
   await startField(p);await advance(p,11);await advance(p,11);
   const progress=await play(p);assert.ok(Object.keys(progress.doneSteps).length,'first 10s field interval completed');
   await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,progress.doneSteps);
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const log=(await store(p)).log.find(l=>l.refId===fieldId);
+  await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const log=(await store(p)).log.find(l=>l.refId===fieldId);
   assert.ok(log&&log.load.m>0&&log.load.min>0&&log.load2.Bfield>0);assert.ok(log.load.min<1,'only first short interval saved');
   record('field-player',{discard:'no row',resumed:true,saved:log.load,points:log.load2.Bfield});
 }
@@ -174,6 +175,7 @@ async function mixedCharts(p,ctx,pr){
   base.log=[{kind:'protocol',name:'Potisak · dva tereta',refId:pr.id,historyId:'mix01',at:Date.parse(fixed),secs:600,items:[item]},
   {kind:'exercise',name:'Zasebna proba potiska',refId:'bench-press',at:Date.parse(fixed)-60000,secs:60,items:[{...item}]}];
   await backupRows(p,base);await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProgress').click();
+  await p.locator('[data-a="progressDetail"][data-topic="suggestions"]').click();
   if(!await p.locator('#pg-load').evaluate(node=>node.open))await p.locator('#pg-load > summary').click();
   const chart=p.locator('#wk-vl');assert.match(await chart.getAttribute('aria-label'),/190 kg/);
   await p.locator('#wk-vl [data-a="ltip"][data-i="7"]').click();assert.equal(await p.locator('#wk-vl .tipg.on').count(),1);
@@ -185,6 +187,7 @@ async function mixedCharts(p,ctx,pr){
   await kg.fill('');await A(p,'historySave').click();await A(p,'historyEdit').waitFor();
   const after=(await store(p)).log.find(l=>l.historyId==='mix01');assert.deepEqual(after.items[0].kgList,[20,null]);
   await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProgress').click();
+  await p.locator('[data-a="progressDetail"][data-topic="suggestions"]').click();
   if(!await p.locator('#wk-vl').isVisible())await p.locator('#wk-vl').locator('xpath=ancestor::details[1]/summary').click();
   const mixedText=await p.locator('.view:not([inert])').innerText();const chartLabel=await p.locator('#wk-vl').getAttribute('aria-label');
   assert.match(mixedText,/Za dio treninga nedostaju podaci. Zbrojevi prikazuju samo poznati rad/);
@@ -200,13 +203,18 @@ async function mixedCharts(p,ctx,pr){
   });
 }
 async function editDose(p,j){
-  const button=p.locator('[data-a="playDoseEdit"][data-j="'+j+'"]');if(!await button.isVisible()&&await A(p,'workoutShowAll').count())await A(p,'workoutShowAll').click();await button.click();await p.locator('#play-dose-form').waitFor();
+  await openJournal(p,true);
+  await p.locator('.cinema-journal [data-a="playDoseEdit"][data-j="'+j+'"]').click();await p.locator('#play-dose-form').waitFor();
 }
+async function applyDose(p){await A(p,'playDoseApply').click();await closeJournal(p);}
+async function cancelDose(p){await A(p,'playDoseCancel').click();await closeJournal(p);}
 async function swipePlayer(p){
+  await openJournal(p,true);
   await p.locator('.workout-journal').waitFor();
   assert.equal(await p.locator('.play-cards').count(),0);
   assert.ok(await p.locator('.workout-journal .workout-set-row').count()>0);
   await A(p,'workoutExercise').first().click();await p.locator('.workout-fullscreen .workout-exercise-page').waitFor();await A(p,'workoutClose').first().click();
+  await closeJournal(p);
   record('vertical-workout-journal',{engine,fullpageDetail:true,allSets:true});
 }
 async function liveFlow(p,pr){
@@ -218,42 +226,42 @@ async function liveFlow(p,pr){
   await p.locator('#play-dose-sets').fill('1');await A(p,'playDoseResize').click();
   const resizeCount=await p.locator('#play-dose-form [data-dose-set]').count();const error=await p.locator('.play-dose-error').allTextContents();record('live-shrink',{requested:1,shown:resizeCount,error});
   if(!process.argv.includes('continue-known'))assert.equal(resizeCount,1,'future set shrinks while current manual set remains');
-  await A(p,'playDoseCancel').click();await editDose(p,0);
+  await cancelDose(p);await editDose(p,0);
   const row=(num,key)=>p.locator('#play-dose-form [data-dose-set="'+num+'"] [data-dose-value="'+key+'"]');
-  await row(1,'kg').fill('99');await A(p,'playDoseCancel').click();
+  await row(1,'kg').fill('99');await cancelDose(p);
   assert.equal((await play(p)).items[0].kgList[0],20);
   await ring.click();
   const first=await play(p);assert.ok(Object.keys(first.doneSteps).length===1);
   await editDose(p,0);await noOverflow(p,'live editor');
   const locked=row(1,'kg');assert.ok(await locked.isDisabled()||await locked.getAttribute('readonly')!==null);
-  await row(2,'reps').fill('3');await row(2,'kg').fill('5001');await A(p,'playDoseApply').click();await p.locator('#play-dose-form').waitFor();
+  await row(2,'reps').fill('3');await row(2,'kg').fill('5001');await applyDose(p);await p.locator('#play-dose-form').waitFor();
   assert.equal((await play(p)).items[0].kgList[1],20,'invalid edit does not leak');
   const retained=await row(2,'reps').inputValue();if(process.argv.includes('continue-known') && retained!=='3')await row(2,'reps').fill('3');else assert.equal(retained,'3','invalid kg must retain patch reps');
   await row(2,'kg').fill('30');
   await p.evaluate(()=>{window.auditPlaySet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='mt.play')throw new DOMException('synthetic workout quota','QuotaExceededError');return window.auditPlaySet.call(this,k,v);};});
-  await A(p,'playDoseApply').click();assert.equal((await play(p)).items[0].kgList[1],20);assert.match(await p.locator('.play-dose-error').innerText(),/nije spremljena/i);
+  await applyDose(p);assert.equal((await play(p)).items[0].kgList[1],20);assert.match(await p.locator('.play-dose-error').innerText(),/nije spremljena/i);
   await p.evaluate(()=>{Storage.prototype.setItem=window.auditPlaySet;});
   if(process.argv.includes('continue-known')){await row(2,'reps').fill('3');await row(2,'kg').fill('30');}else{assert.equal(await row(2,'kg').inputValue(),'30');assert.equal(await row(2,'reps').inputValue(),'3');}
-  await A(p,'playDoseApply').click();await p.locator('#play-dose-form').waitFor({state:'hidden'});
-  await editDose(p,1);await row(2,'sec').fill('20');await A(p,'playDoseApply').click();
+  await applyDose(p);await p.locator('#play-dose-form').waitFor({state:'hidden'});
+  await editDose(p,1);await row(2,'sec').fill('20');await applyDose(p);
   await p.locator('.toast').waitFor({state:'hidden',timeout:10000});await p.locator('.view:not([inert])').evaluate(el=>el.scrollTo(0,0));await p.screenshot({path:path.join(artifacts,'player-dose-card-375.png')});
   await editDose(p,0);
   for(const width of [320,375]){await p.setViewportSize({width,height:812});
     const editorWidth=await p.locator('#play-dose-form').evaluate(el=>{const b=el.getBoundingClientRect();return{left:b.left,right:b.right,client:el.clientWidth,scroll:el.scrollWidth,kgRight:el.querySelector('[data-dose-value=kg]').getBoundingClientRect().right,width:innerWidth};});
     record('live-editor-bounds',editorWidth);assert.ok(editorWidth.scroll<=editorWidth.client+1&&editorWidth.kgRight<=editorWidth.right+1,'dose kg input exceeds its form');
   }
-  await p.screenshot({path:path.join(artifacts,'player-dose-editor-375.png')});await A(p,'playDoseCancel').click();
+  await p.screenshot({path:path.join(artifacts,'player-dose-editor-375.png')});await cancelDose(p);
   const changed=await play(p);assert.deepEqual(changed.items[0].repsList,[5,3]);assert.deepEqual(changed.items[0].kgList,[20,30]);assert.equal(changed.items[1].secList[1],20);
   const beforeReload=structuredClone(changed);await p.reload();await A(p,'resumeGo').click();
   const resumed=await play(p);assert.deepEqual(resumed.doneSteps,beforeReload.doneSteps);assert.deepEqual(resumed.items[0],beforeReload.items[0]);assert.equal(resumed.i,beforeReload.i);assert.deepEqual(resumed.liveSchedule,beforeReload.liveSchedule);
-  await reach(p,()=>p.locator('.hint#phint').innerText().then(t=>/brojač za pauzu/.test(t)),20);
+  await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
   await advance(p,pr.items[1].sec+1);await p.locator('[data-a="jump"][data-d="1"]').click();
   await reach(p,()=>ring.isVisible(),20);
-  const shown=await p.locator('.workout-now').innerText();
+  const shown=await p.locator('.workout-cinema-heading').innerText();await openJournal(p,true);
   assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="kg"]').inputValue(),'30');
   assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="reps"]').inputValue(),'3');
-  await ring.click();
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
+  await closeJournal(p);await ring.click();
+  await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const data=await store(p),log=data.log.find(l=>l.refId===pr.id&&l.items[0].liveDoseChanged===true);
   assert.equal(data.log.length,previous+1);assert.ok(log);const bench=log.items[0];
   assert.deepEqual(bench.kgList,[20,30]);assert.deepEqual(bench.repsList,[5,3]);assert.deepEqual(bench.setNumbers,[1,2]);assert.equal(bench.liveDoseChanged,true);
@@ -282,16 +290,16 @@ async function programNegative(p){
 }
 async function bodyRound(p,pr){
   await toProtocol(p,pr);await advance(p,6);await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
-  await reach(p,()=>p.locator('.hint#phint').innerText().then(t=>/brojač za pauzu/.test(t)),20);
+  await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
   await advance(p,pr.items[1].sec+1);
   const first=await play(p);assert.ok(Object.keys(first.doneSteps).length>=2);
   await p.locator('[data-a="jump"][data-d="1"]').click();
   await reach(p,()=>p.getByRole('button',{name:'Serija gotova',exact:true}).isVisible(),20);
   await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
-  await reach(p,()=>p.locator('.hint#phint').innerText().then(t=>/brojač za pauzu/.test(t)),20);
+  await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
   await advance(p,pr.items[1].sec+1);
   const second=await play(p);
-  await A(p,'quitPlay').click();await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
+  await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const log=(await store(p)).log.find(l=>l.refId===pr.id);assert.ok(log);
   const plank=log.items[1];
   const model=require('../../history-model.js');
@@ -303,7 +311,7 @@ async function bodyRound(p,pr){
 async function reach(p,condition,max){
   for(let i=0;i<max;i++){
     if(await condition())return;
-    const ring=A(p,'ring'),label=await ring.getAttribute('aria-label');
+    const ring=p.locator('.cinema-primary,[data-a=ring]'),label=await ring.getAttribute('aria-label')||((await ring.innerText()).trim());
     if(label==='Kreni'||label==='Preskoči odmor'||label==='Nastavi')await ring.click();
     else await advance(p,2);
   }

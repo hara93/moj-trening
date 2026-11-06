@@ -8,6 +8,11 @@ const UI=require('../history.js');
 const field=(value,initial,dataset)=>({value,defaultValue:initial,dataset,getAttribute:key=>key==='data-history-initial'?initial:null});
 const form=inputs=>({querySelectorAll:()=>inputs});
 const entry=()=>({historyId:'saved-1',kind:'protocol',name:'Potisak',at:new Date('2026-11-04T12:03:04.129+01:00').getTime(),secs:173.125,srpe:6,items:[{exId:'press',measure:'sets',sets:3,done:true,reps:8,kg:25,rirList:[1.234567891,null,2]}]});
+test('session exercise notes survive history corrections and render as escaped text',()=>{
+  const e=entry();e.items[0].note='Kontrola <img src=x onerror=alert(1)> & miran pokret';
+  const changed=Model.edit(e,{name:'Ispravljen naziv'});assert.equal(changed.entry.items[0].note,e.items[0].note);
+  const html=UI.render({mode:'detail',entry:changed.entry});assert.match(html,/Bilješka/);assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt;/);assert.doesNotMatch(html,/<img src=x/);
+});
 
 test('untouched displayed fields preserve exact timestamps, seconds, reserve precision and absent fields',()=>{
   const e=entry(),before=JSON.stringify(e);

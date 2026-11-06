@@ -120,6 +120,8 @@ async function screenshot(page, name) {
 }
 
 async function activity(page) {
+  if(await page.locator('#progress-info').evaluate(node=>node.open))await page.keyboard.press('Escape');
+  await page.locator('.pg-summary-pair > button').first().click();
   const panel = page.locator('#pg-activity');
   await panel.waitFor();
   const table = panel.locator('details.pg-activity-table');
@@ -128,6 +130,12 @@ async function activity(page) {
     Array.from(node.querySelectorAll('th,td'), cell => cell.textContent.trim())));
   assert.equal(rows.length, 8);
   return rows;
+}
+
+async function performance(page) {
+  if(await page.locator('#progress-info').evaluate(node=>node.open))await page.keyboard.press('Escape');
+  const row=page.locator('.pg-summary-pair [data-a=progressDetail][data-topic=performance]');
+  if(await row.count())await row.click();else await page.locator('[data-a=progressMetric][data-v=performance]').click();
 }
 
 async function openHistory(page, id) {
@@ -160,14 +168,14 @@ async function homeChecks(page) {
     await noOverflow(page,'compact-dashboard-'+width);
     await screenshot(page,'compact-dashboard-'+width);
     await page.getByRole('button',{name:'Napredak',exact:true}).click();
-    await page.locator('.analytics-hub').waitFor();
-    assert.deepEqual(await action(page,'analyticsOpen').evaluateAll(nodes=>nodes.map(n=>n.dataset.section)),['progress','load','muscles','trends']);
-    assert.equal(await page.locator('.analytics-hub .db-muscle,.analytics-hub .training-load,.analytics-hub .pg-comparison').count(),0);
+    await page.locator('.pg-cinema').waitFor();
+    assert.equal(await page.locator('.pg-main-card svg').count(),0,'cold main has no invented graph');
+    assert.deepEqual(await action(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>n.dataset.v)),['progress','load']);
     await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
     await page.locator('.db-analytics .db-muscle').waitFor();
     assert.equal(await page.locator('.db-comparison-row').count(),18);
     await action(page,'back').first().click();
-    await page.locator('.analytics-hub').waitFor();
+    await page.locator('.pg-cinema').waitFor();
   }
   const categories = ['Rehabilitacija', 'Teretana', 'Aktivacija', 'Kondicija', 'Knjižnica'];
   for (const [index, category] of categories.entries()) {
@@ -255,7 +263,7 @@ async function runScenarios(page) {
   await importData(page, futureOnly);
   await progress(page);
   assert.ok(await page.locator('.pg-zero').isVisible());
-  assert.deepEqual(await page.locator('.pg-overview strong').allTextContents(), ['0', '0', '0']);
+  assert.deepEqual(await page.locator('.pg-summary-pair strong').allTextContents(), ['0', '0']);
   assert.ok((await activity(page)).every(row => row[1] === '0' && row[2] === '0'));
 
   await importData(page, fixture());
@@ -263,6 +271,7 @@ async function runScenarios(page) {
   assert.match(await page.locator('.home').innerText(), /Zadnji trening: Poznata izvedba i nepoznata serija/);
   assert.doesNotMatch(await page.locator('.home').innerText(), /Budući zapis ne smije povećati rezultat/);
   await progress(page);
+  await performance(page);
   const press = page.locator('.pg-comparison[data-id="bench-press"][data-kind="reps"]');
   const plank = page.locator('.pg-comparison[data-id="side-plank"][data-kind="time"]');
   assert.equal(await page.locator('.pg-comparison').count(), 2);
@@ -281,19 +290,23 @@ async function runScenarios(page) {
   assert.match(weeks[0][0], /2\.\s*11\.\s*2026/);
   assert.match(await page.locator('.pg-activity-summary').innerText(), /4\s+spremljenih treninga/);
   assert.match(await page.locator('.pg-activity-chart').getAttribute('aria-label'), /Zadnji tjedan još traje/);
+  await page.keyboard.press('Escape');
   for (const width of [320, 375]) {
     await page.setViewportSize({ width, height: 850 });
     await noOverflow(page, 'known-progress-' + width);
     await screenshot(page, 'known-' + width);
   }
 
+  await performance(page);
+  const summary=page.locator('.pg-summary-pair [data-topic=performance]');
   const help = page.locator('[data-a="progressInfo"][data-topic="performance"]');
   await help.focus();
   await page.keyboard.press('Enter');
   assert.equal(await page.locator('#progress-info').evaluate(node => node.open), true);
   assert.ok(await page.locator('#progress-info .pg-help-visual').isVisible());
   await page.keyboard.press('Escape');
-  assert.equal(await help.evaluate(node => node === document.activeElement), true);
+  assert.equal(await summary.evaluate(node => node === document.activeElement), true);
+  await performance(page);
   await plank.locator('[data-a="openEx"]').click();
   await page.locator('.workout-exercise-page').waitFor();
   await action(page, 'back').first().click();
@@ -309,6 +322,7 @@ async function runScenarios(page) {
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')));
   assert.deepEqual(saved.log.find(row => row.historyId === 'hp-current').items[0].repsList, [6, 3, null]);
   await progress(page);
+  await performance(page);
   assert.match(await press.locator('.pg-after').innerText(), /^6\s+pon\./);
   assert.match(await press.locator('.pg-change').innerText(), /^\+2\s+pon\./);
   assert.deepEqual((await activity(page))[0].slice(1), ['3', '80', '480']);
@@ -321,7 +335,8 @@ async function runScenarios(page) {
   await action(page, 'historyDeleteConfirm').click();
   await progress(page);
   assert.equal(await page.locator('.pg-comparison').count(), 0);
-  assert.ok(await page.locator('.pg-comparison-empty').isVisible());
+  await performance(page);
+  assert.ok(await page.locator('.pg-main-empty').isVisible());
   assert.deepEqual((await activity(page))[0].slice(1), ['2', '70', '410']);
   await home(page);
   assert.match(await page.locator('.home').innerText(), /Zadnji trening: Klupski trening/);
@@ -332,7 +347,8 @@ async function runScenarios(page) {
   await importData(page, unknown);
   await progress(page);
   assert.equal(await page.locator('.pg-comparison').count(), 0);
-  assert.ok(await page.locator('.pg-comparison-empty').isVisible());
+  await performance(page);
+  assert.ok(await page.locator('.pg-main-empty').isVisible());
   assert.deepEqual((await activity(page))[0].slice(1), ['3', '80', '480']);
   results.push({
     label: 'history-driven-insights', repetitions: '4→5→edited6', seconds: '30→40',

@@ -91,6 +91,7 @@
       (count?'<div class="hy-table-wrap"><table class="hy-sets"><caption>Podaci po spremljenim serijama</caption><thead><tr><th scope="col">Serija</th><th scope="col">'+(timed?'Vrijeme (s)':'Ponavljanja')+'</th><th scope="col">Teret (kg)</th><th scope="col">'+(timed?'Rezerva (s)':'RIR')+'</th></tr></thead><tbody>'+row+'</tbody></table></div>':'<p class="hy-muted">'+(n===0?'Nema dovršenih serija.':'Nije sačuvan dovoljan zapis za prikaz izvedbe po serijama.')+'</p>')+
       (count===64&&(n>64||array(item.repsList).length>64)?'<p class="hy-muted">Prikazano je prvih 64 serije; izvorni zapis ostaje sačuvan.</p>':'')+
       (item.done===false&&number(item.lastReps)!=null?'<p class="hy-copy">Zadnja pokušana serija: <b>'+fmt(item.lastReps)+' ponavljanja.</b></p>':'')+
+      (typeof item.note==='string'&&item.note.trim()?'<p class="hy-copy hy-session-note"><b>Bilješka</b><br>'+esc(item.note)+'</p>':'')+
       '<p class="hy-footnote">Teret je prikazan kako je spremljen za ovu vježbu. Nepoznata vrijednost ostaje označena.</p></article>';
   }
   function fieldDetails(entry) {

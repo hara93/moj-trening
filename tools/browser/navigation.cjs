@@ -56,14 +56,28 @@ async function run(){
   console.log('drafts: nested editor, conflict copy, team raw values/checks, history cancel and morning save passed');
 
   await protocols(p);await named(p,'openPr','nav-timed').click();await a(p,'startPr').click();await advance(p,6);
-  const journal=p.locator('.workout-journal');await journal.waitFor();assert.equal(await p.locator('[role=tab]').count(),0);assert.equal(await journal.locator('.workout-set-row').count(),2);
-  const info=journal.locator('[data-a=workoutInfo]').first();await info.focus();await p.keyboard.press('Enter');await p.locator('.workout-instructions-body').waitFor();
+  const cinema=p.locator('.workout-cinema');await cinema.waitFor();assert.equal(await p.locator('[role=tab]').count(),0);
+  const player=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
+  const info=cinema.locator('[data-a=workoutInfo]');await info.focus();await p.keyboard.press('Enter');await p.locator('.workout-instructions-body').waitFor();
+  const infoPaused=await player();assert.equal(infoPaused.clock.paused,true);
   for(const key of ['Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.workout-fullscreen')),true);}
-  await p.keyboard.press('Escape');await p.locator('.workout-exercise-page').waitFor();await p.keyboard.press('Escape');await p.getByRole('dialog').waitFor({state:'hidden'});
-  const before=Number(await p.locator('.prog').getAttribute('aria-valuenow'));await advance(p,20);const after=await p.locator('.prog').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:parseFloat(e.querySelector('i').style.width)}));assert.ok(after.aria>before);assert.ok(Math.abs(after.aria-after.visual)<.6);
-  await journal.locator('[data-a=workoutInfo]').first().click();const paused=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));await advance(p,30);await back(p);await p.locator('.workout-exercise-page').waitFor();await back(p);await p.getByRole('dialog').waitFor({state:'hidden'});const continued=await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));assert.equal(continued.i,paused.i);assert.equal(continued.left,paused.left);
-  await back(p);await a(p,'quitResume').waitFor();await a(p,'quitResume').click();await p.reload();await a(p,'resumeGo').click();await waitView(p,'play');await back(p);await a(p,'quitDiscard').click();assert.equal((await data(p)).log.filter(x=>x.refId==='nav-timed').length,0);
-  console.log('player: vertical full journal, keyboard instructions/focus containment, matching visual/ARIA progress, panel pause and Back/reload passed');
+  await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});await cinema.waitFor();
+  assert.equal(await info.evaluate(node=>node===document.activeElement),true,'top instructions return focus directly to player info');
+  assert.equal((await player()).clock.paused,false);
+  const before=Number(await cinema.locator('.prog').getAttribute('aria-valuenow'));await advance(p,20);const after=await cinema.locator('.prog').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:parseFloat(e.querySelector('i').style.width)}));assert.ok(after.aria>before);assert.ok(Math.abs(after.aria-after.visual)<.6);
+  const journalButton=cinema.locator('[data-a=cinemaJournal]');await journalButton.focus();await p.keyboard.press('Enter');
+  const journal=p.locator('.cinema-journal-sheet');await journal.waitFor();assert.equal(await journal.locator('.workout-set-row').count(),2);
+  const paused=await player();assert.equal(paused.clock.paused,true);
+  for(const key of ['Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.cinema-journal-sheet')),true);}
+  await journal.locator('[data-a=workoutExercise]').first().click();await p.locator('.workout-exercise-page').waitFor();
+  await advance(p,30);await back(p);await journal.waitFor();
+  assert.equal((await player()).clock.paused,true,'Back from exercise returns to paused journal');
+  assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.cinema-journal-sheet')),true);
+  await back(p);await journal.waitFor({state:'hidden'});await cinema.waitFor();
+  const continued=await player();assert.equal(continued.i,paused.i);assert.equal(continued.left,paused.left);assert.equal(continued.clock.seconds,paused.clock.seconds);assert.equal(continued.clock.paused,false);
+  await info.click();const frozen=await player();await advance(p,30);await back(p);await p.locator('.workout-instructions-body').waitFor({state:'hidden'});assert.equal((await player()).left,frozen.left);
+  await back(p);await a(p,'quitResume').waitFor();await a(p,'quitResume').click();await p.reload();await a(p,'resumeGo').click();await waitView(p,'play');await cinema.waitFor();await back(p);await a(p,'quitDiscard').click();assert.equal((await data(p)).log.filter(x=>x.refId==='nav-timed').length,0);
+  console.log('player: cinematic info/journal return paths, keyboard containment, exact paused clock, matching ARIA progress and Back/reload passed');
 
   // The guard is only a child-screen entry, not a trap at the root.
   await home(p);await p.waitForFunction(()=>history.state?.mtNavigation?.guard!==1);

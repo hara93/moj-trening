@@ -13,7 +13,7 @@
     });
   }
   function html(value) { return typeof value === 'string' ? value : ''; }
-  // Exact Lucide glyphs used by the approved premium prototype.
+  // Lucide glyphs and companion line controls share the same stroke language.
   var ICONS = {
     ellipsis: "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/>",
     "chevron-left": "<path d=\"m15 18-6-6 6-6\"/>",
@@ -24,7 +24,19 @@
     "clock-3": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6h4\"/>",
     "dumbbell": "<path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"/><path d=\"m2.5 21.5 1.4-1.4\"/><path d=\"m20.1 3.9 1.4-1.4\"/><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"/><path d=\"m9.6 14.4 4.8-4.8\"/>",
     "play": "<path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"/>",
-    "info": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4\"/><path d=\"M12 8h.01\"/>"
+    "info": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4\"/><path d=\"M12 8h.01\"/>",
+    "timer": "<path d=\"M10 2h4\"/><path d=\"m12 14 3-3\"/><circle cx=\"12\" cy=\"14\" r=\"8\"/>",
+    "pause": "<rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>",
+    "chevron-up": "<path d=\"m18 15-6-6-6 6\"/>",
+    "chevron-down": "<path d=\"m6 9 6 6 6-6\"/>",
+    "chevrons-up": "<path d=\"m7 15 5-5 5 5\"/><path d=\"m7 9 5-5 5 5\"/>",
+    "pencil": "<path d=\"m16 3 5 5-13 13H3v-5L16 3Z\"/><path d=\"m14 5 5 5\"/>",
+    "notebook-pen": "<path d=\"M16 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M2 7h4M2 11h4M2 15h4\"/><path d=\"m17 11 4 4-7 7h-4v-4l7-7Z\"/>",
+    "share-2": "<circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"6\" cy=\"12\" r=\"3\"/><circle cx=\"18\" cy=\"19\" r=\"3\"/><path d=\"m8.6 10.5 6.8-4M8.6 13.5l6.8 4\"/>",
+    "settings-2": "<path d=\"M20 7h-9M4 7h1M4 17h10M20 17h-1\"/><circle cx=\"8\" cy=\"7\" r=\"3\"/><circle cx=\"17\" cy=\"17\" r=\"3\"/>",
+    "volume-2": "<path d=\"m11 5-5 4H3v6h3l5 4V5Z\"/><path d=\"M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14\"/>",
+    "book-open": "<path d=\"M12 7v14M3 3h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5v16h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3V3Z\"/>",
+    "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m8 12 3 3 5-6\"/>"
   };
   function icon(name) {
     return ICONS[name] ? '<svg class="workout-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>' : '';
@@ -135,6 +147,29 @@
       (vm.toolsHtml ? '<div class="workout-detail-tools" role="group" aria-label="Mogućnosti vježbe">' + html(vm.toolsHtml) + '</div>' : '') +
       (vm.targetHtml ? '<div class="workout-detail-target">' + html(vm.targetHtml) + '</div>' : '') + rows(vm.rowsHtml) + '</article>';
   }
+  function cinema(vm) {
+    vm = vm || {};
+    var phase = ['ready', 'rest', 'work'].indexOf(vm.phase) === -1 ? 'work' : vm.phase;
+    // Every interactive fragment is supplied by the app. This renderer never
+    // advances a phase, estimates a dose or invents a completion value.
+    return '<div class="view workout-cinema is-' + phase + (vm.paused ? ' is-paused' : '') + '" data-phase="' + phase + '"' +
+      (vm.exerciseId ? ' data-ex-id="' + esc(vm.exerciseId) + '"' : '') + '>' +
+      '<header class="workout-cinema-topbar">' + html(vm.topbarHtml) +
+      (vm.menuHtml ? '<div class="workout-cinema-menu">' + html(vm.menuHtml) + '</div>' : '') + '</header>' +
+      (vm.progressHtml ? '<div class="workout-cinema-progress">' + html(vm.progressHtml) + '</div>' : '') +
+      '<div class="workout-cinema-heading">' +
+      (vm.subtitle ? '<p>' + esc(vm.subtitle) + '</p>' : '') + '<h1>' + esc(vm.name || 'Trening') + '</h1></div>' +
+      (vm.noticeHtml ? '<div class="workout-cinema-notice">' + html(vm.noticeHtml) + '</div>' : '') +
+      '<div class="workout-cinema-stage"><div class="workout-cinema-media">' +
+      (html(vm.mediaHtml) || '<div class="workout-cinema-media-empty" aria-label="Demonstracija vježbe nije dostupna">' + icon('dumbbell') + '</div>') + '</div>' +
+      (vm.infoHtml ? '<div class="workout-cinema-info">' + html(vm.infoHtml) + '</div>' : '') +
+      (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') + '</div>' +
+      '<div class="workout-cinema-bottom">' +
+      (vm.restAdjustHtml ? '<div class="workout-cinema-rest-adjust">' + html(vm.restAdjustHtml) + '</div>' : '') +
+      (vm.metricsHtml ? '<div class="workout-cinema-metrics">' + html(vm.metricsHtml) + '</div>' : '') +
+      (vm.controlsHtml ? '<div class="workout-cinema-controls">' + html(vm.controlsHtml) + '</div>' : '') +
+      (vm.journalHtml ? '<div class="workout-cinema-journal">' + html(vm.journalHtml) + '</div>' : '') + '</div></div>';
+  }
   function seriesTable(vm) {
     vm = vm || {};
     var timed = vm.measure === 'time';
@@ -234,5 +269,5 @@
   }
   return Object.freeze({ icon:icon, overview:overview, block:block, exercise:exercise, panel:panel, list:list,
     compactExercise:compactExercise, exercisePage:exercisePage, journal:journal, journalExercise:journalExercise,
-    seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
+    cinema:cinema, seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
 });

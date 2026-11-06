@@ -14,7 +14,7 @@ Vježbe i doze za rehabilitaciju su opće smjernice iz javnih materijala; prije 
 
 Na početnoj stranici **Kondicija** otvara terenski katalog. Filtriraj po **Brzina**, **Agilnost**, **Izdržljivost** ili **Testovi**. Predsezonski plan ima zaseban prikaz s izvornim redoslijedom termina.
 
-Pregled protokola prikazuje fotografiju kategorije treninga i opis prema odabranom prijedlogu. Ispod je kompaktan popis vježbi s punim sličicama i sažetkom doza. Dodirni vježbu za prikaz preko cijelog ekrana: **Serija → Ponavljanja / Sekunde → kg → stvarni RIR / rezerva u sekundama**. Sve serije stoje jedna ispod druge prije i tijekom treninga. Kvačica potvrđuje aktivnu seriju na ponavljanja; izdržaji prate odrađeno vrijeme i strane. Ciljani RIR ostaje odvojen od stvarnog unosa nakon serije. Dodir na cilj uz oznaku ⓘ otvara objašnjenje i postavke serija.
+Pregled protokola prikazuje jednu fazu glavne vježbe i opis treninga. Ispod je kompaktan popis podijeljen na dijelove: postojeće nazive ili Pripremu, Snagu, Kondiciju i druge skupine. Redoslijed i doze ostaju sačuvani. Dodirni vježbu za cijelu dvojnu sliku preko širine i tablicu **Serija → Ponavljanja / Sekunde → kg → stvarni RIR / rezerva u sekundama**. Sve serije stoje jedna ispod druge prije i tijekom treninga. Kvačica potvrđuje aktivnu seriju na ponavljanja; izdržaji prate odrađeno vrijeme i strane. Ciljani RIR ostaje odvojen od stvarnog unosa nakon serije. Dodir na cilj uz oznaku ⓘ otvara objašnjenje i postavke serija.
 
 Ikona **ⓘ na slici** otvara upute, svrhu i figuru s tamnije označenim glavnim te svjetlije označenim pomoćnim mišićima. **Trendovi** ostaju u traci uz opremu, zamjenu i povijest. Grafovi prikazuju stvarne zapise i jasno označavaju usporedive doze.
 
@@ -22,15 +22,17 @@ Odabir opreme odmah mijenja izričito povezanu varijantu vježbe, primjerice pot
 
 Ako vježba zahtijeva težinu koja još nije upisana, prije prve izvedbe unesi kilograme. Za bučice se upisuje težina jedne bučice, za šipku ukupna masa, a za landmine masa ploča. Spremljena težina odnosi se na taj protokol ili pojedinačnu vježbu.
 
-U **Napredak → Tvoj napredak** dodirni naslov odjeljka za detalje ili ikonu **ⓘ** za objašnjenje.
+U **Napretku** odmah su kratki sažeci i jedan glavni graf. **Izvedba** prikazuje usporedive zapise, a **Količina rada** zabilježeni rad. Preklopnik otvara **Opterećenje** s dnevnim naporom i jutarnjom provjerom. Dodir točke, dana ili retka otvara detalje; **ⓘ** objašnjava brojke.
 
 ## Nadogradnje
 
 Donja navigacija ima četiri tipke. **Moj pregled** prikazuje danas, sažetak plana i prečace; **Napredak** okuplja usporedive izvedbe, opterećenje, mišićni tjedan i trendove. Otvaraj detalje samo kad ih trebaš. Početna sa sliderima ostaje ista.
 
-Player u prvom planu drži vježbu koju trenutno pratiš. **Prikaži sve** otvara cijeli dnevnik, a glavna komanda jasno prikazuje što radi. Unosi svih serija ostaju sačuvani; RIR prethodne serije dostupan je i tijekom pripreme sljedeće vježbe. Fotografije su cijele, uz kompaktnije redove za pet i više serija.
+Filmski player prikazuje jednu fazu vježbe preko pune širine, uz kontrole preko fotografije. Brojač na ponavljanjima pokazuje stvarno trajanje serije; vremenske vježbe odbrojavaju. **Serija gotova** potvrđuje odrađen rad. Dodir slike ili brojača pauzira/nastavlja, povlačenje gore otvara **Dnevnik**, a lijevo/desno prelazi na drugu vježbu. Vidljive tipke nude iste radnje.
 
-Trenutna verzija je 1.19.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+**Dnevnik** se otvara preko playera i pauzira timer dok uređuješ. Otvorena vježba pokazuje sve serije, a ostale se mogu proširiti. Oprema, zamjena i vraćanje vježbe, povijest, trendovi, bilješke i uređivanje serija nalaze se uz vježbu. **Prijeđi na vježbu** i naslovi dijelova omogućuju navigaciju bez izmišljanja dovršenih serija. Bilješke se spremaju uz izvedbu u povijesti. Odmor mijenjaj tipkama **− / +** po 15 sekundi; pripremu dodaj za 5, 10, 30 ili 60 sekundi. Izbornik **…** otvara postavke, tempo, zvuk, dijelove, dijeljenje plana, vodič i završetak. Rezultati se pregledavaju prije spremanja.
+
+Trenutna verzija je 1.20.0. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 U mišićnoj figuri oznaka **Odabrano** prikazuje trenutačno odabranu skupinu. Odabir ne znači da je skupina trenirana i ne mijenja spremljene rezultate. Boje rada i plana ostaju odvojene od oznake odabira.
 
@@ -91,6 +93,7 @@ node tools/browser/workout-reference.cjs
 node tools/browser/body-regions.cjs
 node tools/browser/dashboard-anatomy.cjs
 node tools/browser/structure.cjs
+node tools/browser/cinema.cjs
 ```
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.

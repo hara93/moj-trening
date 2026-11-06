@@ -96,6 +96,17 @@ function contained(image, label) {
   assert.ok(image.renderedWidth <= image.width + .1 && image.renderedHeight <= image.height + .1, label + ' has no crop');
 }
 
+async function phaseImage(hero, width) {
+  const image = await wholeImage(hero.locator('img'));
+  const window = await metrics(hero);
+  contained(image, 'Single-phase overview');
+  near(window.width, width, 'Single-phase overview uses full width');
+  near(window.width / window.height, .75, 'Single-phase window preserves the 600×800 half', .001);
+  near(image.width, window.width * 2, 'Single phase is exactly half the original pair');
+  near(image.height, window.height, 'Single phase has no vertical crop');
+  return { window, image };
+}
+
 async function fieldMetrics(table) {
   return table.locator('[data-field="reps"]').first().evaluate(input => {
     const td = input.closest('td'), frame = getComputedStyle(td, '::after');
@@ -130,9 +141,8 @@ async function run() {
     await overview.locator('.hero img').evaluate(image => image.decode());
     const hero = await metrics(overview.locator('.hero'));
     near(hero.width, 375, 'Overview content width');
-    assert.ok(hero.height >= 150 && hero.height <= 224, 'Overview cover respects the responsive cap');
-    contained(await wholeImage(overview.locator('.hero img')), 'Overview image');
-    assert.match(await overview.locator('.hero img').getAttribute('src'), /assets\/covers\/teretana\.webp$/);
+    await phaseImage(overview.locator('.hero'), 375);
+    assert.match(await overview.locator('.hero img').getAttribute('src'), /assets\/slike\/bench-press\.webp$/);
     assert.equal(await overview.locator('.hero').evaluate(node => getComputedStyle(node, '::before').display), 'none');
     const title = await metrics(overview.locator('h1'));
     assert.equal(await overview.locator('h1').innerText(), 'Teretana A');
@@ -162,8 +172,11 @@ async function run() {
     await detail.waitFor();
     await detail.locator('.workout-detail-cover img').evaluate(image => image.decode());
     const cover = await metrics(detail.locator('.workout-detail-cover'));
-    contained(await wholeImage(detail.locator('.workout-detail-cover img')), 'Exercise illustration');
-    assert.ok(cover.height >= 200 && cover.height <= 300, 'Exercise cover includes the unobstructed navigation row');
+    const pair = await wholeImage(detail.locator('.workout-detail-cover img'));
+    contained(pair, 'Exercise illustration');
+    near(pair.width, 375, 'Whole double image spans the detail width');
+    near(pair.width / pair.height, 1.5, 'Whole double image keeps its natural 3:2 ratio', .001);
+    assert.ok(cover.height >= pair.height && cover.height <= pair.height + 70, 'Exercise cover includes the unobstructed navigation row');
     const heading = await metrics(detail.locator('h1'));
     assert.equal(await detail.locator('h1').innerText(), 'Potisak s klupe');
     assert.equal(heading.fontSize, '22px');
@@ -217,13 +230,11 @@ async function run() {
     await screenshot(page, 'exercise-320');
     await detail.locator('[data-a="workoutClose"]').click();
     await overview.waitFor();
-    assert.ok((await metrics(overview.locator('.hero'))).height <= 190, 'Narrow overview cover stays capped');
+    await phaseImage(overview.locator('.hero'), 320);
     assert.equal((await metrics(overview.locator('h1'))).fontSize, '23px');
     await screenshot(page, 'overview-320');
-    // The portrait has marked head and feet at opposite source edges. Replacing
-    // only this disposable image's source exercises the actual application CSS,
-    // without changing media metadata, source styles or stored exercise data.
-    const portrait = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="400"><rect width="200" height="400" fill="#334752"/><circle cx="100" cy="25" r="15" fill="#ffad9e"/><path d="M100 46V330M100 90L50 170M100 90L150 170M100 330L70 380M100 330L130 380" stroke="#6bc9e8" stroke-width="18"/><circle cx="70" cy="380" r="10" fill="#2dd85a"/><circle cx="130" cy="380" r="10" fill="#2dd85a"/></svg>').toString('base64');
+    // Keep the actual generated pair. A shorter phone may scroll through the
+    // five-set form instead of shrinking or replacing the approved source.
     await page.locator('.view [data-a="back"]').first().click();
     await page.locator('[data-a="openPr"][data-id="' + denseProtocolId + '"]').first().click();
     await page.locator('.workout-compact-row').first().click();
@@ -236,17 +247,13 @@ async function run() {
     const denseEvidence = [];
     for (const [width, height] of [[375,812], [320,568]]) {
       await page.setViewportSize({ width, height });
-      await dense.locator('.workout-detail-cover img').evaluate(async (image, src) => { image.src = src; await image.decode(); }, portrait);
+      await dense.locator('.workout-detail-cover img').evaluate(image => image.decode());
       await dense.evaluate(node => { node.scrollTop = 0; });
       const image = await wholeImage(dense.locator('.workout-detail-cover img'));
-      contained(image, width + ' px portrait');
-      const visible = await dense.locator('.workout-detail-cover img').evaluate(image => {
-        const r = image.getBoundingClientRect(), scale = Math.min(r.width / image.naturalWidth, r.height / image.naturalHeight);
-        const x = r.x + (r.width - image.naturalWidth * scale) / 2, y = r.y + (r.height - image.naturalHeight * scale) / 2;
-        return { head: document.elementFromPoint(x + 100*scale, y + 25*scale) === image,
-          feet: document.elementFromPoint(x + 70*scale, y + 380*scale) === image };
-      });
-      assert.ok(visible.head && visible.feet, 'Portrait source edges stay visible and clear of navigation controls');
+      contained(image, width + ' px actual double image');
+      near(image.width, width, 'Dense plan retains the full-width double image');
+      near(image.width / image.height, 1.5, 'Dense plan retains the natural 3:2 source', .001);
+      assert.match(await dense.locator('.workout-detail-cover img').getAttribute('src'), /assets\/slike\/bench-press\.webp$/);
       const size = await fieldMetrics(denseTable); editableSize(size);
       assert.equal((await metrics(denseTable.locator('[data-field="reps"]').first())).fontSize, '16px');
       const infoButton = dense.locator('.workout-media-info button');
@@ -257,11 +264,14 @@ async function run() {
         const r = row.getBoundingClientRect(); return { top:r.top, bottom:r.bottom, height:r.height };
       }));
       assert.ok(rowBounds.every(row => row.height >= 44), 'Every set remains separately editable');
-      assert.ok(rowBounds.at(-1).bottom <= height + 1, 'Five complete set rows fit ' + width + '×' + height + ': ' + JSON.stringify(rowBounds));
       const bounds = await dense.evaluate(node => ({ available:node.clientWidth, content:node.scrollWidth }));
       assert.ok(bounds.content <= bounds.available + 1, 'Dense form does not overflow horizontally');
-      await screenshot(page, 'portrait-five-' + width);
-      denseEvidence.push({ width, height, image, visible, fields:size, rows:rowBounds });
+      await screenshot(page, 'pair-five-' + width);
+      await denseTable.locator('.workout-set-row').last().scrollIntoViewIfNeeded();
+      const lastRow = await metrics(denseTable.locator('.workout-set-row').last());
+      assert.ok(lastRow.y >= 0 && lastRow.y + lastRow.height <= height + 1, 'Last complete set can be brought into view');
+      assert.equal(await denseTable.locator('[data-field="reps"]').last().isEnabled(), true);
+      denseEvidence.push({ width, height, image, fields:size, rows:rowBounds, scrolledLastRow:lastRow });
     }
     await denseTable.locator('[data-field="reps"]').last().fill('12');
     await denseTable.locator('[data-field="kg"]').nth(2).fill('12.5');
@@ -270,10 +280,10 @@ async function run() {
     assert.equal(await denseTable.locator('[data-field="kg"]').nth(1).inputValue(), '0', 'Intentional zero stays distinct from the formerly unknown field');
     assert.ok((await denseTable.locator('[data-field="rir"]').evaluateAll(inputs => inputs.map(input => input.value))).every(value => value === ''), 'Unknown actual RIR is not invented');
     assert.equal(await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('mt.data.v1')).log)), historyBefore, 'Plan edits never rewrite recorded history');
-    evidence.densePortrait = denseEvidence;
+    evidence.densePair = denseEvidence;
     assert.deepEqual(errors, []);
     fs.writeFileSync(path.join(artifacts, 'reference-' + engine + '-metrics.json'), JSON.stringify(evidence, null, 2));
-    console.log('Passed workout presentation (' + engine + '): whole images, portrait head/feet, three/five set density, 375×812 and 320×568, editable values and history.');
+    console.log('Passed workout presentation (' + engine + '): full-width single-phase overview, natural3:2details, three/five set density, 375×812 and 320×568, editable values and history.');
   } finally {
     await browser.close();
     await origin.close();

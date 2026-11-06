@@ -56,36 +56,30 @@ async function noOverflow(page, selector, label) {
   assert.ok(d.document <= d.viewport + 1 && d.content <= d.available + 1, label + ': ' + JSON.stringify(d));
 }
 
-async function activeOnly(page, index) {
-  assert.equal(await journal(page).locator('.workout-player-exercise').count(), 2, 'both exercises stay in the DOM');
-  assert.equal(await journal(page).locator('.workout-player-exercise:visible').count(), 1);
-  assert.equal(await journal(page).locator('.workout-player-exercise[data-current="true"]').count(), 1);
-  assert.equal(await block(page, index).getAttribute('data-current'), 'true');
-  assert.equal(await block(page, index).isVisible(), true);
-  assert.equal(await block(page, 1 - index).isVisible(), false);
-  assert.equal(await journal(page).locator('.workout-set-row').count(), 7, 'five strength and two timed rows remain intact');
-  const name = await block(page,index).locator('.workout-journal-name').innerText();
-  assert.ok((await page.locator('.workout-now>strong').innerText()).includes(name),'displayed exercise title and focused card agree');
-  assert.ok((await page.locator('.workout-now>span').innerText()).includes(index===0?'5 pon.':'4 s'),'displayed dose belongs to focused exercise');
+async function openJournal(page) {
+  await A(page,'cinemaJournal').click();
+  await page.locator('.sheet[data-kind="cinemaJournal"]').waitFor();
+  assert.equal(await journal(page).locator('.workout-set-row').count(),7);
 }
 
-async function control(page, label) {
-  assert.equal(await page.locator('#ring').getAttribute('aria-label'), label);
-  assert.equal(await page.locator('#ring .workout-control-action').innerText(), label);
-  assert.equal(await page.locator('#ring .workout-control-action').isVisible(), true);
+async function closeJournal(page) {
+  await A(page,'cinemaJournalClose').first().click();
+  await page.locator('.sheet[data-kind="cinemaJournal"]').waitFor({state:'hidden'});
 }
 
-async function manualSet(page, set) {
-  for (let tries = 0; tries < 12; tries++) {
-    const p = await player(page), st = current(p);
-    if (st.kind === 'manual') {
-      assert.equal(st.g, 0); assert.equal(st.set, set); await control(page, 'Serija gotova'); return;
+async function manualSet(page,set) {
+  for(let tries=0;tries<12;tries++){
+    const saved=await player(page),st=current(saved);
+    if(st.kind==='manual'){
+      assert.equal(st.g,0);assert.equal(st.set,set);
+      assert.equal(await page.locator('#ring').getAttribute('data-a'),'cinemaTimer');
+      assert.equal(await page.locator('.cinema-primary[data-a="cinemaMain"]').innerText(),'Serija gotova');return;
     }
-    if (st.kind === 'ready') await page.locator('#ring').click();
-    else if (st.dur) await advance(page, p.left + 0.1);
-    else assert.fail('Unexpected step before strength set ' + set + ': ' + JSON.stringify(st));
+    if(st.kind==='ready')await page.locator('.cinema-primary[data-a="cinemaMain"]').click();
+    else if(st.dur)await advance(page,saved.left+.1);
+    else assert.fail('Unexpected step before manual set '+set);
   }
-  assert.fail('Strength set ' + set + ' never became current');
+  assert.fail('Manual set '+set+' did not become current');
 }
 
 async function navigation(page, width) {
@@ -101,115 +95,74 @@ async function navigation(page, width) {
   await noOverflow(page, '.db-home', 'compact dashboard ' + width);
   await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-dashboard-'+width+'.png')});
   await page.getByRole('button', { name: 'Napredak', exact: true }).click();
-  await page.locator('.analytics-hub').waitFor();
-  await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-hub-'+width+'.png')});
-  assert.deepEqual(await A(page, 'analyticsOpen').evaluateAll(nodes => nodes.map(n => n.dataset.section)), ['progress', 'load', 'muscles', 'trends']);
-  for (const [section, selector] of [['progress', '.progress-view'], ['load', '.training-load'], ['muscles', '.db-analytics'], ['trends', '.progress-view']]) {
-    await page.locator('[data-a="analyticsOpen"][data-section="' + section + '"]').click();
-    await page.locator(selector).waitFor(); await noOverflow(page, selector, section + ' ' + width);
-    if (section === 'trends') assert.equal(await page.locator('#pg-exercises').evaluate(node => node.open), true, 'trends opens exercise details directly');
-    if (section === 'muscles') assert.equal(await page.locator('.db-comparison-row').count(), 18);
-    await page.locator('.view [data-a="back"]').first().click();
-    await page.locator('.analytics-hub').waitFor();
-  }
+  await page.locator('.progress-view.pg-cinema').waitFor();
+  assert.equal(await page.locator('.analytics-hub').count(),0,'fourth tab opens the progress graph directly');
+  assert.equal(await page.locator('.pg-summary-pair > button').count(),2);
+  assert.equal(await page.locator('.pg-main-card').count(),1);
+  assert.equal(await page.locator('.pg-drill-list > button').count(),3);
+  assert.deepEqual(await A(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>[n.dataset.v,n.getAttribute('aria-pressed')])),[['progress','true'],['load','false']]);
+  await noOverflow(page,'.progress-view','progress '+width);
+  await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-progress-'+width+'.png')});
+  await page.locator('[data-a="progressMetric"][data-v="volume"]').click();
+  assert.equal(await page.locator('[data-a="progressMetric"][data-v="volume"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
+  await page.locator('.db-analytics').waitFor();assert.equal(await page.locator('.db-comparison-row').count(),18);
+  await noOverflow(page,'.db-analytics','muscles '+width);
+  await page.locator('.view [data-a="back"]').first().click();await page.locator('.progress-view.pg-cinema').waitFor();
+  await page.locator('[data-a="analyticsMode"][data-v="load"]').click();
+  await page.locator('.training-load.tl-cinema').waitFor();await noOverflow(page,'.training-load','load '+width);
+  assert.equal(await page.locator('.tl-drill-list > button').count(),3);
+  await page.locator('[data-a="analyticsMode"][data-v="progress"]').click();
+  await page.locator('.progress-view.pg-cinema').waitFor();
   assert.equal((await store(page)).log.length, 0, 'navigation cannot create history');
 }
 
-async function liveWorkout(page, width, appUrl) {
-  await home(page); await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
-  await A(page, 'dashboardProtocols').click();
-  await page.locator('[data-a="openPr"][data-id="' + protocolId + '"]').click();
-  const baseline = await store(page), source = JSON.stringify(baseline.protocols[protocolId].items), history = JSON.stringify(baseline.log);
-  await A(page, 'startPr').click(); await journal(page).waitFor();
-  await activeOnly(page, 0); await manualSet(page, 1);
-  assert.equal(await journal(page).locator('input[data-field="rir"]:enabled,input[data-field="sir"]:enabled').count(), 0);
-  for (let set = 1; set <= 5; set++) {
-    const input = row(page, 0, set).locator('[data-field="reps"]');
-    await input.scrollIntoViewIfNeeded();
-    assert.equal(await input.evaluate(node => { const r = node.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === node; }), true, 'strength row ' + set + ' can be reached without control overlap');
+async function liveWorkout(page,width) {
+  await home(page);await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
+  await A(page,'dashboardProtocols').click();
+  await page.locator('[data-a="openPr"][data-id="'+protocolId+'"]').click();
+  const baseline=await store(page),source=JSON.stringify(baseline.protocols[protocolId].items),history=JSON.stringify(baseline.log);
+  await A(page,'startPr').click();await page.locator('.workout-cinema').waitFor();await manualSet(page,1);
+  assert.equal(await page.locator('.workout-cinema').getAttribute('data-ex-id'),'bench-press');
+  assert.equal(await page.locator('.workout-cinema .workout-journal').count(),0,'large set tables are opt-in through the journal');
+  await openJournal(page);
+  assert.equal(await journal(page).locator('.workout-set-row:visible').count(),5);
+  assert.equal(await journal(page).locator('input[data-field="rir"]:enabled,input[data-field="sir"]:enabled').count(),0);
+  for(let set=1;set<=5;set++){
+    const input=row(page,0,set).locator('[data-field="reps"]');await input.scrollIntoViewIfNeeded();
+    assert.equal(await input.evaluate(node=>{const r=node.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===node;}),true,'all five current rows stay reachable');
   }
-  const initial = await player(page);
-  await A(page, 'workoutShowAll').click();
-  assert.equal(await journal(page).locator('.workout-player-exercise:visible').count(), 2);
-  await block(page, 1).locator('[data-a="playDoseEdit"]').click();
-  await page.locator('#play-dose-form').waitFor();
-  const editing = await player(page);
-  assert.equal(editing.clock.paused, true); assert.equal(editing.startedAt, initial.startedAt);
+  await A(page,'workoutShowAll').click();assert.equal(await journal(page).locator('.workout-set-row:visible').count(),7);
+  const initial=await player(page);
+  await block(page,1).locator('[data-a="playDoseEdit"]').click();await page.locator('#play-dose-form').waitFor();
   await page.locator('#play-dose-form [data-dose-set="2"] [data-dose-value="sec"]').fill('99');
-  await advance(page, 60);
-  assert.equal((await player(page)).clock.seconds, editing.clock.seconds);
-  await A(page, 'playDoseCancel').click(); await page.locator('#play-dose-form').waitFor({ state: 'hidden' });
-  const cancelled = await player(page);
-  assert.equal(cancelled.startedAt, initial.startedAt); assert.equal(cancelled.clock.seconds, editing.clock.seconds);
-  assert.deepEqual(cancelled.items, initial.items); assert.deepEqual(cancelled.doneSteps, initial.doneSteps);
-  assert.equal(JSON.stringify((await store(page)).log), history);
-  await A(page, 'workoutShowAll').click(); await activeOnly(page, 0);
-
-  let lastManualStep;
-  for (let set = 1; set <= 5; set++) {
-    await manualSet(page, set); const before = await player(page);
-    lastManualStep=before.i;
-    if (set % 2) await page.locator('#ring').click();
-    else await row(page, 0, set).locator('[data-a="workoutSetDone"]').click();
-    const after = await player(page);
-    assert.equal(workCount(after), workCount(before) + 1, 'completion records exactly one work step');
-    assert.equal(after.doneSteps[before.i], 1); assert.equal(after.i > before.i, true);
-    assert.equal(await row(page, 0, set).getAttribute('data-state'), 'done');
-    assert.equal(await row(page, 0, set).locator('[data-field="rir"]').isEnabled(), true);
-    if (set < 5) {
-      assert.equal(await row(page, 0, set + 1).locator('[data-field="rir"]').isEnabled(), false);
-      await control(page, 'Preskoči odmor');
-    }
-  }
-  await activeOnly(page, 1); assert.equal(workCount(await player(page)), 5);
-  const reserve=page.locator('.workout-previous-reserve');
-  await reserve.waitFor(); assert.equal(await reserve.isVisible(),true,'previous exercise reserve stays available after focus moves');
-  const reserveChoice=reserve.locator('[data-a="rir"]').first();
-  assert.equal(Number(await reserveChoice.getAttribute('data-k')),lastManualStep);
-  await reserveChoice.click();
-  assert.equal((await player(page)).rir[lastManualStep],0);
-  assert.equal(await row(page,0,5).locator('[data-field="rir"]').inputValue(),'0');
-  await A(page,'workoutShowAll').click();
-  assert.equal(await page.locator('.workout-previous-reserve').count(),0,'expanded view uses original row instead of a duplicate reserve control');
-  await A(page,'workoutShowAll').click(); await activeOnly(page,1);
-  const transition = await player(page); assert.equal(current(transition).trans, true);
-  await control(page, 'Pauziraj'); await page.locator('#ring').click(); await control(page, 'Nastavi');
-  const paused = await player(page); await advance(page, 20);
-  assert.equal((await player(page)).i, paused.i); assert.equal((await player(page)).clock.seconds, paused.clock.seconds);
-  await page.locator('#ring').click(); await control(page, 'Pauziraj');
-  await page.evaluate(()=>history.back()); await A(page, 'quitResume').waitFor();
-  const backPause = await player(page); await advance(page, 25); await page.keyboard.press('Escape');
-  await A(page, 'quitResume').waitFor({ state: 'hidden' });
-  assert.equal((await player(page)).clock.seconds, backPause.clock.seconds);
-  assert.equal((await player(page)).i, backPause.i); assert.equal((await player(page)).clock.paused, false);
-  await advance(page, (await player(page)).left + 0.1); assert.equal(current(await player(page)).kind, 'work');
-  await page.locator('#ring').click(); await control(page, 'Nastavi');
-  const checkpoint = await player(page);
-  await page.goto('about:blank'); const awayAt = await page.evaluate(() => Date.now());
-  await page.clock.setFixedTime(new Date(awayAt + 120000));
-  await page.goto(appUrl, { waitUntil: 'domcontentloaded' }); await A(page, 'resumeGo').click();
-  const restored = await player(page);
-  assert.equal(restored.i, checkpoint.i); assert.deepEqual(restored.doneSteps, checkpoint.doneSteps);
-  assert.equal(restored.left, checkpoint.left); assert.equal(restored.clock.seconds, checkpoint.clock.seconds);
-  await activeOnly(page, 1); await control(page, 'Nastavi');
-  await page.locator('#ring').click();
-  await advance(page, (await player(page)).left + 0.1);
-  assert.equal(await row(page, 1, 1).getAttribute('data-state'), 'partial');
-  assert.equal(await row(page, 1, 1).locator('[data-field="sir"]').isEnabled(), false);
-  await advance(page, (await player(page)).left + 0.1);
-  await advance(page, (await player(page)).left + 0.1);
-  assert.equal(await row(page, 1, 1).getAttribute('data-state'), 'done');
-  assert.equal(await row(page, 1, 1).locator('[data-field="sir"]').isEnabled(), true);
-  assert.equal(workCount(await player(page)), 7, 'five manual sets and both sides of one timed set');
-  await noOverflow(page, '.workout-player-focus', 'active timed exercise ' + width);
-  await page.screenshot({ path: path.join(artifacts, 'structure-' + engine + '-player-' + width + '.png') });
-  assert.equal(JSON.stringify((await store(page)).log), history, 'unfinished work never appears as saved history');
-  assert.equal(JSON.stringify((await store(page)).protocols[protocolId].items), source, 'session and cancelled edits never rewrite the protocol');
-  await A(page, 'quitPlay').click(); await A(page, 'quitDiscard').click();
-  assert.equal(await player(page), null); assert.equal(JSON.stringify((await store(page)).log), history);
-  results.push({ width, navigation: 'four tabs, compact dashboard, four details and back', retainedRows: 7,
-    manualSets: 5, timedSides: 2, futureEditCancelled: true, activeExerciseFollowsProgress: true,
-    clockExcludesEditorPauseBackAndAway: true, historyUnchanged: true });
+  await advance(page,60);await A(page,'playDoseCancel').click();await page.locator('.sheet[data-kind="cinemaJournal"]').waitFor();
+  const cancelled=await player(page);
+  assert.deepEqual(cancelled.items,initial.items);assert.equal(cancelled.startedAt,initial.startedAt);
+  assert.equal(cancelled.clock.seconds,initial.clock.seconds);assert.equal(cancelled.clock.paused,true);
+  await A(page,'workoutShowAll').click();await closeJournal(page);
+  const beforePause=await player(page);await page.locator('#ring').click();
+  assert.equal((await player(page)).clock.paused,true);assert.equal(workCount(await player(page)),0);
+  await advance(page,7);assert.equal((await player(page)).clock.seconds,beforePause.clock.seconds);
+  await page.locator('#ring').click();assert.equal((await player(page)).clock.paused,false);
+  const firstStep=(await player(page)).i;await page.locator('.cinema-primary[data-a="cinemaMain"]').click();
+  assert.equal(workCount(await player(page)),1);assert.equal((await player(page)).doneSteps[firstStep],1);
+  await openJournal(page);assert.equal(await row(page,0,1).getAttribute('data-state'),'done');
+  assert.equal(await row(page,0,1).locator('[data-field="rir"]').isEnabled(),true);
+  assert.equal(await row(page,0,2).locator('[data-field="rir"]').isEnabled(),false);
+  await closeJournal(page);await manualSet(page,2);await openJournal(page);
+  await row(page,0,2).locator('[data-a="workoutSetDone"]').click();
+  assert.equal(workCount(await player(page)),2);assert.equal((await player(page)).clock.paused,true);
+  const paused=await player(page);await advance(page,25);
+  assert.equal((await player(page)).i,paused.i);assert.equal((await player(page)).clock.seconds,paused.clock.seconds);
+  await noOverflow(page,'.sheet[data-kind="cinemaJournal"]','focused journal '+width);
+  await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-journal-'+width+'.png')});
+  await closeJournal(page);await noOverflow(page,'.workout-cinema','cinema '+width);
+  await A(page,'cinemaMenu').click();await A(page,'cinemaExit').click();await A(page,'quitDiscard').click();
+  assert.equal(await player(page),null);assert.equal(JSON.stringify((await store(page)).log),history);
+  assert.equal(JSON.stringify((await store(page)).protocols[protocolId].items),source);
+  results.push({width,navigation:'four tabs, compact dashboard, direct progress and load modes, muscle details and back',retainedRows:7,
+    activeRows:5,manualSets:2,futureEditCancelled:true,journalClockPaused:true,reserveOnlyAfterCompletion:true,historyUnchanged:true});
 }
 
 (async () => {

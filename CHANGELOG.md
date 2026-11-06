@@ -1,5 +1,15 @@
 # Promjene
 
+## 1.20.0 — 6. 11. 2026.
+
+- Filmski player s jednom fazom vježbe preko pune širine, kontrolama pri dnu, brojačem stvarnog trajanja ručne serije i odbrojavanjem vremenskih vježbi. Dodir slike/brojača pauzira; glavna tipka potvrđuje seriju. Slike zadržavaju proporcije i vidljivog vježbača.
+- Dnevnik se otvara preko playera, s dijelovima treninga, sažetim vježbama i svim serijama otvorene vježbe. Podržava stvarni RIR/SIR, promjene doze, opremu, zamjenu/vraćanje, povijest, trendove, bilješke i prelazak na dio/vježbu. Otvoreno uređivanje čuva prethodno stanje pauze i ne povećava trajanje treninga.
+- Odmor se mijenja za ±15 sekundi; dodatna priprema za 5/10/30/60 sekundi ne stvara odrađene serije. Novi vremenski koraci, težine, bilješke i stvarna rezerva čuvaju se nakon ponovnog otvaranja.
+- Izbornik objedinjuje postavke treninga, tempo, zvuk, dijelove, dijeljenje plana, kratki vodič i pregled završetka. Geste imaju vidljive alternative.
+- Pregled treninga koristi jednu fazu glavne vježbe. Detalj vježbe prikazuje cijeli dvojni kadar preko širine ekrana.
+- Napredak i Opterećenje imaju jedan glavni graf i detalje na klik. Nepoznati podaci ostaju odvojeni od nule; izračuni i izvori podataka ostaju sačuvani. Ikona Napretka prati težinu ostalih ikona.
+- Početna sa sliderima, pozdravom i rasporedom ostaje sačuvana. Dodane su provjere playera, kontrola vremena, povijesti i oba mobilna preglednika.
+
 ## 1.19.0 — 6. 11. 2026.
 
 - Početna stranica sa sliderima ostaje sačuvana. Donja navigacija ima četiri tipke: **Moj pregled**, **Početna**, **Knjižnica** i **Napredak**.

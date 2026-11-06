@@ -410,3 +410,96 @@ span.workout-exercise-open{cursor:default}
 .workout-live>:is(.meta,.hint){font-size:12px;line-height:1.45}
 @media(max-height:740px),(max-width:350px){.workout-series-table{--wk-row-height:44px}.workout-detail-cover .media,.workout-detail-cover .media.two,.workout-media-empty{height:clamp(132px,23svh,180px)}.workout-overview-cover .hero,.workout-overview-cover .hero.two{height:clamp(140px,24svh,190px)}.workout-exercise-page:has(.workout-series-compact) .workout-detail-cover .media,.workout-exercise-page:has(.workout-series-compact) .workout-media-empty{height:clamp(120px,20svh,154px)}.workout-detail-main{padding-top:12px}.workout-detail-main h1{font-size:21px}.workout-detail-previous{margin-top:5px}.workout-journal-heading{margin-top:11px;margin-bottom:16px}.workout-journal-heading h1{font-size:23px}}
 @media(max-height:640px){.workout-exercise-page:has(.workout-series-compact) .workout-detail-cover .media,.workout-exercise-page:has(.workout-series-compact) .workout-media-empty{height:100px}.workout-exercise-page:has(.workout-series-compact) .workout-detail-main{padding-top:9px;padding-bottom:12px}.workout-exercise-page:has(.workout-series-compact) .workout-detail-main h1{font-size:20px}.workout-exercise-page:has(.workout-series-compact) .workout-eyebrow{font-size:9px;margin-bottom:4px}.workout-exercise-page:has(.workout-series-compact) .workout-detail-tools{margin-top:4px;margin-bottom:6px}.workout-exercise-page:has(.workout-series-compact) .workout-detail-target{margin-bottom:6px}}
+
+/* The paired illustration is a complete frame on the exercise detail. A
+   single-phase window is used only when the app explicitly marks it single. */
+.workout-detail-cover .media.two{height:auto!important;max-height:none;aspect-ratio:auto}
+.workout-detail-cover .media.two>img{position:static;width:100%;height:auto!important;max-height:none;object-fit:contain}
+.workout-overview-cover .hero.single{align-self:center;width:100%;height:clamp(220px,52svh,480px);background:#1A2429}
+.workout-overview-cover .hero.single.two{position:relative;display:block;align-self:center;width:100%;height:auto;max-height:none;aspect-ratio:3/4;overflow:hidden}
+.workout-overview-cover .hero.single.two>img{position:absolute;inset:0 auto auto 0;width:200%;max-width:none;height:100%;aspect-ratio:3/2;object-fit:contain;transform:translateX(calc(var(--cinema-phase,0)*-50%))}
+
+/* Cinematic player: app-owned state and actions, one complete phase image.
+   The flexible stage yields space before controls; no dose field is clipped. */
+.workout-cinema{--cinema-bg:#162126;--cinema-surface:#243238;--cinema-line:#41545D;--cinema-muted:#ACBCC2;--cinema-accent:#2DD85A;--cinema-teal:#19C7A0;--cinema-cyan:#1E9ED2;display:flex;flex-direction:column;position:relative;isolation:isolate;flex:1;min-height:0;width:100%;padding:0;overflow:hidden;background:var(--cinema-bg);color:#F3F7F5;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;color-scheme:dark}
+.workout-cinema *{box-sizing:border-box}
+.workout-cinema :is(button,input,select){font-family:inherit}
+.workout-cinema button{touch-action:manipulation}
+.workout-cinema :is(button,input,summary,a):focus-visible{outline:2px solid #6FD4F1;outline-offset:3px}
+.workout-cinema-topbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;min-height:54px;padding:5px 15px;background:linear-gradient(#162126F5,#162126BA)}
+.workout-cinema-topbar>div:only-child{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+.workout-cinema-topbar .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;margin:0}
+.workout-cinema-topbar :is(strong,time){font-size:14px;line-height:1.3;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.workout-cinema-topbar button,.workout-cinema-menu button{display:flex;align-items:center;justify-content:center;flex:none;min-width:44px;min-height:44px;width:44px;height:44px;padding:0;border:1px solid #FFFFFF1A;border-radius:50%;background:#26373D9C;color:#F0F5F4}
+.workout-cinema-topbar svg,.workout-cinema-menu svg{width:19px!important;height:19px!important}
+.workout-cinema-menu{margin-left:auto}
+.workout-cinema-progress{position:relative;z-index:2;flex:none;min-height:8px;padding:0 18px 5px}
+.workout-cinema-progress .prog{height:3px;margin:0;background:#AABCC233;overflow:hidden;border-radius:3px}
+.workout-cinema-progress .prog>i{display:block;height:100%;background:var(--cinema-teal)}
+.workout-cinema-progress :is(.cinema-segments,.cinema-progress-segments){display:flex;gap:5px;width:100%}
+.workout-cinema-progress :is(.cinema-segments,.cinema-progress-segments)>*{display:block;flex:1;min-width:0;height:3px;border-radius:3px;background:#AABCC233}
+.workout-cinema-progress :is(.is-done,.is-past,.past,.done){background:#DFEBE7}
+.workout-cinema-progress :is(.is-current,.current,[aria-current=step]){background:var(--cinema-teal)}
+.workout-cinema-progress .prog.cinema-segments{display:block;mask-image:repeating-linear-gradient(90deg,#000 0,#000 calc(100%/var(--cinema-segments,1) - 5px),transparent calc(100%/var(--cinema-segments,1) - 5px),transparent calc(100%/var(--cinema-segments,1)))}
+.workout-cinema-progress .prog.cinema-segments>i{flex:none;height:100%;min-width:0;background:var(--cinema-teal)}
+.workout-cinema-heading{position:relative;z-index:2;flex:none;padding:8px 62px 3px 20px;min-width:0}
+.workout-cinema-heading p{margin:0 0 5px;color:#65D6B7;font-size:11px;font-weight:550;line-height:1.4;letter-spacing:.015em}
+.workout-cinema-heading h1{margin:0;font-size:25px;font-weight:650;line-height:1.12;letter-spacing:-.04em;overflow-wrap:anywhere;text-wrap:balance;text-shadow:0 2px 16px #0004}
+.workout-cinema-notice{position:relative;z-index:2;flex:none;padding:5px 20px;color:var(--cinema-muted);font-size:11px;line-height:1.4}
+.workout-cinema-notice:empty{display:none}
+.workout-cinema-stage{position:static;flex:1;min-height:0;width:100%;margin:0;overflow:visible;background:transparent}
+.workout-cinema-stage::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(#162126A8 0%,#16212612 18%,transparent 38%,transparent 68%,#162126CC 90%,var(--cinema-bg) 100%)}
+.workout-cinema-media{position:absolute;inset:0;z-index:-2;display:block;overflow:hidden;pointer-events:none;background:var(--cinema-bg)}
+.workout-cinema-media::after{content:"";position:absolute;inset:0 0 auto;width:100%;aspect-ratio:3/4;pointer-events:none;background:linear-gradient(#1621265C 0%,transparent 24%,transparent 86%,#162126ED 100%)}
+.workout-cinema-media>.media{display:flex;align-items:center;justify-content:center;width:100%;height:100%;aspect-ratio:auto;margin:0;background:transparent;overflow:hidden}
+.workout-cinema-media :is(img,video){display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain!important;object-position:center!important}
+.workout-cinema-media>.cinema-single-media.two{position:absolute;inset:0 0 auto;display:block;width:100%;max-width:none;height:auto;max-height:none;aspect-ratio:3/4;overflow:hidden}
+.workout-cinema-media>.cinema-single-media.two>img{position:absolute;inset:0 auto auto 0;display:block;width:200%;max-width:none;height:100%;max-height:none;aspect-ratio:3/2;object-fit:contain!important;transform:translateX(calc(var(--cinema-phase,0)*-50%))}
+.workout-cinema-media :is(.badge,.credit,.swap){display:none}
+.workout-cinema-media-empty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at center,#314A55,#162126);color:#6C929F}
+.workout-cinema-media-empty svg{width:70px!important;height:70px!important;stroke-width:1}
+.workout-cinema-info{position:absolute;top:76px;right:9px;z-index:4}
+.workout-cinema-info button{position:relative;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:#EDF7F3}
+.workout-cinema-info button::before{content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:#162126BD;backdrop-filter:blur(6px)}
+.workout-cinema-info svg{position:relative;z-index:1;width:24px!important;height:24px!important}
+.workout-cinema-next{position:relative;z-index:3;max-height:calc(100% - 16px);overflow:auto;margin:8px 14px;padding:12px;border:1px solid #8AA2AC55;border-radius:15px;background:#1D2B31D9;backdrop-filter:blur(12px);font-size:12px;line-height:1.4;color:#DCE9E6}
+.workout-cinema-next:empty{display:none}
+.workout-cinema-next :is(button,a){min-height:44px;min-width:44px}
+.workout-cinema-next :is(img,video){display:block;flex:none;width:48px;height:56px;object-fit:contain;border-radius:8px;background:#34464D}
+.workout-cinema-next strong{font-size:13px;font-weight:550;line-height:1.35}
+.workout-cinema-next small{display:block;font-size:10px;line-height:1.5;color:#AFC5CD}
+.workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(transparent,#162126D9 32%,var(--cinema-bg) 70%)}
+.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);align-items:end;gap:8px;min-height:90px;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:66px;padding:4px 2px;border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center;font-size:26px;font-weight:600;line-height:1.2;letter-spacing:-.03em}
+.workout-cinema-metric :is(strong,input){font-size:26px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.workout-cinema-metric :is(small,span:last-child){color:#B1C2C8;font-size:10px;font-weight:400;letter-spacing:0;line-height:1.5}
+.workout-cinema-metric input{width:100%;max-width:86px;min-height:44px;border:0;border-bottom:1px solid #73929C88;border-radius:0;background:transparent;color:inherit;text-align:center;padding:4px}
+.workout-cinema-metric:disabled{opacity:.45;cursor:default}
+.workout-cinema-clock,.workout-cinema #ring{position:relative;display:flex;align-items:center;justify-content:center;flex:none;width:132px;height:88px;min-height:88px;min-width:0;margin:0 auto;padding:12px 0 0;border:0;border-radius:0;background:transparent;color:#F3F7F5;font-variant-numeric:tabular-nums}
+.workout-cinema-clock::before{content:"";position:absolute;inset:0;border:6px solid #9CB1BA4A;border-bottom:0;border-radius:80px 80px 0 0;mask:repeating-conic-gradient(from 270deg at 50% 100%,#000 0deg 2.5deg,transparent 2.5deg 5deg);pointer-events:none}
+.workout-cinema-clock>svg,.workout-cinema #ring>svg{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}
+.workout-cinema-clock .n,.workout-cinema #ring .n{position:static;inset:auto;display:flex;align-items:center;justify-content:center;font-size:37px;font-weight:650;line-height:1;letter-spacing:-.055em;color:#F3F7F5}
+.workout-cinema-clock .n svg,.workout-cinema #ring .n svg{position:static;width:27px;height:27px;margin:0;opacity:1}
+.workout-cinema-clock .workout-control-action{display:none}
+.workout-cinema-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-top:5px}
+.workout-cinema-controls>button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:44px;padding:8px 10px;border:1px solid #5A717B66;border-radius:14px;background:#26373E;color:#DCEBE6;font-size:12px;font-weight:550;line-height:1.3}
+.workout-cinema-controls>button:first-child,.workout-cinema-controls>button:nth-child(3){padding:8px 2px}
+.workout-cinema-controls :is(.workout-cinema-primary,.workout-cinema-done){border-color:transparent;background:#2DD85A;color:#102818}
+.workout-cinema-controls>.workout-cinema-done,.workout-cinema-controls>button:nth-child(4):last-child{grid-column:1/-1}
+.workout-cinema-controls svg{width:18px!important;height:18px!important;flex:none}
+.workout-cinema-journal{margin-top:8px}
+.workout-cinema-journal>button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:55px;width:100%;padding:11px 14px;border:1px solid #516770;border-radius:18px;background:#243238;color:#EEF5F2;font-size:12px;font-weight:550;line-height:1.4;text-align:left}
+.workout-cinema-journal>button>span{display:flex;align-items:center;gap:8px;min-width:0}
+.workout-cinema-journal>button>span:last-child{color:#6BDDBB;font-size:10px;line-height:1.4;text-align:right;justify-content:flex-end}
+.workout-cinema-journal svg{width:18px!important;height:18px!important;flex:none}
+.workout-cinema-rest-adjust{display:flex;justify-content:center;align-items:center;gap:12px;min-height:44px;color:#BFD0D3;font-size:12px;line-height:1.4}
+.workout-cinema-rest-adjust button{display:flex;justify-content:center;align-items:center;min-width:44px;min-height:44px;padding:8px;border:1px solid #62778066;border-radius:13px;background:#26373E;color:#C9EDE2;font-size:12px}
+.workout-cinema.is-rest .workout-cinema-stage{background:transparent}
+.workout-cinema.is-rest .workout-cinema-media{opacity:.4}
+.workout-cinema.is-rest .workout-cinema-metrics{display:flex;align-items:center;justify-content:center;min-height:98px}
+.workout-cinema.is-rest .workout-cinema-metric{display:none}
+.workout-cinema.is-rest .workout-cinema-clock,.workout-cinema.is-rest #ring{width:100%;height:96px;min-height:96px;padding:0}
+.workout-cinema.is-rest .workout-cinema-clock::before{display:none}
+.workout-cinema.is-rest .workout-cinema-clock .n,.workout-cinema.is-rest #ring .n{font-size:74px;letter-spacing:-.065em;line-height:1}
+.workout-cinema.is-paused .workout-cinema-stage{filter:saturate(.7)}
+@media(max-width:350px),(max-height:670px){.workout-cinema-topbar{min-height:48px;padding:2px 12px}.workout-cinema-heading{padding:5px 58px 2px 16px}.workout-cinema-heading h1{font-size:22px}.workout-cinema-heading p{margin-bottom:3px;font-size:10px}.workout-cinema-notice{padding:3px 16px;font-size:10px}.workout-cinema-info{top:68px}.workout-cinema-bottom{padding:2px 13px 8px}.workout-cinema-metrics{grid-template-columns:minmax(0,1fr) 116px minmax(0,1fr);min-height:77px;margin-bottom:3px}.workout-cinema-clock,.workout-cinema #ring{width:116px;height:76px;min-height:76px}.workout-cinema-clock .n,.workout-cinema #ring .n{font-size:33px}.workout-cinema-metric,.workout-cinema-metric :is(strong,input){font-size:23px}.workout-cinema-metric{min-height:58px}.workout-cinema-journal{margin-top:6px}.workout-cinema-journal>button{min-height:50px;padding:9px 11px}.workout-cinema-next{margin:6px 10px;padding:9px;font-size:11px}.workout-cinema.is-rest .workout-cinema-metrics{min-height:83px}.workout-cinema.is-rest .workout-cinema-clock,.workout-cinema.is-rest #ring{height:82px;min-height:82px}.workout-cinema.is-rest .workout-cinema-clock .n,.workout-cinema.is-rest #ring .n{font-size:64px}}

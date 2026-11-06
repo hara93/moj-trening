@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const {launch,repo,artifacts,appVersion,withOffline,fixture:baseFixture}=require('./runtime.cjs');
+const {launch,repo,artifacts,appVersion,withOffline,openQuit,fixture:baseFixture}=require('./runtime.cjs');
 const useWebKit=process.argv.includes('webkit');
 const screenshot=path.resolve(artifacts,useWebKit?'today-webkit-375.png':'today-regression.png');
 const mime = {'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.mp4':'video/mp4'};
@@ -121,8 +121,10 @@ async function morningFlow(p){
   const ready=await advise(p);assert.ok(ready.kind);
   const personalBefore=(await data(p)).protocols;
   const launch=action(p,'todayAct');await launch.click();
-  if(await action(p,'quitPlay').isVisible()){
-    await action(p,'quitPlay').click();await action(p,'quitDiscard').click();
+  if(await p.locator('.workout-cinema').isVisible()||await action(p,'quitPlay').isVisible()){
+    await openQuit(p);await action(p,'quitDiscard').click();
+    await p.locator('.workout-cinema,[data-a="quitPlay"]').waitFor({state:'hidden'});
+    assert.equal(await p.evaluate(()=>localStorage.getItem('mt.play')),null,'recommendation preview cleanup leaves no resumable workout');
     assert.deepEqual((await data(p)).protocols,personalBefore,'starting personal suggestion must not mutate saved prescription');
   } else {console.log('First recommendation action opened',await p.locator('h1').allInnerTexts());}
   await today(p);
