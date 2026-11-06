@@ -29,6 +29,10 @@ jobs:
     needs: logic
     # Keep native browser dependencies reproducible when ubuntu-latest changes.
     runs-on: ubuntu-24.04
+    container:
+      # Match tools/browser/package-lock.json; native browser dependencies are preinstalled.
+      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+      options: --ipc=host --init
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -44,12 +48,6 @@ jobs:
           cache: npm
           cache-dependency-path: tools/browser/package-lock.json
       - run: npm ci --prefix tools/browser --ignore-scripts --no-audit --no-fund
-      # The runner already supplies Chromium's runtime libraries. Avoid
-      # reinstalling optional language fonts from a slow apt mirror.
-      - if: matrix.browser == 'chromium'
-        run: npx --prefix tools/browser playwright install chromium
-      - if: matrix.browser == 'webkit'
-        run: npx --prefix tools/browser playwright install --with-deps webkit
       - name: Cijeli trening i postojeće funkcije
         run: node tools/browser/whole-app.cjs live ${{ matrix.browser }}
       - name: Danas i ekipni dnevnik
