@@ -27,7 +27,8 @@ jobs:
           for file in *.js tools/browser/*.cjs; do node --check "$file"; done
   browser:
     needs: logic
-    runs-on: ubuntu-latest
+    # Keep native browser dependencies reproducible when ubuntu-latest changes.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
