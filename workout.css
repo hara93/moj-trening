@@ -312,7 +312,9 @@ span.workout-exercise-open{cursor:default}
 .workout-anatomy .body-rg{fill:#282c33!important;fill-opacity:0!important}
 .workout-anatomy .body-rg.is-on{fill:#a7c1ee!important;fill-opacity:1!important}
 .workout-anatomy .body-rg.is-prime{fill:#4f7ccd!important;fill-opacity:1!important}
-.workout-anatomy .body-ln{stroke:#969da7!important;opacity:.55}
+.workout-anatomy{--body-prime:#4f7ccd;--body-secondary:#a7c1ee}
+.workout-anatomy .body-muscle-fill:is(.is-prime,.is-on){fill-opacity:1}
+.workout-anatomy .body-ln{opacity:1}
 .workout-region-caption{min-height:36px;margin:0 0 12px!important;font-size:11px!important;line-height:1.6!important}
 .workout-region-caption strong{color:#edf3e7;font-weight:550}
 .workout-anatomy .body-rg.is-selected{stroke:#dce88d;stroke-width:1.4;vector-effect:non-scaling-stroke}

@@ -325,7 +325,7 @@ async function infoAndHistory(page) {
       const alpha = Number(style.fillOpacity) * Number(style.opacity) * (color.length > 3 ? color[3] : 1);
       return color.slice(0, 3).reduce((sum, channel) => sum + alpha * channel + (1 - alpha) * 255, 0);
     };
-    return { primary: brightness('.is-prime'), secondary: brightness('.is-on') };
+    return { primary: brightness('.body-muscle-fill.is-prime'), secondary: brightness('.body-muscle-fill.is-on') };
   });
   assert.ok(shades.primary < shades.secondary, 'primary muscles appear darker than secondary: ' + JSON.stringify(shades));
   await noOverflow(page, '.workout-exercise-panel', 'instructions-320');

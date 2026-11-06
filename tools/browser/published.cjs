@@ -22,7 +22,7 @@ async function main() {
   const html = fs.readFileSync(path.join(repo,'index.html'),'utf8');
   const runtime = new Set(['index.html','sw.js']);
   const bodySource = JSON.parse(fs.readFileSync(path.join(repo,'tools/build/body-regions.json'),'utf8'));
-  Object.values(bodySource.images).forEach(file => runtime.add(file));
+  if (!bodySource.visuals) Object.values(bodySource.images).forEach(file => runtime.add(file));
   for (const match of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const match of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const required of ['app.js','body.js','month-plan.js','muscle-work.js','dashboard.js','dashboard.css','style.css','today-model.js','today-view.js','team.js','today.css','team.css','history-model.js','progress-view.js','progress.css','starting-load.js','starting-load.css','workout-view.js','workout.css','training-load.js','training-load-view.js','training-load.css','session-clock.js']) assert(runtime.has(required),'missing local runtime dependency '+required);
@@ -84,7 +84,7 @@ async function main() {
     report.checks.progressDetailsAndHelp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     report.checks.simplifiedNavigation=true;
-    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),18,'18 selectable muscle regions');
+    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),19,'18 muscle groups across 19 selectable front/back regions');
     assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardJoint"]').count(),4,'four visible joint regions, including both hip views');
     assert.equal(await page.locator('.db-comparison-row').count(),18,'18 comparison rows including disclosure');
     assert.equal(await page.locator('.db-body-svg g[data-view="front"]').count(),1);
@@ -170,7 +170,7 @@ async function main() {
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
     await page.getByRole('button',{name:'Filter vježbi',exact:true}).click();
     await page.locator('.filtfig').waitFor();
-    assert.equal(await page.locator('.filtfig [data-region]').count(),22);
+    assert.equal(await page.locator('.filtfig [data-region]').count(),23);
     assert.equal(await page.locator('.filtfig [data-region="hip_joints"]').count(),2);
     assert.equal(await page.locator('.filtfig .body-art').count(),2);
     assert.equal(await page.locator('.filtfig [data-region="front_shoulders"]').count(),1);

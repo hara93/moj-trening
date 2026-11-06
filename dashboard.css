@@ -32,6 +32,7 @@
 .db-region-selected{stroke:#DCE9FF;stroke-width:1.8;stroke-linejoin:round}
 .db-region:focus-visible{stroke:#FFFFFF;stroke-width:2.6}
 .db-region-joint{stroke:#A9B8CE;stroke-width:1}
+.db-region-joint[data-region="hip_joints"]{stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:all;fill-opacity:0!important}
 .db-joint-hit{cursor:pointer;touch-action:manipulation;vector-effect:non-scaling-stroke}
 .dashboard .db-body-svg .db-region.body-tap:hover,.dashboard .db-body-svg .db-region.body-tap:focus-visible{fill-opacity:1}
 .db-region-context{cursor:default}

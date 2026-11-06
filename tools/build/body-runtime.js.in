@@ -1,10 +1,10 @@
-/* BODY: approved front/back artwork with separately selectable vector regions.
-   Local artwork and all geometry are included in the offline app shell. */
+/* BODY: separate closed muscle shapes with native SVG hatching.
+   Drawing, geometry and interaction all work without image requests. */
 (function (root) {
   'use strict';
   var DATA = /* BODY_DATA */;
   var G = DATA.geom || { W: 480, H: 1120, GAP: 40 };
-  var R = DATA.regions, regions = {}, ids = Object.keys(R);
+  var R = DATA.regions, regions = {}, ids = Object.keys(R), sequence = 0;
   ids.forEach(function (id) { regions[id] = { label_hr:R[id][1], view:R[id][0], kind:R[id][3] || 'muscle' }; });
   function toSet(v) {
     var s = {};
@@ -19,25 +19,49 @@
     var size = +o.size > 0 ? +o.size : 140, tap = !!o.tappable;
     var width = views.length * G.W + (views.length - 1) * G.GAP;
     var sw = +o.stroke > 0 ? +o.stroke : (size < 200 ? 0.8 : 1);
+    var native = DATA.visuals, key = 'body-' + (++sequence) + '-';
     var out = '<svg xmlns="http://www.w3.org/2000/svg" class="body-fig' + (o.cls ? ' ' + esc(o.cls) : '') +
       '" viewBox="0 0 ' + width + ' ' + G.H + '" width="' + Math.round(size * width / G.H * 10) / 10 + '" height="' + size + '"' +
       (tap ? '' : ' aria-hidden="true" focusable="false" pointer-events="none"') + '>';
+    if (native) out += '<defs>' + [0,1].map(function (n) {
+      return '<pattern id="' + key + 'hatch-' + n + '" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(' + (n ? '-36' : '36') + ')"><path d="M0 0V14" fill="none" stroke="#A3B1C0" stroke-opacity=".7" stroke-width="2.3"/></pattern>';
+    }).join('') + '<linearGradient id="' + key + 'contour" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#EC8A98"/><stop offset=".48" stop-color="#C57DAE"/><stop offset="1" stop-color="#A87BCA"/></linearGradient></defs>';
     views.forEach(function (view, index) {
       out += '<g data-view="' + view + '"' + (index ? ' transform="translate(' + index * (G.W + G.GAP) + ' 0)"' : '') + '>';
       ids.forEach(function (id) {
         if (R[id][0] !== view && R[id][0] !== 'both') return;
         var d = typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view];
         var state = prime[id] ? 'prime' : on[id] ? 'on' : '';
-        var opacity = state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
+        var hip = id === 'hip_joints';
+        var opacity = hip || native ? '0' : state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
         // Keep this ordering and the body-ln group: app.js expands these paths into touch targets.
         out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (state ? ' is-' + state : '') + (o.selected === id ? ' is-selected' : '') + (R[id][3] === 'joint' ? ' body-joint' : '') + '" data-region="' + id + '"' +
           (tap ? ' role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + !!state + '"' : '') +
-          ' style="fill:var(--accent,#5789E8)" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + d + '"/>';
+          ' style="fill:var(--accent,#5789E8)' + (hip ? ';stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:all;fill-opacity:0!important' : native ? ';fill-opacity:0!important' : '') + '" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + d + '"/>';
       });
       // Transparent artwork sits over the fills, retaining its original muscle hatching.
-      if (DATA.images) out += '<image class="body-art" href="' + esc(DATA.images[view]) + '" x="0" y="0" width="' + G.W + '" height="' + G.H + '" pointer-events="none"/>';
-      var outline = DATA.lines ? DATA.lines[view] : ids.filter(function (id) { return R[id][0] === view || R[id][0] === 'both'; }).map(function (id) { return typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view]; }).join('');
-      out += '<g class="body-ln" fill="none" style="stroke:var(--body-line,#8995A3)" stroke-opacity="' + (DATA.images ? '.28' : '.8') + '" stroke-width="' + (DATA.images ? sw * .55 : sw) +
+      if (native) {
+        out += '<defs><clipPath id="' + key + view + '-clip"><path d="' + native.contours[view] + '"/></clipPath></defs>';
+        out += '<g class="body-art body-muscle-art" pointer-events="none" clip-path="url(#' + key + view + '-clip)" fill-rule="evenodd" stroke="#8C9BAA" stroke-opacity=".68" stroke-width=".6" stroke-linejoin="round">';
+        ids.forEach(function (id) {
+          if ((R[id][0] !== view && R[id][0] !== 'both') || id === 'front_knees' || id === 'hip_joints') return;
+          var custom = native.parts[id], d = typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view];
+          var parts = (Array.isArray(custom) ? custom : custom && custom[view]) || d.match(/M[^M]*/g) || [];
+          var state = prime[id] ? 'prime' : on[id] ? 'on' : '';
+          var paint = o.fills && o.fills[id];
+          parts.forEach(function (d, i) {
+            var fill = paint ? paint.fill : state === 'prime' ? 'var(--body-prime,var(--accent,#5789E8))' : 'var(--body-secondary,var(--accent,#5789E8))';
+            var opacity = paint ? paint.opacity : state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
+            out += '<path class="body-muscle-fill' + (state ? ' is-' + state : '') + '" data-muscle="' + id + '" fill="' + esc(fill) + '" fill-opacity="' + esc(opacity) + '" stroke="none" d="' + d + '"/>';
+            out += '<path class="body-muscle" data-muscle="' + id + '" vector-effect="non-scaling-stroke" fill="url(#' + key + 'hatch-' + i%2 + ')" d="' + d + '"/>';
+          });
+        });
+        out += '</g>';
+      } else if (DATA.images) out += '<image class="body-art" href="' + esc(DATA.images[view]) + '" x="0" y="0" width="' + G.W + '" height="' + G.H + '" style="filter:brightness(1.6)" pointer-events="none"/>';
+      // Hip paths remain touch/keyboard targets, with selection shown in chips.
+      // They must not leave circular landmarks in the decorative line layer.
+      var outline = native ? native.contours[view] : DATA.lines ? DATA.lines[view] : ids.filter(function (id) { return id !== 'hip_joints' && (R[id][0] === view || R[id][0] === 'both'); }).map(function (id) { return typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view]; }).join('');
+      out += '<g class="body-ln" fill="none" style="stroke:' + (native ? 'url(#' + key + 'contour)' : 'var(--body-line,#8995A3)') + '" stroke-opacity="' + (native ? '.95' : DATA.images ? '.28' : '.8') + '" stroke-width="' + (native ? 1.4 : DATA.images ? sw * .55 : sw) +
         '" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"><path vector-effect="non-scaling-stroke" d="' + outline + '"/></g></g>';
     });
     return out + '</svg>';
@@ -47,7 +71,6 @@
     '.body-tap:not(.is-on):not(.is-prime):hover{fill-opacity:.18}' +
     '.body-tap:active{fill-opacity:.6}.body-tap:focus-visible{fill-opacity:.3}' +
     '.body-rg.is-selected{stroke:var(--accent,#b8ccff);stroke-width:1.4;vector-effect:non-scaling-stroke}' +
-    '.body-rg[data-region="hip_joints"]{stroke:var(--body-line,#a3aebc);stroke-width:1;vector-effect:non-scaling-stroke}' +
-    '.body-rg[data-region="hip_joints"].is-on,.body-rg[data-region="hip_joints"].is-prime{stroke:var(--accent,#b8ccff);stroke-width:1.6}';
-  root.BODY = { regions:regions, ids:ids, svg:svg, css:css, geom:G };
+    '.body-rg[data-region="hip_joints"]{stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;fill-opacity:0!important}';
+  root.BODY = { regions:regions, ids:ids, svg:svg, css:css, geom:G, native:!!DATA.visuals };
 })(typeof window !== 'undefined' ? window : this);

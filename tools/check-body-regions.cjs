@@ -19,10 +19,12 @@ test('new anatomy retains every stored region ID, with one bilateral hip joint a
     const html=B.svg({view,prime:['hip_joints'],tappable:true});
     assert.equal((html.match(/data-region="hip_joints"/g)||[]).length,1);
     assert.match(html,/is-prime[^>]+data-region="hip_joints"[^>]+aria-pressed="true"/);
-    assert.match(html,/<image class="body-art"[^>]+pointer-events="none"/);
+    assert.match(html,/<g class="body-art body-muscle-art"[^>]+pointer-events="none"/);
+    assert.match(html,/class="body-muscle"[^>]+fill="url\(#body-/);
+    assert.ok(!html.includes('<image'),'muscle forms are native closed SVG shapes');
   }
   const svg=B.svg({prime:['hip_joints'],tappable:true});
-  assert.equal((svg.match(/data-region=/g)||[]).length,22);
+  assert.equal((svg.match(/data-region=/g)||[]).length,23);
   assert.equal((svg.match(/data-region="hip_joints"/g)||[]).length,2);
   assert.match(B.svg(),/aria-hidden="true" focusable="false" pointer-events="none"/);
 });

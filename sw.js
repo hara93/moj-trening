@@ -1,9 +1,8 @@
-const CACHE = 'mt-v1.18.0';
+const CACHE = 'mt-v1.18.1';
 const SHELL = ['./', './index.html', './style.css', './dashboard.css', './history.css', './player-dose.css', './starting-load.css', './today.css', './progress.css', './team.css', './workout.css', './training-load.css', './hash.js', './data.js', './seed-history.js', './media.js', './pitch.js', './loadfx.js', './body.js', './month-plan.js', './muscle-work.js', './training-load.js', './dashboard.js', './history-store.js', './team.js', './history-model.js', './history.js', './player-dose.js', './session-clock.js', './starting-load.js', './today-model.js', './today-view.js', './progress-model.js', './progress-view.js', './workout-model.js', './workout-view.js', './training-load-view.js', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
 // pictures, thumbnails and font files stay from one version to the next (a new version must not take away, e.g. offline at
 // the gym, what was already shown); each is saved the first time a screen shows it
 const MEDIA = 'mt-media';
-const BODY_ART = ['./assets/body/muscles-front-v3.png', './assets/body/muscles-back-v3.png'];
 const keep = url => url.origin === location.origin ? url.pathname.indexOf('/assets/') !== -1 : url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 const store = req => keep(new URL(req.url)) ? MEDIA : CACHE;
 // with a weak signal the saved copy is used after this long; the network answer still refreshes it for the next start
@@ -11,10 +10,7 @@ const WAIT = 3000;
 // pages that started from the saved copy take their files from the same copy, so one start never mixes two versions
 const fromCache = new Set();
 // a new cache takes the files straight from the server, never from the browser's HTTP cache of the previous release
-self.addEventListener('install', e => { e.waitUntil(Promise.all([
-  caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))),
-  caches.open(MEDIA).then(c => c.addAll(BODY_ART.map(u => new Request(u, { cache: 'reload' }))))
-])); self.skipWaiting(); });
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' }))))); self.skipWaiting(); });
 // only this app's old caches ('mt-…'); other apps on the same address (e.g. 'zns-…') keep theirs. Pictures and fonts an older
 // version saved move to the lasting cache first.
 const moveMedia = k => caches.open(k).then(c => c.keys().then(rs => caches.open(MEDIA).then(m => Promise.all(rs.filter(r => keep(new URL(r.url)))

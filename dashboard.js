@@ -48,9 +48,16 @@
 
   function bodyFigure(groups, selected, forecast) {
     if (!root.BODY || typeof root.BODY.svg !== 'function') return '<p class="db-figure-fallback">Odaberi skupinu iz popisa ispod.</p>';
-    const byRegion = {};
+    const byRegion = {}, appearance = {}, fills = {};
     groups.forEach(g => list(g.regions).forEach(id => { byRegion[id] = g; }));
-    let html = root.BODY.svg({size:250,tappable:true,cls:'db-body-svg'});
+    Object.keys(byRegion).forEach(region => {
+      const g = byRegion[region], actual = val((g.actual || {}).equivalent), planned = forecast && val((g.planned || {}).equivalent) > 0;
+      const state = actual > 0 ? 'recorded' : planned ? 'forecast' : 'empty';
+      const fill = state === 'forecast' ? 'url(#db-forecast-fill)' : state === 'recorded' ? (val((g.actual || {}).direct) > 0 ? '#68D0BC' : '#89B3FC') : '#768293';
+      appearance[region] = {state,planned};
+      fills[region] = {fill,opacity:state === 'empty' ? '.16' : '.86'};
+    });
+    let html = root.BODY.svg({size:250,tappable:true,cls:'db-body-svg',fills});
     html = html.replace(/<path class="body-rg[^\"]*" data-region="([a-z_]+)"([^>]*?)\/>/g, (all, region, rest) => {
       const path = / d="([^"]+)"/.exec(rest);
       if (!path) return all;
@@ -60,22 +67,23 @@
       }
       const g = byRegion[region];
       if (!g) return '<path class="db-region db-region-context" data-region="'+esc(region)+'" fill="transparent" pointer-events="none" fill-rule="evenodd" d="'+path[1]+'"/>';
-      const actual = val((g.actual || {}).equivalent), planned = forecast && val((g.planned || {}).equivalent) > 0;
-      const state = actual > 0 ? 'recorded' : planned ? 'forecast' : 'empty';
+      const {state,planned} = appearance[region];
       const regionLabel = meta ? meta.label_hr : g.label;
       const label = regionLabel + ': ' + fmt((g.actual || {}).equivalent) + ' procijenjenih serija' + (planned ? ', ima preostali plan' : '') + '. Prikaži skupinu ' + g.label;
-      return '<path class="body-tap db-region db-region-'+state+(g.id===selected?' db-region-selected':'')+'" data-region="'+esc(region)+'" data-a="dashboardGroup" data-id="'+esc(g.id)+'" tabindex="0" role="button" aria-label="'+esc(label)+'" aria-pressed="'+(g.id===selected)+'" fill="'+(state==='forecast'?'url(#db-forecast-fill)':state==='recorded'?(val((g.actual||{}).direct)>0?'#68D0BC':'#89B3FC'):'#768293')+'" fill-opacity="'+(state==='empty'?'.16':'.86')+'" fill-rule="evenodd" d="'+path[1]+'"/>';
+      return '<path class="body-tap db-region db-region-'+state+(g.id===selected?' db-region-selected':'')+'" data-region="'+esc(region)+'" data-a="dashboardGroup" data-id="'+esc(g.id)+'" tabindex="0" role="button" aria-label="'+esc(label)+'" aria-pressed="'+(g.id===selected)+'" fill="transparent" fill-opacity="0" style="fill-opacity:0!important" fill-rule="evenodd" d="'+path[1]+'"/>';
     });
-    // Expand small joint targets in screen pixels. Muscle paths stay above these
-    // invisible targets so selecting a muscle centre always selects that muscle.
+    // Expand small joint targets in screen pixels. The semantic hip control has
+    // the same invisible stroke so WebKit touch adjustment can target it. Keep
+    // it beneath muscles so their small neighbouring centres remain selectable.
     html = html.replace(/(<g data-view="(?:front|back)"[^>]*>)([\s\S]*?)(?=<g class="body-ln")/g, (all, start, content) => {
-      let targets = '';
-      content.replace(/<path class="body-tap db-region db-region-joint"([^>]*?)\/>/g, (joint, attrs) => {
+      let targets = '', hipControls = '';
+      content = content.replace(/<path class="body-tap db-region db-region-joint"([^>]*?)\/>/g, (joint, attrs) => {
         const region = / data-region="([a-z_]+)"/.exec(attrs), path = / d="([^"]+)"/.exec(attrs);
         if (region && path) targets += '<path class="body-tap db-joint-hit" data-region="'+region[1]+'" data-a="dashboardJoint" data-id="'+region[1]+'" aria-hidden="true" focusable="false" fill="transparent" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" pointer-events="all" fill-rule="evenodd" d="'+path[1]+'"/>';
+        if (region && region[1] === 'hip_joints') { hipControls += joint; return ''; }
         return joint;
       });
-      return start + targets + content;
+      return start + targets + hipControls + content;
     });
     html = html.replace(/(<svg\b[^>]*>)/, '$1<defs><pattern id="db-forecast-fill" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#514169"/><path d="M-5 5 5-5M0 22 22 0M17 27 27 17" stroke="#C7ACFF" stroke-width="6"/></pattern></defs>');
     return html;

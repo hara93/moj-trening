@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.18.1 — 6. 11. 2026.
+
+- Mišići su zasebni zatvoreni SVG oblici, svaki ispunjen šrafurom i odvojen razmakom. Vanjski obris figure ima jasniji kontrast na tamnoj podlozi. Uklonjeni su vidljivi kružići za kukove iz svih prikaza; područje ostaje dostupno za označavanje i filtriranje preko iste oznake **Kukovi**.
+- Figura se crta izravno u aplikaciji i radi offline bez učitavanja slika.
+
 ## 1.18.0 — 6. 11. 2026.
 
 - Nova odobrena figura sprijeda i straga, s cijelim nogama, zadržava izvorne konture i šrafuru. Mišićne skupine imaju zasebne dodirne plohe u filtrima, uređivanju i prikazu vježbe.

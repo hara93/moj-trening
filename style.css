@@ -643,8 +643,7 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .body-hit{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .body-art{pointer-events:none}
 .body-rg.is-selected{stroke:var(--accent,#b8ccff);stroke-width:1.4;vector-effect:non-scaling-stroke}
-.body-rg[data-region="hip_joints"]{stroke:var(--body-line,#a3aebc);stroke-width:1;vector-effect:non-scaling-stroke}
-.body-rg[data-region="hip_joints"].is-on,.body-rg[data-region="hip_joints"].is-prime{stroke:var(--accent,#b8ccff);stroke-width:1.6}
+.body-rg[data-region="hip_joints"]{stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;fill-opacity:0!important}
 .tag.sec,.afc.sec{background:transparent;box-shadow:inset 0 0 0 1px var(--tag-bg);color:var(--text-body)}
 
 /* the exercise page: photo, title, doses, the card row and the dots fill the screen; a long card scrolls inside */

@@ -133,24 +133,24 @@ async function geometry(page) {
       }
     }
     return { ids: BODY.ids, geom: BODY.geom, count: paths.length, badSamples, overlaps, mismatches,
-      images: [...svg.querySelectorAll('image.body-art')].map(n => n.getAttribute('href')) };
+      images: svg.querySelectorAll('image').length,
+      muscles: [...svg.querySelectorAll('.body-muscle')].map(n => ({id:n.dataset.muscle,closed:/Z\s*$/i.test(n.getAttribute('d')),hatched:!!svg.querySelector(n.getAttribute('fill').slice(4,-1))})),
+      contours: [...svg.querySelectorAll('.body-ln path')].map(n => n.getAttribute('d')) };
   }, source);
   assert.deepEqual(value.ids, ids);
   assert.deepEqual(value.geom, source.geom);
   assert.equal(value.ids.length, 21);
-  assert.equal(value.count, 22);
+  assert.equal(value.count, 23);
   assert.deepEqual(value.mismatches, []);
   assert.deepEqual(value.badSamples, []);
   assert.deepEqual(value.overlaps, []);
-  assert.deepEqual(value.images, [source.images.front, source.images.back]);
-  const images = await page.evaluate(async urls => Promise.all(urls.map(url => new Promise(resolve => {
-    const image = new Image(); image.onload = () => resolve({ url, width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => resolve({ url, error: true }); image.src = url;
-  }))), value.images);
-  for (const image of images) assert.deepEqual(image, { url: image.url, width: 887, height: 1774 });
+  assert.equal(value.images,0,'native muscle drawing has no raster image layer');
+  assert.deepEqual([...new Set(value.muscles.map(p=>p.id))].sort(),ids.filter(id=>id!=='hip_joints'&&id!=='front_knees').sort());
+  assert.ok(value.muscles.every(p=>p.closed&&p.hatched),'every muscle form is closed and filled with a local hatch pattern');
+  assert.deepEqual(value.contours,[source.visuals.contours.front,source.visuals.contours.back]);
   results.push({ check: 'canonical-geometry', ids: value.ids.length, paths: value.count,
     samples: Object.values(source.regions).reduce((n, r) => n + (r.view === 'both' ? r.samples.front.length + r.samples.back.length : r.samples.length), 0),
-    nativeGrid: '1 px at half-pixel centres, front and back', images });
+    nativeGrid: '1 px at half-pixel centres, front and back', closedHatchedForms:value.muscles.length });
 }
 
 async function filter(page, width) {
@@ -202,8 +202,8 @@ async function editor(page, width) {
       assert.ok(state.every(s => s.prime === (phase === 'prime') && s.sec === (phase === 'sec')),
         'editor tap ' + width + ' px ' + phase + '/' + id + ': ' + JSON.stringify(state));
     }
-    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 22 : 0, phase + ' primary');
-    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 22 : 0, phase + ' secondary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 23 : 0, phase + ' primary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 23 : 0, phase + ' secondary');
     assert.equal(await page.locator('.mpick .zch .afc').count(), phase === 'off' ? 0 : 21, phase + ' chips');
     assert.equal(await page.locator('.mpick .zch [data-v="hip_joints"]').count(), phase === 'off' ? 0 : 1);
     await noOverflow(page, '.mpick', 'editor-' + width + '-' + phase);
@@ -214,8 +214,8 @@ async function editor(page, width) {
     assert.deepEqual((saved.muscles?.prime || []).slice().sort(), phase === 'prime' ? ids.slice().sort() : []);
     assert.deepEqual((saved.muscles?.sec || []).slice().sort(), phase === 'sec' ? ids.slice().sort() : []);
     await openEditor(page);
-    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 22 : 0, 'reloaded ' + phase + ' primary');
-    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 22 : 0, 'reloaded ' + phase + ' secondary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 23 : 0, 'reloaded ' + phase + ' primary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 23 : 0, 'reloaded ' + phase + ' secondary');
   }
   results.push({ check: 'editor', width, ids: 21, persistedPhases: ['prime', 'secondary', 'off'] });
 }
@@ -274,24 +274,20 @@ async function coldOfflineArtwork(browser, host) {
     await importData(page);
     assert.equal(await page.locator('svg.body-fig').count(), 0, 'artwork has never been opened in this context');
     await page.waitForFunction(() => !!navigator.serviceWorker.controller, {}, { timeout: 30000 });
-    const cached = await page.evaluate(async images => Promise.all(Object.values(images).map(async url => {
+    const cached = await page.evaluate(async files => Promise.all(files.map(async url => {
       const response = await caches.match(new URL(url, location.href).href);
       return { url, ok: !!response?.ok, bytes: response ? (await response.arrayBuffer()).byteLength : 0 };
-    })), source.images);
+    })), ['body.js']);
     for (const image of cached) { assert.equal(image.ok, true, 'cold precache ' + image.url); assert.ok(image.bytes > 1000, image.url); }
     await withOffline(context, host.server, async () => {
       await page.getByRole('button', { name: 'Knjižnica vježbi', exact: true }).click();
       await A(page, 'eqSheet').click();
       await page.locator('.fsheet svg.filtfig').waitFor();
-      const decoded = await page.evaluate(async () => Promise.all([...document.querySelectorAll('.fsheet image.body-art')].map(async node => {
-        const image = new Image(); image.src = node.getAttribute('href'); await image.decode();
-        return { url: image.getAttribute('src'), width: image.naturalWidth, height: image.naturalHeight };
-      })));
-      assert.equal(decoded.length, 2);
-      for (const image of decoded) { assert.equal(image.width, 887); assert.equal(image.height, 1774); }
+      const native = await page.locator('.fsheet svg.filtfig').evaluate(svg => ({views:svg.querySelectorAll('.body-muscle-art').length,muscles:svg.querySelectorAll('.body-muscle').length,images:svg.querySelectorAll('image').length}));
+      assert.equal(native.views,2);assert.ok(native.muscles>=38);assert.equal(native.images,0);
       await page.locator('.fsheet svg.filtfig').scrollIntoViewIfNeeded();
       await page.screenshot({ path: path.join(artifacts, 'body-' + engine + '-cold-offline.png') });
-      results.push({ check: 'cold-offline-artwork', cached, decoded });
+      results.push({ check: 'cold-offline-artwork', cached, native });
     });
   } finally { await context.close(); }
 }
