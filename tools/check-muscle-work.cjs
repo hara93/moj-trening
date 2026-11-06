@@ -105,7 +105,7 @@ test('a hip marker beside real muscles adds no credits or unassigned warning and
   assert.equal(legacy.eligibilitySource,'category'); assert.deepEqual(legacy.primary,[]);
 });
 test('legacy group masks, eligibility indices and unassigned hip history replay byte for byte', () => {
-  assert.deepEqual(M.groups.map(g => g.id),['chest','frontDelts','biceps','forearms','abs','obliques','hipFlexors','adductors','quadriceps','upperBack','lats','lowerBack','rearDelts','triceps','glutes','gluteMedius','hamstrings','calves']);
+  assert.deepEqual(M.groups.map(g => g.id),['chest','frontDelts','biceps','forearms','abs','obliques','hipFlexors','adductors','quadriceps','upperBack','lats','lowerBack','rearDelts','triceps','glutes','gluteMedius','hamstrings','calves','neck']);
   assert.equal(Object.hasOwn(M.regionToGroup,'hip_joints'),false);
   const legacy = [
     ['mw1','category','Stara snaga','Snaga',0,1,1,1,8192,[],3,2,1],
@@ -178,6 +178,21 @@ test('compact packing round-trips every group, empty and partial/excluded snapsh
   const reversed = M.completedItem(ex({muscles:{prime:['back_glutes','front_chest'],sec:['back_triceps','front_biceps']}}),done());
   assert.deepEqual(M.sanitize(copy(M.pack(reversed))),reversed);
 });
+test('new neck credit is explicit and appended after every legacy packed muscle position',()=>{
+  assert.equal(M.groups.length,19);assert.equal(M.groups.at(-1).id,'neck');assert.equal(M.regionToGroup.neck,'neck');
+  const previous=M.completedItem(ex({muscles:{prime:['back_upper_back_trapezius'],sec:[]}}),done());
+  assert.deepEqual(previous.primary,['upperBack']);assert.equal(M.pack(previous)[7],1<<9);
+  const current=M.completedItem(ex({muscles:{prime:['neck'],sec:[]}}),done());
+  assert.deepEqual(current.primary,['neck']);assert.deepEqual(current.credits.direct,{neck:3});
+  assert.equal(M.pack(current)[7],1<<18);assert.deepEqual(M.sanitize(copy(M.pack(current))),current);
+  assert.equal(M.sumSnapshots([previous]).groups.neck.direct,0);
+  const legacy=['mw1','legacy-neck','Stari nepoznati vrat','Snaga',0,1,1,0,0,['neck'],3,3,0];
+  const historical=M.sanitize(copy(legacy));assert.ok(historical);assert.deepEqual(M.pack(historical),legacy);
+  assert.deepEqual(historical.primary,[]);assert.deepEqual(historical.credits.direct,{});
+  assert.equal(M.sumSnapshots([historical]).coverage.unassignedItems,1);
+  const duplicate=copy(current);duplicate.unassignedRegions.push('neck');assert.equal(M.sanitize(duplicate),null);
+});
+
 test('skipped or zero-work unknown anatomy is not reported as unallocated performed work; excluded warmups are not partial strength work', () => {
   const unassigned = ex({muscles:null});
   for (const item of [done({skipped:true}),done({setsDone:0}),done({done:false,lastReps:0,setsDone:1})]) {
@@ -192,7 +207,7 @@ test('import validation refuses inconsistent, fractional, overlapping, unknown-v
   for (const mutate of [s=>s.v=2,s=>s.primary.push('futureGroup'),s=>s.secondary.push('chest'),s=>s.completedSets=1.5,s=>s.credits.direct.chest=40,s=>s.plannedSets=2,s=>s.completion='planned',s=>s.exerciseId='__proto__',s=>s.unassignedRegions.push('front_chest')]) {
     const s = copy(good); mutate(s); assert.equal(M.sanitize(s),null);
   }
-  for (const mutate of [s=>s[7]=2**18,s=>s[8]=-1,s=>s[4]=7,s=>s[12]='0',s=>s.pop()]) {
+  for (const mutate of [s=>s[7]=2**M.groups.length,s=>s[8]=-1,s=>s[4]=7,s=>s[12]='0',s=>s.pop()]) {
     const s = copy(M.pack(good)); mutate(s); assert.equal(M.sanitize(s),null);
   }
   assert.deepEqual(M.sanitize(copy(good)),good);

@@ -9,6 +9,7 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const MuscleWork = require('../../muscle-work.js');
 
 const base = process.env.MT_BASE_URL || 'https://hara93.github.io/moj-trening/';
 const expectedVersion = appVersion;
@@ -23,6 +24,13 @@ async function main() {
   const html = fs.readFileSync(path.join(repo,'index.html'),'utf8');
   const runtime = new Set(['index.html','sw.js']);
   const bodySource = JSON.parse(fs.readFileSync(path.join(repo,'tools/build/body-regions.json'),'utf8'));
+  assert.equal(bodySource.regions.neck?.view,'both','release includes one shared neck region');
+  assert.ok(MuscleWork.groups.some(group=>group.id==='neck'),'release includes neck muscle work');
+  const pathCount=regions=>regions.reduce((n,region)=>n+(region.view==='both'?2:1),0);
+  const regionPaths=pathCount(Object.values(bodySource.regions));
+  const musclePaths=pathCount(MuscleWork.groups.flatMap(group=>group.regions).map(id=>bodySource.regions[id]));
+  const jointPaths=pathCount(Object.values(bodySource.regions).filter(region=>region.kind==='joint'));
+
   if (!bodySource.visuals) Object.values(bodySource.images).forEach(file => runtime.add(file));
   for (const match of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
   for (const match of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"/g)) if (!/^(?:https?:)?\/\//.test(match[1])) runtime.add(match[1]);
@@ -90,12 +98,12 @@ async function main() {
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     report.checks.simplifiedNavigation=true;
     await page.locator('[data-a="dashboardAnalytics"]').click();
-    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),19,'18 muscle groups across 19 selectable front/back regions');
-    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardJoint"]').count(),4,'four visible joint regions, including both hip views');
-    assert.equal(await page.locator('.db-comparison-row').count(),18,'18 comparison rows including disclosure');
+    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),musclePaths,'all muscle groups have their selectable front/back regions');
+    assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardJoint"]').count(),jointPaths,'all visible joint regions, including both hip views');
+    assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length,'all muscle comparison rows including disclosure');
     assert.equal(await page.locator('.db-body-svg g[data-view="front"]').count(),1);
     assert.equal(await page.locator('.db-body-svg g[data-view="back"]').count(),1);
-    report.checks.dashboardAnatomy18=true;
+    report.checks.dashboardAnatomy={groups:MuscleWork.groups.length,musclePaths,jointPaths};
 
     // The fresh device has no recorded personal workouts. Exercise the accessible
     // group disclosure and keyboard selection without creating any history.
@@ -113,6 +121,12 @@ async function main() {
     await triceps.press('Enter');
     assert.equal(await page.locator('#db-group-title').innerText(),'Triceps');
     report.checks.figureKeyboard=true;
+    const neck=page.locator('.db-body-svg g[data-view="back"] .db-region[data-id="neck"]');
+    await neck.scrollIntoViewIfNeeded();await neck.focus();await neck.press('Enter');
+    assert.equal(await page.locator('#db-group-title').innerText(),MuscleWork.groups.find(group=>group.id==='neck').label);
+    assert.equal(await page.locator('.db-body-svg .db-region[data-id="neck"][aria-pressed="true"]').count(),2);
+    report.checks.neckDashboardKeyboard=true;
+
 
     const store = () => page.evaluate(()=>Object.fromEntries(['mt.data.v1','mt.settings','mt.weeks','mt.skips'].map(key=>[key,localStorage.getItem(key)])));
     const totals = async () => ({
@@ -177,12 +191,19 @@ async function main() {
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
     await page.getByRole('button',{name:'Filter vježbi',exact:true}).click();
     await page.locator('.filtfig').waitFor();
-    assert.equal(await page.locator('.filtfig [data-region]').count(),23);
+    assert.equal(await page.locator('.filtfig [data-region]').count(),regionPaths);
     assert.equal(await page.locator('.filtfig [data-region="hip_joints"]').count(),2);
     assert.equal(await page.locator('.filtfig .body-art').count(),2);
     assert.equal(await page.locator('.filtfig [data-region="front_shoulders"]').count(),1);
     assert.equal(await page.locator('.filtfig [data-region="back_rear_shoulders"]').count(),1);
-    report.checks.anatomy21RegionsBothHips=true;
+    assert.equal(await page.locator('.filtfig [data-region="neck"]').count(),2);
+    const filterNeck=page.locator('.filtfig g[data-view="front"] [data-region="neck"]');
+    await filterNeck.scrollIntoViewIfNeeded();await filterNeck.focus();await filterNeck.press('Enter');
+    assert.equal(await page.locator('.filtfig [data-region="neck"].is-prime').count(),2);
+    assert.equal(await page.locator('.fsheet .zch [data-v="neck"]').innerText(),bodySource.regions.neck.label_hr);
+    report.checks.anatomySharedRegions={ids:Object.keys(bodySource.regions).length,paths:regionPaths,sharedHipPaths:2,sharedNeckPaths:2,neckFilterKeyboard:true};
+    await filterNeck.focus();await filterNeck.press('Enter');
+    assert.equal(await page.locator('.filtfig [data-region="neck"].is-prime').count(),0,'restore unfiltered catalogue before unrelated exercise checks');
     await page.keyboard.press('Escape');
     await page.locator('.tabbar [data-tab="dashboard"]').click();
     await page.locator('.db-quick [data-a="dashboardProtocols"]').click();

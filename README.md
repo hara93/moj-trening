@@ -32,11 +32,11 @@ Filmski player prikazuje jednu fazu vježbe preko pune širine, uz kontrole prek
 
 U uređivanju protokola svaka vježba ima **Dio treninga**: Priprema, Snaga, Kondicija ili vlastiti naziv. Ista vježba može biti u različitim dijelovima; superset mijenja dio zajedno. Vježbe bez odabranog dijela ostaju pod **Glavni dio**. Prozor s gornjom crticom zatvara se povlačenjem crtice prema dolje ili dodirom.
 
-Prije pokretanja otvorena vježba ima **Uredi serije** za ovu izvedbu i **Uredi trening** za trajno spremanje u protokol. Uređivanje treninga zadržava već unesene doze i otvara odabranu vježbu. Info ikona na fotografiji je bijeli obris s prozirnom podlogom.
+U otvorenoj vježbi ponavljanja i kilograme uređuješ izravno u redovima. **+ Dodaj seriju** preuzima zadnju dozu i prikazuje novi red bez dodatnog prozora. Info ikona na fotografiji ostaje bijeli obris s prozirnom podlogom. Figura uključuje odvojene **Mišiće vrata** sprijeda i straga, s jednom zajedničkom oznakom.
 
 **Dnevnik** se otvara preko playera i pauzira timer dok uređuješ. Otvorena vježba pokazuje sve serije, a ostale se mogu proširiti. Oprema, zamjena i vraćanje vježbe, povijest, trendovi, bilješke i uređivanje serija nalaze se uz vježbu. **Prijeđi na vježbu** i naslovi dijelova omogućuju navigaciju bez izmišljanja dovršenih serija. Bilješke se spremaju uz izvedbu u povijesti. Odmor mijenjaj tipkama **− / +** po 15 sekundi; pripremu dodaj za 5, 10, 30 ili 60 sekundi. Izbornik **…** otvara postavke, tempo, zvuk, dijelove, dijeljenje plana, vodič i završetak. Rezultati se pregledavaju prije spremanja.
 
-Trenutna verzija je 1.20.3. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.20.4. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 U mišićnoj figuri oznaka **Odabrano** prikazuje trenutačno odabranu skupinu. Odabir ne znači da je skupina trenirana i ne mijenja spremljene rezultate. Boje rada i plana ostaju odvojene od oznake odabira.
 

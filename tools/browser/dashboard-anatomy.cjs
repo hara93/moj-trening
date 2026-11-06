@@ -8,6 +8,7 @@ const MuscleWork = require('../../muscle-work.js');
 const { artifacts, engine, fixture: baseFixture, launch, repo, serve } = require('./runtime.cjs');
 const source = JSON.parse(fs.readFileSync(path.join(repo, 'tools/build/body-regions.json'), 'utf8'));
 const groups = MuscleWork.groups;
+assert.ok(groups.some(group=>group.id==='neck'&&group.regions.includes('neck')),'neck has a muscle-work group');
 const now = new Date('2026-11-06T12:00:00+01:00');
 const A = (page, name) => page.locator('[data-a="' + name + '"]');
 const body = '.db-body-svg';
@@ -33,6 +34,15 @@ function fixture() {
   data.log = [{ historyId: 'anatomy-record', kind: 'protocol', refId: 'anatomy-recorded', name: 'Ispit figure · odrađeno',
     at: Date.parse('2026-11-05T10:00:00+01:00'), secs: 600, items: [item],
     muscleWork: [MuscleWork.pack(MuscleWork.completedItem(recorded, item))] }];
+  const neckPrimary=exercise('anatomy-neck-primary',{prime:['neck'],sec:[]});
+  const neckSecondary=exercise('anatomy-neck-secondary',{prime:['front_biceps'],sec:['neck']});
+  data.exercises[neckPrimary.id]=neckPrimary;data.exercises[neckSecondary.id]=neckSecondary;
+  const primaryItem={...item,exId:neckPrimary.id},secondaryItem={...item,exId:neckSecondary.id,sets:1,setsDone:1,repsList:[8],kgList:[20],rirList:[2]};
+  data.protocols['anatomy-neck']={id:'anatomy-neck',name:'Zabilježeni rad vrata',days:[],items:[primaryItem,secondaryItem]};
+  data.log.push({historyId:'anatomy-neck-record',kind:'protocol',refId:'anatomy-neck',name:'Zabilježeni rad vrata',
+    at:Date.parse('2026-11-04T10:00:00+01:00'),secs:300,items:[primaryItem,secondaryItem],
+    muscleWork:[MuscleWork.pack(MuscleWork.completedItem(neckPrimary,primaryItem)),MuscleWork.pack(MuscleWork.completedItem(neckSecondary,secondaryItem))]});
+
   return data;
 }
 
@@ -110,14 +120,34 @@ async function tapGroup(page, group) {
       const p = new DOMPoint(sample.x, sample.y).matrixTransform(region.getScreenCTM());
       const x = Math.round(p.x), y = Math.round(p.y);
       let margin = 0;
-      for (const dx of [-1, 0, 1]) for (const dy of [-1, 0, 1]) if (hits(x + dx, y + dy)) margin++;
+      // Prefer a broad interior over a narrow neck/trapezius boundary: mobile
+      // Chromium adjusts touch coordinates within a small contact radius.
+      for (let dx=-5;dx<=5;dx++) for (let dy=-5;dy<=5;dy++) if (hits(x + dx, y + dy)) margin++;
       return { x, y, margin, centre: hits(x, y) };
     }).filter(p => p.centre).sort((a, b) => b.margin - a.margin);
     return candidates[0];
   }, { group: group.id, region, view, samples });
   assert.ok(point, 'a real screen-pixel tap target exists for ' + group.id);
+  await page.evaluate(()=>{
+    window.__anatomyTapEvents=[];
+    if(window.__anatomyTapBound)return;window.__anatomyTapBound=true;
+    for(const type of ['pointerdown','pointerup','pointercancel','touchstart','touchend','click'])document.addEventListener(type,event=>{
+      const target=event.target.closest?.('[data-a]');
+      window.__anatomyTapEvents.push({type,action:target?.dataset.a,id:target?.dataset.id,region:target?.dataset.region,
+        x:event.clientX,y:event.clientY,at:performance.now(),selected:document.getElementById('db-group-title')?.textContent});
+    },true);
+  });
   await page.touchscreen.tap(point.x, point.y);
-  assert.equal(await page.locator('#db-group-title').innerText(), group.label, 'tap selected ' + group.id);
+  // Wait for this single native action to finish rendering; never tap again
+  // or force a click when a target is too close to an anatomical boundary.
+  await page.waitForFunction(label=>document.getElementById('db-group-title')?.textContent===label,group.label,{timeout:1500}).catch(()=>{});
+  const title=await page.locator('#db-group-title').innerText();
+  if(title!==group.label){
+    const target=await page.evaluate(({x,y})=>{const node=document.elementFromPoint(x,y)?.closest('[data-a]');return {action:node?.dataset.a,id:node?.dataset.id,region:node?.dataset.region,tag:node?.tagName};},point);
+    await page.screenshot({path:path.join(artifacts,'dashboard-anatomy-'+engine+'-tap-failure-'+group.id+'.png')});
+    fs.writeFileSync(path.join(artifacts,'dashboard-anatomy-'+engine+'-tap-failure-'+group.id+'.json'),JSON.stringify({point,target,title,group,events:await page.evaluate(()=>window.__anatomyTapEvents)},null,2));
+  }
+  assert.equal(title, group.label, 'tap selected ' + group.id);
 }
 
 async function keyboardGroup(page, group) {
@@ -129,7 +159,7 @@ async function keyboardGroup(page, group) {
 async function selectedParts(page, group) {
   const state = await visibleState(page, group.regions[0]);
   assert.ok(state.fills.length > 0, group.id + ' has visible muscle forms');
-  const recorded = ['chest', 'triceps'].includes(group.id);
+  const recorded = ['chest', 'triceps', 'neck', 'biceps'].includes(group.id);
   if (!recorded) assert.ok(state.fills.every(s => blue(s.fill) && s.opacity > .16),
     group.id + ' selects actual closed parts in blue: ' + JSON.stringify(state.fills));
   assert.ok(state.fills.every(s => visibleColor(s.stroke) && s.strokeOpacity > 0 && s.strokeWidth >= 1.4 &&
@@ -177,6 +207,13 @@ async function colorStates(page, width) {
   await select('abs'); await selectedParts(page, abs);
   await page.locator('.db-anatomy').scrollIntoViewIfNeeded();
   await page.locator('.db-muscle').screenshot({ path: path.join(artifacts, 'dashboard-anatomy-' + engine + '-abs-keyboard-' + width + '.png') });
+  await select('neck');
+  assert.equal(await page.locator(body+' .db-region[data-id="neck"][aria-pressed="true"]').count(),2,'both neck views share one selected muscle group');
+  assert.equal(await page.locator('.db-detail-total strong').innerText(),'2,5','neck shows only its actual two direct and one secondary sets');
+  assert.deepEqual(await page.locator('.db-counts dd').allInnerTexts(),['2','1','1']);
+  assert.ok((await visibleState(page,'neck')).fills.every(s=>s.fill==='rgb(104, 208, 188)'&&s.opacity>.5),'recorded neck work paints both front/back forms green');
+  await page.locator('.db-anatomy').scrollIntoViewIfNeeded();
+  await page.locator('.db-muscle').screenshot({path:path.join(artifacts,'dashboard-anatomy-'+engine+'-neck-'+width+'.png')});
   const chestBefore = (await visibleState(page, 'front_chest')).fills;
   const tricepsBefore = (await visibleState(page, 'back_triceps')).fills;
   assert.ok(chestBefore.every(s => s.fill === 'rgb(104, 208, 188)' && s.opacity > .5), 'direct work remains green');
@@ -221,7 +258,7 @@ async function colorStates(page, width) {
       assert.deepEqual(await geometry(page, '.filtfig'), dashboardGeometry, 'dashboard and library use identical visible muscle forms');
       assert.deepEqual(errors, []);
       results.push({ width, touchGroups: groups.length, keyboardGroups: groups.length, absParts: 8,
-        geometryMatchesLibrary: true, emptySelectionIsNotWork: true, directGreenIndirectBlueForecastPurplePreserved: true });
+        geometryMatchesLibrary: true, emptySelectionIsNotWork: true, directGreenIndirectBlueForecastPurplePreserved: true,neckRecordedDirect:2,neckRecordedSecondary:1,neckEquivalent:2.5 });
       await context.close();
     }
     const report = { engine, passed: true, results, artifacts };

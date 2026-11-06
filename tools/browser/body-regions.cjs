@@ -7,6 +7,9 @@ const path = require('node:path');
 const { artifacts, engine, fixture: baseFixture, launch, repo, serve, withOffline } = require('./runtime.cjs');
 const source = JSON.parse(fs.readFileSync(path.join(repo, 'tools/build/body-regions.json'), 'utf8'));
 const ids = Object.keys(source.regions);
+const regionPathCount = Object.values(source.regions).reduce((count,region)=>count+(region.view==='both'?2:1),0);
+const MuscleWork = require('../../muscle-work.js');
+assert.equal(source.regions.neck?.view,'both','neck is one region shared by front/back');
 const results = [];
 const A = (page, action) => page.locator('[data-a="' + action + '"]');
 const byId = (page, action, id) => page.locator('[data-a="' + action + '"][data-id="' + id + '"]');
@@ -24,7 +27,10 @@ function fixture() {
     'body-primary': exercise('body-primary', 'glavni', { prime: ['front_chest'], sec: ['back_triceps', 'hip_joints'] }, ['Prsa', 'Ruke', 'Kuk']),
     'body-secondary': exercise('body-secondary', 'pomoćni', { prime: ['back_triceps'], sec: ['front_chest'] }, ['Ruke', 'Prsa']),
     'body-legacy-hip': exercise('body-legacy-hip', 'stari Kuk', undefined, ['Kuk']),
-    'body-joint': exercise('body-joint', 'samo zglob', { prime: ['hip_joints'], sec: [] }, ['Kuk'])
+    'body-joint': exercise('body-joint', 'samo zglob', { prime: ['hip_joints'], sec: [] }, ['Kuk']),
+    'body-neck-primary': exercise('body-neck-primary', 'vrat glavni', { prime: ['neck'], sec: [] }, ['Vrat']),
+    'body-neck-secondary': exercise('body-neck-secondary', 'vrat pomoćni', { prime: ['front_biceps'], sec: ['neck'] }, ['Ruke','Vrat']),
+    'body-legacy-whole': {...exercise('body-legacy-whole', 'staro cijelo tijelo', undefined, ['Cijelo tijelo']),name:'Staro cijelo tijelo'}
   };
   data.protocols = { 'body-protocol': {
     id: 'body-protocol', name: 'Ispit figure · trening', tag: 'Teretana', days: [],
@@ -139,8 +145,8 @@ async function geometry(page) {
   }, source);
   assert.deepEqual(value.ids, ids);
   assert.deepEqual(value.geom, source.geom);
-  assert.equal(value.ids.length, 21);
-  assert.equal(value.count, 23);
+  assert.equal(value.ids.length, ids.length);
+  assert.equal(value.count, regionPathCount);
   assert.deepEqual(value.mismatches, []);
   assert.deepEqual(value.badSamples, []);
   assert.deepEqual(value.overlaps, []);
@@ -188,7 +194,26 @@ async function filter(page, width) {
   assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), 0);
   assert.equal(await page.locator('.fsheet .zch .afc').count(), 0);
   await A(page, 'sheetDone').click();
-  results.push({ check: 'filter', width, sampleHitChecks: hitChecks.length, legacyHipIncluded: true, hipChips: 1, sharedHipPaths: 2 });
+  // Neck is independently selectable on either figure. An old whole-body
+  // fallback must not silently acquire this newly introduced region.
+  await page.locator('#libq').fill('');await A(page,'eqSheet').click();
+  await tapRegion(page,figure,'neck','front');
+  assert.equal(await page.locator(figure+' [data-region="neck"].is-prime').count(),2);
+  assert.equal(await page.locator('.fsheet .zch .afc').count(),1);
+  assert.equal(await page.locator('.fsheet .zch .afc').innerText(),source.regions.neck.label_hr);
+  await A(page,'sheetDone').click();
+  assert.deepEqual(await A(page,'openEx').evaluateAll(nodes=>nodes.map(n=>n.dataset.id).sort()),['body-neck-primary','body-neck-secondary']);
+  await A(page,'eqSheet').click();
+  const backNeck=page.locator(figure+' g[data-view="back"] [data-region="neck"]');
+  await backNeck.focus();await page.keyboard.press('Enter');
+  assert.equal(await page.locator(figure+' [data-region="neck"].is-prime').count(),0,'keyboard clears both neck views');
+  await backNeck.focus();await page.keyboard.press('Space');
+  assert.equal(await page.locator(figure+' [data-region="neck"].is-prime').count(),2,'keyboard selects both neck views');
+  await tapRegion(page,figure,'neck','back');
+  assert.equal(await page.locator(figure+' [data-region="neck"].is-prime').count(),0);
+  await A(page,'sheetDone').click();
+  results.push({ check: 'filter', width, sampleHitChecks: hitChecks.length, legacyHipIncluded: true, hipChips: 1, sharedHipPaths: 2,
+    neckSharedBothViews:true,neckTouchAndKeyboard:true,legacyWholeBodyExcludesNeck:true });
 }
 
 async function editor(page, width) {
@@ -202,9 +227,9 @@ async function editor(page, width) {
       assert.ok(state.every(s => s.prime === (phase === 'prime') && s.sec === (phase === 'sec')),
         'editor tap ' + width + ' px ' + phase + '/' + id + ': ' + JSON.stringify(state));
     }
-    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 23 : 0, phase + ' primary');
-    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 23 : 0, phase + ' secondary');
-    assert.equal(await page.locator('.mpick .zch .afc').count(), phase === 'off' ? 0 : 21, phase + ' chips');
+    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? regionPathCount : 0, phase + ' primary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? regionPathCount : 0, phase + ' secondary');
+    assert.equal(await page.locator('.mpick .zch .afc').count(), phase === 'off' ? 0 : ids.length, phase + ' chips');
     assert.equal(await page.locator('.mpick .zch [data-v="hip_joints"]').count(), phase === 'off' ? 0 : 1);
     await noOverflow(page, '.mpick', 'editor-' + width + '-' + phase);
     if (phase === 'prime') await page.screenshot({ path: path.join(artifacts, 'body-' + engine + '-editor-' + width + '.png') });
@@ -214,10 +239,28 @@ async function editor(page, width) {
     assert.deepEqual((saved.muscles?.prime || []).slice().sort(), phase === 'prime' ? ids.slice().sort() : []);
     assert.deepEqual((saved.muscles?.sec || []).slice().sort(), phase === 'sec' ? ids.slice().sort() : []);
     await openEditor(page);
-    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? 23 : 0, 'reloaded ' + phase + ' primary');
-    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? 23 : 0, 'reloaded ' + phase + ' secondary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-prime').count(), phase === 'prime' ? regionPathCount : 0, 'reloaded ' + phase + ' primary');
+    assert.equal(await page.locator(figure + ' .body-rg.is-on').count(), phase === 'sec' ? regionPathCount : 0, 'reloaded ' + phase + ' secondary');
   }
-  results.push({ check: 'editor', width, ids: 21, persistedPhases: ['prime', 'secondary', 'off'] });
+  // Verify the new ID survives the complete editor/save/import sanitizer path
+  // as both primary and secondary work, without relying on a global count.
+  for(const phase of ['prime','sec']){
+    const target=page.locator(figure+' g[data-view="front"] [data-region="neck"]');
+    await target.focus();await page.keyboard.press('Enter');
+    assert.equal(await page.locator(figure+' [data-region="neck"].'+(phase==='prime'?'is-prime':'is-on')).count(),2);
+    await A(page,'saveEx').click();await A(page,'saveEx').waitFor({state:'hidden'});
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')).exercises['body-editor']);
+    assert.deepEqual(saved.muscles,phase==='prime'?{prime:['neck'],sec:[]}:{prime:[],sec:['neck']});
+    assert.ok(saved.zones.includes('Vrat'));
+    const profile=MuscleWork.profile(saved);
+    assert.equal(profile.eligibility,'eligible');
+    assert.deepEqual(profile.primary,phase==='prime'?['neck']:[]);
+    assert.deepEqual(profile.secondary,phase==='sec'?['neck']:[]);
+    await openEditor(page);
+    assert.equal(await page.locator(figure+' [data-region="neck"].'+(phase==='prime'?'is-prime':'is-on')).count(),2);
+    if(phase==='prime')await page.screenshot({path:path.join(artifacts,'body-'+engine+'-neck-editor-'+width+'.png')});
+  }
+  results.push({ check: 'editor', width, ids: ids.length, persistedPhases: ['prime', 'secondary', 'off'],neckPrimarySecondaryProfileRoundtrip:true });
 }
 
 async function instructionAndDashboard(page, width) {

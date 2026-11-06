@@ -2,6 +2,7 @@
 
 // Fresh contexts and a synthetic two-exercise workout only. No personal profile.
 const assert = require('node:assert/strict');
+const MuscleWork = require('../../muscle-work.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
@@ -106,7 +107,7 @@ async function navigation(page, width) {
   await page.locator('[data-a="progressMetric"][data-v="volume"]').click();
   assert.equal(await page.locator('[data-a="progressMetric"][data-v="volume"]').getAttribute('aria-pressed'),'true');
   await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
-  await page.locator('.db-analytics').waitFor();assert.equal(await page.locator('.db-comparison-row').count(),18);
+  await page.locator('.db-analytics').waitFor();assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length);
   await noOverflow(page,'.db-analytics','muscles '+width);
   await page.locator('.view [data-a="back"]').first().click();await page.locator('.progress-view.pg-cinema').waitFor();
   await page.locator('[data-a="analyticsMode"][data-v="load"]').click();

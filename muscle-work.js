@@ -19,7 +19,8 @@
     ['lats','Široki leđni mišići','back_latissimus'], ['lowerBack','Donja leđa','back_lower_back'],
     ['rearDelts','Stražnja ramena','back_rear_shoulders'], ['triceps','Triceps','back_triceps'],
     ['glutes','Gluteus','back_glutes'], ['gluteMedius','Gluteus medius','back_gluteus_medius'],
-    ['hamstrings','Stražnja loža','back_hamstrings'], ['calves','Listovi','back_calves']
+    ['hamstrings','Stražnja loža','back_hamstrings'], ['calves','Listovi','back_calves'],
+    ['neck','Mišići vrata','neck']
   ];
   var groups = GROUP_ROWS.map(function (r) { return { id:r[0], label:r[1], regions:[r[2]] }; });
   var groupIds = groups.map(function (g) { return g.id; }), regionToGroup = {};
@@ -53,7 +54,7 @@
     var primes = Array.isArray(muscle.prime) ? muscle.prime.filter(function (r) { return typeof r === 'string'; }) : [];
     var seconds = Array.isArray(muscle.sec) ? muscle.sec.filter(function (r) { return typeof r === 'string'; }) : [];
     var regions = unique(primes.concat(seconds));
-    // A hip joint is selectable anatomy, not a nineteenth muscle group. Only
+    // A hip joint is selectable anatomy, not a muscle group. Only
     // new profiles use this rule; replay never reclassifies stored snapshots.
     var jointOnly = regions.length === 1 && regions[0] === 'hip_joints';
     if (jointOnly) eligibility = 'excluded';
@@ -160,7 +161,10 @@
       SOURCE.indexOf(x.source) === -1 || ELIGIBILITY.indexOf(x.eligibility) === -1 ||
       ELIGIBILITY_SOURCE.indexOf(x.eligibilitySource) === -1 || COMPLETION.indexOf(x.completion) === -1 ||
       !listValid(x.primary,groupIds) || !listValid(x.secondary,groupIds) || !listValid(x.unassignedRegions) ||
-      x.unassignedRegions.some(function (r) { return has(regionToGroup,r); }) ||
+      // Neck was added after the original mw1 registry. An old unknown-neck
+      // snapshot stays unknown; it never borrows today's new anatomical credit.
+      x.unassignedRegions.some(function (r) { return has(regionToGroup,r) &&
+        (r !== 'neck' || x.primary.indexOf('neck') !== -1 || x.secondary.indexOf('neck') !== -1); }) ||
       x.secondary.some(function (g) { return x.primary.indexOf(g) !== -1; }) ||
       (x.plannedSets !== null && (!integer(x.plannedSets) || x.plannedSets === 0)) ||
       (x.completedSets !== null && !integer(x.completedSets))) return null;

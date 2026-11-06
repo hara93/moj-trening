@@ -2,6 +2,7 @@
 
 // Synthetic data only: no existing browser profile or user backup is opened.
 const assert = require('node:assert/strict');
+const MuscleWork = require('../../muscle-work.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const { artifacts, engine, launch, serve, fixture: baseFixture } = require('./runtime.cjs');
@@ -173,7 +174,7 @@ async function homeChecks(page) {
     assert.deepEqual(await action(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>n.dataset.v)),['progress','load']);
     await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
     await page.locator('.db-analytics .db-muscle').waitFor();
-    assert.equal(await page.locator('.db-comparison-row').count(),18);
+    assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length);
     await action(page,'back').first().click();
     await page.locator('.pg-cinema').waitFor();
   }

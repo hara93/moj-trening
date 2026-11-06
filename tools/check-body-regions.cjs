@@ -10,7 +10,7 @@ const app=read('app.js');
 const helpers=new Function('window','BODY',app.slice(app.indexOf('const MUSCLE_ZONE ='),app.indexOf('// 1.8: equipment tiles'))+'\nreturn {exMuscles,musclesZones,bodyFig};')({BODY:B},B);
 
 test('new anatomy retains every stored region ID, with one bilateral hip joint and native artwork frames',()=>{
-  assert.deepEqual(Array.from(B.ids),legacy.concat('hip_joints'));
+  assert.deepEqual(Array.from(B.ids),legacy.concat('hip_joints','neck'));
   assert.equal(B.regions.hip_joints.view,'both');assert.equal(B.regions.hip_joints.kind,'joint');
   for(const view of ['front','back']){
     const png=fs.readFileSync(path.join(repo,source.images[view]));
@@ -24,9 +24,21 @@ test('new anatomy retains every stored region ID, with one bilateral hip joint a
     assert.ok(!html.includes('<image'),'muscle forms are native closed SVG shapes');
   }
   const svg=B.svg({prime:['hip_joints'],tappable:true});
-  assert.equal((svg.match(/data-region=/g)||[]).length,23);
+  assert.equal((svg.match(/data-region=/g)||[]).length,25);
   assert.equal((svg.match(/data-region="hip_joints"/g)||[]).length,2);
   assert.match(B.svg(),/aria-hidden="true" focusable="false" pointer-events="none"/);
+});
+
+test('neck is one selectable hatched muscle group shared by the front and back views',()=>{
+  assert.equal(B.regions.neck.label_hr,'Mišići vrata');assert.equal(B.regions.neck.kind,'muscle');assert.equal(B.regions.neck.view,'both');
+  const svg=B.svg({prime:['neck'],tappable:true});
+  assert.equal((svg.match(/data-region="neck"/g)||[]).length,2);
+  assert.equal((svg.match(/is-prime[^>]+data-region="neck"/g)||[]).length,2);
+  assert.equal((svg.match(/class="body-muscle" data-muscle="neck"/g)||[]).length,4);
+  for(const view of ['front','back']){
+    assert.ok(source.regions.neck.samples[view].length>=2);
+    assert.ok(source.regions.neck.d[view].split('Z').filter(part=>part.trim()).length>=2);
+  }
 });
 
 test('clearing the new hip selection does not resurrect inferred muscles; old Kuk exercises keep their fallback',()=>{

@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.20.4 — 6. 11. 2026.
+
+- Vraćen je jednostavan prikaz vježbe s izravnim unosom ponavljanja, sekundi i kilograma. Uklonjene su nove tipke za zasebno uređivanje; bijela prozirna info ikona ostaje na fotografiji.
+- **+ Dodaj seriju** dodaje novi red ispod tablice i preuzima zadnju dozu, uključujući nepoznatu težinu. Postojeći unosi ostaju sačuvani, a dodavanje ne bilježi odrađen rad. Tijekom treninga odrađene serije ostaju zaključane.
+- Figura ima zasebne šrafirane oblike mišića vrata sprijeda i straga. Jedna oznaka **Mišići vrata** radi u filtrima, uređivanju vježbe i mišićnom pregledu. Stari zapisi i vježbe ne dobivaju automatski pripisani rad vrata.
+- Proširene su provjere izravnog dodavanja serija, odabira vrata i očuvanja ranijih mišićnih zapisa.
+
 ## 1.20.3 — 6. 11. 2026.
 
 - Otvorena vježba ima vidljivu tipku **Uredi serije** prije pokretanja. **Uredi trening** otvara protokol s odabranom vježbom i već unesenim dozama; trajne promjene spremaju se u uređivanju treninga.
