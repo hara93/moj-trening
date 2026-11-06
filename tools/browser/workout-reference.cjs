@@ -58,6 +58,35 @@ async function metrics(locator) {
   });
 }
 
+async function seriesFooterOrder(detail, expectedRows, label) {
+  const table = detail.locator('.workout-set-table');
+  const add = detail.locator('.workout-page-series > [data-a="workoutAddSet"]');
+  const footer = detail.locator(':scope > .workout-footer');
+  assert.equal(await table.locator('.workout-set-row').count(), expectedRows, label + ': every prescribed set remains present');
+  assert.equal(await add.count(), 1, label + ': one AddSet action follows the table');
+  assert.equal(await add.innerText(), 'Dodaj seriju');
+  assert.equal(await add.isEnabled(), true, label + ': another set can be added');
+  const order = await detail.evaluate(node => {
+    const table = node.querySelector('.workout-set-table');
+    const add = node.querySelector('.workout-page-series > [data-a="workoutAddSet"]');
+    const footer = node.querySelector(':scope > .workout-footer');
+    return { addOutsideTable: !table.contains(add),
+      addAfterTable: !!(table.compareDocumentPosition(add) & Node.DOCUMENT_POSITION_FOLLOWING),
+      footerAfterAdd: !!(add.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING) };
+  });
+  assert.deepEqual(order, { addOutsideTable: true, addAfterTable: true, footerAfterAdd: true }, label + ': table → AddSet → footer DOM order');
+  const bounds = await metrics(table), addSet = await metrics(add), footerBounds = await metrics(footer);
+  const last = await metrics(table.locator('.workout-set-row').last());
+  assert.ok(last.y >= bounds.y && last.y + last.height <= bounds.y + bounds.height + 1, label + ': complete last row stays inside the table');
+  const tableGap = addSet.y - bounds.y - bounds.height;
+  assert.ok(tableGap >= 8 && tableGap <= 14, label + ': compact gap from the complete table to AddSet: ' + tableGap);
+  assert.ok(addSet.height >= 44 && addSet.height <= 48, label + ': AddSet retains its touch target');
+  near(addSet.width, bounds.width, label + ': AddSet aligns with the table width', 1);
+  const footerGap = footerBounds.y - addSet.y - addSet.height;
+  assert.ok(footerGap >= 12 && footerGap <= 24, label + ': footer follows AddSet without overlap or excess gap: ' + footerGap);
+  return { table: bounds, addSet, footer: footerBounds, tableGap, footerGap, rows: expectedRows };
+}
+
 function near(actual, expected, label, tolerance = 0.15) {
   assert.ok(Math.abs(actual - expected) <= tolerance,
     label + ': ' + actual + ' expected ' + expected);
@@ -212,21 +241,21 @@ async function run() {
     near(glyph.height, 16, 'Reference icon height');
     assert.equal(glyph.strokeWidth, '1.6px');
     const cta = await metrics(detail.locator('.workout-footer .btn').first());
-    const tableBounds = await metrics(table);
-    const detailFooter = await metrics(detail.locator(':scope > .workout-footer'));
-    assert.ok(detailFooter.y - tableBounds.y - tableBounds.height >= 12 && detailFooter.y - tableBounds.y - tableBounds.height <= 24, 'Exercise footer follows the complete table');
+    const seriesOrder = await seriesFooterOrder(detail, 3, '375px three-set plan');
+    const detailFooter = seriesOrder.footer;
     assert.ok(cta.y - detailFooter.y >= 12 && cta.y - detailFooter.y <= 17, 'Start button has a compact inset');
     assert.ok(cta.height >= 48 && cta.height <= 52, 'Start button remains easy to tap');
     assert.equal(cta.fontSize, '13px');
     assert.equal(cta.fontWeight, '600');
     assert.equal(cta.borderRadius, '28px');
     await screenshot(page, 'exercise-375');
-    evidence.exercise = { cover, heading, input, glyph, cta, footer: detailFooter };
+    evidence.exercise = { cover, heading, input, glyph, cta, footer: detailFooter, seriesOrder };
     await page.setViewportSize({ width: 320, height: 812 });
     assert.equal((await metrics(detail.locator('h1'))).fontSize, '21px');
     contained(await wholeImage(detail.locator('.workout-detail-cover img')), 'Narrow exercise illustration');
     const narrow = await detail.evaluate(node => ({ width: node.clientWidth, scroll: node.scrollWidth }));
     assert.ok(narrow.scroll <= narrow.width + 1, '320px exercise remains within the viewport');
+    await seriesFooterOrder(detail, 3, '320px three-set plan');
     await screenshot(page, 'exercise-320');
     await detail.locator('[data-a="workoutClose"]').click();
     await overview.waitFor();
@@ -274,6 +303,7 @@ async function run() {
         const r = row.getBoundingClientRect(); return { top:r.top, bottom:r.bottom, height:r.height };
       }));
       assert.ok(rowBounds.every(row => row.height >= 44), 'Every set remains separately editable');
+      const seriesOrder = await seriesFooterOrder(dense, 5, width + 'px five-set plan');
       const bounds = await dense.evaluate(node => ({ available:node.clientWidth, content:node.scrollWidth }));
       assert.ok(bounds.content <= bounds.available + 1, 'Dense form does not overflow horizontally');
       await screenshot(page, 'pair-five-' + width);
@@ -281,7 +311,7 @@ async function run() {
       const lastRow = await metrics(denseTable.locator('.workout-set-row').last());
       assert.ok(lastRow.y >= 0 && lastRow.y + lastRow.height <= height + 1, 'Last complete set can be brought into view');
       assert.equal(await denseTable.locator('[data-field="reps"]').last().isEnabled(), true);
-      denseEvidence.push({ width, height, image, fields:size, rows:rowBounds, scrolledLastRow:lastRow });
+      denseEvidence.push({ width, height, image, fields:size, rows:rowBounds, scrolledLastRow:lastRow, seriesOrder });
     }
     await denseTable.locator('[data-field="reps"]').last().fill('12');
     await denseTable.locator('[data-field="kg"]').nth(2).fill('12.5');

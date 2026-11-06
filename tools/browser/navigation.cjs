@@ -8,6 +8,19 @@ const named=(p,name,id)=>p.locator('[data-a="'+name+'"][data-id="'+id+'"]');
 const data=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')));
 const draft=p=>p.evaluate(()=>JSON.parse(sessionStorage.getItem('mt.unsavedDraft.v1')));
 const back=p=>p.evaluate(()=>history.back());
+async function forwardPastObsoleteGuard(p){
+  await p.evaluate(()=>new Promise((resolve,reject)=>{
+    let forwarded=false;const seen=[];
+    const cleanup=()=>{clearTimeout(timeout);removeEventListener('popstate',onPop);};
+    const onPop=event=>{
+      const guard=event.state?.mtNavigation?.guard;seen.push(guard??null);
+      if(guard===1)forwarded=true;
+      else if(forwarded&&guard===0){cleanup();resolve();}
+    };
+    const timeout=setTimeout(()=>{cleanup();reject(new Error('Forward did not remove its obsolete guard: '+JSON.stringify({seen,url:location.href,state:history.state})));},6000);
+    addEventListener('popstate',onPop);history.forward();
+  }));
+}
 async function waitView(p,name){await p.locator('#app[data-key^="'+name+':"]').waitFor();}
 async function advance(p,seconds){const n=await p.evaluate(()=>Date.now());await p.clock.setFixedTime(new Date(n+seconds*1000));await p.waitForTimeout(350);}
 async function home(p){await p.reload();await p.getByRole('button',{name:'Moj pregled',exact:true}).waitFor();}
@@ -81,8 +94,10 @@ async function run(){
 
   // The guard is only a child-screen entry, not a trap at the root.
   await home(p);await p.waitForFunction(()=>history.state?.mtNavigation?.guard!==1);
-  await p.evaluate(()=>history.forward());await p.waitForTimeout(200);await p.waitForFunction(()=>history.state?.mtNavigation?.guard!==1);
-  await p.evaluate(()=>history.back());await p.waitForURL(/previous=1/);
+  // Waiting for guard !== 1 immediately after forward() can read the original
+  // guard 0 before traversal starts. Observe both native popstate events first.
+  await forwardPastObsoleteGuard(p);
+  await Promise.all([p.waitForURL(/previous=1/),back(p)]);
   assert.deepEqual(errors,[]);console.log(engine+' navigation/accessibility regression passed; native unload warnings: '+dialogs.length);
  }finally{await ctx.close();await browser.close();await server.close();}
 }
