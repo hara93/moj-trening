@@ -1,5 +1,13 @@
 # Promjene
 
+## 1.20.3 — 6. 11. 2026.
+
+- Otvorena vježba ima vidljivu tipku **Uredi serije** prije pokretanja. **Uredi trening** otvara protokol s odabranom vježbom i već unesenim dozama; trajne promjene spremaju se u uređivanju treninga.
+- Prvi dodir tipke radi i dok je polje ponavljanja ili težine aktivno. Unos se provjerava prije otvaranja uređivanja ili pokretanja; nevaljan unos ostaje dostupan za ispravak.
+- Spremanje promjene u protokol zadržava potpise izvorne doze i pravilno resetira samo promijenjeno napredovanje. Stara privremena zamjena ne prenosi se kao privremena oznaka nakon trajnog spremanja; početna težina sprema se uz novi protokol.
+- Info ikona na slici je samo bijeli kružić sa slovom i, bez crnog diska ili zamućenja fotografije. Dodirna ploha ostaje 44 px.
+- Dodane su provjere uređivanja prije početka, odustajanja, spremanja, ponovnog otvaranja i prvog dodira u Chromeu i WebKitu.
+
 ## 1.20.2 — 6. 11. 2026.
 
 - Dijelovi treninga određuju se pri slaganju protokola. Uklonjeno je automatsko razvrstavanje prema kategoriji vježbe: Dead bug ili Copenhagen mogu biti u Pripremi, Snazi ili vlastitom dijelu. Vježbe bez naslova pripadaju neutralnom Glavnom dijelu.

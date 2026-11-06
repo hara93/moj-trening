@@ -75,6 +75,7 @@ jobs:
           node tools/browser/cinema.cjs ${{ matrix.browser }}
           node tools/browser/sections.cjs ${{ matrix.browser }}
           node tools/browser/sheet-gesture.cjs ${{ matrix.browser }}
+          node tools/browser/prestart-edit.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -206,7 +206,11 @@ test('journal info sits over its thumbnail as a separate accessible button with 
   const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
   assert.match(css,/\.workout-journal-info\{position:absolute;left:calc\(var\(--wk-thumb\) - 40px\)/);
   assert.match(css,/\.workout-journal-info>button\{[^}]*width:44px;height:44px;min-width:44px;min-height:44px/);
-  assert.match(css,/\.workout-journal-info>button::before\{[^}]*width:24px;height:24px/);
+  assert.match(css,/\.workout-journal-info>button::before\{content:none\}/);
+  for(const selector of ['workout-media-info','workout-cinema-info']){
+    assert.match(css,new RegExp('\\.'+selector+' button::before\\{content:none\\}'));
+    assert.match(css,new RegExp('\\.'+selector+' button\\{[^}]*background:transparent;color:#fff'));
+  }
 });
 
 test('full exercise page preserves high-resolution media and the sole info slot over the image before fixed toolbar and table',()=>{

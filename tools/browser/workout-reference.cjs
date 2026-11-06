@@ -260,6 +260,16 @@ async function run() {
       near((await metrics(infoButton)).height, 44, 'Info touch height');
       near((await metrics(infoButton)).width, 44, 'Info touch width');
       near((await metrics(infoButton.locator('svg'))).width, 24, 'Quiet info glyph');
+      const infoAppearance=await infoButton.evaluate(button=>{
+        const css=getComputedStyle(button),disk=getComputedStyle(button,'::before'),glyph=getComputedStyle(button.querySelector('svg'));
+        return {background:css.backgroundColor,color:css.color,disk:disk.content,diskBackground:disk.backgroundColor,
+          backdrop:disk.backdropFilter||disk.webkitBackdropFilter||'none',glyphFill:glyph.fill};
+      });
+      assert.equal(infoAppearance.background,'rgba(0, 0, 0, 0)','photo remains visible behind the info target');
+      assert.equal(infoAppearance.color,'rgb(255, 255, 255)','info circle and letter are white');
+      assert.equal(infoAppearance.disk,'none','info has no generated disk behind it');
+      assert.equal(infoAppearance.backdrop,'none','info does not blur the photo');
+      assert.equal(infoAppearance.glyphFill,'none','white info circle has a transparent interior');
       const rowBounds = await denseTable.locator('.workout-set-row').evaluateAll(rows => rows.map(row => {
         const r = row.getBoundingClientRect(); return { top:r.top, bottom:r.bottom, height:r.height };
       }));
