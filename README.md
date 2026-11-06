@@ -26,7 +26,9 @@ U **Moj pregled → Napredak** dodirni naslov odjeljka za detalje ili ikonu **�
 
 ## Nadogradnje
 
-Trenutna verzija je 1.18.1. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.18.2. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+
+U mišićnoj figuri oznaka **Odabrano** prikazuje trenutačno odabranu skupinu. Odabir ne znači da je skupina trenirana i ne mijenja spremljene rezultate. Boje rada i plana ostaju odvojene od oznake odabira.
 
 Figura sprijeda i straga ima zasebne zatvorene mišićne oblike ispunjene šrafurom. Jasni razmaci odvajaju oblike, uključujući dijelove trbušnih mišića, bedara i listova. U uređivaču dodir označava glavni mišić, drugi dodir pomoćni, a treći uklanja oznaku. **Kukovi** su jedna oznaka za obje strane i oba prikaza, bez vidljivih kružića i bez zasebnih mišićnih bodova. Podlaktice su dostupne s obje strane figure. U prikazu uputa dodir samo prikazuje naziv i ulogu područja. Figura se crta kao SVG bez učitavanja slika. Referentni crteži ostaju u `assets/body/`, a uređiva geometrija, oblici i probne točke u `tools/build/body-regions.json`. Ponovna izgradnja: `python3 tools/build/build_body.py`.
 
@@ -83,6 +85,7 @@ node tools/browser/training-load.cjs
 node tools/browser/offline-bootstrap.cjs
 node tools/browser/workout-reference.cjs
 node tools/browser/body-regions.cjs
+node tools/browser/dashboard-anatomy.cjs
 ```
 
 Dodaj `webkit` na kraj naredbe za drugi preglednik. `CHROMIUM_PATH` i `WEBKIT_PATH` mogu zadati već instalirani preglednik; `MT_TEST_OUTPUT` mijenja mapu probnih izvještaja i slika (zadano privremena mapa). Provjere se pokreću i u `.github/workflows/checks.yml`.

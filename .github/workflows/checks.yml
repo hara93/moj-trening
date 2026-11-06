@@ -70,6 +70,7 @@ jobs:
           node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
           node tools/browser/workout-reference.cjs ${{ matrix.browser }}
           node tools/browser/body-regions.cjs ${{ matrix.browser }}
+          node tools/browser/dashboard-anatomy.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

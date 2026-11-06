@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.18.2 — 6. 11. 2026.
+
+- **Moj pregled** označava svaki odvojeni šrafirani oblik mišića, kao knjižnica. Uklonjen je zajednički okvir oko starih dodirnih ploha; i fokus tipkovnice prati pojedinačne oblike.
+- Odabrana skupina bez zabilježenog rada ima plavu oznaku **Odabrano**. Boje izravnog rada, neizravnog rada i plana zadržavaju svoje značenje, a odabir ne mijenja broj serija ni pokrivenost tjedna.
+
 ## 1.18.1 — 6. 11. 2026.
 
 - Mišići su zasebni zatvoreni SVG oblici, svaki ispunjen šrafurom i odvojen razmakom. Vanjski obris figure ima jasniji kontrast na tamnoj podlozi. Uklonjeni su vidljivi kružići za kukove iz svih prikaza; područje ostaje dostupno za označavanje i filtriranje preko iste oznake **Kukovi**.

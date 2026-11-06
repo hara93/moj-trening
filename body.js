@@ -54,7 +54,7 @@
           parts.forEach(function (d, i) {
             var fill = paint ? paint.fill : state === 'prime' ? 'var(--body-prime,var(--accent,#5789E8))' : 'var(--body-secondary,var(--accent,#5789E8))';
             var opacity = paint ? paint.opacity : state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
-            out += '<path class="body-muscle-fill' + (state ? ' is-' + state : '') + '" data-muscle="' + id + '" fill="' + esc(fill) + '" fill-opacity="' + esc(opacity) + '" stroke="none" d="' + d + '"/>';
+            out += '<path class="body-muscle-fill' + (state ? ' is-' + state : '') + ((paint && paint.selected) || o.selected === id ? ' body-part-selected' : '') + '" data-muscle="' + id + '" fill="' + esc(fill) + '" fill-opacity="' + esc(opacity) + '" stroke="none" d="' + d + '"/>';
             out += '<path class="body-muscle" data-muscle="' + id + '" vector-effect="non-scaling-stroke" fill="url(#' + key + 'hatch-' + i%2 + ')" d="' + d + '"/>';
           });
         });

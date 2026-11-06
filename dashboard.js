@@ -53,9 +53,10 @@
     Object.keys(byRegion).forEach(region => {
       const g = byRegion[region], actual = val((g.actual || {}).equivalent), planned = forecast && val((g.planned || {}).equivalent) > 0;
       const state = actual > 0 ? 'recorded' : planned ? 'forecast' : 'empty';
-      const fill = state === 'forecast' ? 'url(#db-forecast-fill)' : state === 'recorded' ? (val((g.actual || {}).direct) > 0 ? '#68D0BC' : '#89B3FC') : '#768293';
+      const picked = g.id === selected;
+      const fill = state === 'forecast' ? 'url(#db-forecast-fill)' : state === 'recorded' ? (val((g.actual || {}).direct) > 0 ? '#68D0BC' : '#89B3FC') : picked ? '#5789E8' : '#768293';
       appearance[region] = {state,planned};
-      fills[region] = {fill,opacity:state === 'empty' ? '.16' : '.86'};
+      fills[region] = {fill,opacity:state === 'empty' ? picked ? '.9' : '.16' : '.86',selected:picked};
     });
     let html = root.BODY.svg({size:250,tappable:true,cls:'db-body-svg',fills});
     html = html.replace(/<path class="body-rg[^\"]*" data-region="([a-z_]+)"([^>]*?)\/>/g, (all, region, rest) => {
@@ -85,7 +86,13 @@
       });
       return start + targets + hipControls + content;
     });
-    html = html.replace(/(<svg\b[^>]*>)/, '$1<defs><pattern id="db-forecast-fill" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#514169"/><path d="M-5 5 5-5M0 22 22 0M17 27 27 17" stroke="#C7ACFF" stroke-width="6"/></pattern></defs>');
+    // Keyboard focus follows the same individual pieces; hit paths never paint
+    // the former combined region over the visible gaps between muscle parts.
+    const focusStyle = groups.map(g => {
+      const selectors = list(g.regions).map(region => '.db-body-svg:has(.db-region[data-id="'+esc(g.id)+'"]:focus-visible) .body-muscle-fill[data-muscle="'+esc(region)+'"]');
+      return selectors.length ? selectors.join(',')+'{stroke:#FFFFFF;stroke-opacity:1;stroke-width:2;vector-effect:non-scaling-stroke}' : '';
+    }).join('');
+    html = html.replace(/(<svg\b[^>]*>)/, '$1<style>'+focusStyle+'</style><defs><pattern id="db-forecast-fill" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#514169"/><path d="M-5 5 5-5M0 22 22 0M17 27 27 17" stroke="#C7ACFF" stroke-width="6"/></pattern></defs>');
     return html;
   }
 
@@ -200,7 +207,7 @@
       (vm.daily?root.TodayView.card(vm.daily):'')+
       '<section class="db-overview" aria-label="Izvedba plana"><div><small>Ovaj tjedan</small><strong>'+fmt(summary.done)+'<span> / '+fmt(summary.planned)+'</span></strong><p>'+(val(summary.planned)?'termina iz plana odrađeno':'Nema termina u tjednom planu')+'</p></div><div><small>Danas</small><strong>'+fmt(summary.todayDone)+'<span> / '+fmt(summary.todayPlanned)+'</span></strong><p>'+(val(summary.todayPlanned)?'termina iz plana odrađeno':'Nema termina u današnjem planu')+'</p></div></section>'+
       '<section class="db-panel db-muscle" aria-labelledby="db-muscle-title"><div class="db-section-head"><div><p class="db-kicker">Zabilježeni podražaj</p><h2 id="db-muscle-title">Mišićni tjedan</h2></div></div><div class="db-anatomy-row"><div class="db-anatomy">'+bodyFigure(groups,selected,!!vm.forecast)+'</div>'+coverageRing(coverage,!!vm.forecast)+'</div>'+
-      '<p class="db-map-hint">Dodirni figuru ili odaberi skupinu iz usporedbe.</p><div class="db-legend"><span><i class="db-swatch db-swatch-direct"></i>Izravni rad</span><span><i class="db-swatch db-swatch-indirect"></i>Neizravni rad</span>'+(vm.forecast?'<span><i class="db-swatch db-swatch-plan"></i>Samo u planu</span>':'')+'<span><i class="db-swatch db-swatch-empty"></i>Bez zapisa</span></div>'+
+      '<p class="db-map-hint">Dodirni figuru ili odaberi skupinu iz usporedbe.</p><div class="db-legend"><span><i class="db-swatch db-swatch-selected"></i>Odabrano</span><span><i class="db-swatch db-swatch-direct"></i>Izravni rad</span><span><i class="db-swatch db-swatch-indirect"></i>Neizravni rad</span>'+(vm.forecast?'<span><i class="db-swatch db-swatch-plan"></i>Samo u planu</span>':'')+'<span><i class="db-swatch db-swatch-empty"></i>Bez zapisa</span></div>'+
       '<button type="button" class="db-forecast" role="switch" aria-checked="'+!!vm.forecast+'" data-a="dashboardForecast"><span><b>Uključi preostali plan</b><small>Od danas do nedjelje · bez promjene dnevnika</small></span><i aria-hidden="true"></i></button>'+
       (!hasKnownWork?'<p class="db-empty-copy db-first-step">'+(val((vm.quality||{}).missingSessions)?'Za dio odrađenih treninga nema spremljene raspodjele po mišićima.':list(vm.sessions).some(s=>s.status==='done')?'Trening je zabilježen. Ovaj tjedan još nema zabilježenih serija snage po mišićima.':'Ovdje ćeš nakon prvog treninga snage vidjeti koje si mišiće radio.')+'</p>':'')+
       groupDetail(vm,group)+groupPicker(groups,selected,!!vm.forecast)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';

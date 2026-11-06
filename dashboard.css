@@ -29,8 +29,8 @@
 .db-anatomy .db-body-svg{width:100%;height:auto;max-height:258px;--body-line:#C3CDDB}
 .db-anatomy .body-art{pointer-events:none}
 .db-region{transition:fill-opacity .15s,stroke .15s;cursor:pointer;outline:none;vector-effect:non-scaling-stroke}
-.db-region-selected{stroke:#DCE9FF;stroke-width:1.8;stroke-linejoin:round}
-.db-region:focus-visible{stroke:#FFFFFF;stroke-width:2.6}
+.db-body-svg .db-region-selected,.dashboard .db-body-svg .db-region[data-a="dashboardGroup"]:focus-visible{stroke:none;outline:none}
+.db-body-svg .body-part-selected{stroke:#A9C7FF;stroke-opacity:1;stroke-width:1.4;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .db-region-joint{stroke:#A9B8CE;stroke-width:1}
 .db-region-joint[data-region="hip_joints"]{stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:all;fill-opacity:0!important}
 .db-joint-hit{cursor:pointer;touch-action:manipulation;vector-effect:non-scaling-stroke}
@@ -59,6 +59,7 @@
 .db-swatch-indirect{background:#89B3FC}
 .db-swatch-plan{background:repeating-linear-gradient(135deg,#C7ACFF 0 2px,#514169 2px 5px);border:1px solid #AD92DA}
 .db-swatch-empty{background:#485364;border:1px solid #768395}
+.db-swatch-selected{background:#5789E8;border:1px solid #A9C7FF}
 .db-forecast{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;margin-top:15px;border:0;border-top:1px solid var(--db-line);border-bottom:1px solid var(--db-line);background:transparent;text-align:left;min-height:64px}
 .db-forecast b{display:block;font-size:13px;line-height:1.4;font-weight:600}
 .db-forecast small{display:block;margin-top:3px;color:var(--db-muted);font-size:10px;line-height:1.5}
