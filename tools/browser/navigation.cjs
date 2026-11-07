@@ -21,6 +21,30 @@ async function forwardPastObsoleteGuard(p){
     addEventListener('popstate',onPop);history.forward();
   }));
 }
+async function rootExit(browser,url){
+ const p=await browser.newPage({serviceWorkers:'block'}),errors=[];
+ p.setDefaultTimeout(6000);p.on('pageerror',e=>errors.push(e.message));
+ const previous=new URL(url);previous.searchParams.set('previous','1');
+ const priorHeading=p.getByRole('heading',{name:'Prethodna stranica',exact:true});
+ try{
+  // A real document behind the app, with no app scripts, guards or reloads.
+  await p.route(previous.href,route=>route.fulfill({
+   contentType:'text/html; charset=utf-8',body:'<!doctype html><title>Prethodna stranica</title><h1>Prethodna stranica</h1>'
+  }));
+  await p.goto(previous.href);await priorHeading.waitFor();
+  await p.goto(url);await a(p,'dataSheet').click();
+  const sheet=p.getByRole('dialog',{name:'Moji podaci'});
+  await sheet.waitFor();
+  await p.waitForFunction(()=>history.state?.mtNavigation?.guard===1);
+  await p.keyboard.press('Escape');await sheet.waitFor({state:'hidden'});
+  await p.waitForFunction(()=>history.state?.mtNavigation?.guard===0);
+  // Observe both native popstate events before asserting a single Back.
+  await forwardPastObsoleteGuard(p);
+  await Promise.all([p.waitForURL(previous.href),back(p)]);
+  await priorHeading.waitFor();
+  assert.deepEqual(errors,[]);
+ }finally{await p.close();}
+}
 async function waitView(p,name){await p.locator('#app[data-key^="'+name+':"]').waitFor();}
 async function advance(p,seconds){const n=await p.evaluate(()=>Date.now());await p.clock.setFixedTime(new Date(n+seconds*1000));await p.waitForTimeout(350);}
 async function home(p){await p.reload();await p.getByRole('button',{name:'Moj pregled',exact:true}).waitFor();}
@@ -32,7 +56,7 @@ async function run(){
  p.on('dialog',async d=>{dialogs.push(d.type());await d.accept();});
  try{
   await p.clock.setFixedTime(new Date('2026-11-05T10:00:00+01:00'));
-  await p.goto(server.url+'?previous=1');await p.getByRole('button',{name:'Moj pregled',exact:true}).waitFor();await p.goto(server.url);
+  await p.goto(server.url);
   await a(p,'dataSheet').focus();await p.keyboard.press('Enter');await p.getByRole('dialog',{name:'Moji podaci'}).waitFor();
   for(const key of ['Tab','Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.sheet')),true);}
   await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'dataSheet');
@@ -92,12 +116,9 @@ async function run(){
   await back(p);await a(p,'quitResume').waitFor();await a(p,'quitResume').click();await p.reload();await a(p,'resumeGo').click();await waitView(p,'play');await cinema.waitFor();await back(p);await a(p,'quitDiscard').click();assert.equal((await data(p)).log.filter(x=>x.refId==='nav-timed').length,0);
   console.log('player: cinematic info/journal return paths, keyboard containment, exact paused clock, matching ARIA progress and Back/reload passed');
 
-  // The guard is only a child-screen entry, not a trap at the root.
-  await home(p);await p.waitForFunction(()=>history.state?.mtNavigation?.guard!==1);
-  // Waiting for guard !== 1 immediately after forward() can read the original
-  // guard 0 before traversal starts. Observe both native popstate events first.
-  await forwardPastObsoleteGuard(p);
-  await Promise.all([p.waitForURL(/previous=1/),back(p)]);
+  // The guard is only a child-screen entry, not a trap at the root. Use a
+  // separate history so document restores in the long flow cannot affect it.
+  await rootExit(browser,server.url);
   assert.deepEqual(errors,[]);console.log(engine+' navigation/accessibility regression passed; native unload warnings: '+dialogs.length);
  }finally{await ctx.close();await browser.close();await server.close();}
 }
