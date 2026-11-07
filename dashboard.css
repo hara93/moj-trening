@@ -75,6 +75,9 @@
 .db-detail-total{text-align:right;flex:none}
 .db-detail-total strong{display:block;font-size:34px;line-height:1;font-weight:600;letter-spacing:-.035em;color:#A9C7FF;font-variant-numeric:tabular-nums}
 .db-detail-total small{display:block;max-width:100px;margin-top:5px;font-size:9px;line-height:1.4;color:var(--db-muted)}
+.db-detail-battery{--battery-height:21px;margin-top:14px}
+.db-detail-battery .muscle-battery{padding:3px;border-radius:8px}
+.db-detail-battery p{margin:6px 0 0;color:var(--db-muted);font-size:10px;line-height:1.4}
 .db-counts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:15px 0 0;padding:12px 0;border-top:1px solid var(--db-line);border-bottom:1px solid var(--db-line)}
 .db-counts>div{display:flex;flex-direction:column;gap:6px}
 .db-counts>div+div{border-left:1px solid var(--db-line);padding-left:10px}
@@ -106,11 +109,6 @@
 .db-comparison-row{display:grid;grid-template-columns:86px minmax(0,1fr) 34px;align-items:center;gap:8px;min-height:47px;width:100%;padding:7px 6px;border:1px solid transparent;border-bottom-color:#3C485A80;border-radius:8px;background:transparent;text-align:left}
 .db-comparison-row[aria-pressed="true"]{background:#304057;border-color:#6B8DBF}
 .db-comparison-name{font-size:11px;line-height:1.35;color:#DCE6F4;overflow-wrap:anywhere}
-.db-comparison-track{position:relative;display:block;height:9px;border-radius:4px;background:#3C485A;overflow:hidden}
-.db-comparison-track>i{position:absolute;top:0;bottom:0;left:0}
-.db-comparison-direct{background:#68D0BC}
-.db-comparison-indirect{background:#89B3FC}
-.db-comparison-plan{background:repeating-linear-gradient(135deg,#C7ACFF 0 2px,#514169 2px 5px);border-top:1px solid #C7ACFF;border-bottom:1px solid #C7ACFF}
 .db-comparison-value{text-align:right;line-height:1.2;font-variant-numeric:tabular-nums}
 .db-comparison-value b{display:block;font-size:13px;color:#EAF1FB;font-weight:600}
 .db-comparison-value small{display:block;font-size:9px;color:#D2B8FA;margin-top:3px}

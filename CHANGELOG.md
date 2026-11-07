@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.20.8 — 7. 11. 2026.
+
+- **Napredak** prikazuje tjednu izvedbu i trend serija u kružnim grafovima.
+- **Opterećenje** prikazuje raspodjelu poznatog napora po vrsti treninga uz dnevni graf.
+- **Rad po mišićima** i **Mišićni tjedan** imaju bateriju za svaku skupinu. Izravne i pomoćne serije imaju različite boje, a preostali plan prikazuje se šrafurom na zajedničkoj skali razdoblja.
+
 ## 1.20.7 — 7. 11. 2026.
 
 - Player nudi **Ponovi seriju** nakon označavanja i na kvačici u Dnevniku. Ponavljanje vraća samo odabranu seriju, briše njezinu zabilježenu izvedbu i ponovno pokreće brojač.

@@ -201,6 +201,8 @@ async function colorStates(page, width) {
   await tapGroup(page, abs); await selectedParts(page, abs); await absGutters(page);
   assert.equal(await page.locator('.db-detail-total strong').innerText(), '0', 'blue selection is not recorded work');
   assert.deepEqual(await page.locator('.db-counts dd').allInnerTexts(), ['0', '0', '0']);
+  const battery = page.locator('.db-detail-battery .muscle-battery-fill');
+  assert.equal(await battery.locator('i').count(),0,'without records the battery has no fill');
   assert.match(await page.locator('.db-legend').innerText(), /Odabrano/);
   await page.locator('.db-anatomy').scrollIntoViewIfNeeded();
   await page.locator('.db-muscle').screenshot({ path: path.join(artifacts, 'dashboard-anatomy-' + engine + '-abs-' + width + '.png') });
@@ -211,6 +213,10 @@ async function colorStates(page, width) {
   assert.equal(await page.locator(body+' .db-region[data-id="neck"][aria-pressed="true"]').count(),2,'both neck views share one selected muscle group');
   assert.equal(await page.locator('.db-detail-total strong').innerText(),'2,5','neck shows only its actual two direct and one secondary sets');
   assert.deepEqual(await page.locator('.db-counts dd').allInnerTexts(),['2','1','1']);
+  assert.deepEqual(await battery.locator('i').evaluateAll(nodes=>nodes.map(node=>node.className)),
+    ['muscle-battery-direct','muscle-battery-secondary']);
+  assert.equal(await battery.evaluate(node=>parseFloat(node.lastElementChild.style.width)/parseFloat(node.firstElementChild.style.width)),.25,
+    'one secondary set contributes half a set beside two direct sets');
   assert.ok((await visibleState(page,'neck')).fills.every(s=>s.fill==='rgb(104, 208, 188)'&&s.opacity>.5),'recorded neck work paints both front/back forms green');
   await page.locator('.db-anatomy').scrollIntoViewIfNeeded();
   await page.locator('.db-muscle').screenshot({path:path.join(artifacts,'dashboard-anatomy-'+engine+'-neck-'+width+'.png')});
@@ -229,6 +235,7 @@ async function colorStates(page, width) {
   await select('calves');
   assert.deepEqual(paint((await visibleState(page, 'back_calves')).fills), paint(plannedBefore), 'selection preserves forecast purple');
   assert.equal(await page.locator('.db-detail-total strong').innerText(), '0', 'forecast is not performed work');
+  assert.deepEqual(await battery.locator('i').evaluateAll(nodes=>nodes.map(node=>node.className)),['muscle-battery-plan']);
   await page.locator('.db-anatomy').scrollIntoViewIfNeeded();
   await page.locator('.db-muscle').screenshot({ path: path.join(artifacts, 'dashboard-anatomy-' + engine + '-forecast-' + width + '.png') });
   await toggle.click();

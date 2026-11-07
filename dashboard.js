@@ -126,11 +126,19 @@
     return '<aside class="db-quality">'+icon('info')+'<div><strong>'+(missing?'Potpunost podataka':'Djelomična izvedba')+'</strong><p>'+esc(notes.join(' '))+'</p><p>'+(missing?'Prikazane serije obuhvaćaju poznate zapise. Nedostajući podaci nisu nula.':'Uračunat je samo potvrđeni odrađeni rad.')+'</p></div></aside>';
   }
 
-  function groupPicker(groups, selected, forecast) {
+  function groupBattery(group, max, forecast) {
+    const actual = group.actual || {}, planned = group.planned || {};
+    const fill = (type, amount) => amount > 0 ? '<i class="muscle-battery-'+type+'" style="width:'+amount/max*100+'%"></i>' : '';
+    return '<span class="muscle-battery" aria-hidden="true"><span class="muscle-battery-fill">'+
+      fill('direct',val(actual.direct))+fill('secondary',val(actual.indirect)*.5)+
+      (forecast?fill('plan',val(planned.equivalent)):'')+'</span></span>';
+  }
+
+  function groupPicker(groups, selected, forecast, max) {
     if (!groups.length) return '';
     const total = g => val((g.actual||{}).equivalent)+(forecast?val((g.planned||{}).equivalent):0);
     const ordered = groups.slice().sort((a,b)=>total(b)-total(a));
-    const hasWork = ordered.some(g=>total(g)>0), max = Math.max(1,...ordered.map(total));
+    const hasWork = ordered.some(g=>total(g)>0);
     const shown = hasWork ? ordered.filter(g=>total(g)>0).slice(0,5) : [];
     const chosen = ordered.find(g=>g.id===selected);
     if (hasWork && chosen && !shown.includes(chosen)) {
@@ -139,10 +147,9 @@
     const rest = ordered.filter(g=>!shown.includes(g));
     const row = g => {
       const actual=g.actual||{}, planned=g.planned||{};
-      const direct=val(actual.direct), indirect=val(actual.indirect)*.5;
       const future=forecast?val(planned.equivalent):0;
       const label=g.label+': '+fmt(actual.direct)+' izravnih serija, '+fmt(actual.indirect)+' neizravnih serija. Procijenjeni zbroj '+fmt(actual.equivalent)+(forecast?', preostali plan '+fmt(planned.equivalent):'');
-      return '<button type="button" class="db-comparison-row" data-a="dashboardGroup" data-id="'+esc(g.id)+'" aria-pressed="'+(g.id===selected)+'" aria-label="'+esc(label)+'"><span class="db-comparison-name">'+esc(g.label)+'</span><span class="db-comparison-track" aria-hidden="true"><i class="db-comparison-direct" style="width:'+direct/max*100+'%"></i><i class="db-comparison-indirect" style="left:'+direct/max*100+'%;width:'+indirect/max*100+'%"></i>'+(future?'<i class="db-comparison-plan" style="left:'+(direct+indirect)/max*100+'%;width:'+future/max*100+'%"></i>':'')+'</span><span class="db-comparison-value"><b>'+fmt(actual.equivalent)+'</b>'+(future?'<small>+'+fmt(future)+'</small>':'')+'</span></button>';
+      return '<button type="button" class="db-comparison-row" data-a="dashboardGroup" data-id="'+esc(g.id)+'" aria-pressed="'+(g.id===selected)+'" aria-label="'+esc(label)+'"><span class="db-comparison-name">'+esc(g.label)+'</span>'+groupBattery(g,max,forecast)+'<span class="db-comparison-value"><b>'+fmt(actual.equivalent)+'</b>'+(future?'<small>+'+fmt(future)+'</small>':'')+'</span></button>';
     };
     const legend='<div class="db-comparison-legend"><span><i class="db-swatch db-swatch-direct"></i>Izravne</span><span><i class="db-swatch db-swatch-indirect"></i>0,5 × neizravne</span>'+(forecast?'<span><i class="db-swatch db-swatch-plan"></i>Preostali plan</span>':'')+'</div>';
     return '<section class="db-comparison" aria-label="Usporedba mišićnih skupina"><div class="db-comparison-heading"><h3>Rad po skupinama</h3><span>procijenjene serije</span></div>'+legend+
@@ -168,10 +175,11 @@
     return rows.length ? '<details class="db-sources"><summary>Odakle dolaze serije <span>'+rows.length+'</span></summary><ul>'+rows.join('')+'</ul></details>' : '';
   }
 
-  function groupDetail(vm, group) {
+  function groupDetail(vm, group, max) {
     if (!group) return '<p class="db-empty-copy">Za ovaj pregled nema dostupnih skupina.</p>';
     const actual = group.actual || {}, planned = group.planned || {};
     return '<section class="db-group-detail" aria-labelledby="db-group-title"><div class="db-detail-heading"><div><p class="db-kicker">Odabrana skupina</p><h3 id="db-group-title">'+esc(group.label)+'</h3></div><div class="db-detail-total" aria-live="polite"><strong>'+fmt(actual.equivalent)+'</strong><small>procijenjenih serija</small></div></div>'+
+      '<div class="db-detail-battery">'+groupBattery(group,max,vm.forecast)+'<p>Zajednička skala za ovaj tjedan · 0–'+fmt(max)+' serija</p></div>'+
       '<dl class="db-counts"><div><dt>Izravne serije</dt><dd>'+fmt(actual.direct)+'</dd></div><div><dt>Neizravne serije</dt><dd>'+fmt(actual.indirect)+'</dd></div><div><dt>Dani s radom</dt><dd>'+fmt(actual.days)+'</dd></div></dl>'+
       (vm.forecast && val(planned.equivalent)>0?'<p class="db-group-plan"><i class="db-swatch db-swatch-plan"></i><span>Preostali plan dodaje <b>+'+fmt(planned.equivalent)+'</b> procijenjenih serija <small>'+fmt(planned.direct)+' izravno · '+fmt(planned.indirect)+' neizravno</small></span></p>':'')+
       (!val(actual.equivalent)?'<p class="db-empty-copy">Za ovu skupinu nema poznatih radnih serija u odrađenim treninzima ovog tjedna.</p>':'')+
@@ -205,12 +213,14 @@
     const group=groups.find(g=>g.id===vm.selectedGroup) || groups.find(g=>val((g.actual||{}).equivalent)>0) || groups[0];
     const selected=group && group.id;
     const hasKnownWork=groups.some(g=>val((g.actual||{}).equivalent)>0);
+    const peak = Math.max(1,...groups.map(g=>val((g.actual||{}).equivalent)+(vm.forecast?val((g.planned||{}).equivalent):0)));
+    const max = Math.ceil(peak/4)*4;
     return '<div class="view dashboard db-analytics"><header class="db-heading db-analytics-heading"><div><button type="button" class="db-back" data-a="back" aria-label="Natrag">'+icon('arrow')+'</button><div><h1>Analiza tjedna</h1><p class="db-period">'+esc(range.label || '')+'</p></div><details class="db-info"><summary aria-label="Kako čitati analizu tjedna">'+icon('info')+'</summary><div><strong>Rad iz dnevnika</strong><p>Odrađeno dolazi iz spremljenih treninga. Preostali plan prikazan je zasebno. Procijenjene serije opisuju količinu rada, a ne rast mišića.</p></div></details></div></header>'+
       '<section class="db-panel db-muscle" aria-labelledby="db-muscle-title"><div class="db-section-head"><div><p class="db-kicker">Zabilježeni podražaj</p><h2 id="db-muscle-title">Mišićni tjedan</h2></div></div><div class="db-anatomy-row"><div class="db-anatomy">'+bodyFigure(groups,selected,!!vm.forecast)+'</div>'+coverageRing(coverage,!!vm.forecast)+'</div>'+
       '<p class="db-map-hint">Dodirni figuru ili odaberi skupinu iz usporedbe.</p><div class="db-legend"><span><i class="db-swatch db-swatch-selected"></i>Odabrano</span><span><i class="db-swatch db-swatch-direct"></i>Izravni rad</span><span><i class="db-swatch db-swatch-indirect"></i>Neizravni rad</span>'+(vm.forecast?'<span><i class="db-swatch db-swatch-plan"></i>Samo u planu</span>':'')+'<span><i class="db-swatch db-swatch-empty"></i>Bez zapisa</span></div>'+
       '<button type="button" class="db-forecast" role="switch" aria-checked="'+!!vm.forecast+'" data-a="dashboardForecast"><span><b>Uključi preostali plan</b><small>Od danas do nedjelje · bez promjene dnevnika</small></span><i aria-hidden="true"></i></button>'+
       (!hasKnownWork?'<p class="db-empty-copy db-first-step">'+(val((vm.quality||{}).missingSessions)?'Za dio odrađenih treninga nema spremljene raspodjele po mišićima.':list(vm.sessions).some(s=>s.status==='done')?'Trening je zabilježen. Ovaj tjedan još nema zabilježenih serija snage po mišićima.':'Ovdje ćeš nakon prvog treninga snage vidjeti koje si mišiće radio.')+'</p>':'')+
-      groupDetail(vm,group)+groupPicker(groups,selected,!!vm.forecast)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';
+      groupDetail(vm,group,max)+groupPicker(groups,selected,!!vm.forecast,max)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';
   }
 
   function upcoming(vm) {

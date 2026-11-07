@@ -16,8 +16,23 @@ test('unknown total is a dash and a known subtotal is explicit rather than a com
   assert.match(html,/data-load-period="current" data-total-au="" data-known-au="25" data-missing-au="1"/);
   assert.match(html,/data-load-metric="current-au">—/);assert.match(html,/Zbroj nije potpun/);assert.match(html,/25<\/span> AU poznato/);
 });
+test('the effort ring uses known AU shares and keeps unrated activities out of the arcs',()=>{
+  const html=render([
+    entry(),
+    entry({historyId:'field',kind:'field',secs:900}),
+    entry({historyId:'unknown',kind:'team',teamType:'match',srpe:undefined})
+  ]);
+  const arcs=Array.from(html.matchAll(/class="tl-dial-segment" data-load-ring-kind="([^"]+)"[^>]+stroke-dasharray="([\d.]+) ([\d.]+)"/g));
+  assert.deepEqual(arcs.map(arc=>arc[1]),['protocol','field']);
+  assert.ok(Math.abs((Number(arcs[0][2])+2.4)/Number(arcs[0][3])-.25)<1e-8);
+  assert.ok(Math.abs((Number(arcs[1][2])+2.4)/Number(arcs[1][3])-.75)<1e-8);
+  assert.match(html,/<strong>100<\/strong><small>AU poznato<\/small>/);
+  assert.match(html,/data-load-ring-kind="match"><dt><i aria-hidden="true"><\/i>Utakmice<\/dt><dd><small>Nepoznato<\/small>/);
+});
 test('zero effort remains visible zero with no positive-height invented chart fill',()=>{
   const html=render([entry({srpe:0})]);assert.match(html,/data-load-metric="current-au">0/);assert.doesNotMatch(html,/class="tl-day-fill"/);assert.doesNotMatch(html,/Zbroj nije potpun/);
+  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd>0 <small>AU<\/small>/);
+  assert.doesNotMatch(html,/class="tl-dial-segment"/);
 });
 test('empty and legacy missing states do not expose fabricated AU or zero muscle tables',()=>{
   const html=render([entry({kind:null,srpe:undefined,secs:undefined})]);

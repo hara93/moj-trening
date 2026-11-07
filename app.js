@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.7';
+const APP_VERSION = '1.20.8';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -4842,6 +4842,7 @@ VIEWS.progress = function(t=top()){
     dosingSections:S.progTab === 'doziranje' ? progressDosingSections() : [],
     zero:total === 0,
     insights:ProgressModel.summarize({log:S.log,exercises:S.ex,now:Date.now()}),
+    weekPlan:{done:wk.done,planned:wk.planned,activeDays:DAYS.filter((_,day)=>days[calDay(ws,day)]).length},
     stats:[
       { value:wk.planned ? wk.done + '/' + wk.planned : thisWeek, label:wk.planned ? 'po planu ovaj tjedan' : 'treninga ovaj tjedan', note:wk.planned && thisWeek !== wk.done ? thisWeek + ' odrađeno ukupno' : '' },
       { value:sk, label:plural(sk,'tjedan','tjedna','tjedana') + ' zaredom', note:hasPlan ? 'po planu' : 's treningom' },

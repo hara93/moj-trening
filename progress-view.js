@@ -28,7 +28,7 @@
   var INFO = {
     overview: {
       title: 'Kako čitati napredak',
-      paragraphs: ['Na vrhu su usporedive zabilježene izvedbe i aktivnost kroz osam tjedana. Detaljni grafovi i pravila ostaju ispod.',
+      paragraphs: ['Prvi krug prikazuje odrađeni dio tjednog plana ili dane sa spremljenim treningom u ovom tjednu. Drugi uspoređuje dvije zabilježene serije na istoj ljestvici ili prikazuje koliko si tjedana bio aktivan u zadnjih osam.',
         'Tjedan po planu prati tvoje planirane treninge. Ekipni treninzi ulaze u ukupan broj odrađenih treninga, a isprobavanje vježbe iz knjižnice ostaje u povijesti te vježbe.']
     },
     performance: {
@@ -146,10 +146,13 @@
       (comparisons.length ? '<div class="pg-comparisons">' + comparisons.map(comparisonHtml).join('') + '</div>' :
         '<div class="pg-comparison-empty"><h3>Prva izvedba je polazište</h3><p>Za usporedbu trebaju dvije zabilježene izvedbe iste vježbe pri istoj težini i načinu izvođenja. Različite doze i dalje vidiš u punoj povijesti.</p></div>') + '</section>';
   }
-  function activityHtml(insights) {
-    var weeks = (Array.isArray(insights.weeks) ? insights.weeks : []).filter(function (week) {
+  function activityWeeks(insights) {
+    return (Array.isArray(insights.weeks) ? insights.weeks : []).filter(function (week) {
       return week && finite(week.start) && !isNaN(new Date(week.start).getTime()) && finite(week.count) && week.count >= 0;
     }).slice(-8);
+  }
+  function activityHtml(insights) {
+    var weeks = activityWeeks(insights);
     if (!weeks.length) return '';
     var total = weeks.reduce(function (sum, week) { return sum + week.count; }, 0);
     var minutes = weeks.reduce(function (sum, week) { return sum + (finite(week.minutes) && week.minutes >= 0 ? week.minutes : 0); }, 0);
@@ -324,16 +327,75 @@
     var hits='<div class="pg-point-hits">'+['previous','current'].map(function(point,index){return '<button type="button" class="pg-point-hit" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" style="left:'+(index?90.3125:15)+'%;top:'+(y(item[point])/150*100)+'%" aria-label="'+esc(shortDate(item[point+'At'])+', '+amount(item[point])+' '+item.unit+'. Prikaži zapis')+'"></button>';}).join('')+'</div>';
     return '<div id="pg-performance" class="pg-main-performance"><p class="pg-main-context">'+esc(item.context||'')+'</p><div class="pg-performance-plot">'+graph+hits+'</div><div class="pg-point-buttons">'+['previous','current'].map(function(point){var n=item[point],at=item[point+'At'];return '<button type="button" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" aria-label="'+esc(shortDate(at)+', '+amount(n)+' '+item.unit+'. Prikaži zapis')+'"><span>'+esc(weekDate(at))+'</span><strong>'+esc(amount(n))+' <small>'+esc(item.unit)+'</small></strong><i aria-hidden="true">↗</i></button>';}).join('')+'</div></div>';
   }
+  function summaryRings(key, fractions) {
+    var gradients = '', circles = '';
+    fractions.forEach(function (fraction, index) {
+      var id = 'pg-ring-' + key + '-' + index;
+      var tone = key === 'cadence' || index === 1 ? 'blue' : 'mint';
+      var geometry = ' cx="44" cy="44" r="' + (index ? 27 : 37) + '"';
+      circles += '<circle class="pg-ring-track"' + geometry + '/>';
+      if (fraction > 0) {
+        gradients += '<linearGradient id="' + id + '" x2="85%" y2="100%"><stop class="pg-ring-' + tone + '-start"/>' +
+          '<stop class="pg-ring-' + tone + '-end" offset="100%"/></linearGradient>';
+        circles += '<circle class="pg-ring-fill"' + geometry + ' stroke="url(#' + id + ')" pathLength="100" stroke-dasharray="' +
+          Math.min(fraction * 100, 100) + ' 100" transform="rotate(-90 44 44)"/>';
+      }
+    });
+    return '<svg class="pg-ring-graphic" viewBox="0 0 88 88" aria-hidden="true">' +
+      (gradients ? '<defs>' + gradients + '</defs>' : '') + circles + '</svg>';
+  }
+  function summaryCard(card) {
+    return '<button type="button" class="pg-ring-card" data-a="progressDetail" data-topic="' + card.topic + '">' +
+      '<span class="pg-ring-stage">' + summaryRings(card.key, card.fractions) + '<span class="pg-ring-readout">' +
+      '<strong' + (card.up ? ' class="pg-summary-up"' : '') + '>' + esc(card.value) + '</strong>' +
+      (card.total != null ? '<span>od ' + esc(card.total) + '</span>' : '') + '</span></span>' +
+      '<span class="pg-ring-label">' + esc(card.label) + '</span>' +
+      (card.note ? '<small class="pg-ring-note">' + esc(card.note) + '</small>' : '') +
+      (card.comparison ? '<small class="pg-ring-legend"><span>Prije ' + esc(amount(card.comparison.previous)) +
+        '</span><span>Zadnje ' + esc(amount(card.comparison.current)) + '</span></small>' : '') + '</button>';
+  }
+  function weeklySummary(stats, plan) {
+    var card = { key:'week', topic:'activity', label:stats.label, value:stats.value, note:stats.note, fractions:[0] };
+    if (finite(plan.done) && finite(plan.planned) && plan.planned > 0) {
+      card.label = 'Tjedni plan';
+      card.value = amount(plan.done);
+      card.total = amount(plan.planned);
+      card.note = stats.note || 'Odrađeni treninzi';
+      card.fractions = [plan.done / plan.planned];
+    } else if (finite(plan.activeDays)) {
+      card.label = 'Aktivni dani ovaj tjedan';
+      card.value = amount(plan.activeDays);
+      card.total = '7';
+      card.note = 'Spremljeni treninzi · ' + stats.value;
+      card.fractions = [plan.activeDays / 7];
+    }
+    return card;
+  }
+  function secondarySummary(stats, insights, comparison) {
+    if (comparison) {
+      var delta = comparison.current - comparison.previous;
+      var scale = Math.max(comparison.current, comparison.previous, 1);
+      return { key:'performance', topic:'performance', label:comparison.name,
+        value:delta === 0 ? '0' : (delta > 0 ? '+' : '−') + amount(Math.abs(delta)), up:delta > 0,
+        note:delta === 0 ? 'Bez promjene · ' + comparison.unit : 'Usporediva serija · ' + comparison.unit,
+        comparison:comparison, fractions:[comparison.current / scale, comparison.previous / scale] };
+    }
+    var weeks = activityWeeks(insights);
+    if (!weeks.length) return { key:'cadence', topic:'activity', label:stats.label, value:stats.value, note:stats.note, fractions:[0] };
+    var active = weeks.filter(function (week) { return week.count > 0; }).length;
+    return { key:'cadence', topic:'activity', label:'Aktivni tjedni', value:amount(active), total:weeks.length,
+      note:'Tjedni sa spremljenim treningom', fractions:[active / weeks.length] };
+  }
   function render(vm) {
     vm=vm || {};lastVM=vm;
     if(vm.tab==='doziranje')return renderLegacy(vm);
     var old=renderLegacy(vm),items=choices(vm),selected=items.find(function(e){return e.id===vm.chartExerciseId;}) || items[0],id=selected && selected.id;
     var comparison=comparisons(vm).find(function(e){return e.id===id;}),exercise=(Array.isArray(vm.exercises)?vm.exercises:[]).find(function(e){return e.id===id;}),metric=['performance','volume'].includes(vm.chartMetric)?vm.chartMetric:comparison?'performance':'volume';
-    var stats=Array.isArray(vm.stats)?vm.stats:[],week=stats[0] || {value:'—',label:'Ovaj tjedan'},secondary=stats[1] || {value:'—',label:'Kontinuitet'},delta=comparison?comparison.current-comparison.previous:null;
-    var secondaryValue=delta===null?secondary.value:delta===0?'Bez promjene':(delta>0?'+':'−')+amount(Math.abs(delta));
-    var secondaryLabel=comparison?comparison.name:secondary.label,secondaryNote=comparison?comparison.unit+' · usporediva serija':secondary.note || '';
+    var stats = Array.isArray(vm.stats) ? vm.stats : [];
+    var week = weeklySummary(stats[0] || { value:'—', label:'Ovaj tjedan' }, vm.weekPlan || {});
+    var secondary = secondarySummary(stats[1] || { value:'—', label:'Kontinuitet' }, vm.insights || {}, comparison);
     var content='<div class="view progress-view pg-cinema" data-progress-tab="pregled">'+(vm.topbarHtml || '')+'<header class="pg-heading"><div><p class="pg-kicker">Tvoj rad, kroz vrijeme</p><h1>Napredak</h1></div>'+info('overview','Kako čitati Napredak')+'</header>'+modeTabs('progress')+
-      '<section class="pg-summary-pair" aria-label="Kratki pregled"><button type="button" data-a="progressDetail" data-topic="activity"><span>'+esc(week.label)+'</span><strong>'+esc(week.value)+'</strong>'+(week.note?'<small>'+esc(week.note)+'</small>':'')+'</button><button type="button" data-a="progressDetail" data-topic="'+(comparison?'performance':'activity')+'"><span>'+esc(secondaryLabel)+'</span><strong'+(delta>0?' class="pg-summary-up"':'')+'>'+esc(secondaryValue)+'</strong>'+(secondaryNote?'<small>'+esc(secondaryNote)+'</small>':'')+'</button></section>';
+      '<section class="pg-summary-pair" aria-label="Kratki pregled">'+summaryCard(week)+summaryCard(secondary)+'</section>';
     if(vm.zero)content+='<section class="pg-zero pg-cinema-zero"><h2>Prvi trening, prvi pomak</h2><p>Spremi odrađeni trening i postavi svoje polazište.</p><button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
     content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2><button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button></div><div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
       (metric==='performance'?mainPerformance(comparison):exercise&&exercise.html?'<div class="pg-main-volume">'+exercise.html+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka za graf</h3><p>Kad spremiš dovoljno izvedbi, ovdje će se prikazati zabilježena količina rada.</p></div>')+
