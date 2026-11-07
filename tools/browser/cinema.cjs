@@ -7,6 +7,7 @@ const path = require('node:path');
 const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
 const fixed = new Date('2026-11-06T10:00:00+01:00');
 const id = 'cinema-audit';
+const redoId = 'cinema-redo-audit';
 const results = [];
 const A = (p, action) => p.locator((action==='cinemaMain'?'.cinema-primary':'')+'[data-a="' + action + '"]');
 const store = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')));
@@ -25,6 +26,8 @@ function fixture() {
     { exId: 'bench-press', measure: 'sets', sets: 5, reps: 8, kg: 50, rest: 60, sides: false, targetRir: 2 },
     { exId: 'side-plank', measure: 'time', sets: 2, reps: 1, sec: 6, kg: 0, rest: 30, sides: true, targetSir: 3 }
   ] } };
+  data.protocols[redoId] = { id: redoId, name: 'Provjera ponavljanja serije', tag: 'Teretana', days: [],
+    items: [{ ...data.protocols[id].items[0], sets: 3, reps: 10 }] };
   return data;
 }
 
@@ -381,6 +384,132 @@ async function notesAndUndo(p,width) {
     notesSurvivePlayerReload:true,notesInFinishedHistory:true,noteSurvivesDataReload:true});
 }
 
+async function setRecovery(p,width) {
+  await home(p);
+  await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
+  await A(p,'dashboardProtocols').click();
+  await p.locator('[data-a="openPr"][data-id="'+redoId+'"]').click();
+  const original = await store(p);
+  await A(p,'startPr').click();
+  const main = A(p,'cinemaMain');
+  const saveResult = async (index, reps, rir) => {
+    await p.locator('[data-a="cinemaReserve"][data-k="'+index+'"]').click();
+    const dialog = p.getByRole('dialog',{name:'Rezultat serije',exact:true});
+    const form = dialog.locator('#workout-result-form');
+    await form.waitFor();
+    assert.equal(await form.locator('[name="reps"]').inputValue(),'10');
+    await form.locator('[name="reps"]').fill(String(reps));
+    await form.locator('[name="rir"]').fill(String(rir));
+    await form.getByRole('button',{name:'Spremi rezultat',exact:true}).click();
+    await dialog.waitFor({state:'hidden'});
+  };
+  await manual(p,1);
+  const first = (await player(p)).i;
+  await advance(p,4);
+  await main.click();
+  const accidental = await player(p);
+  assert.equal(step(accidental).kind,'rest');
+  assert.deepEqual(accidental.doneSteps,{[first]:1});
+  await p.locator('.workout-cinema [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();
+  const restarted = await player(p);
+  assert.equal(restarted.i,first);
+  assert.equal(restarted.stepClock.seconds,0,'the mistaken completion restarts the set clock');
+  assert.deepEqual(restarted.doneSteps,{});
+  assert.equal(await main.innerText(),'Serija gotova');
+
+  // The real journal checkbox should complete the restarted set. Going back
+  // from rest used to leave the player on a checked set with a dead button.
+  await openJournal(p,3);
+  await row(p,0,1).locator('[data-a="workoutSetDone"]').click();
+  assert.equal((await player(p)).doneSteps[first],1);
+  await closeJournal(p);
+  await saveResult(first,12,2);
+  const firstResult = await player(p);
+  assert.equal(firstResult.liveSchedule[first].actualReps,12);
+  assert.equal(firstResult.rir[first],2);
+  assert.deepEqual(firstResult.items,accidental.items,'recording actual work keeps the planned doses');
+  await openJournal(p,3);
+  assert.equal(await row(p,0,1).locator('[data-field="reps"]').inputValue(),'12');
+  assert.equal(await row(p,0,1).locator('[data-field="rir"]').inputValue(),'2');
+  assert.equal(await row(p,0,2).locator('[data-field="reps"]').inputValue(),'10');
+  await closeJournal(p);
+  await p.getByRole('button',{name:'Prethodna vježba',exact:true}).click();
+  await A(p,'cinemaPause').click();
+  const oldPosition = await player(p);
+  assert.equal(oldPosition.i,first);
+  assert.equal(oldPosition.doneSteps[first],1);
+  assert.equal(oldPosition.clock.paused,true);
+  await p.reload({waitUntil:'domcontentloaded'});
+  await A(p,'resumeGo').click();
+  assert.equal(await main.innerText(),'Nastavi dalje');
+  await main.click();
+  const advanced = await player(p);
+  assert.equal(advanced.i,first+1);
+  assert.deepEqual(advanced.doneSteps,oldPosition.doneSteps);
+  assert.equal(advanced.liveSchedule[first].actualReps,12);
+  assert.equal(advanced.rir[first],2);
+
+  await manual(p,2);
+  const second = (await player(p)).i;
+  await main.click();
+  await openJournal(p,3);
+  const secondReps = row(p,0,2).locator('[data-field="reps"]');
+  assert.equal(await secondReps.isEnabled(),true);
+  await secondReps.fill('11'); await secondReps.press('Tab');
+  const secondReserve = row(p,0,2).locator('[data-field="rir"]');
+  await secondReserve.fill('1'); await secondReserve.press('Tab');
+  await row(p,0,1).locator('[data-a="workoutRedoSet"]').click();
+  await sheet(p).waitFor({state:'hidden'});
+  const selected = await player(p);
+  assert.equal(selected.i,first);
+  assert.deepEqual(selected.doneSteps,{[second]:1},'repeating an earlier set keeps the later set completed');
+  assert.deepEqual(selected.rir,{[second]:1},'only the selected set loses its reserve');
+  const expectedSchedule = accidental.liveSchedule.map((entry,index)=>index===second?{...entry,actualReps:11}:entry);
+  assert.deepEqual(selected.liveSchedule,expectedSchedule,'retry keeps the same schedule and clears only the selected actual reps');
+  assert.deepEqual(selected.items,accidental.items);
+  assert.deepEqual(await store(p),original,'no history or protocol changes before saving');
+
+  await main.click();
+  await saveResult(first,12,2);
+  await manual(p,2);
+  assert.equal(await main.innerText(),'Nastavi dalje');
+  await main.click();
+  await manual(p,3);
+  const third = (await player(p)).i;
+  await main.click();
+  await A(p,'finishPlay').waitFor();
+  await saveResult(third,13,3);
+  const finished = await player(p);
+  assert.equal(finished.liveSchedule[third].actualReps,13);
+  assert.equal(finished.rir[third],3);
+  await p.getByRole('button',{name:'Ponovi zadnju seriju',exact:true}).click();
+  const reopened = await player(p);
+  assert.equal(reopened.done,false,'the last set is repeatable from the unsaved result screen');
+  assert.equal(reopened.i,third);
+  assert.deepEqual(reopened.doneSteps,{[first]:1,[second]:1});
+  assert.deepEqual(reopened.rir,{[first]:2,[second]:1});
+  assert.equal(reopened.liveSchedule[third].actualReps,undefined);
+  assert.equal(reopened.liveSchedule[first].actualReps,12);
+  assert.equal(reopened.liveSchedule[second].actualReps,11);
+  await main.click();
+  await A(p,'finishPlay').click();
+  assert.equal(await player(p),null);
+  const saved = await store(p);
+  assert.equal(saved.log.length,original.log.length+1);
+  const entry = saved.log.find(entry=>entry.refId===redoId);
+  const logged = entry.items[0];
+  assert.deepEqual(logged.setNumbers,[1,2,3]);
+  assert.deepEqual(logged.repsList,[12,11,10]);
+  assert.deepEqual(logged.rirList,[2,1,null]);
+  assert.equal(saved.protocols[redoId].items[0].reps,10);
+  await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
+  await A(p,'historyList').first().click();
+  await p.locator('[data-a="historyOpen"][data-id="'+entry.historyId+'"]').click();
+  assert.deepEqual(await p.locator('.hy-sets tbody tr').first().locator('td').allInnerTexts(),['12','50','2']);
+  results.push({width,accidentalMarkRetried:true,journalMarkAdvanced:true,completedCheckpointRecovered:true,
+    onlySelectedSetReset:true,lastSetRetriedBeforeSave:true,eachSetLoggedOnce:true,actualRepsAndRirSaved:true});
+}
+
 (async () => {
   const host = await serve(), browser = await launch();
   try {
@@ -392,7 +521,9 @@ async function notesAndUndo(p,width) {
       try {
         await p.goto(host.url, { waitUntil: 'domcontentloaded' }); await p.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor();
         await importData(p); await checkHome(p, width);if(!process.argv.includes('just-notes'))await runPlayer(p, width, host.url);
-        await notesAndUndo(p,width);assert.deepEqual(errors, []);
+        await notesAndUndo(p,width);
+        if(!process.argv.includes('just-notes'))await setRecovery(p,width);
+        assert.deepEqual(errors, []);
       } catch (error) {
         await p.screenshot({ path: path.join(artifacts, 'cinema-' + engine + '-failure-' + width + '.png') }).catch(() => {});
         console.error('Current screen:', (await p.locator('.view,.sheet').allInnerTexts()).join('\n').slice(0, 1800)); throw error;

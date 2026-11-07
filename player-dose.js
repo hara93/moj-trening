@@ -22,6 +22,14 @@
       sec: pick('secList', 'sec', 30)
     };
   }
+  function validActualReps(reps) {
+    return Number.isInteger(reps) && reps >= 1 && reps <= 60;
+  }
+  function recordedAt(step, item) {
+    const dose = at(step.it || item, step.set);
+    if (step.kind === 'manual' && validActualReps(step.actualReps)) dose.reps = step.actualReps;
+    return dose;
+  }
   function items(input) {
     return (input || []).map(it => {
       var n = Number.isInteger(it.sets) && it.sets > 0 ? it.sets : 1,
@@ -212,7 +220,7 @@
         return;
       }
       const setNumber = step.set || 1;
-      const dose = at(step.it || item, setNumber);
+      const dose = player.doneSteps?.[index] ? recordedAt(step, item) : at(step.it || item, setNumber);
       let row = bySet.get(setNumber);
       if (!row) {
         row = {
@@ -258,7 +266,8 @@
       if (!summary) { summary = {last:index, done:false}; seen.set(row.set,summary); }
       summary.last = index;
       const done = !!player.doneSteps?.[index];
-      if (done || index === player.i) row.dose = at(step.it || item,row.set);
+      if (done) row.dose = recordedAt(step, item);
+      else if (index === player.i) row.dose = at(step.it || item,row.set);
       if (index === player.i && !player.done) {
         row.current = true;
         if (step.kind === 'manual' && !done && !player.paused) row.step = index;
@@ -349,6 +358,7 @@
       }
       var st = copy(row),
         g = st.g;
+      if (st.kind !== 'manual' || !validActualReps(st.actualReps)) delete st.actualReps;
       if (!Number.isInteger(g) || g < 0 || g >= input.length) {
         return null;
       }
@@ -420,6 +430,8 @@
   return {
     version: 1,
     at: at,
+    recordedAt: recordedAt,
+    validActualReps: validActualReps,
     items: items,
     key: key,
     locks: locks,

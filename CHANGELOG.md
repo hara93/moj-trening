@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.20.7 — 7. 11. 2026.
+
+- Player nudi **Ponovi seriju** nakon označavanja i na kvačici u Dnevniku. Ponavljanje vraća samo odabranu seriju, briše njezinu zabilježenu izvedbu i ponovno pokreće brojač.
+- Nakon potvrde serije **Uredi rezultat** sprema stvarna ponavljanja i RIR. Stvarna ponavljanja mogu se promijeniti i u Dnevniku.
+- Ako se vratiš na već zabilježenu seriju, **Nastavi dalje** prolazi na sljedeći korak uz sačuvan rezultat. To radi i nakon nastavka prethodno zaglavljenog treninga.
+- Na pregledu prije spremanja možeš ponovno otvoriti i posljednju seriju.
+
 ## 1.20.6 — 7. 11. 2026.
 
 - Trening **Gornji dio nakon utakmice · 60 min** može se otvoriti izravno iz izbornika za uvoz.

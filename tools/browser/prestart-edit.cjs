@@ -93,18 +93,20 @@ async function run(p,width){
   assert.deepEqual(started.items[2].ss,started.items[3].ss);assert.equal(started.items[2].sets,2);
   assert.equal(Object.keys(started.doneSteps).length,0);await untouched(p,before);
 
-  // Complete exactly one hip-thrust set; adding a future row retains its lock
-  // and actual evidence while increasing only the remaining prescription.
+  // Complete one hip-thrust set and correct its result. Adding a future row
+  // retains its actual reps and load while extending only the prescription.
   await openJournal(p,true);await p.locator('.cinema-journal [data-a="cinemaGoSet"][data-j="1"]').click();
   if((await player(p)).liveSchedule[(await player(p)).i].kind==='ready')await p.locator('.cinema-primary').click();
   const current=await player(p);assert.equal(current.liveSchedule[current.i].kind,'manual');assert.equal(current.liveSchedule[current.i].g,1);
   await p.locator('.cinema-primary').click();assert.equal(Object.keys((await player(p)).doneSteps).length,1);
-  await exercise(p,1);await noOldButtons(p);assert.equal(await row(p,1,'reps').isDisabled(),true);assert.equal(await row(p,1,'kg').isDisabled(),true);
-  const done=await row(p,1,'reps').inputValue();await add(p).click();
+  await exercise(p,1);await noOldButtons(p);assert.equal(await row(p,1,'reps').isDisabled(),false);assert.equal(await row(p,1,'kg').isDisabled(),true);
+  await edit(p,1,'reps',11);await add(p).click();
   assert.equal(await detail(p).locator('.workout-set-row').count(),5);assert.equal(await row(p,5,'reps').inputValue(),'7');assert.equal(await row(p,5,'kg').inputValue(),'65');
-  assert.equal(await row(p,1,'reps').isDisabled(),true);assert.equal(await row(p,1,'kg').isDisabled(),true);assert.equal(await row(p,1,'reps').inputValue(),done);
+  assert.equal(await row(p,1,'reps').isDisabled(),false);assert.equal(await row(p,1,'kg').isDisabled(),true);assert.equal(await row(p,1,'reps').inputValue(),'11');
   assert.equal(await detail(p).locator('.workout-set-row[data-state="done"]').count(),1);
   const expanded=await player(p);assert.equal(expanded.items[1].sets,5);assert.equal(Object.keys(expanded.doneSteps).length,1);
+  assert.equal(expanded.items[1].repsList[0],9,'editing the result leaves the prescription alone');
+  assert.equal(expanded.liveSchedule[Object.keys(expanded.doneSteps)[0]].actualReps,11,'schedule rebuild retains the recorded result');
   await untouched(p,before);await shot(p,'live-locks',width);
   await closeExercise(p);await openQuit(p);await a(p,'quitDiscard').click();await untouched(p,before);assert.equal(await player(p),null);
 
@@ -131,7 +133,7 @@ async function run(p,width){
   await untouched(p,before);assert.equal(await player(p),null);
   results.push({width,directInlineOnly:true,noNewEditingButtons:true,hipThrustThreeToFour:true,lastPrescriptionCopied:true,
     focusedFieldFirstTap:true,invalidRawBlocksAdd:true,invalidInputCanGoBack:true,previewSourceAndHistoryUnchanged:true,backRetainsPreview:true,
-    reloadPreservesSavedPlan:true,playerUsesPreviewDose:true,liveAddedRowCreatesNoWork:true,completedRowsStayLocked:true,
+    reloadPreservesSavedPlan:true,playerUsesPreviewDose:true,liveAddedRowCreatesNoWork:true,completedLoadStaysLocked:true,actualRepsSurviveAdd:true,
     unknownKgRemainsUnknown:true,maxTwenty:true,programPreviewProtected:true,librarySessionOnly:true});
 }
 (async()=>{
