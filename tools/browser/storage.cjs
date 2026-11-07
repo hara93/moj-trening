@@ -122,6 +122,115 @@ async function unknownRows(browser, url) {
   }
 }
 
+async function singleProtocol(browser, url) {
+  const context = await browser.newContext({serviceWorkers:'block',viewport:{width:375,height:850}});
+  try {
+    const page = await context.newPage(), errors = [];
+    page.setDefaultTimeout(8000);
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(url,{waitUntil:'domcontentloaded'});
+    await ready(page);
+    const backup = fixture(), existingId = 'storage-existing-protocol';
+    backup.protocols[existingId] = {id:existingId,name:'Moj postojeći trening',days:[1],
+      items:[{exId:'db-row',measure:'sets',sets:2,reps:8,kg:12,rest:60,sides:true}]};
+    backup.log = [{historyId:'storage-existing-workout',kind:'protocol',refId:existingId,
+      name:'Moj postojeći trening',at:Date.now()-10000,secs:1200}];
+    backup.settings = {...backup.settings,sound:false};
+    await action(page,'dataSheet').click();
+    await page.locator('#importFile').setInputFiles({name:'postojeci-podaci.json',mimeType:'application/json',
+      buffer:Buffer.from(JSON.stringify(backup))});
+    await action(page,'restoreApply').click();
+    await action(page,'restoreApply').waitFor({state:'hidden'});
+
+    const showProtocols = async () => {
+      await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
+      await action(page,'dashboardProtocols').click();
+      await page.getByRole('heading',{name:'Moji protokoli',exact:true}).waitFor();
+    };
+    const choose = async (contents) => {
+      const [picker] = await Promise.all([page.waitForEvent('filechooser'),action(page,'importWorkout').click()]);
+      assert.equal(await picker.element().getAttribute('id'),'importWorkoutFile');
+      await picker.setFiles({name:'trening.json',mimeType:'application/json',buffer:Buffer.from(contents)});
+    };
+    const snapshot = () => page.evaluate(() => ({
+      data:JSON.parse(localStorage.getItem('mt.data.v1')),
+      settings:localStorage.getItem('mt.settings')
+    }));
+    const plan = {
+      kind:'moj-trening-protocol',v:1,id:existingId,days:[3],log:[{historyId:'forged'}],
+      name:'Uvezeni trening',desc:'Plan iz samostalne datoteke.',
+      items:[
+        {exId:'side-plank',sets:1,sec:25,rest:30,section:'Priprema'},
+        {exId:'db-row',sets:2,reps:10,rest:90,section:'Snaga',targetRir:3,note:'S osloncem.',sides:false},
+        {exId:'db-overhead-press',sets:2,reps:8,rest:60,section:'Snaga',targetRir:4,kg:7.5}
+      ]
+    };
+    const source = JSON.stringify(plan);
+    await showProtocols();
+    const before = await snapshot();
+    for (const invalid of ['{',JSON.stringify(backup),JSON.stringify({...plan,items:[{...plan.items[0],exId:'nepoznata-vjezba'}]})]) {
+      await choose(invalid);
+      await page.locator('.toast[role="alert"]').waitFor();
+      assert.equal(await page.locator('#p-name').count(),0,'invalid file cannot open a draft');
+      assert.deepEqual(await snapshot(),before,'invalid file cannot write to storage');
+      await home(page);
+      await showProtocols();
+    }
+
+    await choose(source);
+    const name = page.locator('#p-name');
+    await name.waitFor();
+    assert.equal(await name.inputValue(),plan.name);
+    assert.equal(await page.locator('#p-desc').inputValue(),plan.desc);
+    assert.equal(await action(page,'itOpen').count(),3);
+    assert.deepEqual(await snapshot(),before,'opening the imported draft is read-only');
+    await page.locator('.topbar [data-a="back"]').click();
+    await action(page,'importWorkout').waitFor();
+    assert.deepEqual(await snapshot(),before,'closing the preview leaves the original data');
+
+    await choose(source);
+    await name.waitFor();
+    await page.locator('.topbar [data-a="savePr"]').click();
+    await page.getByRole('heading',{name:plan.name,exact:true}).waitFor();
+    const saved = await snapshot();
+    const newIds = Object.keys(saved.data.protocols).filter(id=>!Object.hasOwn(before.data.protocols,id));
+    assert.equal(newIds.length,1,'saving adds exactly one protocol with a new ID');
+    const [newId] = newIds;
+    const {[newId]:added,...existing} = saved.data.protocols;
+    assert.deepEqual({...saved.data,protocols:existing},before.data,'saving preserves existing data including history');
+    assert.equal(saved.settings,before.settings,'saving preserves settings');
+    assert.equal(added.name,plan.name);
+    assert.deepEqual(added.days,[],'file-supplied schedule is ignored');
+    assert.deepEqual(added.items.map(({exId,measure,sets,rest,section,sides})=>({exId,measure,sets,rest,section,sides})),[
+      {exId:'side-plank',measure:'time',sets:1,rest:30,section:'Priprema',sides:true},
+      {exId:'db-row',measure:'sets',sets:2,rest:90,section:'Snaga',sides:true},
+      {exId:'db-overhead-press',measure:'sets',sets:2,rest:60,section:'Snaga',sides:false}
+    ]);
+    assert.equal(added.items[0].sec,25);
+    assert.equal(added.items[1].reps,10);
+    assert.equal(added.items[1].targetRir,3);
+    assert.equal(added.items[1].note,'S osloncem.');
+    assert.equal(added.items[2].kg,7.5);
+
+    await home(page);
+    await showProtocols();
+    await page.locator('[data-a="openPr"][data-id="' + newId + '"]').click();
+    await page.getByRole('heading',{name:plan.name,exact:true}).waitFor();
+    assert.deepEqual(await snapshot(),saved,'the imported protocol survives reload');
+    await page.getByRole('button',{name:'Pokreni trening',exact:true}).click();
+    const missingWeight = page.locator('#starting-load-form input');
+    await missingWeight.waitFor();
+    assert.equal(await missingWeight.count(),1,'only the exercise with no supplied weight asks for it');
+    assert.equal(await missingWeight.inputValue(),'');
+    assert.deepEqual(await snapshot(),saved);
+    assert.deepEqual(errors,[]);
+    console.log('single-protocol-import',JSON.stringify({engine,rejectsInvalid:true,previewWithoutWrites:true,
+      newProtocolOnly:true,reload:true,unknownWeightPrompts:true}));
+  } finally {
+    await context.close();
+  }
+}
+
 (async () => {
   const host = await serve();
   let browser;
@@ -129,6 +238,7 @@ async function unknownRows(browser, url) {
     browser = await launch();
     await twoTabs(browser,host.url);
     await unknownRows(browser,host.url);
+    await singleProtocol(browser,host.url);
   } finally {
     if (browser) await browser.close();
     await host.close();

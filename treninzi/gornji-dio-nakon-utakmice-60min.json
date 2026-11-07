@@ -1,0 +1,61 @@
+{
+  "kind": "moj-trening-protocol",
+  "v": 1,
+  "name": "Gornji dio nakon utakmice · 60 min",
+  "desc": "Za dan nakon nogometne utakmice, kad se osjećaš spremno. Ukupno oko 60 min: 6 min laganog hodanja prije pokretanja, oko 43 min vođenih vježbi i odmora, 5 min za dvije lagane pripremne serije potiska (8 pa 5 ponavljanja) neposredno prije prve radne serije te 6 min laganog hodanja na kraju. U radnim serijama zadrži 4 čista ponavljanja u rezervi. Ako si sutradan još iscrpljen, pomakni trening za dan.",
+  "items": [
+    {
+      "exId": "band-pull-apart",
+      "section": "Priprema",
+      "sets": 2,
+      "reps": 15,
+      "rest": 45
+    },
+    {
+      "exId": "open-book",
+      "section": "Priprema",
+      "sets": 2,
+      "reps": 8,
+      "rest": 45
+    },
+    {
+      "exId": "dead-bug",
+      "section": "Priprema",
+      "sets": 2,
+      "reps": 6,
+      "rest": 45
+    },
+    {
+      "exId": "db-bench-press",
+      "section": "Snaga",
+      "sets": 4,
+      "reps": 8,
+      "rest": 180,
+      "targetRir": 4
+    },
+    {
+      "exId": "db-row",
+      "section": "Snaga",
+      "sets": 4,
+      "reps": 10,
+      "rest": 180,
+      "targetRir": 4
+    },
+    {
+      "exId": "db-overhead-press",
+      "section": "Snaga",
+      "sets": 3,
+      "reps": 8,
+      "rest": 150,
+      "targetRir": 4
+    },
+    {
+      "exId": "face-pull-cord",
+      "section": "Snaga",
+      "sets": 3,
+      "reps": 12,
+      "rest": 90,
+      "targetRir": 4
+    }
+  ]
+}

@@ -274,9 +274,10 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.4';
+const APP_VERSION = '1.20.5';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
+const WORKOUT_FILE_KIND = 'moj-trening-protocol';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
 const OLD_KEYS = ['mt.data.v2', 'mt.before-import.v2', 'mt.active.v2'];
 const DATA_COLLS = ['exercises', 'protocols', 'field', 'programs'];
@@ -810,8 +811,45 @@ function freshBackupObject(){
 // a backup is recognised by its content; the photo pack (also a .json file) is sent to its own row
 function backupProblem(d){
   if (isPlainObj(d) && d.kind === PACK_KIND) return 'Ovo je paket slika, a ne sigurnosna kopija. Ništa nije promijenjeno. Paket se uvozi u retku „Uvezi paket slika”.';
+  if (isPlainObj(d) && d.kind === WORKOUT_FILE_KIND) return 'Trening dodaj kroz Moji protokoli → Uvezi trening.';
   if (!isPlainObj(d) || (d.kind && d.kind !== BACKUP_KIND) || !(d.v === 1 || d.v === 2) || !isPlainObj(d.exercises) || !isPlainObj(d.protocols) || !Array.isArray(d.log)) return 'Ta datoteka nije sigurnosna kopija ove aplikacije. Ništa nije promijenjeno.';
   return '';
+}
+
+// A workout file only supplies a new draft. Library entries, dates and history stay local.
+function workoutFileDraft(data){
+  const textFits = (value, limit) => typeof value === 'string' && value.trim().length <= limit;
+  if (!isPlainObj(data) || data.kind !== WORKOUT_FILE_KIND || data.v !== 1) {
+    throw new Error('Odaberi JSON datoteku pojedinačnog treninga.');
+  }
+  if (!textFits(data.name, 120) || !data.name.trim() ||
+      (data.desc != null && !textFits(data.desc, 1600)) ||
+      !Array.isArray(data.items) || data.items.length < 1 || data.items.length > 30) {
+    throw new Error('Trening treba imati naziv i od 1 do 30 vježbi.');
+  }
+  const integerIn = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+  const items = data.items.map((item, index) => {
+    const number = index + 1;
+    const exercise = isPlainObj(item) && typeof item.exId === 'string' && Object.hasOwn(S.ex, item.exId) && S.ex[item.exId];
+    if (!exercise) throw new Error('Vježba ' + number + ' nije u tvojoj knjižnici.');
+    const base = exItem(exercise);
+    const timed = base.measure === 'time';
+    const validDose = timed ? integerIn(item.sec, 5, 600) : integerIn(item.reps, 1, 60);
+    if (!validDose || !integerIn(item.sets, 1, 10) || !integerIn(item.rest, 0, 300) ||
+        (item.kg != null && (!Number.isFinite(item.kg) || item.kg < 0 || item.kg > 5000)) ||
+        (item.targetRir != null && (timed || !integerIn(item.targetRir, 0, 10))) ||
+        (item.section != null && !textFits(item.section, 80)) ||
+        (item.note != null && !textFits(item.note, 300))) {
+      throw new Error('Provjeri serije, dozu i odmor za vježbu ' + number + '.');
+    }
+    const dose = { exId: exercise.id, measure: base.measure, sides: base.sides, sets: item.sets,
+      reps: timed ? base.reps : item.reps, sec: timed ? item.sec : base.sec, rest: item.rest, kg: item.kg ?? 0 };
+    if (item.targetRir != null) dose.targetRir = item.targetRir;
+    if (item.section?.trim()) dose.section = item.section.trim();
+    if (item.note?.trim()) dose.note = item.note.trim();
+    return dose;
+  });
+  return { name: data.name.trim(), desc: data.desc?.trim() || '', items };
 }
 // iPhone: the share sheet ("Spremi u Datoteke"); elsewhere a download. The answer says what really happened.
 async function shareOrDownload(name, body){
@@ -1733,7 +1771,8 @@ VIEWS.protocols = function(){
       '<div class="list" style="margin-top:14px"><button class="row" data-a="fieldList"><span class="thumb" style="background:#33404A">' + pathIcon(I.run, 28) + '</span><span class="tx"><span class="t">Treninzi na terenu</span><span class="m"><span>' + (fieldN ? fieldN + ' ' + plural(fieldN,'trening','treninga','treninga') : 'Učitavanje') + '</span><span class="tag">STATSports</span></span></span>' + I.chev + '</button></div>'
     )) +
     '<div style="height:16px"></div></div>' +
-    '<div class="footer gut"><button class="btn" data-a="newPr">' + I.plus.replace('<svg', '<svg width="18" height="18"') + 'Novi protokol</button></div>';
+    '<div class="footer gut"><button class="btn" data-a="newPr">' + I.plus.replace('<svg', '<svg width="18" height="18"') + 'Novi protokol</button>' +
+    (S.dbState === 'ready' ? '<button type="button" class="txtbtn flink" data-a="importWorkout">Uvezi trening</button><input id="importWorkoutFile" type="file" accept="application/json,.json" hidden>' : '') + '</div>';
 };
 
 // search also knows the words people use for the same thing: English equipment names, everyday words for body zones
@@ -5647,6 +5686,7 @@ const A = {
   },
   addToNew: () => { const e = S.ex[S.sheet.exId]; S.sheet = null; S.draft = { id: uid('p'), name:'', desc:'', items: e ? [newItem(e)] : [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   newPr: () => { S.draft = { id: uid('p'), name:'', desc:'', items: [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
+  importWorkout: () => { document.getElementById('importWorkoutFile')?.click(); },
   editPr: d => { const p = S.pr[d.id]; if (!p) return; S.draft = Object.assign(clone(p), { _open: null }); S.draft.items = S.draft.items || []; S.draft.items.forEach(it => { it._d0 = doseSig(it); }); S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   builderSectionApply: d => { const name=String(S.draft?._sectionName||'').trim();if(!name){toast('Upiši naziv dijela.');document.getElementById('builder-section-name')?.focus();return;}if(builderSetSection(+d.i,name.slice(0,80)))render(); },
   itOpen: d => { builderCommitSection(); const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
@@ -5708,6 +5748,21 @@ const A = {
     builderCommitSection();
     if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     if (!dr.items.length) { toast('Dodaj barem jednu vježbu.'); return; }
+    if (dr._fromWorkoutFile) {
+      try {
+        const current = localStorage.getItem(STORE_KEY);
+        if (!current || (current !== savedJson && !mergeOtherCopy(current))) throw new Error('Storage changed');
+        savedJson = current;
+        pendingExt = null;
+      } catch (_) {
+        toast('Podatke nije moguće učitati. Ponovno otvori aplikaciju prije spremanja treninga.', true);
+        return;
+      }
+      if (dr.items.some(item => !Object.hasOwn(S.ex, item.exId))) {
+        toast('Vježba više nije u knjižnici. Zamijeni je prije spremanja.', true);
+        return;
+      }
+    }
     const isNew = !S.pr[dr.id];
     const keepIf = (o, it, ks) => { ks.forEach(k => { if (it[k] != null && it[k] !== '') o[k] = it[k]; }); return o; };
     // a new protocol (also a copy) and every dose you changed by hand start counting "sessions in a row" from zero
@@ -6124,6 +6179,20 @@ app.addEventListener('change', async ev => {
   }
   if(t.id==='workout-equipment'){A.workoutEquipment({v:t.value});return;}
   if(t.id==='workout-target'){A.workoutTarget({v:t.value,j:t.dataset.j});return;}
+  if (t.id === 'importWorkoutFile' && t.files?.[0]) {
+    const file = t.files[0], origin = top(), selection = actionSeq;
+    t.value = '';
+    if (file.size > 32 * 1024) { toast('Datoteka treninga je prevelika.', true); return; }
+    let data;
+    try { data = JSON.parse(await file.text()); } catch (_) { data = null; }
+    if (top() !== origin || origin.v !== 'protocols' || selection !== actionSeq || S.sheet) return;
+    try {
+      S.draft = { ...workoutFileDraft(data), id: uid('p'), _open: null, _fromWorkoutFile: true };
+      S.draftSig = draftSig(S.draft);
+      go({ v:'build', id: S.draft.id });
+    } catch (error) { toast(error.message, true); }
+    return;
+  }
   // a backup only opens the preview sheet; nothing changes before "Zamijeni podatke"
   if ((t.id === 'importFile' || t.id === 'importFile2') && t.files && t.files[0]) {
     const f = t.files[0]; let d = null;

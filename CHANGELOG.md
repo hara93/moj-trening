@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.20.5 — 7. 11. 2026.
+
+- **Moji protokoli → Uvezi trening** otvara jedan protokol iz JSON datoteke. Trening se dodaje nakon spremanja pregleda.
+- Dodan je primjer treninga za gornji dio od približno 60 minuta nakon utakmice.
+
 ## 1.20.4 — 6. 11. 2026.
 
 - Vraćen je jednostavan prikaz vježbe s izravnim unosom ponavljanja, sekundi i kilograma. Uklonjene su nove tipke za zasebno uređivanje; bijela prozirna info ikona ostaje na fotografiji.
