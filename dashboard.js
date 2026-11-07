@@ -104,10 +104,13 @@
     const c = 2*Math.PI*47, step = c/28, length = total ? done/total*c : 0;
     const geometry = ' cx="56" cy="56" r="47" transform="rotate(-90 56 56)"';
     const mask = '<mask id="db-ring-ticks" maskUnits="userSpaceOnUse" x="0" y="0" width="112" height="112"><circle class="db-ring-mask"'+geometry+' stroke-dasharray="'+step*.78+' '+step*.22+'"/></mask>';
-    let rings = '<circle class="db-ring-track"'+geometry+'/>';
-    if (length) rings += '<circle class="db-ring-done"'+geometry+' stroke-dasharray="'+length+' '+c+'"/>';
-    if (forecast && projected>done) rings += '<circle class="db-ring-plan"'+geometry+' stroke-dasharray="'+(projected-done)/total*c+' '+c+'" stroke-dashoffset="'+(-length)+'"/>';
-    const svg = '<svg viewBox="0 0 112 112" aria-hidden="true" focusable="false"><defs>'+mask+'</defs><g mask="url(#db-ring-ticks)">'+rings+'</g></svg>';
+    let fills = '';
+    if (length) fills += '<circle class="db-ring-done"'+geometry+' stroke-dasharray="'+length+' '+c+'"/>';
+    if (forecast && projected>done) fills += '<circle class="db-ring-plan"'+geometry+' stroke-dasharray="'+(projected-done)/total*c+' '+c+'" stroke-dashoffset="'+(-length)+'"/>';
+    const reveal = fills ? '<mask id="db-ring-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="112" height="112">'+
+      '<circle class="chart-ring-sweep"'+geometry+' stroke-width="10" pathLength="100" stroke-dasharray="100 100" style="--chart-ring-length:'+((forecast?projected:done)/total*100)+'"/></mask>' : '';
+    const svg = '<svg viewBox="0 0 112 112" aria-hidden="true" focusable="false"><defs>'+mask+reveal+'</defs><g mask="url(#db-ring-ticks)"><circle class="db-ring-track"'+geometry+'/>'+
+      (fills?'<g mask="url(#db-ring-reveal)">'+fills+'</g>':'')+'</g></svg>';
     return '<div class="db-coverage"><div class="db-ring">'+svg+'<div><strong>'+fmt(done)+'<small>/'+fmt(total)+'</small></strong></div></div><b>skupina sa<br>zabilježenim radom</b>'+
       (forecast?'<span class="db-projection">S planom <strong>'+fmt(projected)+'/'+fmt(total)+'</strong></span>':'')+'</div>';
   }

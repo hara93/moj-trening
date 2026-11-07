@@ -267,14 +267,14 @@ function exMedia(e, first){
 // rows are 72 px: shipped media has a 192 px square (media.js "thumb"), so a long list never loads the full pictures
 function thumbHtml(e){
   const m = exMedia(e, true);
-  if (m) return m.thumb || m.type === 'image' || m.poster ? '<img alt="" loading="lazy" src="'+esc(m.thumb || (m.type === 'image' ? m.src : m.poster))+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
+  if (m) return m.thumb || m.type === 'image' || m.poster ? '<img alt="" loading="lazy" decoding="async" src="'+esc(m.thumb || (m.type === 'image' ? m.src : m.poster))+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
   return pathIcon(catIcon(e && e.cat), 28);
 }
 function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; }
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.14';
+const APP_VERSION = '1.20.15';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -1100,6 +1100,7 @@ function render(){
   captureEditForm();
   if (pendingExt && !appBusy()) takeOtherCopy();
   const key = viewKey();
+  const enteredView = app.dataset.key !== key;
   const fk = focusKey(document.activeElement);
   if (fk && fk.a && app.dataset.key && app.dataset.key !== key) focusMem[app.dataset.key] = fk;
   const old = app.querySelector('.view');
@@ -1124,6 +1125,8 @@ function render(){
   app.dataset.key = key;
   restoreEditForm();
   const v = app.querySelector('.view');
+  if (v && (enteredView || old?.classList.contains('tl-cinema') !== v.classList.contains('tl-cinema')) &&
+      (t.v === 'muscleWeek' || v.matches('.pg-cinema,.tl-cinema'))) v.classList.add('charts-entering');
   if (v && scrollMem[key] != null) v.scrollTop = scrollMem[key];
   if (sheetTop) {
     const sheet = app.querySelector('.sheet'), scroller = sheet?.querySelector(':scope > .fbody') || sheet;
@@ -1909,7 +1912,7 @@ const PIC_BOX = { '16:10': ' b1610', '3:2': ' b32' };
 function mediaHtml(e, badge, inPlayer){
   const m = exMedia(e); let inner, credit = '';
   if (m) {
-    inner = m.type === 'image' ? '<img class="fit" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'"'+(m.two ? ' style="object-position:50% '+(Number.isFinite(m.picY) ? m.picY : 50)+'%"' : '')+'>' : videoTag(m);
+    inner = m.type === 'image' ? '<img class="fit" fetchpriority="high" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'"'+(m.two ? ' style="object-position:50% '+(Number.isFinite(m.picY) ? m.picY : 50)+'%"' : '')+'>' : videoTag(m);
     credit = creditHtml(m) + swapHtml(e, m);
   } else inner = '<div class="ph">' + pathIcon(catIcon(e && e.cat), 44) + (inPlayer ? '' : '<span>Dodaj svoj video ili sliku u uređivanju</span>') + '</div>';   // mid-workout only the icon
   return '<div class="media'+(m && m.two ? ' two' + (PIC_BOX[m.picBox] || '') : '')+'">' + inner + credit + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
@@ -2305,8 +2308,14 @@ function cinemaMediaHtml(e) {
   if(!m)return '<div class="media cinema-single-media"><div class="ph">'+pathIcon(catIcon(e?.cat),72)+'</div></div>';
   const old=app.querySelector('.workout-cinema .cinema-single-media img,.workout-cinema .cinema-single-media video');
   const same=old&&old.getAttribute('src')===m.src;
+  const warmed=P._warmedPicture?.image;
+  const reuseWarmed=m.type==='image'&&warmed?.getAttribute('src')===m.src&&(!warmed.complete||warmed.naturalWidth);
   if(same)keepMedia=old;
-  const image=same?'<span id="keepmedia"></span>':m.type==='video'?videoTag(m):'<img src="'+esc(m.src)+'" alt="'+esc(e.name)+'">';
+  else if(reuseWarmed){
+    warmed.setAttribute('fetchpriority','high');warmed.alt=e.name;
+    keepMedia=warmed;delete P._warmedPicture;
+  }
+  const image=same||reuseWarmed?'<span id="keepmedia"></span>':m.type==='video'?videoTag(m):'<img fetchpriority="high" src="'+esc(m.src)+'" alt="'+esc(e.name)+'">';
   return '<div class="media cinema-single-media'+(m.two?' two':'')+'">'+image+creditHtml(m)+'</div>';
 }
 function cinemaRecordedStep(){
@@ -2801,7 +2810,7 @@ function workoutOverviewHero(p,first) {
   const items=viewDoseItems(top(),p.items||[]),sections=CinemaModel.sections(items,S.ex);
   const main=items.find((it,j)=>S.ex[it.exId]?.cat==='Snaga'&&!/prep|priprem|zagrij/i.test(sections[j]))||first;
   const e=main&&S.ex[main.exId],m=e&&exMedia(e,true);
-  return m?'<div class="hero single'+(m.two?' two':'')+'">'+(m.type==='image'?'<img alt="'+esc(e.name)+'" src="'+esc(m.src)+'">':videoTag(m))+'<span class="fade"></span>'+creditHtml(m)+'</div>':heroHtml(p,null);
+  return m?'<div class="hero single'+(m.two?' two':'')+'">'+(m.type==='image'?'<img fetchpriority="high" alt="'+esc(e.name)+'" src="'+esc(m.src)+'">':videoTag(m))+'<span class="fade"></span>'+creditHtml(m)+'</div>':heroHtml(p,null);
 }
 function workoutProtocolOptionsHtml(p,items) {
   return '<h3>Opcije treninga</h3><button type="button" class="opt" data-a="editPr" data-id="'+esc(p.id)+'">'+I.edit+'<span>Uredi trening</span></button>'+workoutExpectationHtml(p.id,items)+'<details class="workout-protocol-options"><summary>Raspored i planirani rad po mišićima</summary>'+protocolMusclePreview({items})+(p.program?'':daysPicker('prDays',p.id,p.days))+'</details>';
@@ -5272,7 +5281,7 @@ function attachSheetGestures(){
     const handle=document.createElement('button');
     handle.type='button';handle.className='sheet-drag-handle';handle.setAttribute('aria-label','Zatvori prozor');
     handle.title='Povuci dolje ili dodirni za zatvaranje';
-    if(native)node.append(handle);else node.prepend(handle);
+    if(native)node.firstElementChild.after(handle);else node.prepend(handle);
     const current=()=>node.isConnected&&(native?node.open:!!S.sheet&&app.querySelector('.sheet')===node);
     const close=()=>{if(!current())return;if(!native)dismissSheet();else if(node.id==='progress-info')ProgressView.closeInfo();else if(node.id==='training-load-info')TrainingLoadView.closeInfo();};
     const reset=()=>{node.classList.remove('is-sheet-dragging');node.style.removeProperty('transform');node.style.removeProperty('transition');};
@@ -5318,7 +5327,7 @@ function attachSheetGestures(){
       if(pull?.claimed)reset();
       pull=null;
       if(!current()||ev.touches.length!==1||ev.target.closest?.('.sheet-drag-handle,input,textarea,select,[contenteditable]'))return;
-      const scroller=native?node:ev.target.closest?.('.fbody');
+      const scroller=ev.target.closest?.('.fbody,#progress-info-body,#training-load-info-body');
       if(scroller?.scrollTop>1)return;
       const touch=ev.touches[0];
       if(native&&ev.target===node){
@@ -5345,6 +5354,26 @@ function attachSheetGestures(){
     node.addEventListener('touchcancel',()=>{if(pull?.claimed)reset();pull=null;},{passive:true});
   });
 }
+// Warm one following picture only after the picture on screen has loaded.
+// Private images and videos keep their existing on-demand loading path.
+function warmCinemaPicture(imageOrEvent){
+  const image=imageOrEvent.currentTarget||imageOrEvent;
+  if(!P||P.done||!image.isConnected||navigator.onLine===false||navigator.connection?.saveData||document.hidden)return;
+  if(!image.complete){image.addEventListener('load',warmCinemaPicture,{once:true});return;}
+  if(!image.naturalWidth)return;
+  const current=image.closest('.workout-cinema').dataset.exId;
+  const next=P.steps.find((step,index)=>index>P.i&&isWork(step)&&step.it?.exId!==current);
+  const exercise=next&&S.ex[next.it.exId],src=exercise&&!exercise.media&&window.EXMEDIA?.[exercise.id]?.pic;
+  const warmed=P._warmedPicture;
+  if(!src||warmed&&(!warmed.image.complete||warmed.src===src))return;
+  const upcoming=new Image();
+  upcoming.setAttribute('fetchpriority','low');upcoming.decoding='async';
+  P._warmedPicture={image:upcoming,src};upcoming.src=src;
+  setTimeout(()=>{
+    // Once promoted to the player, the request belongs to the visible image.
+    if(P?._warmedPicture?.image===upcoming&&!upcoming.complete)upcoming.removeAttribute('src');
+  },5000);
+}
 function playAfter(){
   P._lastI = P.i;
   const slot = document.getElementById('keepmedia');
@@ -5363,6 +5392,8 @@ function playAfter(){
     stage.addEventListener('pointercancel',()=>{start=null;},{passive:true});
     const video=stage.querySelector('video');
     if(video){if(P.paused||stillMotion())video.pause();else video.play()?.catch(()=>{});}
+    const picture=stage.querySelector('.cinema-single-media img');
+    if(picture)warmCinemaPicture(picture);
   }
   const row = document.getElementById('play-card-row');
   if (row && row.children.length) {
@@ -6367,9 +6398,7 @@ const A = {
     const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
   progTab: d => { S.progTab = d.v; render(); },
   progressInfo: (d,el) => ProgressView.showInfo(d.topic,el),
-  progressInfoClose: () => ProgressView.closeInfo(),
   trainingLoadInfo: (d,el) => TrainingLoadView.showInfo(d.topic,el),
-  trainingLoadInfoClose: () => TrainingLoadView.closeInfo(),
   setGoal: d => { if (!writeSetting('goal',S.settings.goal===d.v?null:d.v)) return; render(); },
   setBall: d => { const v = ballN() + (+d.d); if (!writeSetting('ballN',Math.max(0,Math.min(7,v)))) return; render(); },
   setMatch: d => { if (!writeSetting('matchDay',+d.v)) return; render(); },

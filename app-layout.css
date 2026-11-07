@@ -148,5 +148,9 @@
 .sheet-drag-handle:focus-visible{outline:none}
 .sheet-drag-handle:focus-visible::after{content:"";position:absolute;top:9px;left:8px;right:8px;height:7px;border-radius:8px;outline:2px solid var(--accent);outline-offset:2px}
 :is(#progress-info-title,#training-load-info-title):focus{outline:none}
+:is(.pg-dialog,.tl-dialog)[open]{display:flex;flex-direction:column;overflow:hidden}
+:is(.pg-dialog,.tl-dialog)::before{content:"";flex:none;display:block;width:38px;height:4px;margin:-7px auto 10px;background:#69818B66;border-radius:5px}
+:is(#progress-info-title,#training-load-info-title){flex:none}
+:is(#progress-info-body,#training-load-info-body){min-height:0;overflow:auto;overscroll-behavior:contain}
 .is-sheet-dragging{animation:none!important;will-change:transform}
 .is-sheet-dragging>.sheet-drag-handle{cursor:grabbing}

@@ -89,15 +89,15 @@ test('LM1 withholds a total when field speed data or actual dose are unknown',()
   const unknown=compute({kind:'protocol',secs:300,items:[{exId:id,sets:3,setsDone:3,done:true,reps:10,repsList:[5,null,3]}]});
   assert.equal(unknown.incomplete,true);assert.equal(unknown.incompleteReason,'dose');
 });
-function weeks(logs){
-  const M=loadModel({},logs),now=Date.now(),day=864e5,start=now-new Date(now).getDay()*day;
+function weeks(logs,now){
+  const M=loadModel({},logs),day=864e5,start=now-3*day;
   const sourceStart=source.indexOf('function weekLoads(n)'),sourceEnd=source.indexOf('/* ---------- load charts:',sourceStart);
   assert.ok(sourceEnd>sourceStart);
-  return new Function('S','weekStart','calDay','isTraining','fieldLogLoad','itemLoad','incompleteRecordedDose',source.slice(sourceStart,sourceEnd)+';return weekLoads(8);')(
-    {log:logs},()=>start,(at,n)=>at+n*day,()=>true,M.fieldLogLoad,M.itemLoad,()=>false);
+  return new Function('S','Date','weekStart','calDay','isTraining','fieldLogLoad','itemLoad','incompleteRecordedDose',source.slice(sourceStart,sourceEnd)+';return weekLoads(8);')(
+    {log:logs},{now:()=>now},()=>start,(at,n)=>at+n*day,()=>true,M.fieldLogLoad,M.itemLoad,()=>false);
 }
 test('weekly totals preserve known metres and visibly flag unknown speed or missing distance',()=>{
-  const now=Date.now(),W=weeks([{kind:'field',at:now,load:{m:1500,min:5}},{kind:'field',at:now,refId:'mas-test-5-min'}]);
+  const now=Date.UTC(2026,10,5,12),W=weeks([{kind:'field',at:now,load:{m:1500,min:5}},{kind:'field',at:now,refId:'mas-test-5-min'}],now);
   assert.equal(W[7].m,1500);assert.equal(W[7].hsr,0);assert.equal(W[7].partial,true);assert.equal(W[7].speedUnknown,true);
   const begin=source.indexOf('function weekLoadHtml(compact)'),end=source.indexOf('// the field page:',begin),segments=[];
   const html=new Function('weekLoads','shortDate','calDay','loadFmt','loadHead','weekBars','chartTable',source.slice(begin,end)+';return weekLoadHtml(true);')(

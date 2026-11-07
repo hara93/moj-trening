@@ -183,7 +183,7 @@ async function checkExercisePeriods(page) {
     await activitySummary.click();
     assert.equal(await page.locator('#progress-info').evaluate(node=>node.open),true);
     assert.ok(await page.locator('#progress-info-title').evaluate(node=>node===document.activeElement));
-    assert.equal(await page.locator('#progress-info [data-a="progressInfoClose"]').count(),1);
+    assert.equal(await page.locator('#progress-info').getByRole('button',{name:/^(×|Jasno)$/}).count(),0);
     assert.equal(await page.locator('#progress-info-title').innerText(),'Aktivnost i kontinuitet');
     assert.equal(await page.locator('#pg-consistency .heat i').count(),84);
     await page.keyboard.press('Escape');

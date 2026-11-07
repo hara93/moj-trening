@@ -66,11 +66,14 @@
       offset=end;
       return segment;
     }).join('');
+    var reveal=segments?'<mask id="tl-dial-reveal" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">'+
+      '<circle class="chart-ring-sweep"'+geometry+' stroke-width="22" pathLength="100" stroke-dasharray="100 100" transform="rotate(-90 64 64)"/></mask>':'';
     return '<svg class="tl-dial-art" viewBox="0 0 128 128" aria-hidden="true"><defs>'+
       '<mask id="tl-dial-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128"><circle class="tl-dial-mask"'+ticks+' transform="rotate(-90 64 64)"/></mask>'+
+      reveal+
       '<radialGradient id="tl-dial-shade" class="tl-dial-shade"><stop offset=".61" stop-opacity=".96"/><stop offset=".80" stop-opacity=".78"/><stop offset=".92" stop-opacity="0"/></radialGradient></defs>'+
       '<circle class="tl-dial-track"'+ticks+' transform="rotate(-90 64 64)"/>'+
-      '<g mask="url(#tl-dial-mask)"><g transform="rotate(-90 64 64)">'+segments+'</g></g>'+
+      (segments?'<g mask="url(#tl-dial-reveal)"><g mask="url(#tl-dial-mask)"><g transform="rotate(-90 64 64)">'+segments+'</g></g></g>':'')+
       '<circle cx="64" cy="64" r="60" fill="url(#tl-dial-shade)"/></svg>';
   }
   function effortDistribution(current){
@@ -193,19 +196,21 @@
       body=source?source.outerHTML:'<p>Za ovaj prikaz još nema podataka.</p>';
     }
     if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
-    el.querySelector('#training-load-info-title').textContent=title;el.querySelector('#training-load-info-body').innerHTML=body;
+    el.querySelector('#training-load-info-title').textContent=title;
+    var content=el.querySelector('#training-load-info-body');
+    content.classList.toggle('charts-entering',topic==='muscles');
+    content.innerHTML=body;
     if(topic==='effort'||topic==='model'){var detail=el.querySelector('details');if(detail)detail.open=true;}
     openDialog(el);
   }
-  function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><h2 id="training-load-info-title" tabindex="-1" autofocus></h2><div id="training-load-info-body"></div><button type="button" class="tl-dialog-done" data-a="trainingLoadInfoClose">Jasno</button></dialog>';}
+  function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><h2 id="training-load-info-title" tabindex="-1" autofocus></h2><div id="training-load-info-body"></div></dialog>';}
   function closeInfo(){var el=document.getElementById('training-load-info');if(!el)return;if(typeof el.close==='function')el.close();else el.removeAttribute('open');if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();}
   function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');openDialog(el);}
   function openDialog(el){
-    el.onclick=function(event){if(event.target===el)closeInfo();};
     el.oncancel=function(event){event.preventDefault();closeInfo();};
     el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};
     if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');
-    el.scrollTop=0;
+    el.querySelector('#training-load-info-body').scrollTop=0;
     el.querySelector('#training-load-info-title').focus({preventScroll:true});
   }
   return Object.freeze({render:render,showInfo:showInfo,showDetail:showDetail,closeInfo:closeInfo});

@@ -80,7 +80,7 @@ test('information controls have named native dialog and original detail routes r
   const html = View.render({});
   assert.match(html, /<dialog id="progress-info"[^>]*aria-labelledby="progress-info-title"/);
   assert.match(html, /<h2 id="progress-info-title" tabindex="-1" autofocus>/);
-  assert.match(html, /data-a="progressInfoClose">Jasno<\/button>/);
+  assert.doesNotMatch(html.match(/<dialog id="progress-info"[\s\S]*?<\/dialog>/)[0], /<button/);
   assert.match(html, /data-a="progressInfo" data-topic="load"/);
   assert.match(html, /data-a="progressInfo" data-topic="records"/);
   assert.match(html, /data-a="progInfo"/);

@@ -225,7 +225,7 @@ async function runScenarios(page) {
   assert.equal(await page.locator('#training-load-info-title').innerText(),'Napor treninga');
   const dialog = page.locator('#training-load-info');
   const title = dialog.locator('#training-load-info-title');
-  assert.equal(await dialog.locator('[data-a="trainingLoadInfoClose"]').count(),1);
+  assert.equal(await dialog.getByRole('button',{name:/^(×|Jasno)$/}).count(),0);
   assert.equal(await title.evaluate(node => document.activeElement === node), true,
     'opening the sheet by pointer focuses its title');
   assert.equal(await title.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'the title has no focus frame');
@@ -235,6 +235,7 @@ async function runScenarios(page) {
   await page.keyboard.press('Enter');
   const grip = dialog.locator('.sheet-drag-handle');
   assert.equal(await grip.evaluate(node => node.tabIndex), 0, 'the sheet grip stays in the tab order');
+  assert.equal(await dialog.getByRole('button').first().getAttribute('aria-label'),'Zatvori prozor');
   await grip.focus();
   assert.notEqual(await grip.evaluate(node => getComputedStyle(node,'::after').outlineStyle), 'none', 'the keyboard-focused grip has a visible focus frame');
   await grip.press('Enter');

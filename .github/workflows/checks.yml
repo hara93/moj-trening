@@ -67,6 +67,7 @@ jobs:
           node tools/browser/workout.cjs ${{ matrix.browser }}
           node tools/browser/training-load.cjs ${{ matrix.browser }}
           node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
+          node tools/browser/exercise-media.cjs ${{ matrix.browser }}
           node tools/browser/workout-reference.cjs ${{ matrix.browser }}
           node tools/browser/body-regions.cjs ${{ matrix.browser }}
           node tools/browser/dashboard-anatomy.cjs ${{ matrix.browser }}
@@ -75,6 +76,7 @@ jobs:
           node tools/browser/live-exercises.cjs ${{ matrix.browser }}
           node tools/browser/sections.cjs ${{ matrix.browser }}
           node tools/browser/sheet-gesture.cjs ${{ matrix.browser }}
+          node tools/browser/chart-motion.cjs ${{ matrix.browser }}
           node tools/browser/prestart-edit.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()

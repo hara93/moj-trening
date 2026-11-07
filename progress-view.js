@@ -231,7 +231,7 @@
   function dialog() {
     return '<dialog id="progress-info" class="pg-dialog" aria-labelledby="progress-info-title">' +
       '<h2 id="progress-info-title" tabindex="-1" autofocus></h2>' +
-      '<div id="progress-info-body"></div><button type="button" class="pg-dialog-done" data-a="progressInfoClose">Jasno</button></dialog>';
+      '<div id="progress-info-body"></div></dialog>';
   }
   function renderLegacy(vm) {
     vm = vm || {};
@@ -381,7 +381,7 @@
       '<stop offset="' + edge + '"' + start + '/><stop offset="100%" class="pg-ring-' + tone + '-end"/></radialGradient>';
   }
   function summaryRings(key, fractions) {
-    var gradients = '', rings = '';
+    var gradients = '', tracks = '', fills = '', end = 0;
     fractions.forEach(function (fraction, index) {
       var id = 'pg-ring-' + key + '-' + index;
       var tone = key === 'cadence' || index === 1 ? 'blue' : 'mint';
@@ -392,15 +392,25 @@
       for (var tick = 0; tick < count; tick++) {
         var start = (tick + .09) * step;
         track += ringSegment(inner, outer, start, start + .82 * step);
-        if (filled > tick) active += ringSegment(inner, outer, start, start + .82 * step * Math.min(1, filled - tick));
+        if (filled > tick) {
+          var stop = start + .82 * step * Math.min(1, filled - tick);
+          active += ringSegment(inner, outer, start, stop);
+          end = Math.max(end, stop);
+        }
       }
       gradients += ringGradient(id + '-track', inner, outer, 'track');
-      rings += '<path class="pg-ring-track" d="' + track + '" fill="url(#' + id + '-track)"/>';
+      tracks += '<path class="pg-ring-track" d="' + track + '" fill="url(#' + id + '-track)"/>';
       if (!active) return;
       gradients += ringGradient(id, inner, outer, tone);
-      rings += '<path class="pg-ring-fill" d="' + active + '" fill="url(#' + id + ')"/>';
+      fills += '<path class="pg-ring-fill" d="' + active + '" fill="url(#' + id + ')"/>';
     });
-    return '<svg class="pg-ring-graphic" viewBox="0 0 88 88" aria-hidden="true"><defs>' + gradients + '</defs>' + rings + '</svg>';
+    if (fills) {
+      var mask = 'pg-ring-reveal-' + key, length = Math.min(100, end / (2 * Math.PI) * 100 + .2);
+      gradients += '<mask id="' + mask + '" maskUnits="userSpaceOnUse" x="0" y="0" width="88" height="88">' +
+        '<circle class="chart-ring-sweep" cx="44" cy="44" r="31" stroke-width="42" pathLength="100" stroke-dasharray="100 100" transform="rotate(-90 44 44)" style="--chart-ring-length:' + length + '"/></mask>';
+      fills = '<g mask="url(#' + mask + ')">' + fills + '</g>';
+    }
+    return '<svg class="pg-ring-graphic" viewBox="0 0 88 88" aria-hidden="true"><defs>' + gradients + '</defs>' + tracks + fills + '</svg>';
   }
   function summaryCard(card) {
     return '<button type="button" class="pg-ring-card" data-a="progressDetail" data-topic="' + card.topic + '">' +
@@ -509,12 +519,11 @@
     openDialog(element);
   }
   function openDialog(element) {
-    element.onclick = function (event) { if (event.target === element) closeInfo(); };
     element.oncancel = function (event) { event.preventDefault(); closeInfo(); };
     element.onclose = restoreInfoFocus;
     if (typeof element.showModal === 'function') element.showModal();
     else element.setAttribute('open', '');
-    element.scrollTop = 0;
+    element.querySelector('#progress-info-body').scrollTop = 0;
     element.querySelector('#progress-info-title').focus({preventScroll:true});
   }
   function closeInfo() {

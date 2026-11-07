@@ -109,15 +109,19 @@ async function run(p,width){
   assert.equal(await info.evaluate(n=>document.activeElement===n),true,'native dialog restores opener focus');
   const activity=p.locator('.pg-summary-pair > button').first();
   await activity.click();
-  await dialog.getByRole('button',{name:'Jasno',exact:true}).click();assert.equal(await dialog.evaluate(n=>n.open),false);
-  await activity.click();
+  const grip=dialog.getByRole('button',{name:'Zatvori prozor',exact:true});
+  assert.equal(await dialog.getByRole('button',{name:/^(×|Jasno)$/}).count(),0);
+  await p.mouse.click(1,1);assert.equal(await dialog.evaluate(n=>n.open),true,'tapping the backdrop does not dismiss the dialog');
+  const gripY=(await grip.boundingBox()).y;
   const detail=dialog.locator('#progress-info-body');
-  const scrolled=await dialog.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;});
-  if(scrolled){
-    assert.equal(await bodyDrag(detail,0,135),false,'long detail still scrolls down toward its top');
-    assert.equal(await dialog.evaluate(n=>n.open),true);
-    await dialog.evaluate(n=>n.scrollTop=0);
-  }
+  assert.ok(await detail.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;}),'the activity body scrolls');
+  assert.equal((await grip.boundingBox()).y,gripY,'the grip stays accessible while the body scrolls');
+  await grip.tap();assert.equal(await dialog.evaluate(n=>n.open),false);
+  await activity.click();
+  await detail.evaluate(n=>n.scrollTop=100);
+  assert.equal(await bodyDrag(detail,0,135),false,'long detail still scrolls down toward its top');
+  assert.equal(await dialog.evaluate(n=>n.open),true);
+  await detail.evaluate(n=>n.scrollTop=0);
   assert.equal(await bodyDrag(detail,0,135),true,'downward touch at the activity dialog top moves the sheet');
   await dialog.waitFor({state:'hidden'});
   await p.waitForTimeout(390);

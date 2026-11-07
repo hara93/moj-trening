@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.20.15 — 8. 11. 2026.
+
+- Prozori u **Napretku** i **Opterećenju** zatvaraju se povlačenjem s vrha ili dodirom ručke koja je vidljiva i dok listaš sadržaj.
+- Kružni grafovi i pokazatelji rada po mišićima pune se do zabilježene vrijednosti pri ulasku u prikaz.
+- Aplikacija daje prednost slici na zaslonu, a player unaprijed učitava jednu sljedeću sliku iz kataloga. Spremljene slike otvaraju se iz lokalne kopije i osvježavaju u pozadini.
+
 ## 1.20.14 — 7. 11. 2026.
 
 - Uklonjena je tipka × iz zaglavlja prozora u **Napretku** i **Opterećenju**. Prozori se zatvaraju povlačenjem ili dodirom ručke te tipkom **Jasno** pri dnu.

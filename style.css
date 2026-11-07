@@ -29,6 +29,13 @@ a{color:var(--accent-text);text-decoration:none}
 .muscle-meter-direct{background:linear-gradient(90deg,#25CD9D,#62E9AA)}
 .muscle-meter-secondary{background:linear-gradient(90deg,#429BEF,#76CCFF)}
 .muscle-meter-plan{background:repeating-linear-gradient(135deg,#C7ACFF 0 2px,#514169 2px 5px)}
+.chart-ring-sweep{fill:none;stroke:#fff}
+@media(prefers-reduced-motion:no-preference){
+  .charts-entering .chart-ring-sweep{animation:chart-ring-fill .85s cubic-bezier(.2,.65,.35,1) backwards}
+  .charts-entering .muscle-meter>i{animation:chart-meter-fill .7s cubic-bezier(.2,.65,.35,1) backwards}
+}
+@keyframes chart-ring-fill{from{stroke-dasharray:0 100}to{stroke-dasharray:var(--chart-ring-length,100) 100}}
+@keyframes chart-meter-fill{from{width:0}}
 
 /* the app is pinned to the screen's four edges, not sized: an iPhone home-screen app (standalone, black-translucent status bar)
    can resolve height:100% / 100vh to the screen minus the status bar (with a black-translucent status bar it even leaves the
