@@ -83,6 +83,9 @@ async function superset(p){
   const active=live.locator('[data-a="workoutSetDone"]');assert.equal(await active.count(),1);assert.equal(await active.getAttribute('data-j'),'0');assert.equal(await active.getAttribute('data-set'),'1');
   const beforeRefusal=await play(p);await p.evaluate(()=>{window.realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='mt.play')throw new DOMException('Synthetic refusal','QuotaExceededError');return window.realSet.call(this,k,v);};});
   await active.click();assert.equal((await play(p)).i,beforeRefusal.i);assert.deepEqual((await play(p)).doneSteps,beforeRefusal.doneSteps);assert.equal(await row(p,0,1,'.workout-journal').getAttribute('data-state'),'active');assert.match(await p.locator('.toast').innerText(),/nije spremljena/);await p.evaluate(()=>{Storage.prototype.setItem=window.realSet;});await active.click();
+  await live.waitFor({state:'hidden'});const advanced=await play(p);
+  assert.equal(advanced.i,beforeRefusal.i+1);assert.equal(advanced.clock.paused,false);
+  await openJournal(p,true);
   const marked=row(p,0,1,'.workout-journal');assert.equal(await marked.getAttribute('data-state'),'done');
   await inline(p,0,1,'rir','0','.workout-journal');assert.equal(await marked.locator('[data-field=rir]').inputValue(),'0');assert.equal(await live.locator('[data-a="workoutSetDone"]').count(),0);
   await closeJournal(p);

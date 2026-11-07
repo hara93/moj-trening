@@ -254,11 +254,13 @@ async function runPlayer(p, width, url) {
   await expandGroup(p,0);
   const secondStep = (await player(p)).i;
   await row(p, 0, 2).locator('[data-a="workoutSetDone"]').click();
-  assert.equal(doneCount(await player(p)), 2); assert.equal((await player(p)).doneSteps[secondStep], 1);
-  assert.equal((await player(p)).clock.paused, true, 'completion inside journal leaves its clock paused');
-  const afterCheckbox = await player(p); await advance(p, 30);
-  assert.equal((await player(p)).i, afterCheckbox.i); assert.equal((await player(p)).clock.seconds, afterCheckbox.clock.seconds);
-  await closeJournal(p);
+  await sheet(p).waitFor({state:'hidden'});
+  const afterCheckbox = await player(p);
+  assert.equal(doneCount(afterCheckbox), 2); assert.equal(afterCheckbox.doneSteps[secondStep], 1);
+  assert.equal(afterCheckbox.i,secondStep+1); assert.equal(step(afterCheckbox).kind,'rest');
+  assert.equal(afterCheckbox.clock.paused,false,'the journal completion returns to running rest');
+  await advance(p,afterCheckbox.left+.1);
+  assert.equal(step(await player(p)).set,3,'the next set starts without a separate resume');
   for (let set = 3; set <= 5; set++) {
     await manual(p, set); const before = await player(p);
     await A(p, 'cinemaMain').click(); await closeCompletionPanel(p);
@@ -422,7 +424,7 @@ async function setRecovery(p,width) {
   await openJournal(p,3);
   await row(p,0,1).locator('[data-a="workoutSetDone"]').click();
   assert.equal((await player(p)).doneSteps[first],1);
-  await closeJournal(p);
+  await sheet(p).waitFor({state:'hidden'});
   await saveResult(first,12,2);
   const firstResult = await player(p);
   assert.equal(firstResult.liveSchedule[first].actualReps,12);
@@ -476,7 +478,16 @@ async function setRecovery(p,width) {
   await main.click();
   await manual(p,3);
   const third = (await player(p)).i;
-  await main.click();
+  await openJournal(p,3);
+  const finalCheckbox = row(p,0,3).locator('[data-a="workoutSetDone"]');
+  const beforeReview = await player(p);
+  await p.evaluate(()=>{window.realSet=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='mt.play')throw new DOMException('Synthetic refusal','QuotaExceededError');return window.realSet.call(this,key,value);};});
+  await finalCheckbox.click();
+  assert.deepEqual(await player(p),beforeReview,'a rejected last-set save keeps the journal checkpoint');
+  assert.ok(await finalCheckbox.isVisible());
+  await p.evaluate(()=>{Storage.prototype.setItem=window.realSet;});
+  await finalCheckbox.click();
+  await sheet(p).waitFor({state:'hidden'});
   await A(p,'finishPlay').waitFor();
   await saveResult(third,13,3);
   const finished = await player(p);

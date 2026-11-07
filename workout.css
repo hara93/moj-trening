@@ -73,6 +73,16 @@ span.workout-exercise-open{cursor:default}
 .workout-alternatives .tx{gap:5px}
 .workout-alternatives .tx b{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
 .workout-alternatives .tx small{font-size:11px;line-height:1.45;color:#BDCADB;overflow-wrap:anywhere}
+.cinema-journal-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.cinema-journal-actions .cinema-add-exercise,.cinema-journal .cinema-remove-exercise{display:inline-flex;align-items:center;gap:5px}
+.cinema-journal-actions .cinema-add-exercise svg,.cinema-journal .cinema-remove-exercise svg{width:14px;height:14px;flex:none}
+.cinema-journal .cinema-remove-exercise{min-height:44px;padding:8px 0;color:#f0a3a1;font-size:12px}
+.cinema-journal .is-collapsed .cinema-remove-exercise{display:none}
+.cinema-option-sheet .cinema-remove-confirm{color:#f0a3a1}
+.cinema-exercise-choices{max-height:36vh;overflow:auto;overscroll-behavior:contain}
+.cinema-exercise-choices .row{min-height:64px}
+.cinema-exercise-choices .thumb{width:44px;height:44px}
+.cinema-exercise-choices .row>svg{width:16px;height:16px;flex:none;color:var(--accent)}
 .workout-details{display:grid;gap:14px;margin-top:23px;padding-top:17px;border-top:1px solid var(--wk-line)}
 .workout-details>.lift,.workout-details>.pre-sets{margin:0!important}
 .workout-details .daypicker{margin:0}
@@ -463,6 +473,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-info button::before{content:none}
 .workout-cinema-info svg{position:relative;z-index:1;width:24px!important;height:24px!important}
 .workout-cinema-next{position:relative;z-index:3;max-height:calc(100% - 16px);overflow:auto;margin:8px 14px;padding:12px;border:1px solid #8AA2AC55;border-radius:15px;background:#252C37ED;backdrop-filter:blur(12px);font-size:12px;line-height:1.4;color:#DCE9E6}
+.workout-cinema-next:has(>.cinema-next){background:#252C3780}
 .workout-cinema-next:empty{display:none}
 .workout-cinema-next :is(button,a){min-height:44px;min-width:44px}
 .workout-cinema-next :is(img,video){display:block;flex:none;width:48px;height:56px;object-fit:contain;border-radius:8px;background:var(--surface-2)}

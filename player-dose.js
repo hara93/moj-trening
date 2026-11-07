@@ -168,10 +168,10 @@
       item: out
     };
   }
-  function rebuild(player, updatedItems, buildSchedule) {
+  function rebuild(player, updatedItems, buildSchedule, options = {}) {
     const generated = buildSchedule(updatedItems);
     const pastSteps = player.steps.slice(0, player.i);
-    const currentStep = player.steps[player.i];
+    const currentStep = options.dropCurrent ? null : player.steps[player.i];
     const passedKeys = new Set(pastSteps.map(key));
     const currentKey = currentStep && key(currentStep);
     const originalByKey = new Map();
@@ -183,8 +183,13 @@
     // Completed evidence and the current timer survive literally. An unfinished
     // manual set may receive its edited dose without becoming a second set.
     const updatedCurrent = generated.find(step => key(step) === currentKey);
-    const current = currentStep && currentStep.kind === 'manual' && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
-    const futureSteps = generated.filter(step => !passedKeys.has(key(step)) && key(step) !== currentKey && step.kind !== 'prep');
+    const current = !options.afterPassed && currentStep && currentStep.kind === 'manual' && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
+    // Rebuilding again after a removal can generate a rest for an earlier
+    // round that ended differently before the exercise was removed.
+    const after = options.afterPassed || player.liveBaseItems
+      ? generated.findLastIndex(step => passedKeys.has(key(step)) || key(step) === currentKey) + 1
+      : 0;
+    const futureSteps = generated.slice(after).filter(step => !passedKeys.has(key(step)) && key(step) !== currentKey && step.kind !== 'prep');
     const steps = pastSteps.concat(current ? [current] : [], futureSteps.map(step => {
       const previous = originalByKey.get(key(step));
       return previous && player.doneSteps[previous.index] ? previous.step : step;
@@ -210,6 +215,26 @@
       doneSteps,
       rir
     };
+  }
+  function removeExercise(player, group, updatedItems, buildSchedule) {
+    const steps = [], doneSteps = {}, rir = {};
+    let i = 0, dropCurrent = false;
+    player.steps.forEach((step, index) => {
+      // The initial preparation belongs to the whole workout. Timed
+      // transitions and preparation inserted later belong to an occurrence.
+      const initialPrep = index === 0 && step.kind === 'prep' && !step.set;
+      if (!initialPrep && step.g === group) {
+        if (index === player.i) dropCurrent = true;
+        return;
+      }
+      if (player.doneSteps[index]) doneSteps[steps.length] = player.doneSteps[index];
+      if (player.rir?.[index] != null) rir[steps.length] = player.rir[index];
+      steps.push(step.g > group ? {...step,g:step.g-1} : step);
+      if (index < player.i) i++;
+    });
+    // Steps that no longer belong to the new timeline must not be reinserted
+    // before the position the player already reached.
+    return {timeline:rebuild({...player,steps,doneSteps,rir,i},updatedItems,buildSchedule,{dropCurrent,afterPassed:true}),dropCurrent};
   }
   function rows(player, itemIndex, claimAll) {
     const item = player.items[itemIndex];
@@ -293,7 +318,7 @@
     return rows(p, j, false).filter(r => r.sides === expected).length;
   }
   function changed(p, j, actual) {
-    var baseline = p.originalItems && p.originalItems[j];
+    var baseline = (p.liveBaseItems || p.originalItems)?.[j];
     if (!baseline || !actual.length) {
       return false;
     }
@@ -437,6 +462,7 @@
     locks: locks,
     editItem: editItem,
     rebuild: rebuild,
+    removeExercise: removeExercise,
     rows: rows,
     completeSets: completeSets,
     checklist: checklist,

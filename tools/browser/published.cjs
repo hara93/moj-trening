@@ -99,6 +99,11 @@ async function main() {
     await page.locator('#progress-info [data-a="progressInfoClose"]').first().click();
     report.checks.progressDetailsAndHelp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
+    await page.locator('.tabbar [data-tab="analytics"]').click();
+    await page.getByRole('heading',{name:'Napredak',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Natrag',exact:true}).click();
+    await page.getByRole('heading',{name:'Moj pregled',exact:true}).waitFor();
+    report.checks.progressTabBack=true;
     report.checks.simplifiedNavigation=true;
     await page.locator('[data-a="dashboardAnalytics"]').click();
     assert.equal(await page.locator('.db-region[role="button"][data-a="dashboardGroup"]').count(),musclePaths,'all muscle groups have their selectable front/back regions');
@@ -203,11 +208,19 @@ async function main() {
     await page.locator('.view.dashboard').evaluate(view=>{view.scrollTop=0;});
     await page.screenshot({path:screenshotPath,animations:'disabled'});
 
-    // Check the older figure entry too, in the same unused disposable context.
+    // Check the library figure in the same disposable context.
     await page.goto(base+'?verify='+encodeURIComponent(revision),{waitUntil:'domcontentloaded'});
     await page.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
     await page.getByRole('button',{name:'Filter vježbi',exact:true}).click();
     await page.locator('.filtfig').waitFor();
+    const equipment=page.locator('.fsheet [data-a="eqToggle"]');
+    assert.equal(await equipment.getAttribute('aria-expanded'),'false');
+    assert.equal(await page.locator('.fsheet [data-a="eqTile"]').first().isVisible(),false);
+    await equipment.click();
+    assert.equal(await equipment.getAttribute('aria-expanded'),'true');
+    assert.equal(await page.locator('.fsheet [data-a="eqTile"]').first().isVisible(),true);
+    await equipment.click();
+    report.checks.collapsibleLibraryEquipment=true;
     assert.equal(await page.locator('.filtfig [data-region]').count(),regionPaths);
     assert.equal(await page.locator('.filtfig [data-region="hip_joints"]').count(),2);
     assert.equal(await page.locator('.filtfig .body-art').count(),2);
@@ -244,6 +257,11 @@ async function main() {
       await page.locator('#starting-load-form button[type="submit"]').click();
     }
     await page.locator('.workout-cinema').waitFor();
+    const nextCard = page.locator('.workout-cinema-next:has(>.cinema-next)');
+    await nextCard.waitFor();
+    const nextOpacity = await nextCard.evaluate(node=>Number(/,\s*([\d.]+)\)$/.exec(getComputedStyle(node).backgroundColor)?.[1]));
+    assert.ok(nextOpacity >= .49 && nextOpacity <= .51,'next exercise card has an approximately half-transparent background');
+    report.checks.nextCardOpacity=nextOpacity;
     await page.locator('.workout-cinema .cinema-single-media img').evaluate(img=>img.decode());
     await page.screenshot({path:path.join(artifacts,'published-cinema-player-375.png'),animations:'disabled'});
     report.checks.cinematicPlayer=true;

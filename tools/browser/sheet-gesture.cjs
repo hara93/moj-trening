@@ -28,6 +28,20 @@ async function touchDrag(p,dialog,dx,dy,cancel=false){
   },{dx,dy,cancel});
   await p.waitForTimeout(390);
 }
+async function bodyDrag(target,dx,dy){
+  return target.evaluate((node,args)=>{
+    const b=node.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2;
+    const send=(type,touches)=>{
+      const event=new Event(type,{bubbles:true,cancelable:true});
+      Object.defineProperty(event,'touches',{value:touches});
+      return !node.dispatchEvent(event);
+    };
+    send('touchstart',[{identifier:1,clientX:x,clientY:y}]);
+    const claimed=send('touchmove',[{identifier:1,clientX:x+args.dx,clientY:y+args.dy}]);
+    send('touchend',[]);
+    return claimed;
+  },{dx,dy});
+}
 async function manual(p){
   for(let count=0;count<12;count++){
     const s=await player(p),step=s.liveSchedule[s.i];
@@ -93,10 +107,53 @@ async function run(p,width){
   await drag(p,dialog,0,20);assert.equal(await dialog.evaluate(n=>n.open),true);
   await drag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
   assert.equal(await info.evaluate(n=>document.activeElement===n),true,'native dialog restores opener focus');
+  const activity=p.locator('.pg-summary-pair > button').first();
+  await activity.click();
+  await dialog.locator('.pg-dialog-head button').click();assert.equal(await dialog.evaluate(n=>n.open),false);
+  await activity.click();
+  const detail=dialog.locator('#progress-info-body');
+  const scrolled=await dialog.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;});
+  if(scrolled){
+    assert.equal(await bodyDrag(detail,0,135),false,'long detail still scrolls down toward its top');
+    assert.equal(await dialog.evaluate(n=>n.open),true);
+    await dialog.evaluate(n=>n.scrollTop=0);
+  }
+  assert.equal(await bodyDrag(detail,0,135),true,'downward touch at the activity dialog top moves the sheet');
+  await dialog.waitFor({state:'hidden'});
+  await p.waitForTimeout(390);
+  assert.equal(await activity.evaluate(n=>n===document.activeElement),true,'activity dialog returns focus to its card');
   await p.locator('[data-a="analyticsMode"][data-v="load"]').click();await A(p,'trainingLoadInfo').first().click();
   dialog=p.locator('#training-load-info');
   assert.ok(await dialog.locator('.tl-dialog-head button').evaluate(n=>document.activeElement===n));
   await touchDrag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
+  await p.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]').click();
+  assert.equal(await bodyDrag(dialog.locator('#training-load-info-body'),0,135),true);
+  await dialog.waitFor({state:'hidden'});
+  await p.waitForTimeout(390);
+
+  await p.reload();await p.getByRole('heading',{name:'Bok, Tomislav',exact:true}).waitFor();
+  await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
+  await A(p,'eqSheet').click();
+  const filter=sheet(p),equipment=A(p,'eqToggle'),tiles=A(p,'eqTile');
+  const filterBody=filter.locator('.fbody'),figure=filter.locator('.filtfig');
+  const compactY=(await figure.boundingBox()).y;
+  assert.equal(await equipment.getAttribute('aria-expanded'),'false');assert.equal(await tiles.first().isVisible(),false);
+  await equipment.click();
+  assert.equal(await equipment.getAttribute('aria-expanded'),'true');assert.ok(await tiles.first().isVisible());
+  assert.ok((await figure.boundingBox()).y>compactY,'only expanded equipment moves the figure down');
+  await tiles.first().click();
+  assert.equal(await tiles.first().getAttribute('aria-pressed'),'true');
+  assert.equal(await equipment.getAttribute('aria-expanded'),'true');
+  assert.ok(await filterBody.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;}));
+  assert.equal(await bodyDrag(filterBody,0,135),false,'downward touches from scrolled filter content stay with scrolling');
+  await drag(p,filter,0,135);await filter.waitFor({state:'hidden'});
+  await A(p,'eqSheet').click();
+  assert.equal(await equipment.getAttribute('aria-expanded'),'false');
+  assert.match(await equipment.innerText(),/1 odabrano/);
+  assert.equal(await bodyDrag(filterBody,0,-135),false,'upward filter touch stays with scrolling');
+  assert.equal(await bodyDrag(filterBody,135,20),false,'horizontal filter touch leaves the sheet in place');
+  assert.equal(await bodyDrag(filterBody.locator('.fl').first(),0,135),true,'pulling filter text down from the top dismisses it');
+  await filter.waitFor({state:'hidden'});await p.waitForTimeout(390);
 
   // Closing a discard question keeps the unsaved draft, matching Escape/Back.
   await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProtocols').click();await A(p,'newPr').click();
@@ -106,7 +163,8 @@ async function run(p,width){
   assert.deepEqual((await saved(p)).protocols,original.protocols);assert.deepEqual((await saved(p)).log,original.log);
   await A(p,'back').first().click();await A(p,'leaveDiscard').click();
   report.push({width,shortDragRetained:true,horizontalRetained:true,cancelledTouchRetained:true,downDragCloses:true,
-    restoredOriginalPause:true,bodyScrollAndInputsRetained:true,nestedReturnsToJournal:true,nativeDialogsCloseAndRestoreFocus:true,unsavedDraftGuardRetained:true,historyUnchanged:true});
+    restoredOriginalPause:true,bodyScrollAndInputsRetained:true,nestedReturnsToJournal:true,nativeDialogsCloseAndRestoreFocus:true,
+    filterEquipmentStartsCollapsed:true,filterBodyAndScrolledGrabDismiss:true,analyticsBodyDismiss:true,unsavedDraftGuardRetained:true,historyUnchanged:true});
 }
 
 (async()=>{

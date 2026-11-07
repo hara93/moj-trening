@@ -1,5 +1,12 @@
 # Promjene
 
+## 1.20.13 — 7. 11. 2026.
+
+- **Analiza tjedna** ponovno prikazuje figuru uz krug pokrivenosti. U **Knjižnici** je figura veća, oprema se otvara na dodir, a povlačenje prema dolje s vrha zatvara filtar.
+- Kvačica za aktivnu seriju u **Dnevniku** vraća player na sljedeći korak ili pregled rezultata. Kartica **Slijedi** ima poluprozirnu pozadinu.
+- U **Dnevniku** možeš dodati vježbu na kraj aktivnog treninga ili ukloniti vježbu bez zabilježene serije. Spremljeni protokol ostaje isti.
+- Strelica u **Napretku** vraća prethodni zaslon. Prozori s detaljima zatvaraju se povlačenjem s vrha ili tipkom ×.
+
 ## 1.20.12 — 7. 11. 2026.
 
 - Veća figura u **Mišićnom tjednu** olakšava odabir. Prednji mišići potkoljenice imaju zasebnu skupinu, a dodir gležnja otvara objašnjenje zgloba.

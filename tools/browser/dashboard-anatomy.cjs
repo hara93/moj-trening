@@ -204,14 +204,16 @@ async function noOverflow(page, width) {
   assert.ok(size.document <= size.viewport + 1 && size.content <= size.view + 1, width + ' px: ' + JSON.stringify(size));
 }
 
-async function fullWidthFigure(page) {
+async function compactWeekFigure(page) {
   const layout = await page.locator('.db-anatomy-row').evaluate(row => {
     const figure = row.querySelector('.db-body-svg').getBoundingClientRect();
     const coverage = row.querySelector('.db-coverage').getBoundingClientRect();
-    return {rowWidth: row.clientWidth, figureWidth: figure.width, figureBottom: figure.bottom, coverageTop: coverage.top};
+    return {figureWidth: figure.width, figureRight: figure.right, figureBottom: figure.bottom,
+      coverageLeft: coverage.left, coverageTop: coverage.top};
   });
-  assert.ok(Math.abs(layout.rowWidth - layout.figureWidth) <= 1, 'the figure uses the available width');
-  assert.ok(layout.coverageTop >= layout.figureBottom, 'coverage is below the full-width figure');
+  assert.ok(layout.coverageLeft > layout.figureRight && layout.coverageTop < layout.figureBottom,
+    'coverage sits beside the weekly figure');
+  return layout.figureWidth;
 }
 
 async function colorStates(page, width) {
@@ -328,7 +330,7 @@ async function shinAndAnkle(page, width) {
       await page.goto(host.url, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor(); await importData(page);
       await dashboard(page);
-      await fullWidthFigure(page);
+      const weekFigureWidth = await compactWeekFigure(page);
       const dashboardGeometry = await geometry(page, body);
       const before = await page.evaluate(() => localStorage.getItem('mt.data.v1'));
       for (const group of groups) {
@@ -341,11 +343,14 @@ async function shinAndAnkle(page, width) {
       assert.equal(await page.evaluate(() => localStorage.getItem('mt.data.v1')), before, 'selection/forecast cannot modify recorded data');
       await home(page); await page.getByRole('button', { name: 'Knjižnica vježbi', exact: true }).click();
       await A(page, 'eqSheet').click(); await page.locator('.filtfig').waitFor();
+      const libraryFigure = await page.locator('.filtfig').boundingBox();
+      assert.ok(libraryFigure.width > width && libraryFigure.width > weekFigureWidth,
+        'the library figure scales the anatomy into the available width');
       assert.deepEqual(await geometry(page, '.filtfig'), dashboardGeometry, 'dashboard and library use identical visible muscle forms');
       assert.deepEqual(errors, []);
       results.push({ width, touchGroups: groups.length, keyboardGroups: groups.length, absParts: 8,
         geometryMatchesLibrary: true, emptySelectionIsNotWork: true, directGreenIndirectBlueForecastPurplePreserved: true,neckRecordedDirect:2,neckRecordedSecondary:1,neckEquivalent:2.5,
-        frontShinsTouchAndKeyboard: true, frontShinsRecordedDirect: 2, rearCalvesCreditSeparate: true, ankleJointDialog: true, fullWidthFigure: true });
+        frontShinsTouchAndKeyboard: true, frontShinsRecordedDirect: 2, rearCalvesCreditSeparate: true, ankleJointDialog: true, compactWeekFigure: true, largerLibraryFigure: true });
       await context.close();
     }
     const report = { engine, passed: true, results, artifacts };

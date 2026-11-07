@@ -53,7 +53,7 @@ async function basics(p){
   await home(p);const lib=p.getByRole('button',{name:'Knjižnica vježbi',exact:true});await lib.focus();await p.keyboard.press('Enter');
   const q=p.locator('#libq');await q.fill('xzz-test-no-matches');assert.equal(await p.locator('#liblist [data-a="openEx"]').count(),0);
   await q.fill('bench');assert.ok(await p.locator('#liblist [data-a="openEx"]').count()>0);
-  await A(p,'eqSheet').click();const filter=p.locator('[data-a="eqTile"]').first();await filter.click();await A(p,'sheetDone').click();await A(p,'filtClear').click();await q.fill('bench');await by(p,'openEx','bench-press').click();
+  await A(p,'eqSheet').click();await A(p,'eqToggle').click();const filter=p.locator('[data-a="eqTile"]').first();await filter.click();await A(p,'sheetDone').click();await A(p,'filtClear').click();await q.fill('bench');await by(p,'openEx','bench-press').click();
   await p.locator('.workout-exercise-page').waitFor();
   for(const [action,close] of [['workoutInfo','workoutPanelBack'],['workoutHistory','workoutPanelBack'],['workoutTrends','workoutPanelBack']]){await A(p,action).first().click();await p.locator('.workout-fullscreen').waitFor();await A(p,close).click();if(await A(p,'workoutClose').count())await A(p,'workoutClose').first().click();}
   assert.equal(await p.locator('.exswipe,.play-cards').count(),0);

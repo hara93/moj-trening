@@ -105,6 +105,24 @@ test('schedule rebuild preserves current rest/time, passed and completed steps a
   assert.equal(fresh.rir[1], 2);
   assert.equal(fresh.steps.filter(s => s.kind === 'manual' && s.g === 1).length, 2);
 });
+test('rebuilding after superset removal keeps passed rounds behind the editable current set', () => {
+  const items = D.items([{...item(),sets:2},{...item('b'),sets:2}]);
+  function buildRounds(doses) {
+    const first = doses.map((it,g)=>({kind:'manual',it,g,set:1}));
+    const second = doses.map((it,g)=>({kind:'manual',it,g,set:2}));
+    return [{kind:'prep',g:0,dur:5},...first,{...first.at(-1),kind:'rest',dur:30},...second];
+  }
+  const p = {items,steps:buildRounds(items),i:4,doneSteps:{1:1},rir:{1:2}};
+  const {timeline,dropCurrent} = D.removeExercise(p,1,[items[0]],buildRounds);
+  assert.equal(dropCurrent,false);
+  const edited = D.editItem(items[0],{rows:[{set:2,reps:12}]}).item;
+  const fresh = D.rebuild({...p,...timeline,liveBaseItems:[items[0]]},[edited],buildRounds);
+  assert.equal(fresh.steps[fresh.i].set,2);
+  assert.equal(D.at(fresh.steps[fresh.i].it,2).reps,12);
+  assert.deepEqual(fresh.steps.map(step=>step.kind),['prep','manual','manual']);
+  assert.deepEqual(fresh.doneSteps,{1:1});
+  assert.deepEqual(fresh.rir,{1:2});
+});
 test('noncontiguous completed rounds retain original set ordinals, doses and reserve masks', () => {
   let p = player();
   p.doneSteps = {

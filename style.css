@@ -706,17 +706,24 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .swdots .dot[aria-current="true"] i{width:14px}
 
 /* Filter vježbi */
-.sheet.fsheet{max-height:none;height:calc(100% - 48px);padding-bottom:0;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;position:relative}
+.sheet.fsheet{max-height:none;height:calc(100% - 48px);padding-bottom:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .fsheet .grab{flex:none}
-.fhd{position:sticky;top:-10px;z-index:2;background:var(--surface);display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 8px;margin:0 -2px}
+.fhd{flex:none;display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 8px;margin:0 -2px}
 .fhd h3{margin:0 !important;font-size:19px !important}
 .fcnt{font-size:17px;font-weight:600;color:var(--accent-text);font-variant-numeric:tabular-nums}
+.fbody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;margin-inline:-12px;padding-inline:12px}
 .fsec{margin-top:12px;flex:none}
 .fpre{gap:8px;margin-top:4px;flex:none}
 .fl{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:600;margin:0 2px 10px}
 .chip.sm{height:44px;padding:0 13px;border-radius:12px;font-size:13.5px}
 .fcats{gap:7px}
+.f-eq-toggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--text);font-size:15px;font-weight:600;text-align:left}
+.f-eq-toggle svg{margin-inline-start:auto;width:17px;height:17px;transform:rotate(90deg)}
+.f-eq-toggle[aria-expanded="true"] svg{transform:rotate(-90deg)}
+.f-eq-count{color:var(--accent-text);font-size:12px}
 .eqgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.f-eq-toggle+.eqgrid{margin-top:10px}
+.eqgrid[hidden]{display:none}
 .eqt{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;border:0;background:transparent;padding:0;color:var(--text)}
 .eqt .bx{width:100%;height:56px;box-sizing:border-box;border-radius:16px;background:var(--surface-2);border:2px solid transparent;display:flex;align-items:center;justify-content:center;color:var(--text)}
 .eqt .bx svg{width:28px;height:28px}
@@ -725,12 +732,15 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .eqt[aria-pressed="true"] .tx{color:var(--text)}
 .figs{padding:4px 0 0}
 .figs .body-fig{margin:0 auto}
+.fsheet .figs{margin-inline:-8px;overflow:hidden}
+/* Crop the unused side gutters of the SVG to make the anatomy itself larger. */
+.fsheet .filtfig{width:112%;max-width:none;margin:0 -6%}
 .figl{display:flex;justify-content:space-around;margin-top:6px;font-size:12px;color:var(--text-2)}
 .zch{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;min-height:44px;align-items:center}
 .zhint{font-size:13px;color:var(--text-2)}
 .afc{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 10px 0 12px;border:0;border-radius:10px;background:var(--tag-bg);color:var(--accent-text);font-size:13.5px;font-weight:600;white-space:nowrap;flex:none}
 .afc svg{opacity:.85}
-.fft{position:sticky;bottom:0;z-index:2;display:grid;grid-template-columns:1fr 2fr;gap:10px;margin:16px -16px 0;margin-top:auto;padding:14px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));background:linear-gradient(transparent, var(--surface) 14px)}
+.fft{flex:none;display:grid;grid-template-columns:1fr 2fr;gap:10px;margin:0 -16px;padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));background:var(--surface)}
 .fft .btn{height:52px;font-size:16px}
 
 /* the library with filters in use */

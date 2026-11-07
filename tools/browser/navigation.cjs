@@ -50,6 +50,28 @@ async function advance(p,seconds){const n=await p.evaluate(()=>Date.now());await
 async function home(p){await p.reload();await p.getByRole('button',{name:'Moj pregled',exact:true}).waitFor();}
 async function protocols(p){await home(p);await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await a(p,'dashboardProtocols').first().click();}
 async function discard(p){await a(p,'back').first().click();await a(p,'leaveDiscard').click();}
+async function progressBack(p){
+  const tab=name=>p.getByRole('navigation',{name:'Glavna navigacija'}).getByRole('button',{name,exact:true});
+  const progress=tab('Napredak');
+  await progress.click();await waitView(p,'analytics');
+  assert.equal(await progress.getAttribute('aria-current'),'page');
+  await progress.click();
+  await p.locator('.topbar [data-a="back"]').click();await waitView(p,'library');
+  assert.equal(await tab('Knjižnica vježbi').getAttribute('aria-current'),'page');
+  assert.equal(await p.locator('#libq').inputValue(),'bench');
+
+  await tab('Moj pregled').click();await a(p,'dashboardProgress').click();await waitView(p,'progress');
+  const load=p.locator('[data-a="analyticsMode"][data-v="load"]');
+  await load.click();await p.locator('.tl-cinema').waitFor();
+  await progress.click();await p.locator('.pg-cinema').waitFor();
+  await load.click();
+  await p.locator('.tl-cinema').waitFor();
+  await p.locator('.tl-heading [data-a="back"]').click();await waitView(p,'dashboard');
+  await progress.click();await waitView(p,'analytics');
+  await p.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();await waitView(p,'muscleWeek');
+  await back(p);await waitView(p,'analytics');
+  await back(p);await waitView(p,'dashboard');
+}
 async function run(){
  const server=await serve(),browser=await launch(),ctx=await browser.newContext({viewport:{width:375,height:812},locale:'hr-HR',timezoneId:'Europe/Zagreb',reducedMotion:'reduce'});
  const p=await ctx.newPage(),errors=[],dialogs=[];p.setDefaultTimeout(6000);p.on('pageerror',e=>errors.push(e.message));
@@ -61,6 +83,7 @@ async function run(){
   for(const key of ['Tab','Tab','Shift+Tab','Tab']){await p.keyboard.press(key);assert.equal(await p.evaluate(()=>!!document.activeElement?.closest('.sheet')),true);}
   await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement?.dataset?.a),'dataSheet');
   await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await p.locator('#libq').fill('bench');await named(p,'openEx','bench-press').click();await back(p);await waitView(p,'library');assert.equal(await p.locator('#libq').inputValue(),'bench');
+  await progressBack(p);
   await home(p);await a(p,'dataSheet').click();const b=fixture();b.log=[];b.settings.sound=false;b.settings.planDates={};b.protocols['nav-timed']={id:'nav-timed',name:'Provjera vremenskih serija',items:[{exId:'side-plank',sets:2,sec:60,rest:5,measure:'time',sides:true}],days:[]};
   await p.locator('#importFile').setInputFiles({name:'synthetic-navigation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(b))});await a(p,'restoreApply').click();await a(p,'restoreApply').waitFor({state:'hidden'});
   await protocols(p);await a(p,'newPr').click();await p.locator('#p-name').fill('Nacrt protokola · provjera');
