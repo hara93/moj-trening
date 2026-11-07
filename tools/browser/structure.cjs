@@ -104,8 +104,7 @@ async function navigation(page, width) {
   assert.deepEqual(await A(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>[n.dataset.v,n.getAttribute('aria-pressed')])),[['progress','true'],['load','false']]);
   await noOverflow(page,'.progress-view','progress '+width);
   await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-progress-'+width+'.png')});
-  await page.locator('[data-a="progressMetric"][data-v="volume"]').click();
-  assert.equal(await page.locator('[data-a="progressMetric"][data-v="volume"]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('.pg-choose, .pg-metric-tabs').count(),0,'no empty trend picker on a fresh overview');
   await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
   await page.locator('.db-analytics').waitFor();assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length);
   await noOverflow(page,'.db-analytics','muscles '+width);

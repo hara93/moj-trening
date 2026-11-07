@@ -57,6 +57,33 @@ test('baseline is the preceding 28 local dates and never averages incomplete rep
   const partial=summary(log.concat(entry('past-missing',{at:at('2026-10-20'),srpe:undefined}))).effort.baseline;
   assert.equal(partial.totalAU,null);assert.equal(partial.weeklyAverageAU,null);assert.equal(partial.knownAU,120);
 });
+test('selectable dates share one range for effort, muscle sets and contiguous chart bins',()=>{
+  const exercise={id:'press',name:'Potisak',cat:'Snaga',muscles:{prime:['front_chest'],sec:['back_triceps']}};
+  const muscleWork=[M.pack(M.completedItem(exercise,actual()))];
+  const dates=['2026-11-05','2026-10-30','2026-10-29','2026-10-07','2026-10-06','2026-08-08','2026-08-07','2025-01-02'];
+  const log=dates.map(date=>entry(date,{at:at(date),muscleWork})).concat([
+    entry('future',{at:now+1,muscleWork}),entry('trial',{at:at('2020-01-01'),kind:'exercise',muscleWork})
+  ]);
+  for(const [key,start,sessions] of [['7d','2026-10-30',2],['1m','2026-10-07',4],['3m','2026-08-08',6],['all','2025-01-02',8]]){
+    const {range,effort,muscles}=summary(log,{period:key}),bins=effort.days;
+    assert.equal(range.period,key);assert.equal(range.from,new Date(start+'T00:00:00').getTime());
+    assert.equal(range.to,new Date('2026-11-06T00:00:00').getTime());
+    assert.equal(effort.current.sessions,sessions);assert.equal(effort.current.totalAU,sessions*25);
+    assert.equal(muscles.recordedSets,sessions*2);assert.equal(muscles.groups.find(group=>group.id==='triceps').equivalent,sessions);
+    assert.ok(bins.length<=7);assert.equal(bins[0].date,start);assert.equal(bins[bins.length-1].endDate,'2026-11-05');
+    assert.equal(bins[0].from,range.from);assert.equal(bins[bins.length-1].to,range.to);
+    assert.equal(bins.reduce((sum,bin)=>sum+bin.sessions,0),sessions);
+    assert.equal(bins.reduce((sum,bin)=>sum+bin.knownAU,0),effort.current.knownAU);
+    bins.slice(1).forEach((bin,i)=>assert.equal(bin.from,bins[i].to));
+    const widths=bins.map(bin=>(Date.parse(bin.endDate)-Date.parse(bin.date))/86400000+1);
+    assert.ok(Math.max(...widths)-Math.min(...widths)<=1);
+    assert.equal(effort.baseline!==null,key==='7d');
+  }
+  assert.deepEqual(summary(log,{period:'invalid'}),summary(log));
+  const empty=summary([],{period:'all'});
+  assert.equal(empty.effort.days.length,1);assert.equal(empty.effort.days[0].date,'2026-11-05');
+  assert.equal(empty.effort.current.totalAU,null);
+});
 test('no history and legacy missing data remain unknown rather than complete zero load',()=>{
   const empty=summary([]);assert.equal(empty.effort.current.totalAU,null);assert.equal(empty.effort.baseline.weeklyAverageAU,null);assert.equal(empty.effort.days.length,7);
   const old=summary([entry('old',{kind:null,secs:undefined,srpe:undefined,items:undefined})]);assert.equal(old.effort.current.sessions,1);assert.equal(old.effort.current.totalAU,null);assert.equal(old.muscles.coverage.missingSessions,1);

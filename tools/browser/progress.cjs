@@ -90,6 +90,7 @@ async function expand(page, id) {
     const activitySummary=page.locator('.pg-summary-pair > button').first();
     await activitySummary.click();
     assert.equal(await page.locator('#progress-info').evaluate(node=>node.open),true);
+    assert.ok(await page.locator('#progress-info .pg-dialog-head button').evaluate(node=>node===document.activeElement));
     assert.equal(await page.locator('#progress-info-title').innerText(),'Aktivnost i kontinuitet');
     assert.equal(await page.locator('#pg-consistency .heat i').count(),84);
     await page.keyboard.press('Escape');
@@ -173,6 +174,7 @@ async function expand(page, id) {
     await importData(page,fixture(true)); await progress(page);
     if (await page.locator('[data-a="progTab"][data-v="pregled"]').count()) await page.locator('[data-a="progTab"][data-v="pregled"]').click();
     assert.ok(await page.locator('.pg-zero').isVisible());
+    assert.equal(await page.locator('.pg-choose, .pg-metric-tabs').count(),0,'no unavailable trend controls on an empty overview');
     await noOverflow(page,'zero320');
     await page.setViewportSize({width:375,height:850});
     await page.screenshot({path:path.join(artifacts,prefix+'-zero375.png')});

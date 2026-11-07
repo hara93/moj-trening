@@ -61,6 +61,16 @@ function fixture(empty = false) {
   return data;
 }
 
+function periodFixture() {
+  const data = fixture();
+  const protocol = data.log.find(row => row.historyId === 'tl-today');
+  for (const [date, minutes] of [['2026-10-14', 9], ['2026-09-10', 18], ['2026-07-15', 24]]) {
+    data.log.push({ ...protocol, historyId: 'tl-period-' + date, name: 'Poznati trening ' + date,
+      at: stamp(date), secs: minutes * 60, srpe: 5 });
+  }
+  return data;
+}
+
 async function home(page) {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor();
@@ -167,6 +177,7 @@ async function main() {
     try {
       await page.goto(host.url, { waitUntil: 'domcontentloaded' });
       await runScenarios(page);
+      await runPeriodScenario(page);
       assert.deepEqual(errors, []);
       console.log(JSON.stringify({ engine, results }, null, 2));
     } catch (error) {
@@ -212,9 +223,21 @@ async function runScenarios(page) {
   await effortSummary.click();
   assert.equal(await page.locator('#training-load-info').evaluate(node=>node.open),true);
   assert.equal(await page.locator('#training-load-info-title').innerText(),'Napor treninga');
+  const dialog = page.locator('#training-load-info');
+  const closeButton = dialog.locator('.tl-dialog-head [data-a="trainingLoadInfoClose"]');
+  assert.equal(await closeButton.evaluate(node => document.activeElement === node), true,
+    'opening the sheet by pointer focuses the header close control instead of the grip');
+  assert.equal(await closeButton.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'pointer open shows no focus frame');
   await page.keyboard.press('Escape');
-  assert.equal(await page.locator('#training-load-info').evaluate(node=>node.open),false);
+  assert.equal(await dialog.evaluate(node=>node.open),false);
   assert.equal(await effortSummary.evaluate(node=>node===document.activeElement),true);
+  await page.keyboard.press('Enter');
+  assert.notEqual(await closeButton.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'keyboard open keeps visible focus');
+  const grip = dialog.locator('.sheet-drag-handle');
+  assert.equal(await grip.evaluate(node => node.tabIndex), 0, 'the sheet grip stays in the tab order');
+  await grip.press('Enter');
+  assert.equal(await dialog.evaluate(node => node.open), false, 'the focused grip dismisses the sheet by keyboard');
+  assert.equal(await effortSummary.evaluate(node => document.activeElement === node), true);
   assert.equal(await page.locator('svg.tl-days').getAttribute('role'),'img');
   assert.match(await page.locator('svg.tl-days').getAttribute('aria-label'),/AU poznato/);
   const boundary = page.locator('[data-load-day="2026-10-30"]');
@@ -304,6 +327,70 @@ async function runScenarios(page) {
     excluded: ['future workouts', 'library trials', 'LM1 AU values', 'yesterday morning answers'],
     historyEditDeleteAndBackupRestore: true, foregroundRefreshesNewDay: true
   });
+}
+
+async function runPeriodScenario(page) {
+  await page.clock.setFixedTime(fixed);
+  await importData(page, periodFixture());
+  await loadView(page);
+  const buttons = action(page, 'trainingLoadRange');
+  const option = key => page.locator('[data-a="trainingLoadRange"][data-v="' + key + '"]');
+  const chart = page.locator('svg.tl-days');
+  const bins = chart.locator('[data-load-day]');
+  const muscleLink = page.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]');
+  const checkin = await page.locator('.tl-checkin').innerText();
+  const savedLog = await page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')).log);
+  const ranges = [
+    { key: '7d', sessions: 7, knownAU: 261.266667, chest: 4 },
+    { key: '1m', sessions: 10, knownAU: 369.266667, chest: 10 },
+    { key: '3m', sessions: 11, knownAU: 459.266667, chest: 12 },
+    { key: 'all', sessions: 12, knownAU: 579.266667, chest: 14 }
+  ];
+  assert.equal(await buttons.count(), ranges.length);
+  assert.equal(await option('7d').getAttribute('aria-pressed'), 'true', 'default remains seven dates');
+  for (const { key, sessions, knownAU, chest } of ranges) {
+    await option(key).click();
+    assert.equal(await option(key).getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('[data-a="trainingLoadRange"][aria-pressed="true"]').count(), 1);
+    const current = await period(page, 'current');
+    assert.equal(Number(current.sessions), sessions);
+    assert.equal(current.missingAu, '2');
+    closeNumber(current.knownAu, knownAU, key + ' known effort');
+    assert.equal(current.totalAu, '', 'wider window keeps missing ratings separate from known effort');
+    assert.equal(await page.locator('[data-load-period="baseline"]').count(), key === '7d' ? 1 : 0);
+    const binCount = await bins.count();
+    assert.ok(binCount > 0 && binCount <= 7, key + ' keeps the chart readable on mobile');
+    closeNumber(await bins.evaluateAll(nodes => nodes.reduce((sum, node) => sum + Number(node.dataset.knownAu), 0)),
+      knownAU, key + ' graph covers the selected period');
+    assert.equal(await page.locator('.tl-checkin').innerText(), checkin, 'morning check remains about today');
+
+    await muscleLink.click();
+    const muscle = page.locator('#training-load-info [data-load-group="chest"]');
+    assert.equal(Number(await muscle.getAttribute('data-direct')), chest, key + ' uses matching muscle credits');
+    assert.equal(Number(await muscle.getAttribute('data-equivalent')), chest);
+    await page.keyboard.press('Escape');
+  }
+
+  const oldest = chart.locator('[data-load-day][data-known-au="120"]');
+  const start = await oldest.getAttribute('data-load-day');
+  const end = await oldest.getAttribute('data-end-date');
+  assert.ok(end >= '2026-07-15' && start <= '2026-07-15');
+  const trendButton = page.locator('[data-a="trainingLoadDetail"][data-topic="day"][data-date="' + start + '"]');
+  await trendButton.click();
+  const detail = page.locator('[data-load-day-detail="' + start + '"]');
+  assert.equal(await detail.getAttribute('data-end-date'), end, 'the drill-down opens the exact trend interval');
+  assert.match(await detail.innerText(), /120\s*AU/);
+  await page.keyboard.press('Escape');
+  assert.equal(await trendButton.evaluate(node => document.activeElement === node), true);
+  await layout(page, 320, 'all-period-320');
+  await screenshot(page, 'all-period-320');
+
+  await loadView(page);
+  assert.equal(await option('all').getAttribute('aria-pressed'), 'true', 'the chosen period survives reload');
+  closeNumber((await period(page, 'current')).knownAu, 579.266667, 'reload keeps selected totals');
+  const after = await page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')).log);
+  assert.deepEqual(after, savedLog, 'range switching leaves the training history intact');
+  results.push({ label: 'load-periods', ranges, selectionPersists: true, historyUnchanged: true, trendDetailMatchesBucket: true });
 }
 
 module.exports = { fixture, protocolId };

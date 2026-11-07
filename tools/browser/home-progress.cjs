@@ -136,7 +136,8 @@ async function activity(page) {
 async function performance(page) {
   if(await page.locator('#progress-info').evaluate(node=>node.open))await page.keyboard.press('Escape');
   const row=page.locator('.pg-summary-pair [data-a=progressDetail][data-topic=performance]');
-  if(await row.count())await row.click();else await page.locator('[data-a=progressMetric][data-v=performance]').click();
+  const metric=page.locator('[data-a=progressMetric][data-v=performance]');
+  if(await row.count())await row.click();else if(await metric.count())await metric.click();
 }
 
 async function openHistory(page, id) {

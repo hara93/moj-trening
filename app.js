@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.9';
+const APP_VERSION = '1.20.10';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -447,6 +447,8 @@ function cleanSettings(s){
   Object.keys(s).forEach(k => { const v = s[k]; if (badKey(k)) return; if (plain(v)) o[k] = v;
     else if (isPlainObj(v)) { const m = {}; Object.keys(v).forEach(q => { if (!badKey(q) && plain(v[q])) m[q] = v[q]; }); o[k] = m; } });   // e.g. a map of skipped suggestions
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
+  if (TrainingLoad.periods.includes(s.trainingLoadPeriod)) o.trainingLoadPeriod = s.trainingLoadPeriod;
+  else delete o.trainingLoadPeriod;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
   if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
@@ -454,7 +456,7 @@ function cleanSettings(s){
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
-const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10 };
+const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, trainingLoadPeriod: '7d' };
 
 /* ---------- photos and videos on the phone (IndexedDB) ---------- */
 const IDB = {
@@ -2729,7 +2731,7 @@ function workoutExpectationHtml(id,items) {
   return '<details class="workout-expectation" data-load-expectation data-status="'+estimate.status+'" data-sample-count="'+estimate.sampleCount+'"'+(estimate.min===null?'':' data-min="'+estimate.min+'" data-max="'+estimate.max+'"')+'><summary>Očekivani napor · '+(estimate.status==='available'?amount(estimate.min)+(estimate.min===estimate.max?'':'–'+amount(estimate.max))+' j.n.':'još nema dovoljno usporedivih zapisa')+'</summary><p>'+esc(estimate.reason)+'</p><p>'+estimate.sampleCount+' ocijenjenih usporedivih izvedbi · stvarni napor unosiš nakon treninga.</p><button class="txtbtn" data-a="trainingLoadOpen">Praćenje opterećenja</button></details>';
 }
 VIEWS.trainingLoad=function(){
-  const now=Date.now(),summary=TrainingLoad.summary({log:S.log,now}),morning=S.settings.morningChecks?.[dateKey(now)]||null;
+  const now=Date.now(),summary=TrainingLoad.summary({log:S.log,now,period:S.settings.trainingLoadPeriod}),morning=S.settings.morningChecks?.[dateKey(now)]||null;
   return TrainingLoadView.render({summary,morning});
 };
 
@@ -5159,7 +5161,7 @@ function attachSheetGestures(){
     const handle=document.createElement('button');
     handle.type='button';handle.className='sheet-drag-handle';handle.setAttribute('aria-label','Zatvori prozor');
     handle.title='Povuci dolje ili dodirni za zatvaranje';
-    node.prepend(handle);
+    if(native)node.append(handle);else node.prepend(handle);
     const current=()=>node.isConnected&&(native?node.open:!!S.sheet&&app.querySelector('.sheet')===node);
     const close=()=>{if(!current())return;if(!native)dismissSheet();else if(node.id==='progress-info')ProgressView.closeInfo();else if(node.id==='training-load-info')TrainingLoadView.closeInfo();};
     const reset=()=>{node.classList.remove('is-sheet-dragging');node.style.removeProperty('transform');node.style.removeProperty('transition');};
@@ -5760,6 +5762,10 @@ const A = {
   progressMetric:d=>{if(!['performance','volume'].includes(d.v))return;ProgressView.closeInfo();top().chartMetric=d.v;render();},
   progressExercise:d=>{if(!S.ex[d.id])return;ProgressView.closeInfo();top().chartExerciseId=d.id;render();},
   progressDetail:(d,el)=>ProgressView.showDetail(d.topic,el,d),
+  trainingLoadRange:d=>{
+    if (!TrainingLoad.periods.includes(d.v) || S.settings.trainingLoadPeriod === d.v) return;
+    if (writeSetting('trainingLoadPeriod',d.v)) render();
+  },
   trainingLoadDetail:(d,el)=>TrainingLoadView.showDetail(d.topic,el,d),
   muscleEligibility: d => {
     if (!S.draft || !['auto','true','false'].includes(d.v)) return;
@@ -6317,6 +6323,7 @@ app.addEventListener('click', ev => {
   if (el.disabled) return;
   const fn = A[el.dataset.a];
   if (fn) {
+    app.classList.toggle('pointer-input',ev.detail>0);
     ev.preventDefault();
     const input=document.activeElement;
     if(el.closest('.workout-exercise-page')&&input?.classList?.contains('workout-set-input')){
@@ -6357,6 +6364,7 @@ app.addEventListener('input', ev => {
 
 });
 app.addEventListener('keydown', ev => {
+  app.classList.remove('pointer-input');
   const t=ev.target, list=t.closest('[role="tablist"]');
   if(ev.key==='Enter'&&t.id==='builder-section-name'){ev.preventDefault();A.builderSectionApply({i:S.draft?._sectionCustom});return;}
   if(ev.key==='Enter'&&t.classList?.contains('workout-set-input')){ev.preventDefault();workoutInlineChange(t);return;}

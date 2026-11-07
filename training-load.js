@@ -26,6 +26,7 @@
   function dateKey(at){var d=new Date(at);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function midnight(at){var d=new Date(at);d.setHours(0,0,0,0);return d.getTime();}
   function shift(at,days){var d=new Date(at);d.setDate(d.getDate()+days);return d.getTime();}
+  function calendarDay(at){var d=new Date(at);return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;}
   function kind(entry){return entry.kind==='team'?(entry.teamType==='match'?'match':'team'):entry.kind==='protocol'?'protocol':entry.kind==='field'?'field':entry.kind==null?'legacy':null;}
   function records(log,now){
     var byId=new Map(),anonymous=[];
@@ -68,18 +69,32 @@
       recordedSets:sets,coveredGroups:groups.filter(function(group){return group.equivalent>0;}).length,
       complete:coverage.sessions>0&&!coverage.missingSessions&&!coverage.invalidSessions&&!coverage.unassignedSessions};
   }
+  var periodLengths={'7d':7,'1m':30,'3m':90,all:null};
+  var periods=Object.freeze(Object.keys(periodLengths));
   function summary(input){
     input=plain(input)?input:{};
     if(!time(input.now))return freeze({status:'invalid',today:null,range:null,effort:null,muscles:null});
-    var today=midnight(input.now),from=shift(today,-6),to=shift(today,1),baselineFrom=shift(from,-28),log=records(input.log,input.now);
-    var current=period(log,from,to),baseline=period(log,baselineFrom,from),days=[];
-    baseline.weeks=[];
-    for(var w=0;w<4;w++)baseline.weeks.push(period(log,shift(baselineFrom,w*7),shift(baselineFrom,(w+1)*7)));
-    baseline.activeWeeks=baseline.weeks.filter(function(week){return week.sessions>0;}).length;
-    baseline.weeklyAverageAU=baseline.complete?round(baseline.knownAU/4):null;
-    for(var i=0;i<7;i++){var day=period(log,shift(from,i),shift(from,i+1));day.date=dateKey(day.from);days.push(day);}
-    return freeze({status:'ready',today:dateKey(input.now),range:{from:from,to:to,observedTo:input.now},
-      effort:{current:current,baseline:baseline,days:days},muscles:muscleSummary(log,{from:from,to:to})});
+    var key=periods.includes(input.period)?input.period:'7d';
+    var today=midnight(input.now),to=shift(today,1),log=records(input.log,input.now);
+    var from=key==='all'?(log.length?midnight(log[log.length-1].at):today):shift(to,-periodLengths[key]);
+    var count=calendarDay(to)-calendarDay(from),binCount=Math.min(7,count),binDays=Math.ceil(count/binCount);
+    var range={from:from,to:to,observedTo:input.now,period:key,binDays:binDays};
+    var current=period(log,from,to),baseline=null,days=[];
+    if(key==='7d'){
+      var baselineFrom=shift(from,-28);
+      baseline=period(log,baselineFrom,from);
+      baseline.weeks=[];
+      for(var w=0;w<4;w++)baseline.weeks.push(period(log,shift(baselineFrom,w*7),shift(baselineFrom,(w+1)*7)));
+      baseline.activeWeeks=baseline.weeks.filter(function(week){return week.sessions>0;}).length;
+      baseline.weeklyAverageAU=baseline.complete?round(baseline.knownAU/4):null;
+    }
+    for(var i=0;i<binCount;i++){
+      var start=Math.floor(i*count/binCount),end=Math.floor((i+1)*count/binCount);
+      var day=period(log,shift(from,start),shift(from,end));
+      day.date=dateKey(day.from);day.endDate=dateKey(day.to-1);days.push(day);
+    }
+    return freeze({status:'ready',today:dateKey(input.now),range:range,
+      effort:{current:current,baseline:baseline,days:days},muscles:muscleSummary(log,range)});
   }
   function rowNumber(item,key,index){
     var value=own(item,key+'List')?Array.isArray(item[key+'List'])?item[key+'List'][index]:null:item[key];
@@ -142,5 +157,5 @@
     result.reason='Raspon prijavljenog napora vlastitih izvedbi iste zabilježene radne doze. Rezerva, odmor i današnje stanje nisu pretpostavljeni; nije jamstvo napora sljedećeg treninga.';
     return freeze(result);
   }
-  return Object.freeze({version:1,sessionAU:sessionAU,summary:summary,expectation:expectation});
+  return Object.freeze({version:1,periods:periods,sessionAU:sessionAU,summary:summary,expectation:expectation});
 });

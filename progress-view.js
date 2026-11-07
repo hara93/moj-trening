@@ -417,9 +417,14 @@
     var content='<div class="view progress-view pg-cinema" data-progress-tab="pregled">'+(vm.topbarHtml || '')+'<header class="pg-heading"><div><p class="pg-kicker">Tvoj rad, kroz vrijeme</p><h1>Napredak</h1></div>'+info('overview','Kako čitati Napredak')+'</header>'+modeTabs('progress')+
       '<section class="pg-summary-pair" aria-label="Kratki pregled">'+summaryCard(week)+summaryCard(secondary)+'</section>';
     if(vm.zero)content+='<section class="pg-zero pg-cinema-zero"><h2>Prvi trening, prvi pomak</h2><p>Spremi odrađeni trening i postavi svoje polazište.</p><button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
-    content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2><button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button></div><div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
-      (metric==='performance'?mainPerformance(comparison):exercise&&exercise.html?'<div class="pg-main-volume">'+exercise.html+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka za graf</h3><p>Kad spremiš dovoljno izvedbi, ovdje će se prikazati zabilježena količina rada.</p></div>')+
-      (selected?'<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button>':'')+'</section>';
+    content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2>'+
+      (selected?'<button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button>':'')+'</div>';
+    if(selected){
+      content+='<div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
+        (metric==='performance'?mainPerformance(comparison):exercise&&exercise.html?'<div class="pg-main-volume">'+exercise.html+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka o količini rada</h3><p>Odaberi Izvedba za usporedive serije ove vježbe.</p></div>')+
+        '<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button>';
+    }else content+='<div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div>';
+    content+='</section>';
     content+='<nav class="pg-drill-list" aria-label="Detaljni pregledi">'+drill('','Mišićni tjedan','Izravne i pomoćne serije','data-a="analyticsOpen" data-section="muscles"')+drill('records','Rekordi','Osobni rezultati iz dnevnika')+drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+'</nav><div class="pg-compact-tools">'+drill('activity','Aktivnost i kontinuitet','')+drill('suggestions','Plan i prijedlozi',(vm.counts||{}).ready?vm.counts.ready+' čeka potvrdu':'')+'<button type="button" data-a="progTab" data-v="doziranje">Doziranje i pravila <span aria-hidden="true">›</span></button></div>';
     return content+'<template id="progress-detail-cache">'+old+'</template>'+dialog()+'</div>';
   }
@@ -428,7 +433,8 @@
     var title='Detalji napretka',body='',source=null;
     if(topic==='choose') {
       title='Odaberi vježbu';var list=choices(lastVM);
-      body=list.length?'<div class="pg-picker-list">'+list.map(function(e){return '<button type="button" data-a="progressExercise" data-id="'+esc(e.id)+'"><strong>'+esc(e.name)+'</strong><span aria-hidden="true">›</span></button>';}).join('')+'</div>':empty('Još nema dovoljno zapisa za trend vježbe.');
+      if(!list.length)return;
+      body='<div class="pg-picker-list">'+list.map(function(e){return '<button type="button" data-a="progressExercise" data-id="'+esc(e.id)+'"><strong>'+esc(e.name)+'</strong><span aria-hidden="true">›</span></button>';}).join('')+'</div>';
     } else if(topic==='point') {
       var item=comparisons(lastVM).find(function(e){return e.id===(data||{}).id;}),point=(data||{}).point==='previous'?'previous':'current';
       if(item){title=shortDate(item[point+'At']);body='<h3>'+esc(item.name)+'</h3><div class="pg-point-detail"><span>Najbolja potpuno odrađena serija</span><strong>'+esc(amount(item[point]))+' '+esc(item.unit)+'</strong><p>'+esc(item.context||'')+'</p></div><button type="button" class="pg-exercise-link" data-a="openEx" data-id="'+esc(item.id)+'">Vježba i puna povijest <span aria-hidden="true">↗</span></button>';}
@@ -445,7 +451,7 @@
     element.querySelector('#progress-info-title').textContent=title;element.querySelector('#progress-info-body').innerHTML=body;
     var panel=element.querySelector('details.pg-section');if(panel)panel.open=true;
     element.onclick=function(event){if(event.target===element)closeInfo();};element.oncancel=function(event){event.preventDefault();closeInfo();};element.onclose=restoreInfoFocus;
-    if(typeof element.showModal==='function')element.showModal();else element.setAttribute('open','');element.querySelector('button').focus();
+    if(typeof element.showModal==='function')element.showModal();else element.setAttribute('open','');element.querySelector('.pg-dialog-head button').focus();
   }
   function restoreInfoFocus() {
     if (focusBeforeInfo && focusBeforeInfo.isConnected) focusBeforeInfo.focus();
@@ -462,7 +468,7 @@
     element.onclose = restoreInfoFocus;
     if (typeof element.showModal === 'function') element.showModal();
     else element.setAttribute('open', '');
-    element.querySelector('button').focus();
+    element.querySelector('.pg-dialog-head button').focus();
   }
   function closeInfo() {
     var element = document.getElementById('progress-info');

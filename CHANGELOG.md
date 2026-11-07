@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.20.10 — 7. 11. 2026.
+
+- **Opterećenje** pamti odabrani prikaz za 7, 30 ili 90 dana ili cijelu povijest. Napor, trend i mišićne serije prate odabrano razdoblje.
+- **Napredak** prikazuje odabir vježbe i mjere kada postoji dostupan trend. Prozori s objašnjenjima pri otvaranju fokusiraju gumb za zatvaranje, a ručka ostaje dostupna za povlačenje.
+
 ## 1.20.9 — 7. 11. 2026.
 
 - Kružni grafovi Napretka i Opterećenja sada se pune kroz odvojene segmente. Rad po mišićima prikazuju tanke crtice na zajedničkoj skali razdoblja.

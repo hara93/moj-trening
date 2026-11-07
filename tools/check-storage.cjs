@@ -10,6 +10,7 @@ const HistoryStore = require('../history-store.js');
 const MuscleWork = require('../muscle-work.js');
 const MonthPlan = require('../month-plan.js');
 const TodayView = require('../today-view.js');
+const TrainingLoad = require('../training-load.js');
 const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 const copy = value => JSON.parse(JSON.stringify(value));
 function between(start, end) {
@@ -29,7 +30,7 @@ function harness() {
     settings:{sound:true,goal:'snaga'}, sheet:{kind:'data'} };
   const context = { S, DATA_COLLS:['exercises','protocols','field','programs'], APP_VERSION:'audit',
     BACKUP_KIND:'moj-trening-backup', STORE_KEY:'mt.data.v1', GOALS:{snaga:{},hipertrofija:{}},
-    HistoryStore, MuscleWork, MonthPlan, TodayView, repairKnownMasLoads:logs=>logs,
+    HistoryStore, MuscleWork, MonthPlan, TodayView, TrainingLoad, repairKnownMasLoads:logs=>logs,
     clone:copy, mtCanon:JSON.stringify, FORM_VIEWS:{}, Date,
     localStorage:{getItem:key=>disk.has(key)?disk.get(key):null,removeItem:key=>disk.delete(key)},
     lsSet:(key,value)=>{ calls.writes.push(key);disk.set(key,JSON.stringify(value));return true; },
@@ -52,13 +53,14 @@ test('an export sees a deferred second-tab workout/settings without mutating the
   latest.log.unshift({historyId:'new',kind:'team',name:'Novo iz druge kartice',at:2,secs:1800});
   latest.exercises.x.name = 'Noviji naziv';
   h.disk.set('mt.data.v1',JSON.stringify(latest));
-  h.disk.set('mt.settings',JSON.stringify({sound:false,goal:'hipertrofija',morningChecks:{'2026-11-05':{date:'2026-11-05',pain:0}}}));
+  h.disk.set('mt.settings',JSON.stringify({sound:false,goal:'hipertrofija',trainingLoadPeriod:'3m',morningChecks:{'2026-11-05':{date:'2026-11-05',pain:0}}}));
   const before = JSON.stringify(h.S), stored = h.disk.get('mt.data.v1');
   await h.context.handlers.exportData();
   const backup = h.calls.share[0];
   assert.deepEqual(backup.log.map(row=>row.historyId),['new','old']);
   assert.equal(backup.exercises.x.name,'Noviji naziv');
   assert.equal(backup.settings.sound,false);
+  assert.equal(backup.settings.trainingLoadPeriod,'3m');
   assert.equal(backup.settings.morningChecks['2026-11-05'].pain,0);
   assert.equal(JSON.stringify(h.S),before);
   assert.equal(h.disk.get('mt.data.v1'),stored);
