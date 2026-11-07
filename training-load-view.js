@@ -195,10 +195,18 @@
     if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
     el.querySelector('#training-load-info-title').textContent=title;el.querySelector('#training-load-info-body').innerHTML=body;
     if(topic==='effort'||topic==='model'){var detail=el.querySelector('details');if(detail)detail.open=true;}
-    el.onclick=function(e){if(e.target===el)closeInfo();};el.oncancel=function(e){e.preventDefault();closeInfo();};el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');el.querySelector('.tl-dialog-head button').focus();
+    openDialog(el);
   }
-  function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><div class="tl-dialog-head"><h2 id="training-load-info-title"></h2><button type="button" data-a="trainingLoadInfoClose" aria-label="Zatvori objašnjenje">×</button></div><div id="training-load-info-body"></div><button type="button" class="tl-dialog-done" data-a="trainingLoadInfoClose">Jasno</button></dialog>';}
+  function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><h2 id="training-load-info-title" tabindex="-1" autofocus></h2><div id="training-load-info-body"></div><button type="button" class="tl-dialog-done" data-a="trainingLoadInfoClose">Jasno</button></dialog>';}
   function closeInfo(){var el=document.getElementById('training-load-info');if(!el)return;if(typeof el.close==='function')el.close();else el.removeAttribute('open');if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();}
-  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');el.onclick=function(e){if(e.target===el)closeInfo();};el.oncancel=function(e){e.preventDefault();closeInfo();};el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');el.querySelector('.tl-dialog-head button').focus();}
+  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');openDialog(el);}
+  function openDialog(el){
+    el.onclick=function(event){if(event.target===el)closeInfo();};
+    el.oncancel=function(event){event.preventDefault();closeInfo();};
+    el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};
+    if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');
+    el.scrollTop=0;
+    el.querySelector('#training-load-info-title').focus({preventScroll:true});
+  }
   return Object.freeze({render:render,showInfo:showInfo,showDetail:showDetail,closeInfo:closeInfo});
 });

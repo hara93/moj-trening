@@ -230,8 +230,7 @@
   }
   function dialog() {
     return '<dialog id="progress-info" class="pg-dialog" aria-labelledby="progress-info-title">' +
-      '<div class="pg-dialog-head"><h2 id="progress-info-title"></h2><button type="button" ' +
-      'data-a="progressInfoClose" aria-label="Zatvori objašnjenje">×</button></div>' +
+      '<h2 id="progress-info-title" tabindex="-1" autofocus></h2>' +
       '<div id="progress-info-body"></div><button type="button" class="pg-dialog-done" data-a="progressInfoClose">Jasno</button></dialog>';
   }
   function renderLegacy(vm) {
@@ -495,8 +494,7 @@
     if(!element.open || !element.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
     element.querySelector('#progress-info-title').textContent=title;element.querySelector('#progress-info-body').innerHTML=body;
     var panel=element.querySelector('details.pg-section');if(panel)panel.open=true;
-    element.onclick=function(event){if(event.target===element)closeInfo();};element.oncancel=function(event){event.preventDefault();closeInfo();};element.onclose=restoreInfoFocus;
-    if(typeof element.showModal==='function')element.showModal();else element.setAttribute('open','');element.querySelector('.pg-dialog-head button').focus();
+    openDialog(element);
   }
   function restoreInfoFocus() {
     if (focusBeforeInfo && focusBeforeInfo.isConnected) focusBeforeInfo.focus();
@@ -508,12 +506,16 @@
     if(!element.open || !element.contains(trigger)) focusBeforeInfo = trigger && typeof trigger.focus === 'function' ? trigger : document.activeElement;
     element.querySelector('#progress-info-title').textContent = content.title;
     element.querySelector('#progress-info-body').innerHTML = infoHtml(topic);
+    openDialog(element);
+  }
+  function openDialog(element) {
     element.onclick = function (event) { if (event.target === element) closeInfo(); };
     element.oncancel = function (event) { event.preventDefault(); closeInfo(); };
     element.onclose = restoreInfoFocus;
     if (typeof element.showModal === 'function') element.showModal();
     else element.setAttribute('open', '');
-    element.querySelector('.pg-dialog-head button').focus();
+    element.scrollTop = 0;
+    element.querySelector('#progress-info-title').focus({preventScroll:true});
   }
   function closeInfo() {
     var element = document.getElementById('progress-info');

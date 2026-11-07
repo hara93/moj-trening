@@ -79,7 +79,8 @@ test('dynamic plain values and IDs are escaped, while trusted existing renderers
 test('information controls have named native dialog and original detail routes remain reachable', () => {
   const html = View.render({});
   assert.match(html, /<dialog id="progress-info"[^>]*aria-labelledby="progress-info-title"/);
-  assert.match(html, /aria-label="Zatvori objašnjenje"/);
+  assert.match(html, /<h2 id="progress-info-title" tabindex="-1" autofocus>/);
+  assert.match(html, /data-a="progressInfoClose">Jasno<\/button>/);
   assert.match(html, /data-a="progressInfo" data-topic="load"/);
   assert.match(html, /data-a="progressInfo" data-topic="records"/);
   assert.match(html, /data-a="progInfo"/);

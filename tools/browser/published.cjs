@@ -92,11 +92,12 @@ async function main() {
     assert.equal(await page.locator('.pg-summary-pair>button').count(),2);
     await page.locator('[data-a="progressDetail"][data-topic="activity"]').first().click();
     await page.locator('#progress-info[open] #pg-activity').waitFor();
-    await page.locator('#progress-info [data-a="progressInfoClose"]').first().click();
+    assert.equal(await page.locator('#progress-info [data-a="progressInfoClose"]').count(),1);
+    await page.locator('#progress-info').getByRole('button',{name:'Zatvori prozor',exact:true}).click();
     const progressHelp=page.locator('[data-a="progressInfo"]:visible').first();
     await progressHelp.click();
     await page.locator('#progress-info[open]').waitFor();
-    await page.locator('#progress-info [data-a="progressInfoClose"]').first().click();
+    await page.locator('#progress-info').getByRole('button',{name:'Jasno',exact:true}).click();
     report.checks.progressDetailsAndHelp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     await page.locator('.tabbar [data-tab="analytics"]').click();

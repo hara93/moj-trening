@@ -103,13 +103,13 @@ async function run(p,width){
   await p.getByRole('button',{name:'Napredak',exact:true}).click();
   const info=A(p,'progressInfo').first();await info.click();
   let dialog=p.locator('#progress-info');assert.equal(await dialog.evaluate(n=>n.open),true);
-  assert.ok(await dialog.locator('.pg-dialog-head button').evaluate(n=>document.activeElement===n));
+  assert.ok(await dialog.locator('#progress-info-title').evaluate(n=>document.activeElement===n));
   await drag(p,dialog,0,20);assert.equal(await dialog.evaluate(n=>n.open),true);
   await drag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
   assert.equal(await info.evaluate(n=>document.activeElement===n),true,'native dialog restores opener focus');
   const activity=p.locator('.pg-summary-pair > button').first();
   await activity.click();
-  await dialog.locator('.pg-dialog-head button').click();assert.equal(await dialog.evaluate(n=>n.open),false);
+  await dialog.getByRole('button',{name:'Jasno',exact:true}).click();assert.equal(await dialog.evaluate(n=>n.open),false);
   await activity.click();
   const detail=dialog.locator('#progress-info-body');
   const scrolled=await dialog.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;});
@@ -124,7 +124,7 @@ async function run(p,width){
   assert.equal(await activity.evaluate(n=>n===document.activeElement),true,'activity dialog returns focus to its card');
   await p.locator('[data-a="analyticsMode"][data-v="load"]').click();await A(p,'trainingLoadInfo').first().click();
   dialog=p.locator('#training-load-info');
-  assert.ok(await dialog.locator('.tl-dialog-head button').evaluate(n=>document.activeElement===n));
+  assert.ok(await dialog.locator('#training-load-info-title').evaluate(n=>document.activeElement===n));
   await touchDrag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
   await p.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]').click();
   assert.equal(await bodyDrag(dialog.locator('#training-load-info-body'),0,135),true);

@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.14 — 7. 11. 2026.
+
+- Uklonjena je tipka × iz zaglavlja prozora u **Napretku** i **Opterećenju**. Prozori se zatvaraju povlačenjem ili dodirom ručke te tipkom **Jasno** pri dnu.
+
 ## 1.20.13 — 7. 11. 2026.
 
 - **Analiza tjedna** ponovno prikazuje figuru uz krug pokrivenosti. U **Knjižnici** je figura veća, oprema se otvara na dodir, a povlačenje prema dolje s vrha zatvara filtar.

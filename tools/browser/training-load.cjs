@@ -224,17 +224,19 @@ async function runScenarios(page) {
   assert.equal(await page.locator('#training-load-info').evaluate(node=>node.open),true);
   assert.equal(await page.locator('#training-load-info-title').innerText(),'Napor treninga');
   const dialog = page.locator('#training-load-info');
-  const closeButton = dialog.locator('.tl-dialog-head [data-a="trainingLoadInfoClose"]');
-  assert.equal(await closeButton.evaluate(node => document.activeElement === node), true,
-    'opening the sheet by pointer focuses the header close control instead of the grip');
-  assert.equal(await closeButton.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'pointer open shows no focus frame');
+  const title = dialog.locator('#training-load-info-title');
+  assert.equal(await dialog.locator('[data-a="trainingLoadInfoClose"]').count(),1);
+  assert.equal(await title.evaluate(node => document.activeElement === node), true,
+    'opening the sheet by pointer focuses its title');
+  assert.equal(await title.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'the title has no focus frame');
   await page.keyboard.press('Escape');
   assert.equal(await dialog.evaluate(node=>node.open),false);
   assert.equal(await effortSummary.evaluate(node=>node===document.activeElement),true);
   await page.keyboard.press('Enter');
-  assert.notEqual(await closeButton.evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'keyboard open keeps visible focus');
   const grip = dialog.locator('.sheet-drag-handle');
   assert.equal(await grip.evaluate(node => node.tabIndex), 0, 'the sheet grip stays in the tab order');
+  await grip.focus();
+  assert.notEqual(await grip.evaluate(node => getComputedStyle(node,'::after').outlineStyle), 'none', 'the keyboard-focused grip has a visible focus frame');
   await grip.press('Enter');
   assert.equal(await dialog.evaluate(node => node.open), false, 'the focused grip dismisses the sheet by keyboard');
   assert.equal(await effortSummary.evaluate(node => document.activeElement === node), true);

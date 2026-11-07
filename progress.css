@@ -172,9 +172,7 @@
 .pg-dosing .advice{font-size:12px;line-height:1.5}
 .pg-dialog{width:calc(100% - 32px);max-width:410px;max-height:calc(100% - 56px);margin:auto;padding:20px 18px;border:1px solid var(--border);border-radius:23px;background:var(--surface);color:#EDF5F7;box-sizing:border-box;overflow-y:auto;box-shadow:0 22px 70px #0008}
 .pg-dialog::backdrop{background:#101722bb;backdrop-filter:blur(5px)}
-.pg-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .pg-dialog h2{margin:9px 0 0;font-size:20px;line-height:1.25;font-weight:600;letter-spacing:-.02em}
-.pg-dialog-head button{flex:none;width:44px;height:44px;border:0;border-radius:13px;background:var(--surface-2);color:#DBE9FF;font-size:25px}
 .pg-dialog p{margin:15px 0 0;color:#C5D2E6;font-size:14px;line-height:1.6}
 .pg-help-visual{padding:12px 10px;margin-top:18px;border:1px solid var(--border);border-radius:15px;background:var(--bg)}
 .pg-help-visual>small{display:block;margin-bottom:11px;color:#B8CCE9;font-size:11px;line-height:1.4}
