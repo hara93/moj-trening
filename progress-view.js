@@ -327,22 +327,42 @@
     var hits='<div class="pg-point-hits">'+['previous','current'].map(function(point,index){return '<button type="button" class="pg-point-hit" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" style="left:'+(index?90.3125:15)+'%;top:'+(y(item[point])/150*100)+'%" aria-label="'+esc(shortDate(item[point+'At'])+', '+amount(item[point])+' '+item.unit+'. Prikaži zapis')+'"></button>';}).join('')+'</div>';
     return '<div id="pg-performance" class="pg-main-performance"><p class="pg-main-context">'+esc(item.context||'')+'</p><div class="pg-performance-plot">'+graph+hits+'</div><div class="pg-point-buttons">'+['previous','current'].map(function(point){var n=item[point],at=item[point+'At'];return '<button type="button" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" aria-label="'+esc(shortDate(at)+', '+amount(n)+' '+item.unit+'. Prikaži zapis')+'"><span>'+esc(weekDate(at))+'</span><strong>'+esc(amount(n))+' <small>'+esc(item.unit)+'</small></strong><i aria-hidden="true">↗</i></button>';}).join('')+'</div></div>';
   }
+  function ringPoint(radius, angle) {
+    return (44 + Math.sin(angle) * radius).toFixed(2) + ' ' + (44 - Math.cos(angle) * radius).toFixed(2);
+  }
+  function ringSegment(inner, outer, start, end) {
+    return 'M' + ringPoint(outer, start) + 'A' + outer + ' ' + outer + ' 0 0 1 ' + ringPoint(outer, end) +
+      'L' + ringPoint(inner, end) + 'A' + inner + ' ' + inner + ' 0 0 0 ' + ringPoint(inner, start) + 'Z';
+  }
+  function ringGradient(id, inner, outer, tone) {
+    var edge = ((outer - 3.7) / outer * 100).toFixed(2) + '%';
+    var start = ' class="pg-ring-' + tone + '-start"';
+    return '<radialGradient id="' + id + '" gradientUnits="userSpaceOnUse" cx="44" cy="44" r="' + outer + '">' +
+      '<stop offset="' + (inner / outer * 100).toFixed(2) + '%"' + start + ' stop-opacity="0"/>' +
+      '<stop offset="' + edge + '"' + start + ' stop-opacity=".36"/>' +
+      '<stop offset="' + edge + '"' + start + '/><stop offset="100%" class="pg-ring-' + tone + '-end"/></radialGradient>';
+  }
   function summaryRings(key, fractions) {
-    var gradients = '', circles = '';
+    var gradients = '', rings = '';
     fractions.forEach(function (fraction, index) {
       var id = 'pg-ring-' + key + '-' + index;
       var tone = key === 'cadence' || index === 1 ? 'blue' : 'mint';
-      var geometry = ' cx="44" cy="44" r="' + (index ? 27 : 37) + '"';
-      circles += '<circle class="pg-ring-track"' + geometry + '/>';
-      if (fraction > 0) {
-        gradients += '<linearGradient id="' + id + '" x2="85%" y2="100%"><stop class="pg-ring-' + tone + '-start"/>' +
-          '<stop class="pg-ring-' + tone + '-end" offset="100%"/></linearGradient>';
-        circles += '<circle class="pg-ring-fill"' + geometry + ' stroke="url(#' + id + ')" pathLength="100" stroke-dasharray="' +
-          Math.min(fraction * 100, 100) + ' 100" transform="rotate(-90 44 44)"/>';
+      var inner = index ? 24 : fractions.length > 1 ? 34 : 26, outer = index ? 32 : 41;
+      var count = index ? 24 : 28, step = 2 * Math.PI / count;
+      var filled = Math.min(fraction, 1) * count;
+      var track = '', active = '';
+      for (var tick = 0; tick < count; tick++) {
+        var start = (tick + .09) * step;
+        track += ringSegment(inner, outer, start, start + .82 * step);
+        if (filled > tick) active += ringSegment(inner, outer, start, start + .82 * step * Math.min(1, filled - tick));
       }
+      gradients += ringGradient(id + '-track', inner, outer, 'track');
+      rings += '<path class="pg-ring-track" d="' + track + '" fill="url(#' + id + '-track)"/>';
+      if (!active) return;
+      gradients += ringGradient(id, inner, outer, tone);
+      rings += '<path class="pg-ring-fill" d="' + active + '" fill="url(#' + id + ')"/>';
     });
-    return '<svg class="pg-ring-graphic" viewBox="0 0 88 88" aria-hidden="true">' +
-      (gradients ? '<defs>' + gradients + '</defs>' : '') + circles + '</svg>';
+    return '<svg class="pg-ring-graphic" viewBox="0 0 88 88" aria-hidden="true"><defs>' + gradients + '</defs>' + rings + '</svg>';
   }
   function summaryCard(card) {
     return '<button type="button" class="pg-ring-card" data-a="progressDetail" data-topic="' + card.topic + '">' +

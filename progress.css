@@ -240,9 +240,8 @@
 .pg-ring-card:focus-visible{outline:2px solid var(--ring-blue);outline-offset:2px}
 .pg-ring-stage{position:relative;display:grid;place-items:center;width:88px;height:88px;margin-bottom:2px}
 .pg-ring-graphic{grid-area:1/1;display:block;width:100%;height:100%}
-.pg-ring-track,.pg-ring-fill{fill:none;stroke-width:5.5}
-.pg-ring-track{stroke:var(--border)}
-.pg-ring-fill{stroke-linecap:round;animation:pg-ring-appear .35s ease-out}
+.pg-ring-fill{animation:pg-ring-appear .35s ease-out}
+.pg-ring-track-start,.pg-ring-track-end{stop-color:var(--border)}
 .pg-ring-mint-start{stop-color:var(--ring-mint)}.pg-ring-mint-end{stop-color:var(--ring-green)}
 .pg-ring-blue-start{stop-color:#4E8FE7}.pg-ring-blue-end{stop-color:var(--ring-blue)}
 .pg-ring-readout{position:relative;grid-area:1/1;display:grid;justify-items:center;gap:2px;max-width:60px}

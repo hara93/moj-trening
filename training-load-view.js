@@ -35,17 +35,29 @@
     }).join('')+'<path class="tl-day-line" d="'+line+'"/>'+days.map(function(day,i){return day.rated>0&&finite(day.knownAU)?'<circle class="tl-day-dot'+(day.missingAU?' tl-day-partial':'')+'" cx="'+x(i)+'" cy="'+y(day.knownAU)+'" r="3.3"/>':'';}).join('')+'</svg><div class="tl-day-controls">'+days.map(function(day){return '<button type="button" data-a="trainingLoadDetail" data-topic="day" data-date="'+esc(day.date)+'" aria-label="'+esc(date(day.from)+': '+(day.sessions?day.rated?number(day.knownAU)+' AU poznato':'napor nije poznat':'nema zapisa')+'. Prikaži detalje')+'"><span>'+esc(date(day.from))+'</span></button>';}).join('')+'</div></div>'+(days.some(function(day){return day.missingAU;})?'<p class="tl-chart-note">* Poznati dio napora · ? nedostaju podaci</p>':'');
   }
   var effortKinds=['protocol','field','team','match','legacy'];
-  function effortDistribution(current){
-    var buckets=effortKinds.map(function(kind){return current.byKind.find(function(bucket){return bucket.kind===kind;});}).filter(Boolean);
-    var positive=buckets.filter(function(bucket){return bucket.knownAU>0;});
-    var circumference=2*Math.PI*51,offset=0;
-    var segments=positive.map(function(bucket){
-      var arc=bucket.knownAU/current.knownAU*circumference;
-      var gap=positive.length>1?Math.min(2.4,arc*.2):0;
-      var segment='<circle class="tl-dial-segment" data-load-ring-kind="'+bucket.kind+'" cx="64" cy="64" r="51" stroke-dasharray="'+(arc-gap)+' '+circumference+'" stroke-dashoffset="'+(-offset-gap/2)+'"/>';
-      offset+=arc;
+  function effortDial(buckets,total){
+    var tickCount=28,radius=50,circumference=2*Math.PI*radius;
+    var step=circumference/tickCount,tick=step*.79;
+    var geometry=' cx="64" cy="64" r="'+radius+'"';
+    var ticks=geometry+' stroke-dasharray="'+tick+' '+(step-tick)+'"';
+    var filled=0,offset=0;
+    var segments=buckets.filter(function(bucket){return bucket.knownAU>0;}).map(function(bucket){
+      filled+=bucket.knownAU/total*tickCount;
+      // Measure the category in painted ticks, leaving the gaps out of its share.
+      var whole=Math.floor(filled),end=whole*step+(filled-whole)*tick;
+      var segment='<circle class="tl-dial-segment" data-load-ring-kind="'+bucket.kind+'"'+geometry+' stroke-dasharray="'+(end-offset)+' '+circumference+'" stroke-dashoffset="'+(-offset)+'"/>';
+      offset=end;
       return segment;
     }).join('');
+    return '<svg class="tl-dial-art" viewBox="0 0 128 128" aria-hidden="true"><defs>'+
+      '<mask id="tl-dial-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128"><circle class="tl-dial-mask"'+ticks+' transform="rotate(-90 64 64)"/></mask>'+
+      '<radialGradient id="tl-dial-shade" class="tl-dial-shade"><stop offset=".61" stop-opacity=".96"/><stop offset=".80" stop-opacity=".78"/><stop offset=".92" stop-opacity="0"/></radialGradient></defs>'+
+      '<circle class="tl-dial-track"'+ticks+' transform="rotate(-90 64 64)"/>'+
+      '<g mask="url(#tl-dial-mask)"><g transform="rotate(-90 64 64)">'+segments+'</g></g>'+
+      '<circle cx="64" cy="64" r="60" fill="url(#tl-dial-shade)"/></svg>';
+  }
+  function effortDistribution(current){
+    var buckets=effortKinds.map(function(kind){return current.byKind.find(function(bucket){return bucket.kind===kind;});}).filter(Boolean);
     var partial=current.missingAU>0&&current.rated>0;
     var display=number(partial?current.knownAU:current.totalAU,1);
     var label=partial?'AU poznato':current.totalAU===null?'AU':'AU ukupno';
@@ -55,7 +67,7 @@
       return '<div class="tl-kind-row'+(bucket.knownAU>0?'':' tl-kind-muted')+'" data-load-ring-kind="'+bucket.kind+'"><dt><i aria-hidden="true"></i>'+esc(bucket.label)+'</dt><dd>'+(hasValue?number(bucket.knownAU,1)+' <small>AU</small>':'<small>Nepoznato</small>')+'</dd></div>';
     }).join('');
     return '<div class="tl-distribution"><button type="button" class="tl-effort-total tl-effort-dial" data-a="trainingLoadInfo" data-topic="effort" aria-haspopup="dialog" aria-label="'+esc(accessibleName+'. Otvori objašnjenje')+'" style="--tl-dial-glyphs:'+Math.max(4,display.length)+'">'+
-      '<svg class="tl-dial-art" viewBox="0 0 128 128" aria-hidden="true"><circle class="tl-dial-ticks" cx="64" cy="64" r="61"/><circle class="tl-dial-track" cx="64" cy="64" r="51"/><circle class="tl-dial-center" cx="64" cy="64" r="41"/><g transform="rotate(-90 64 64)">'+segments+'</g></svg>'+
+      effortDial(buckets,current.knownAU)+
       '<span class="tl-dial-readout"><strong'+(partial?'':' data-load-metric="current-au"')+'>'+display+'</strong><small>'+label+'</small></span></button>'+
       '<div class="tl-distribution-breakdown"><p>Po vrsti aktivnosti</p>'+(legend?'<dl>'+legend+'</dl>':'<span class="tl-distribution-empty">Raspodjela će se prikazati nakon prvog spremljenog treninga.</span>')+'</div></div>';
   }
@@ -75,14 +87,14 @@
       '<div class="tl-reference" data-load-period="baseline" data-total-au="'+value(baseline.totalAU)+'" data-known-au="'+value(baseline.knownAU)+'" data-weekly-average-au="'+value(baseline.weeklyAverageAU)+'" data-sessions="'+baseline.sessions+'" data-active-weeks="'+baseline.activeWeeks+'"><div><span>Prethodna 4 tjedna</span><strong>'+number(baseline.weeklyAverageAU,1)+' <small>AU / tjedan</small></strong></div><p>'+baseline.sessions+' zapisa u '+baseline.activeWeeks+' od 4 tjedna'+(baseline.missingAU?' · napor nije poznat za '+baseline.missingAU+' zapisa':baseline.sessions?' · prosjek zabilježenog napora':' · nema usporednog razdoblja')+'</p></div>'+
       '<details class="tl-details"><summary>Brojke i izvori napora</summary><p>AU su jedinice napora: tvoja ocjena cijelog treninga (sRPE, 0–10) × stvarne minute (sekunde ÷ 60). Nula je unesena ocjena; prazno ostaje nepoznato. Protokoli, teren, ekipa i utakmice ulaze u ovaj pokazatelj. Pokusi iz knjižnice i budući zapisi ne ulaze.</p><div class="tl-table-wrap"><table><caption>Zadnjih 7 dana, samo spremljeni zapisi</caption><thead><tr><th scope="col">Datum</th><th scope="col">Treninzi</th><th scope="col">Napor AU</th></tr></thead><tbody>'+summary.effort.days.slice().reverse().map(function(day){return '<tr><th scope="row">'+esc(date(day.from))+'</th><td>'+day.sessions+'</td><td>'+(day.sessions?day.totalAU!==null?number(day.totalAU):day.rated?number(day.knownAU)+' poznato':'—':'Nema zapisa')+(day.missingAU?' · '+day.missingAU+' nepoznato':'')+'</td></tr>';}).join('')+'</tbody></table></div><p>Referentni prosjek dijeli zabilježeni napor prethodnih 28 dana s četiri. Ne ocjenjuje je li trening za tebe optimalan.</p><button type="button" class="tl-link" data-a="historyList">Otvori povijest treninga <span aria-hidden="true">↗</span></button></details></section>';
   }
-  function muscleBattery(group,max){
+  function muscleMeter(group,max){
     const direct = group.direct/max*100, secondary = group.secondary*.5/max*100;
-    return '<span class="muscle-battery" aria-hidden="true"><span class="muscle-battery-fill">'+
-      (direct>0?'<i class="muscle-battery-direct" style="width:'+direct+'%"></i>':'')+
-      (secondary>0?'<i class="muscle-battery-secondary" style="width:'+secondary+'%"></i>':'')+'</span></span>';
+    return '<span class="muscle-meter" aria-hidden="true">'+
+      (direct>0?'<i class="muscle-meter-direct" style="width:'+direct+'%"></i>':'')+
+      (secondary>0?'<i class="muscle-meter-secondary" style="width:'+secondary+'%"></i>':'')+'</span>';
   }
   function muscleRow(group,max){
-    return '<div class="tl-muscle-row" data-load-group="'+esc(group.id)+'" data-direct="'+value(group.direct)+'" data-secondary="'+value(group.secondary)+'" data-equivalent="'+value(group.equivalent)+'"><div><span>'+esc(group.label)+'</span><b>'+number(group.equivalent,1)+'</b></div>'+muscleBattery(group,max)+'<small>'+number(group.direct,0)+' izravnih · '+number(group.secondary,0)+' pomoćnih serija</small></div>';
+    return '<div class="tl-muscle-row" data-load-group="'+esc(group.id)+'" data-direct="'+value(group.direct)+'" data-secondary="'+value(group.secondary)+'" data-equivalent="'+value(group.equivalent)+'"><div><span>'+esc(group.label)+'</span><b>'+number(group.equivalent,1)+'</b></div>'+muscleMeter(group,max)+'<small>'+number(group.direct,0)+' izravnih · '+number(group.secondary,0)+' pomoćnih serija</small></div>';
   }
   function muscles(summary){
     var model=summary.muscles,coverage=model.coverage,known=model.recordedSets>0||coverage.coveredSessions>0;
@@ -93,8 +105,8 @@
       '<div class="tl-muscle-overview"><button type="button" data-a="trainingLoadInfo" data-topic="muscles" aria-haspopup="dialog"><strong data-load-metric="muscle-sets">'+(known?number(model.recordedSets,0):'—')+'</strong><span>poznatih radnih serija</span></button><button type="button" data-a="trainingLoadInfo" data-topic="muscles" aria-haspopup="dialog"><strong>'+number(model.coveredGroups,0)+'</strong><span>skupina sa zabilježenim radom</span></button></div>'+
       (missing?'<p class="tl-note">Dio mišićne raspodjele nije poznat. Prikazan je samo sačuvani rad.</p>':'')+
       (top.length?'<p class="tl-muscle-scale">Zajednička skala za 7 dana · 0–'+number(max,0)+' serija</p><div class="tl-muscle-chart">'+top.map(function(group){return muscleRow(group,max);}).join('')+'</div>':'<p class="tl-empty">Još nema raspodjele radnih serija u ovom razdoblju. Ekipni trening i utakmica ne stvaraju pretpostavljene mišićne serije.</p>')+
-      '<div class="tl-legend"><span><i class="muscle-battery-direct"></i>Izravne × 1</span><span><i class="muscle-battery-secondary"></i>Pomoćne × 0,5</span></div>'+
-      '<details class="tl-details"><summary>Sve mišićne skupine i pravilo</summary><p>Jedna odrađena serija pripisuje se glavnim mišićima kao 1, pomoćnima kao 0,5. To je model pripisivanja rada: kilogrami i RIR ne ponderiraju ove serije. Broj ne mjeri rast mišića, točan podražaj ili oporavak.</p><div class="tl-table-wrap"><table><caption>Poznati dio raspodjele radnih serija</caption><thead><tr><th scope="col">Skupina</th><th scope="col">Izravne</th><th scope="col">Pomoćne</th><th scope="col">Procjena</th></tr></thead><tbody>'+groups.map(function(group){return '<tr><th scope="row">'+esc(group.label)+'</th><td>'+(known?number(group.direct,0):'—')+'</td><td>'+(known?number(group.secondary,0):'—')+'</td><td>'+(known?number(group.equivalent,1)+muscleBattery(group,max):'—')+'</td></tr>';}).join('')+'</tbody></table></div><p>Pojedina radna serija može biti pripisana više skupina. Zato se vrijednosti po mišićima ne zbrajaju kao broj serija treninga. Zagrijavanja se izostavljaju; planirani termini nisu odrađeni rad.</p></details></section>';
+      '<div class="tl-legend"><span><i class="muscle-meter-direct"></i>Izravne × 1</span><span><i class="muscle-meter-secondary"></i>Pomoćne × 0,5</span></div>'+
+      '<details class="tl-details"><summary>Sve mišićne skupine i pravilo</summary><p>Jedna odrađena serija pripisuje se glavnim mišićima kao 1, pomoćnima kao 0,5. To je model pripisivanja rada: kilogrami i RIR ne ponderiraju ove serije. Broj ne mjeri rast mišića, točan podražaj ili oporavak.</p><div class="tl-table-wrap"><table><caption>Poznati dio raspodjele radnih serija</caption><thead><tr><th scope="col">Skupina</th><th scope="col">Izravne</th><th scope="col">Pomoćne</th><th scope="col">Procjena</th></tr></thead><tbody>'+groups.map(function(group){return '<tr><th scope="row">'+esc(group.label)+'</th><td>'+(known?number(group.direct,0):'—')+'</td><td>'+(known?number(group.secondary,0):'—')+'</td><td>'+(known?number(group.equivalent,1)+muscleMeter(group,max):'—')+'</td></tr>';}).join('')+'</tbody></table></div><p>Pojedina radna serija može biti pripisana više skupina. Zato se vrijednosti po mišićima ne zbrajaju kao broj serija treninga. Zagrijavanja se izostavljaju; planirani termini nisu odrađeni rad.</p></details></section>';
   }
   function readiness(summary,morning){
     var current=morning&&morning.date===summary.today?morning:{},specs=[['energy','Energija',1,5],['legs','Noge',1,5],['pain','Bol',0,10]];

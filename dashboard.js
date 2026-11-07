@@ -101,17 +101,14 @@
   function coverageRing(coverage, forecast) {
     const total = val(coverage.total), done = Math.min(total,val(coverage.done));
     const projected = Math.max(done, Math.min(total,val(coverage.projected)));
-    const c = 2 * Math.PI * 47, length = total ? done / total * c : 0;
-    let svg = '<svg viewBox="0 0 112 112" aria-hidden="true" focusable="false"><circle class="db-ring-track" cx="56" cy="56" r="47"/>';
-    if (length) svg += '<circle class="db-ring-done" cx="56" cy="56" r="47" transform="rotate(-90 56 56)" stroke-dasharray="'+length+' '+c+'"/>';
-    if (forecast && total && projected > done) {
-      const a = -Math.PI/2 + done/total*2*Math.PI, b = -Math.PI/2+projected/total*2*Math.PI;
-      const point = angle => (56+47*Math.cos(angle)).toFixed(3)+' '+(56+47*Math.sin(angle)).toFixed(3);
-      // The only full-circle case is split into two arcs; one SVG arc cannot have identical endpoints.
-      const path = projected-done === total ? 'M56 9 A47 47 0 1 1 56 103 A47 47 0 1 1 56 9' : 'M'+point(a)+' A47 47 0 '+(b-a>Math.PI?1:0)+' 1 '+point(b);
-      svg += '<path class="db-ring-plan" d="'+path+'"/>';
-    }
-    return '<div class="db-coverage"><div class="db-ring">'+svg+'</svg><div><strong>'+fmt(done)+'<small>/'+fmt(total)+'</small></strong></div></div><b>skupina sa<br>zabilježenim radom</b>'+
+    const c = 2*Math.PI*47, step = c/28, length = total ? done/total*c : 0;
+    const geometry = ' cx="56" cy="56" r="47" transform="rotate(-90 56 56)"';
+    const mask = '<mask id="db-ring-ticks" maskUnits="userSpaceOnUse" x="0" y="0" width="112" height="112"><circle class="db-ring-mask"'+geometry+' stroke-dasharray="'+step*.78+' '+step*.22+'"/></mask>';
+    let rings = '<circle class="db-ring-track"'+geometry+'/>';
+    if (length) rings += '<circle class="db-ring-done"'+geometry+' stroke-dasharray="'+length+' '+c+'"/>';
+    if (forecast && projected>done) rings += '<circle class="db-ring-plan"'+geometry+' stroke-dasharray="'+(projected-done)/total*c+' '+c+'" stroke-dashoffset="'+(-length)+'"/>';
+    const svg = '<svg viewBox="0 0 112 112" aria-hidden="true" focusable="false"><defs>'+mask+'</defs><g mask="url(#db-ring-ticks)">'+rings+'</g></svg>';
+    return '<div class="db-coverage"><div class="db-ring">'+svg+'<div><strong>'+fmt(done)+'<small>/'+fmt(total)+'</small></strong></div></div><b>skupina sa<br>zabilježenim radom</b>'+
       (forecast?'<span class="db-projection">S planom <strong>'+fmt(projected)+'/'+fmt(total)+'</strong></span>':'')+'</div>';
   }
 
@@ -126,12 +123,12 @@
     return '<aside class="db-quality">'+icon('info')+'<div><strong>'+(missing?'Potpunost podataka':'Djelomična izvedba')+'</strong><p>'+esc(notes.join(' '))+'</p><p>'+(missing?'Prikazane serije obuhvaćaju poznate zapise. Nedostajući podaci nisu nula.':'Uračunat je samo potvrđeni odrađeni rad.')+'</p></div></aside>';
   }
 
-  function groupBattery(group, max, forecast) {
+  function groupMeter(group, max, forecast) {
     const actual = group.actual || {}, planned = group.planned || {};
-    const fill = (type, amount) => amount > 0 ? '<i class="muscle-battery-'+type+'" style="width:'+amount/max*100+'%"></i>' : '';
-    return '<span class="muscle-battery" aria-hidden="true"><span class="muscle-battery-fill">'+
+    const fill = (type, amount) => amount > 0 ? '<i class="muscle-meter-'+type+'" style="width:'+amount/max*100+'%"></i>' : '';
+    return '<span class="muscle-meter" aria-hidden="true">'+
       fill('direct',val(actual.direct))+fill('secondary',val(actual.indirect)*.5)+
-      (forecast?fill('plan',val(planned.equivalent)):'')+'</span></span>';
+      (forecast?fill('plan',val(planned.equivalent)):'')+'</span>';
   }
 
   function groupPicker(groups, selected, forecast, max) {
@@ -149,7 +146,7 @@
       const actual=g.actual||{}, planned=g.planned||{};
       const future=forecast?val(planned.equivalent):0;
       const label=g.label+': '+fmt(actual.direct)+' izravnih serija, '+fmt(actual.indirect)+' neizravnih serija. Procijenjeni zbroj '+fmt(actual.equivalent)+(forecast?', preostali plan '+fmt(planned.equivalent):'');
-      return '<button type="button" class="db-comparison-row" data-a="dashboardGroup" data-id="'+esc(g.id)+'" aria-pressed="'+(g.id===selected)+'" aria-label="'+esc(label)+'"><span class="db-comparison-name">'+esc(g.label)+'</span>'+groupBattery(g,max,forecast)+'<span class="db-comparison-value"><b>'+fmt(actual.equivalent)+'</b>'+(future?'<small>+'+fmt(future)+'</small>':'')+'</span></button>';
+      return '<button type="button" class="db-comparison-row" data-a="dashboardGroup" data-id="'+esc(g.id)+'" aria-pressed="'+(g.id===selected)+'" aria-label="'+esc(label)+'"><span class="db-comparison-name">'+esc(g.label)+'</span>'+groupMeter(g,max,forecast)+'<span class="db-comparison-value"><b>'+fmt(actual.equivalent)+'</b>'+(future?'<small>+'+fmt(future)+'</small>':'')+'</span></button>';
     };
     const legend='<div class="db-comparison-legend"><span><i class="db-swatch db-swatch-direct"></i>Izravne</span><span><i class="db-swatch db-swatch-indirect"></i>0,5 × neizravne</span>'+(forecast?'<span><i class="db-swatch db-swatch-plan"></i>Preostali plan</span>':'')+'</div>';
     return '<section class="db-comparison" aria-label="Usporedba mišićnih skupina"><div class="db-comparison-heading"><h3>Rad po skupinama</h3><span>procijenjene serije</span></div>'+legend+
@@ -179,7 +176,7 @@
     if (!group) return '<p class="db-empty-copy">Za ovaj pregled nema dostupnih skupina.</p>';
     const actual = group.actual || {}, planned = group.planned || {};
     return '<section class="db-group-detail" aria-labelledby="db-group-title"><div class="db-detail-heading"><div><p class="db-kicker">Odabrana skupina</p><h3 id="db-group-title">'+esc(group.label)+'</h3></div><div class="db-detail-total" aria-live="polite"><strong>'+fmt(actual.equivalent)+'</strong><small>procijenjenih serija</small></div></div>'+
-      '<div class="db-detail-battery">'+groupBattery(group,max,vm.forecast)+'<p>Zajednička skala za ovaj tjedan · 0–'+fmt(max)+' serija</p></div>'+
+      '<div class="db-detail-meter">'+groupMeter(group,max,vm.forecast)+'<p>Zajednička skala za ovaj tjedan · 0–'+fmt(max)+' serija</p></div>'+
       '<dl class="db-counts"><div><dt>Izravne serije</dt><dd>'+fmt(actual.direct)+'</dd></div><div><dt>Neizravne serije</dt><dd>'+fmt(actual.indirect)+'</dd></div><div><dt>Dani s radom</dt><dd>'+fmt(actual.days)+'</dd></div></dl>'+
       (vm.forecast && val(planned.equivalent)>0?'<p class="db-group-plan"><i class="db-swatch db-swatch-plan"></i><span>Preostali plan dodaje <b>+'+fmt(planned.equivalent)+'</b> procijenjenih serija <small>'+fmt(planned.direct)+' izravno · '+fmt(planned.indirect)+' neizravno</small></span></p>':'')+
       (!val(actual.equivalent)?'<p class="db-empty-copy">Za ovu skupinu nema poznatih radnih serija u odrađenim treninzima ovog tjedna.</p>':'')+

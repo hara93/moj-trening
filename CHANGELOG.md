@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.9 — 7. 11. 2026.
+
+- Kružni grafovi Napretka i Opterećenja sada se pune kroz odvojene segmente. Rad po mišićima prikazuju tanke crtice na zajedničkoj skali razdoblja.
+
 ## 1.20.8 — 7. 11. 2026.
 
 - **Napredak** prikazuje tjednu izvedbu i trend serija u kružnim grafovima.

@@ -233,11 +233,11 @@ async function runScenarios(page) {
   await musclesRow.click();
   const chest=page.locator('#training-load-info [data-load-group="chest"]');
   assert.equal(await chest.getAttribute('data-direct'),'4');assert.equal(await chest.getAttribute('data-equivalent'),'4');
-  assert.ok(await chest.locator('.muscle-battery-direct').isVisible());
+  assert.ok(await chest.locator('.muscle-meter-direct').isVisible());
   const muscleDetails=page.locator('#training-load-info [data-load-section="muscles"] details');
   await muscleDetails.locator('summary').click();
   const triceps=muscleDetails.locator('tbody tr').filter({has:page.getByRole('rowheader',{name:'Triceps',exact:true})});
-  assert.ok(await triceps.locator('.muscle-battery-secondary').isVisible());
+  assert.ok(await triceps.locator('.muscle-meter-secondary').isVisible());
   assert.deepEqual(await triceps.locator('th,td').allTextContents(),['Triceps','0','4','2']);
   await page.keyboard.press('Escape');
   assert.equal(await musclesRow.evaluate(node=>node===document.activeElement),true);
