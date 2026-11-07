@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.12 — 7. 11. 2026.
+
+- Veća figura u **Mišićnom tjednu** olakšava odabir. Prednji mišići potkoljenice imaju zasebnu skupinu, a dodir gležnja otvara objašnjenje zgloba.
+
 ## 1.20.11 — 7. 11. 2026.
 
 - U **Napretku** se graf odabrane vježbe može filtrirati na zadnjih 7, 30 ili 90 dana ili cijelu povijest. Izvedba i količina rada koriste isti raspon, koji se pamti zasebno od Opterećenja.

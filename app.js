@@ -62,7 +62,7 @@ const MEDIA_URLS = {}, mediaTried = {};
 const MEDIA = new Proxy(MEDIA_URLS, { get(t, k){ if (typeof k === 'string' && !(k in t) && !mediaTried[k] && k.indexOf('pack:') !== 0) loadOwnMedia(k); return t[k]; } });
 const mediaUrl = id => MEDIA[id] || '';
 const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Eksplozivnost', 'Trup', 'Kondicija'];
-const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Core','Koljeno','Gležanj','Leđa','Prsa','Ramena','Ruke','Cijelo tijelo','Vrat'];
+const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Prednja potkoljenica','Core','Koljeno','Gležanj','Leđa','Prsa','Ramena','Ruke','Cijelo tijelo','Vrat'];
 // the data keeps 'Core' (also in exercises you edited); on screen it is "Trup", like the library category
 const exZoneLabel = z => z === 'Core' ? 'Trup' : z;
 const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
@@ -72,16 +72,16 @@ const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medi
 // `muscles` = { prime: [region ids], sec: [region ids] }; an exercise without it (your own,
 // or one you edited before 1.8) is drawn from its zones: the first zone's regions as the main ones, the others' as secondary.
 const MUSCLE_ZONE = { front_chest:'Prsa', front_shoulders:'Ramena', front_biceps:'Ruke', front_forearms:'Ruke', front_abs:'Core', front_obliques:'Core',
-  front_hip_flexors:'Fleksori kuka', front_adductors:'Aduktori', front_quadriceps:'Kvadriceps', front_knees:'Koljeno', front_shins_ankles:'Gležanj',
+  front_hip_flexors:'Fleksori kuka', front_adductors:'Aduktori', front_quadriceps:'Kvadriceps', front_knees:'Koljeno', front_shins:'Prednja potkoljenica', front_shins_ankles:'Gležanj',
   back_upper_back_trapezius:'Leđa', back_latissimus:'Leđa', back_lower_back:'Leđa', back_rear_shoulders:'Ramena', back_triceps:'Ruke',
   back_glutes:'Gluteus', back_gluteus_medius:'Gluteus medius', back_hamstrings:'Stražnja loža', back_calves:'Lisni mišić', hip_joints:'Kuk', neck:'Vrat' };
 const MUSCLES = Object.keys(MUSCLE_ZONE);
-const ZONE_MUSCLES = { 'Kuk': ['front_hip_flexors', 'back_gluteus_medius'], 'Cijelo tijelo': MUSCLES.filter(r => r !== 'hip_joints' && r !== 'neck') };
-// Keep the established fallback for old exercises; a new hip marker is always explicit.
+const ZONE_MUSCLES = { 'Kuk': ['front_hip_flexors', 'back_gluteus_medius'], 'Cijelo tijelo': MUSCLES.filter(r => !['hip_joints','neck','front_shins'].includes(r)) };
+// Keep the established zone fallback for old exercises.
 MUSCLES.filter(r => r !== 'hip_joints').forEach(r => (ZONE_MUSCLES[MUSCLE_ZONE[r]] = ZONE_MUSCLES[MUSCLE_ZONE[r]] || []).push(r));
 const ZONE_ONLY = ['Cijelo tijelo'];   // zones without a selectable region survive muscle edits
 const UPPER_M = ['neck','front_chest','front_shoulders','back_rear_shoulders','front_biceps','back_triceps','front_forearms','back_upper_back_trapezius','back_latissimus'];
-const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves','hip_joints'];
+const LEG_M = ['front_hip_flexors','front_adductors','front_quadriceps','front_knees','front_shins','front_shins_ankles','back_glutes','back_gluteus_medius','back_hamstrings','back_calves','hip_joints'];
 // 1.8.1: the filter's shortcuts like GOWOD: "Cijelo tijelo" (every region), "Gornji dio" (arms, shoulders, chest, back and the trunk)
 // and "Donji dio" (the legs and hips) select their whole region set; a set selected in full shows as ONE chip that removes it (all
 // regions: only "Cijelo tijelo"). 1.8's 'cijelo' (exercises that work the upper body and the legs together) is gone: a saved one
@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.11';
+const APP_VERSION = '1.20.12';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';

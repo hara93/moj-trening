@@ -33,18 +33,19 @@
         var d = typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view];
         var state = prime[id] ? 'prime' : on[id] ? 'on' : '';
         var hip = id === 'hip_joints';
-        var opacity = hip || native ? '0' : state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
+        var hideFill = hip || (native && id !== 'front_shins_ankles');
+        var opacity = hideFill ? '0' : state === 'prime' ? '.9' : state === 'on' ? '.3' : '0';
         // Keep this ordering and the body-ln group: app.js expands these paths into touch targets.
         out += '<path class="body-rg' + (tap ? ' body-tap' : '') + (state ? ' is-' + state : '') + (o.selected === id ? ' is-selected' : '') + (R[id][3] === 'joint' ? ' body-joint' : '') + '" data-region="' + id + '"' +
           (tap ? ' role="button" aria-label="' + esc(R[id][1]) + '" aria-pressed="' + !!state + '"' : '') +
-          ' style="fill:var(--accent,#5789E8)' + (hip ? ';stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:all;fill-opacity:0!important' : native ? ';fill-opacity:0!important' : '') + '" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + d + '"/>';
+          ' style="fill:var(--accent,#5789E8)' + (hip ? ';stroke:transparent!important;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:all;fill-opacity:0!important' : native ? ';fill-opacity:' + opacity + '!important' : '') + '" fill-opacity="' + opacity + '" fill-rule="evenodd" d="' + d + '"/>';
       });
       // Transparent artwork sits over the fills, retaining its original muscle hatching.
       if (native) {
         out += '<defs><clipPath id="' + key + view + '-clip"><path d="' + native.contours[view] + '"/></clipPath></defs>';
         out += '<g class="body-art body-muscle-art" pointer-events="none" clip-path="url(#' + key + view + '-clip)" fill-rule="evenodd" stroke="#8C9BAA" stroke-opacity=".68" stroke-width=".6" stroke-linejoin="round">';
         ids.forEach(function (id) {
-          if ((R[id][0] !== view && R[id][0] !== 'both') || id === 'front_knees' || id === 'hip_joints') return;
+          if ((R[id][0] !== view && R[id][0] !== 'both') || R[id][3] === 'joint') return;
           var custom = native.parts[id], d = typeof R[id][2] === 'string' ? R[id][2] : R[id][2][view];
           var parts = (Array.isArray(custom) ? custom : custom && custom[view]) || d.match(/M[^M]*/g) || [];
           var state = prime[id] ? 'prime' : on[id] ? 'on' : '';

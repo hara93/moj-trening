@@ -114,8 +114,8 @@ def main():
     raw = source.read_bytes()
     if source.suffix == '.json':
         src = json.loads(raw)
-        if set(src['regions']) != set(LABELS) | {'hip_joints', 'neck'}:
-            raise ValueError('All muscle IDs and the shared hip_joints region are required')
+        if set(src['regions']) != set(LABELS) | {'hip_joints', 'neck', 'front_shins'}:
+            raise ValueError('All stored and current body region IDs are required')
         data = {'geom': src['geom'], 'images': src['images'],
                 'regions': {key: [r['view'], r['label_hr'], r['d'], r.get('kind', 'muscle')]
                             for key, r in src['regions'].items()}}

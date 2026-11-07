@@ -36,7 +36,7 @@ U otvorenoj vježbi ponavljanja i kilograme uređuješ izravno u redovima. **+ D
 
 **Dnevnik** se otvara preko playera i pauzira timer dok uređuješ. Otvorena vježba pokazuje sve serije, a ostale se mogu proširiti. Oprema, zamjena i vraćanje vježbe, povijest, trendovi, bilješke i uređivanje serija nalaze se uz vježbu. **Prijeđi na vježbu** i naslovi dijelova omogućuju navigaciju bez izmišljanja dovršenih serija. Bilješke se spremaju uz izvedbu u povijesti. Odmor mijenjaj tipkama **− / +** po 15 sekundi; pripremu dodaj za 5, 10, 30 ili 60 sekundi. Izbornik **…** otvara postavke, tempo, zvuk, dijelove, dijeljenje plana, vodič i završetak. Rezultati se pregledavaju prije spremanja.
 
-Trenutna verzija je 1.20.11. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
+Trenutna verzija je 1.20.12. Prva ikona donje trake otvara **Moj pregled**. Dodirni **Danas** za prijedlog iz rasporeda utakmica, današnjeg plana i povijesti. Otvori **Korišteni podaci** za izvor prijedloga. Kad pokreneš kraću izvedbu, izvorni protokol zadržava svoje doze. U povijest ulazi ono što si odradio.
 
 U **Moj pregled → Moji protokoli → Uvezi trening** možeš otvoriti gotovi trening **Gornji dio nakon utakmice · 60 min** ili odabrati vlastitu datoteku treninga. Pregledaj ispunjeni protokol i dodirni **Spremi** da ga dodaš na popis.
 

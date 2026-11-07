@@ -30,6 +30,8 @@ function fixture() {
     'body-joint': exercise('body-joint', 'samo zglob', { prime: ['hip_joints'], sec: [] }, ['Kuk']),
     'body-neck-primary': exercise('body-neck-primary', 'vrat glavni', { prime: ['neck'], sec: [] }, ['Vrat']),
     'body-neck-secondary': exercise('body-neck-secondary', 'vrat pomoćni', { prime: ['front_biceps'], sec: ['neck'] }, ['Ruke','Vrat']),
+    'body-shins': exercise('body-shins', 'prednja potkoljenica', { prime: ['front_shins'], sec: [] }, []),
+    'body-legacy-ankle': exercise('body-legacy-ankle', 'stari gležanj', { prime: ['front_shins_ankles'], sec: [] }, ['Gležanj']),
     'body-legacy-whole': {...exercise('body-legacy-whole', 'staro cijelo tijelo', undefined, ['Cijelo tijelo']),name:'Staro cijelo tijelo'}
   };
   data.protocols = { 'body-protocol': {
@@ -151,7 +153,8 @@ async function geometry(page) {
   assert.deepEqual(value.badSamples, []);
   assert.deepEqual(value.overlaps, []);
   assert.equal(value.images,0,'native muscle drawing has no raster image layer');
-  assert.deepEqual([...new Set(value.muscles.map(p=>p.id))].sort(),ids.filter(id=>id!=='hip_joints'&&id!=='front_knees').sort());
+  const muscleIds = ids.filter(id => source.regions[id].kind !== 'joint');
+  assert.deepEqual([...new Set(value.muscles.map(p=>p.id))].sort(), muscleIds.sort());
   assert.ok(value.muscles.every(p=>p.closed&&p.hatched),'every muscle form is closed and filled with a local hatch pattern');
   assert.deepEqual(value.contours,[source.visuals.contours.front,source.visuals.contours.back]);
   results.push({ check: 'canonical-geometry', ids: value.ids.length, paths: value.count,
@@ -212,8 +215,26 @@ async function filter(page, width) {
   await tapRegion(page,figure,'neck','back');
   assert.equal(await page.locator(figure+' [data-region="neck"].is-prime').count(),0);
   await A(page,'sheetDone').click();
+
+  await A(page, 'eqSheet').click();
+  await tapRegion(page, figure, 'front_shins', 'front');
+  assert.equal(await page.locator('.fsheet .zch .afc').innerText(), source.regions.front_shins.label_hr);
+  await A(page, 'sheetDone').click();
+  const shinMatches = await A(page, 'openEx').evaluateAll(nodes => nodes.map(node => node.dataset.id));
+  assert.ok(shinMatches.includes('body-shins'));
+  assert.ok(!shinMatches.includes('body-legacy-ankle'), 'the stored ankle ID does not match the new shin muscle');
+  assert.ok(!shinMatches.includes('body-legacy-whole'), 'the old whole-body fallback does not add the new shin muscle');
+  await A(page, 'filtClear').click();
+  await A(page, 'eqSheet').click();
+  await tapRegion(page, figure, 'front_shins_ankles', 'front');
+  assert.equal(await page.locator('.fsheet .zch .afc').innerText(), source.regions.front_shins_ankles.label_hr);
+  await A(page, 'sheetDone').click();
+  const ankleMatches = await A(page, 'openEx').evaluateAll(nodes => nodes.map(node => node.dataset.id));
+  assert.ok(ankleMatches.includes('body-legacy-ankle'));
+  assert.ok(!ankleMatches.includes('body-shins'));
+  await A(page, 'filtClear').click();
   results.push({ check: 'filter', width, sampleHitChecks: hitChecks.length, legacyHipIncluded: true, hipChips: 1, sharedHipPaths: 2,
-    neckSharedBothViews:true,neckTouchAndKeyboard:true,legacyWholeBodyExcludesNeck:true });
+    neckSharedBothViews:true,neckTouchAndKeyboard:true,legacyWholeBodyExcludesNeck:true,shinAndLegacyAnkleFiltersSeparate:true });
 }
 
 async function editor(page, width) {

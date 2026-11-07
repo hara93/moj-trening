@@ -10,7 +10,7 @@ const app=read('app.js');
 const helpers=new Function('window','BODY',app.slice(app.indexOf('const MUSCLE_ZONE ='),app.indexOf('// 1.8: equipment tiles'))+'\nreturn {exMuscles,musclesZones,bodyFig};')({BODY:B},B);
 
 test('new anatomy retains every stored region ID, with one bilateral hip joint and native artwork frames',()=>{
-  assert.deepEqual(Array.from(B.ids),legacy.concat('hip_joints','neck'));
+  assert.deepEqual(Array.from(B.ids),legacy.concat('hip_joints','neck','front_shins'));
   assert.equal(B.regions.hip_joints.view,'both');assert.equal(B.regions.hip_joints.kind,'joint');
   for(const view of ['front','back']){
     const png=fs.readFileSync(path.join(repo,source.images[view]));
@@ -24,9 +24,33 @@ test('new anatomy retains every stored region ID, with one bilateral hip joint a
     assert.ok(!html.includes('<image'),'muscle forms are native closed SVG shapes');
   }
   const svg=B.svg({prime:['hip_joints'],tappable:true});
-  assert.equal((svg.match(/data-region=/g)||[]).length,25);
+  assert.equal((svg.match(/data-region=/g)||[]).length,26);
   assert.equal((svg.match(/data-region="hip_joints"/g)||[]).length,2);
   assert.match(B.svg(),/aria-hidden="true" focusable="false" pointer-events="none"/);
+});
+
+test('front shin hatching is independent of the stored ankle joint target',()=>{
+  assert.equal(B.regions.front_shins.label_hr,'Prednji mišići potkoljenice');
+  assert.equal(B.regions.front_shins.kind,'muscle');
+  assert.equal(B.regions.front_shins_ankles.label_hr,'Gležnjevi');
+  assert.equal(B.regions.front_shins_ankles.kind,'joint');
+  const front=B.svg({view:'front',prime:['front_shins'],tappable:true});
+  assert.match(front,/is-prime[^>]+data-region="front_shins"[^>]+aria-pressed="true"/);
+  assert.match(front,/body-joint[^>]+data-region="front_shins_ankles"[^>]+aria-pressed="false"/);
+  assert.equal((front.match(/class="body-muscle" data-muscle="front_shins"/g)||[]).length,2);
+  assert.doesNotMatch(front,/data-muscle="front_shins_ankles"/);
+  const anklePrime=B.svg({view:'front',prime:['front_shins_ankles']});
+  const ankleSecondary=B.svg({view:'front',on:['front_shins_ankles']});
+  assert.match(anklePrime,/data-region="front_shins_ankles"[^>]+fill-opacity:\.9!important/);
+  assert.match(ankleSecondary,/data-region="front_shins_ankles"[^>]+fill-opacity:\.3!important/);
+  for(const id of ['front_shins','front_shins_ankles']){
+    const region=source.regions[id];
+    assert.equal(region.view,'front');
+    assert.equal((region.d.match(/Z/g)||[]).length,2);
+    assert.equal(region.samples.length,2);
+    assert.equal(region.samples[0].x+region.samples[1].x,B.geom.W);
+    assert.equal(region.samples[0].y,region.samples[1].y);
+  }
 });
 
 test('neck is one selectable hatched muscle group shared by the front and back views',()=>{

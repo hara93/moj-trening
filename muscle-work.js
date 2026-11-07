@@ -20,7 +20,7 @@
     ['rearDelts','Stražnja ramena','back_rear_shoulders'], ['triceps','Triceps','back_triceps'],
     ['glutes','Gluteus','back_glutes'], ['gluteMedius','Gluteus medius','back_gluteus_medius'],
     ['hamstrings','Stražnja loža','back_hamstrings'], ['calves','Listovi','back_calves'],
-    ['neck','Mišići vrata','neck']
+    ['neck','Mišići vrata','neck'], ['shins','Prednji mišići potkoljenice','front_shins']
   ];
   var groups = GROUP_ROWS.map(function (r) { return { id:r[0], label:r[1], regions:[r[2]] }; });
   var groupIds = groups.map(function (g) { return g.id; }), regionToGroup = {};
@@ -161,10 +161,9 @@
       SOURCE.indexOf(x.source) === -1 || ELIGIBILITY.indexOf(x.eligibility) === -1 ||
       ELIGIBILITY_SOURCE.indexOf(x.eligibilitySource) === -1 || COMPLETION.indexOf(x.completion) === -1 ||
       !listValid(x.primary,groupIds) || !listValid(x.secondary,groupIds) || !listValid(x.unassignedRegions) ||
-      // Neck was added after the original mw1 registry. An old unknown-neck
-      // snapshot stays unknown; it never borrows today's new anatomical credit.
+      // An older snapshot with a then-unknown region retains its original attribution.
       x.unassignedRegions.some(function (r) { return has(regionToGroup,r) &&
-        (r !== 'neck' || x.primary.indexOf('neck') !== -1 || x.secondary.indexOf('neck') !== -1); }) ||
+        (!['neck','front_shins'].includes(r) || x.primary.includes(regionToGroup[r]) || x.secondary.includes(regionToGroup[r])); }) ||
       x.secondary.some(function (g) { return x.primary.indexOf(g) !== -1; }) ||
       (x.plannedSets !== null && (!integer(x.plannedSets) || x.plannedSets === 0)) ||
       (x.completedSets !== null && !integer(x.completedSets))) return null;

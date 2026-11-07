@@ -2135,6 +2135,7 @@ window.SEED = {
    "phase": null,
    "cord": "",
    "zones": [
+    "Prednja potkoljenica",
     "Gležanj"
    ],
    "equip": [
@@ -2169,7 +2170,7 @@ window.SEED = {
    "mediaType": null,
    "muscles": {
     "prime": [
-     "front_shins_ankles"
+     "front_shins"
     ],
     "sec": []
    }

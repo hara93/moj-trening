@@ -105,7 +105,7 @@ test('a hip marker beside real muscles adds no credits or unassigned warning and
   assert.equal(legacy.eligibilitySource,'category'); assert.deepEqual(legacy.primary,[]);
 });
 test('legacy group masks, eligibility indices and unassigned hip history replay byte for byte', () => {
-  assert.deepEqual(M.groups.map(g => g.id),['chest','frontDelts','biceps','forearms','abs','obliques','hipFlexors','adductors','quadriceps','upperBack','lats','lowerBack','rearDelts','triceps','glutes','gluteMedius','hamstrings','calves','neck']);
+  assert.deepEqual(M.groups.slice(0,19).map(g => g.id),['chest','frontDelts','biceps','forearms','abs','obliques','hipFlexors','adductors','quadriceps','upperBack','lats','lowerBack','rearDelts','triceps','glutes','gluteMedius','hamstrings','calves','neck']);
   assert.equal(Object.hasOwn(M.regionToGroup,'hip_joints'),false);
   const legacy = [
     ['mw1','category','Stara snaga','Snaga',0,1,1,1,8192,[],3,2,1],
@@ -179,7 +179,7 @@ test('compact packing round-trips every group, empty and partial/excluded snapsh
   assert.deepEqual(M.sanitize(copy(M.pack(reversed))),reversed);
 });
 test('new neck credit is explicit and appended after every legacy packed muscle position',()=>{
-  assert.equal(M.groups.length,19);assert.equal(M.groups.at(-1).id,'neck');assert.equal(M.regionToGroup.neck,'neck');
+  assert.equal(M.groups[18].id,'neck');assert.equal(M.regionToGroup.neck,'neck');
   const previous=M.completedItem(ex({muscles:{prime:['back_upper_back_trapezius'],sec:[]}}),done());
   assert.deepEqual(previous.primary,['upperBack']);assert.equal(M.pack(previous)[7],1<<9);
   const current=M.completedItem(ex({muscles:{prime:['neck'],sec:[]}}),done());
@@ -191,6 +191,19 @@ test('new neck credit is explicit and appended after every legacy packed muscle 
   assert.deepEqual(historical.primary,[]);assert.deepEqual(historical.credits.direct,{});
   assert.equal(M.sumSnapshots([historical]).coverage.unassignedItems,1);
   const duplicate=copy(current);duplicate.unassignedRegions.push('neck');assert.equal(M.sanitize(duplicate),null);
+});
+
+test('anterior lower leg uses an appended credit and legacy ankle snapshots keep their meaning',()=>{
+  assert.equal(M.groups.length,20);assert.equal(M.groups[19].id,'shins');
+  assert.equal(M.regionToGroup.front_shins,'shins');assert.equal(M.regionToGroup.front_shins_ankles,undefined);
+  const anterior=M.completedItem(ex({muscles:{prime:['front_shins'],sec:[]}}),done());
+  assert.deepEqual(anterior.credits.direct,{shins:3});assert.equal(M.pack(anterior)[7],1<<19);
+  assert.deepEqual(M.sanitize(copy(M.pack(anterior))),anterior);
+  const legacy=['mw1','legacy-ankle','Stara oznaka','Snaga',0,1,1,0,0,['front_shins_ankles'],3,3,0];
+  const historical=M.sanitize(copy(legacy));assert.deepEqual(M.pack(historical),legacy);
+  const aggregate=M.sumSnapshots([anterior,historical]);
+  assert.equal(aggregate.groups.shins.direct,3);assert.equal(aggregate.groups.calves.direct,0);
+  assert.equal(aggregate.coverage.unassignedItems,1);
 });
 
 test('skipped or zero-work unknown anatomy is not reported as unallocated performed work; excluded warmups are not partial strength work', () => {

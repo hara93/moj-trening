@@ -9,6 +9,8 @@ const { artifacts, engine, fixture: baseFixture, launch, repo, serve } = require
 const source = JSON.parse(fs.readFileSync(path.join(repo, 'tools/build/body-regions.json'), 'utf8'));
 const groups = MuscleWork.groups;
 assert.ok(groups.some(group=>group.id==='neck'&&group.regions.includes('neck')),'neck has a muscle-work group');
+const shins = groups.find(group => group.id === 'shins');
+assert.deepEqual(shins?.regions, ['front_shins'], 'the front shin has its own muscle-work group');
 const now = new Date('2026-11-06T12:00:00+01:00');
 const A = (page, name) => page.locator('[data-a="' + name + '"]');
 const body = '.db-body-svg';
@@ -42,6 +44,12 @@ function fixture() {
   data.log.push({historyId:'anatomy-neck-record',kind:'protocol',refId:'anatomy-neck',name:'Zabilježeni rad vrata',
     at:Date.parse('2026-11-04T10:00:00+01:00'),secs:300,items:[primaryItem,secondaryItem],
     muscleWork:[MuscleWork.pack(MuscleWork.completedItem(neckPrimary,primaryItem)),MuscleWork.pack(MuscleWork.completedItem(neckSecondary,secondaryItem))]});
+  const shinExercise = exercise('anatomy-shins', {prime: ['front_shins'], sec: []});
+  const shinItem = {...item, exId: shinExercise.id};
+  data.exercises[shinExercise.id] = shinExercise;
+  data.log.push({historyId: 'anatomy-shin-record', kind: 'protocol', refId: 'anatomy-shins', name: 'Zabilježeni rad potkoljenice',
+    at: Date.parse('2026-11-03T10:00:00+01:00'), secs: 300, items: [shinItem],
+    muscleWork: [MuscleWork.pack(MuscleWork.completedItem(shinExercise, shinItem))]});
 
   return data;
 }
@@ -110,6 +118,8 @@ async function tapGroup(page, group) {
   const region = group.regions[0], def = source.regions[region];
   const view = def.view === 'both' ? 'back' : def.view;
   const samples = def.view === 'both' ? def.samples[view] : def.samples;
+  // Use the central lumbar samples, away from the boundary with gluteus medius.
+  const tapSamples = group.id === 'lowerBack' ? [samples[1], samples[3]] : samples;
   const point = await page.locator(body).evaluate((svg, input) => {
     const region = svg.querySelector('g[data-view="' + input.view + '"] .db-region[data-region="' + input.region + '"]');
     const hits = (x, y) => {
@@ -126,7 +136,7 @@ async function tapGroup(page, group) {
       return { x, y, margin, centre: hits(x, y) };
     }).filter(p => p.centre).sort((a, b) => b.margin - a.margin);
     return candidates[0];
-  }, { group: group.id, region, view, samples });
+  }, { group: group.id, region, view, samples: tapSamples });
   assert.ok(point, 'a real screen-pixel tap target exists for ' + group.id);
   await page.evaluate(()=>{
     window.__anatomyTapEvents=[];
@@ -159,7 +169,7 @@ async function keyboardGroup(page, group) {
 async function selectedParts(page, group) {
   const state = await visibleState(page, group.regions[0]);
   assert.ok(state.fills.length > 0, group.id + ' has visible muscle forms');
-  const recorded = ['chest', 'triceps', 'neck', 'biceps'].includes(group.id);
+  const recorded = ['chest', 'triceps', 'neck', 'biceps', 'shins'].includes(group.id);
   if (!recorded) assert.ok(state.fills.every(s => blue(s.fill) && s.opacity > .16),
     group.id + ' selects actual closed parts in blue: ' + JSON.stringify(state.fills));
   assert.ok(state.fills.every(s => visibleColor(s.stroke) && s.strokeOpacity > 0 && s.strokeWidth >= 1.4 &&
@@ -192,6 +202,16 @@ async function noOverflow(page, width) {
   const size = await page.locator('.dashboard').evaluate(node => ({ viewport: innerWidth, document: document.documentElement.scrollWidth,
     content: node.scrollWidth, view: node.clientWidth }));
   assert.ok(size.document <= size.viewport + 1 && size.content <= size.view + 1, width + ' px: ' + JSON.stringify(size));
+}
+
+async function fullWidthFigure(page) {
+  const layout = await page.locator('.db-anatomy-row').evaluate(row => {
+    const figure = row.querySelector('.db-body-svg').getBoundingClientRect();
+    const coverage = row.querySelector('.db-coverage').getBoundingClientRect();
+    return {rowWidth: row.clientWidth, figureWidth: figure.width, figureBottom: figure.bottom, coverageTop: coverage.top};
+  });
+  assert.ok(Math.abs(layout.rowWidth - layout.figureWidth) <= 1, 'the figure uses the available width');
+  assert.ok(layout.coverageTop >= layout.figureBottom, 'coverage is below the full-width figure');
 }
 
 async function colorStates(page, width) {
@@ -241,6 +261,62 @@ async function colorStates(page, width) {
   await toggle.click();
 }
 
+async function shinAndAnkle(page, width) {
+  const frontRegion = id => page.locator(body + ' g[data-view="front"] .db-region[data-region="' + id + '"]');
+  const title = page.locator('#db-group-title');
+  const total = page.locator('.db-detail-total strong');
+  const shinRegion = frontRegion('front_shins');
+  const calfGroup = groups.find(group => group.id === 'calves');
+  const ankles = source.regions.front_shins_ankles;
+
+  async function tapFrontSample(regionId, sample, action, id) {
+    await page.locator(body).scrollIntoViewIfNeeded();
+    const point = await frontRegion(regionId).evaluate((node, sample) => {
+      const p = new DOMPoint(sample.x, sample.y).matrixTransform(node.getScreenCTM());
+      const x = Math.round(p.x), y = Math.round(p.y);
+      const target = document.elementFromPoint(x, y)?.closest('[data-a]');
+      return {x, y, region: target?.dataset.region, action: target?.dataset.a, id: target?.dataset.id};
+    }, sample);
+    assert.equal(point.region, regionId, 'the front lower-leg sample hits its own region');
+    assert.equal(point.action, action);
+    assert.equal(point.id, id);
+    await page.touchscreen.tap(point.x, point.y);
+  }
+
+  async function expectShins() {
+    await page.getByRole('heading', {name: shins.label, exact: true}).waitFor();
+    assert.equal(await title.innerText(), shins.label);
+    assert.equal(await page.locator('.sheet').count(), 0, 'front shin muscles open the regular group detail');
+    assert.equal(await shinRegion.getAttribute('aria-pressed'), 'true');
+    assert.equal(await total.innerText(), '2');
+    assert.deepEqual(await page.locator('.db-counts dd').allInnerTexts(), ['2', '0', '1']);
+  }
+
+  for (const sample of source.regions.front_shins.samples) {
+    await keyboardGroup(page, calfGroup);
+    assert.equal(await total.innerText(), '0', 'rear calves have no recorded credit from the front shin session');
+    await tapFrontSample('front_shins', sample, 'dashboardGroup', 'shins');
+    await expectShins();
+  }
+  await keyboardGroup(page, calfGroup);
+  await keyboardGroup(page, shins);
+  await expectShins();
+  await page.locator('.db-group-detail').screenshot({path: path.join(artifacts, 'dashboard-anatomy-' + engine + '-shins-' + width + '.png')});
+
+  assert.equal(await frontRegion('front_shins_ankles').getAttribute('aria-haspopup'), 'dialog');
+  for (const sample of ankles.samples) {
+    await tapFrontSample('front_shins_ankles', sample, 'dashboardJoint', 'front_shins_ankles');
+    const dialog = page.locator('.sheet[data-kind="bodyRegion"]');
+    await dialog.getByRole('heading', {name: ankles.label_hr, exact: true}).waitFor();
+    assert.match(await dialog.innerText(), /ne dodaje zasebne bodove/i);
+    const highlighted = dialog.locator('.is-prime[data-region="front_shins_ankles"]');
+    assert.ok(await highlighted.evaluate(node => Number(getComputedStyle(node).fillOpacity)) > .5, 'the ankle is visibly marked in its joint detail');
+    assert.equal(await dialog.locator('.is-prime[data-region="front_shins"]').count(), 0);
+    await dialog.locator('[data-a="sheetDone"]').click();
+    await expectShins();
+  }
+}
+
 (async () => {
   const host = await serve(), browser = await launch();
   try {
@@ -252,20 +328,24 @@ async function colorStates(page, width) {
       await page.goto(host.url, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Bok, Tomislav', exact: true }).waitFor(); await importData(page);
       await dashboard(page);
+      await fullWidthFigure(page);
       const dashboardGeometry = await geometry(page, body);
       const before = await page.evaluate(() => localStorage.getItem('mt.data.v1'));
       for (const group of groups) {
         await tapGroup(page, group); await selectedParts(page, group);
         await keyboardGroup(page, group); await selectedParts(page, group);
       }
-      await colorStates(page, width); await noOverflow(page, width);
+      await colorStates(page, width);
+      await shinAndAnkle(page, width);
+      await noOverflow(page, width);
       assert.equal(await page.evaluate(() => localStorage.getItem('mt.data.v1')), before, 'selection/forecast cannot modify recorded data');
       await home(page); await page.getByRole('button', { name: 'Knjižnica vježbi', exact: true }).click();
       await A(page, 'eqSheet').click(); await page.locator('.filtfig').waitFor();
       assert.deepEqual(await geometry(page, '.filtfig'), dashboardGeometry, 'dashboard and library use identical visible muscle forms');
       assert.deepEqual(errors, []);
       results.push({ width, touchGroups: groups.length, keyboardGroups: groups.length, absParts: 8,
-        geometryMatchesLibrary: true, emptySelectionIsNotWork: true, directGreenIndirectBlueForecastPurplePreserved: true,neckRecordedDirect:2,neckRecordedSecondary:1,neckEquivalent:2.5 });
+        geometryMatchesLibrary: true, emptySelectionIsNotWork: true, directGreenIndirectBlueForecastPurplePreserved: true,neckRecordedDirect:2,neckRecordedSecondary:1,neckEquivalent:2.5,
+        frontShinsTouchAndKeyboard: true, frontShinsRecordedDirect: 2, rearCalvesCreditSeparate: true, ankleJointDialog: true, fullWidthFigure: true });
       await context.close();
     }
     const report = { engine, passed: true, results, artifacts };

@@ -26,6 +26,9 @@ async function main() {
   const bodySource = JSON.parse(fs.readFileSync(path.join(repo,'tools/build/body-regions.json'),'utf8'));
   assert.equal(bodySource.regions.neck?.view,'both','release includes one shared neck region');
   assert.ok(MuscleWork.groups.some(group=>group.id==='neck'),'release includes neck muscle work');
+  const shinGroup = MuscleWork.groups.find(group => group.id === 'shins');
+  assert.deepEqual(shinGroup?.regions, ['front_shins'], 'release includes front shin muscle work');
+  assert.equal(bodySource.regions.front_shins_ankles?.kind, 'joint', 'the legacy ankle ID remains a joint');
   const pathCount=regions=>regions.reduce((n,region)=>n+(region.view==='both'?2:1),0);
   const regionPaths=pathCount(Object.values(bodySource.regions));
   const musclePaths=pathCount(MuscleWork.groups.flatMap(group=>group.regions).map(id=>bodySource.regions[id]));
@@ -127,6 +130,20 @@ async function main() {
     assert.equal(await page.locator('.db-body-svg .db-region[data-id="neck"][aria-pressed="true"]').count(),2);
     report.checks.neckDashboardKeyboard=true;
 
+    const shin = page.locator('.db-body-svg .db-region[data-region="front_shins"][data-a="dashboardGroup"]');
+    await shin.focus();
+    await shin.press('Enter');
+    assert.equal(await page.locator('#db-group-title').innerText(), shinGroup.label);
+    assert.equal(await shin.getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('.sheet').count(), 0);
+    const ankle = page.locator('.db-body-svg .db-region[data-region="front_shins_ankles"][data-a="dashboardJoint"]');
+    await ankle.focus();
+    await ankle.press('Enter');
+    const joint = page.locator('.sheet[data-kind="bodyRegion"]');
+    await joint.getByRole('heading', {name: bodySource.regions.front_shins_ankles.label_hr, exact: true}).waitFor();
+    await joint.locator('[data-a="sheetDone"]').click();
+    assert.equal(await page.locator('#db-group-title').innerText(), shinGroup.label);
+    report.checks.frontShinsAndAnkleSeparate=true;
 
     const store = () => page.evaluate(()=>Object.fromEntries(['mt.data.v1','mt.settings','mt.weeks','mt.skips'].map(key=>[key,localStorage.getItem(key)])));
     const totals = async () => ({
