@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.11 — 7. 11. 2026.
+
+- U **Napretku** se graf odabrane vježbe može filtrirati na zadnjih 7, 30 ili 90 dana ili cijelu povijest. Izvedba i količina rada koriste isti raspon, koji se pamti zasebno od Opterećenja.
+
 ## 1.20.10 — 7. 11. 2026.
 
 - **Opterećenje** pamti odabrani prikaz za 7, 30 ili 90 dana ili cijelu povijest. Napor, trend i mišićne serije prate odabrano razdoblje.

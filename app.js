@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.10';
+const APP_VERSION = '1.20.11';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -447,8 +447,10 @@ function cleanSettings(s){
   Object.keys(s).forEach(k => { const v = s[k]; if (badKey(k)) return; if (plain(v)) o[k] = v;
     else if (isPlainObj(v)) { const m = {}; Object.keys(v).forEach(q => { if (!badKey(q) && plain(v[q])) m[q] = v[q]; }); o[k] = m; } });   // e.g. a map of skipped suggestions
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
-  if (TrainingLoad.periods.includes(s.trainingLoadPeriod)) o.trainingLoadPeriod = s.trainingLoadPeriod;
-  else delete o.trainingLoadPeriod;
+  for (const key of ['trainingLoadPeriod','progressChartPeriod']) {
+    if (TrainingLoad.periods.includes(s[key])) o[key] = s[key];
+    else delete o[key];
+  }
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
   if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
@@ -456,7 +458,7 @@ function cleanSettings(s){
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
-const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, trainingLoadPeriod: '7d' };
+const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, trainingLoadPeriod: '7d', progressChartPeriod: 'all' };
 
 /* ---------- photos and videos on the phone (IndexedDB) ---------- */
 const IDB = {
@@ -1914,9 +1916,9 @@ function creditSheet(s){
     (L.changes ? row('Izmjene', esc(L.changes)) : '') + (L.dvids && dv ? '<p class="dv">„'+esc(dv.en)+'” '+esc(dv.hr)+'</p>' : '') +
     '<p class="all">'+a('Sve licence slika i snimki', 'https://github.com/hara93/moj-trening/blob/main/MEDIA-LICENSES.md')+'</p></div>';
 }
-function historyOf(exId){
+function historyOf(exId, now=Date.now()){
   const out = [];
-  S.log.filter(l => l.at <= Date.now()).forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId && !it.skipped) out.push(Object.assign({ at: l.at }, it)); }));
+  S.log.filter(l => l.at <= now).forEach(l => (l.items||[]).forEach(it => { if (it.exId === exId && !it.skipped) out.push(Object.assign({ at: l.at }, it)); }));
   return out; // newest first, like the log (skipped exercises left out)
 }
 // the chips under the name: more sets, or longer holds; intervals (4 or more timed sets, e.g. 30/30) keep their work
@@ -4171,9 +4173,10 @@ function incompleteRecordedDose(x) {
   return !rows || rows.some(r=>r.sides===null || (x.measure==='time'
     ? r.sec===null : r.reps===null || (Object.prototype.hasOwnProperty.call(x,'kgList') && r.kg===null)));
 }
-function exLoadSeries(exId, days){
-  const e = S.ex[exId], from = days ? calDay(Date.now(), -days) : 0;
-  const all = historyOf(exId).filter(x=>x.at>=from);
+function exLoadSeries(exId, days, bounds){
+  const e = S.ex[exId], now = bounds?.now ?? Date.now();
+  const from = bounds ? bounds.from ?? 0 : days ? calDay(now, -days) : 0;
+  const all = historyOf(exId, now).filter(x=>x.at>=from);
   const h = all.filter(x=>!x.historySetsUnknown && !x.historyRepsUnknown).reverse();
   if (!h.length) return all.length?{kind:'reps',pts:[],partial:true}:null;
   const time = h[h.length - 1].measure === 'time';
@@ -4697,16 +4700,21 @@ function loadHead(txt, v, prev, vs, none){
 const LOAD_LABEL = { kg: 'Volumen tereta', reps: 'Ukupno ponavljanja', secs: 'Ukupno vrijeme', m: 'Metri' };
 const LOAD_RANGES = [['3', '3 mj', 91], ['6', '6 mj', 183], ['sve', 'Sve', 0]];
 // the "Opterećenje" card of one exercise (the exercise page and Glavne vježbe); range: '3' | '6' | 'sve'
-function exLoadCard(e, range, compact, bare){
-  const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2]), all = rg[2] ? exLoadSeries(e.id, 0) : sr;
+function exLoadCard(e, range, compact, bare, bounds){
+  const rg = LOAD_RANGES.find(r => r[0] === range) || LOAD_RANGES[0], sr = exLoadSeries(e.id, rg[2], bounds);
+  const all = !bounds && rg[2] ? exLoadSeries(e.id, 0) : sr, limited = bounds?.from != null;
   const per = bare ? '' : compact ? '<button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button>' : '<div class="per" role="group" aria-label="Razdoblje">' + LOAD_RANGES.map(r => '<button data-a="loadRange" data-v="'+r[0]+'" aria-pressed="'+(r[0] === rg[0])+'">'+r[1]+'</button>').join('') + '</div>';
   const title = compact ? '<b class="t2">'+esc(e.name)+'</b>' : '<span class="t">'+(sr ? LOAD_LABEL[sr.kind] : LOAD_LABEL[all && all.kind] || 'Volumen')+'</span>';
-  if (!sr || !sr.pts.length) return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(sr && sr.partial ? 'Nedostaju podaci za prikaz zabilježenog rada.' : all ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.')+'</p></div>';
+  if (!sr || !sr.pts.length) {
+    const empty = all || limited ? 'U ovom razdoblju nema treninga s ovom vježbom.' : 'Kad odradiš ovu vježbu, ovdje se vidi kako raste njezin volumen: kilogrami × ponavljanja, ponavljanja ili vrijeme.';
+    return '<div class="lc"><div class="hd">'+title+per+'</div><p class="none">'+(sr?.partial ? 'Nedostaju podaci za prikaz zabilježenog rada.' : empty)+'</p></div>';
+  }
   const P2 = sr.pts, k = sr.kind, f = v => loadFmt(k, v), n = P2.length, last = P2[n - 1], tr = loadTrend(P2);
   const sub = p => p.xs.length === 1 ? recordedDoseLabel(p.xs[0]) : p.xs.length + ' × u treningu';
   const pts = P2.map(p => ({ t: p.t, v: p.v, sub: sub(p) }));
   const sum = (compact ? e.name + ': ' : '') + LOAD_LABEL[k] + ', ' + n + ' ' + plural(n, 'trening', 'treninga', 'treninga') + ' od ' + shortDate(P2[0].t) + ' do ' + shortDate(last.t) + ': od ' + f(P2[0].v) + ' do ' + f(last.v) + (tr ? '. ' + tr.text : '') + '.';
-  return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga', n === 1 ? 'prvi trening' : '') +
+  const single = limited ? '1 trening u razdoblju' : 'prvi trening';
+  return '<div class="lc"><div class="hd">'+title+per+'</div>' + loadHead(f(last.v), last.v, n > 1 ? P2[n - 2].v : 0, 'od prošlog treninga', n === 1 ? single : '') +
     (n > 1 ? lineChart('lc-' + e.id + (compact ? '-c' : ''), pts, f, sum, bare) : '<p class="none">' + esc(shortDate(last.t) + ' · ' + sub(last) + '. Graf se crta od drugog treninga.') + '</p>') +
     (tr ? '<div class="ins '+(tr.dir > 0 ? 'up' : tr.dir < 0 ? 'dn' : 'eq')+'"><i aria-hidden="true">'+(tr.dir > 0 ? '↗' : tr.dir < 0 ? '↘' : '→')+'</i>'+esc(tr.text)+'</div>' : '') +
     (sr.partial ? '<p class="none">U dijelu zapisa nedostaju podaci. Prikazan je poznati dio rada.</p>' : '') +
@@ -4803,12 +4811,12 @@ VIEWS.loadInfo = function(){
     '<div style="height:24px"></div></div>';
 };
 VIEWS.progress = function(t=top()){
-  const plan = planSlots(), ws = weekStart(Date.now()), wplan = weekPlan(ws, plan), wk = weekStatus(ws, wplan);
+  const now = Date.now(), plan = planSlots(), ws = weekStart(now), wplan = weekPlan(ws, plan), wk = weekStatus(ws, wplan);
   if (S.dbState === 'ready') notePlan(ws, wk.slots);
   const hasPlan = plan.length || Object.keys(S.settings.planDates || {}).length;
   let sk = hasPlan ? streakWeeks(plan) : 0;
   if (!hasPlan) for (let w = ws, k = 0; k < 104; w = calDay(w, -7), k++) { const we = calDay(w, 7); if (S.log.some(l => isTraining(l) && l.at >= w && l.at < we && l.at <= Date.now())) sk++; else if (w !== ws) break; }
-  const recorded = S.log.filter(l => l.at <= Date.now());
+  const recorded = S.log.filter(l => l.at <= now);
   const thisWeek = recorded.filter(l => isTraining(l) && l.at >= ws).length, total = nTrainings(recorded);
   const sugs = progSuggestions(), act = sugs.filter(x => x.kind === 'up' || x.kind === 'revert' || x.kind === 'variant'), way = sugs.filter(x => x.kind === 'way');
   const nokg = {}; sugs.filter(x => x.kind === 'nokg').forEach(x => { (nokg[x.p.id] = nokg[x.p.id] || { p: x.p, names: [] }).names.push(x.e.name); });
@@ -4823,7 +4831,15 @@ VIEWS.progress = function(t=top()){
     const r = time && !moved ? 0 : sr.loaded && !time ? 2 : sr.loaded || e.cat === 'Snaga' || e.cat === 'Trup' ? 1 : 0;
     if (r) { series[id] = sr; rank[id] = r; } });
   const lifts = Object.keys(series).sort((a, b) => rank[b] - rank[a] || hist[b].length - hist[a].length || hist[b][hist[b].length - 1].at - hist[a][hist[a].length - 1].at).slice(0, 4);
-  const exerciseCharts = lifts.map(id => ({ id, name:S.ex[id].name, html:exLoadCard(S.ex[id], 'sve', true) })); // same calculator and card as the exercise page
+  const exerciseCharts = lifts.map(id => ({ id, name:S.ex[id].name, html:exLoadCard(S.ex[id], 'sve', true, false, { now, from:null }) }));
+  const insightInput = { log:S.log, exercises:S.ex, now };
+  const insights = ProgressModel.summarize(insightInput);
+  const candidates = insights.comparisons.map(item=>item.id).concat(lifts);
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : candidates[0];
+  const chartPeriod = S.settings.progressChartPeriod || 'all', from = TrainingLoad.periodStart(now,chartPeriod);
+  const chartComparison = chartExerciseId ? ProgressModel.exerciseTrend({...insightInput,from,exerciseId:chartExerciseId}) : null;
+  const fullVolume = from === null && exerciseCharts.find(chart=>chart.id===chartExerciseId)?.html;
+  const chartVolumeHtml = chartExerciseId ? fullVolume || exLoadCard(S.ex[chartExerciseId], 'sve', true, false, {now,from}) : '';
   // records: a best estimated max that beat an earlier best, set in the last 30 days (your first weight is not a record);
   // reps of a set count up to 10 like in Doziranje; no timed carries, jumps or throws
   const prs = Object.keys(hist).filter(id => S.ex[id] && S.ex[id].cat !== 'Eksplozivnost').map(id => { let best = null, beaten = false;
@@ -4839,11 +4855,11 @@ VIEWS.progress = function(t=top()){
   const loadParts = [current.vl > 0 ? loadFmt('vl',current.vl) + ' tereta' : '', current.m > 0 ? loadFmt('m',current.m) + ' trčanja' : ''].filter(Boolean);
   const recordsHtml = prs.length ? '<div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '';
   return ProgressView.render({
-    chartMetric:t.chartMetric,chartExerciseId:t.chartExerciseId,
+    chartMetric:t.chartMetric,chartExerciseId,chartPeriod,chartComparison,chartVolumeHtml,
     topbarHtml:topbar(backBtn(), '', 'NAPREDAK'), tab:S.progTab,
     dosingSections:S.progTab === 'doziranje' ? progressDosingSections() : [],
     zero:total === 0,
-    insights:ProgressModel.summarize({log:S.log,exercises:S.ex,now:Date.now()}),
+    insights,
     weekPlan:{done:wk.done,planned:wk.planned,activeDays:DAYS.filter((_,day)=>days[calDay(ws,day)]).length},
     stats:[
       { value:wk.planned ? wk.done + '/' + wk.planned : thisWeek, label:wk.planned ? 'po planu ovaj tjedan' : 'treninga ovaj tjedan', note:wk.planned && thisWeek !== wk.done ? thisWeek + ' odrađeno ukupno' : '' },
@@ -5761,6 +5777,10 @@ const A = {
   },
   progressMetric:d=>{if(!['performance','volume'].includes(d.v))return;ProgressView.closeInfo();top().chartMetric=d.v;render();},
   progressExercise:d=>{if(!S.ex[d.id])return;ProgressView.closeInfo();top().chartExerciseId=d.id;render();},
+  progressRange:d=>{
+    if (!TrainingLoad.periods.includes(d.v) || S.settings.progressChartPeriod === d.v) return;
+    if (writeSetting('progressChartPeriod',d.v)) render();
+  },
   progressDetail:(d,el)=>ProgressView.showDetail(d.topic,el,d),
   trainingLoadRange:d=>{
     if (!TrainingLoad.periods.includes(d.v) || S.settings.trainingLoadPeriod === d.v) return;

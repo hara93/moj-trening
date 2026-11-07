@@ -107,28 +107,48 @@
     return description+label+' '+number(previous.reserve)+' → '+number(current.reserve)+
       (current.reserve===previous.reserve?'.':' · različita rezerva; usporedba nije dokaz promjene snage.');
   }
-  function comparisons(rows,exercises){
-    var out=[];
-    observations(rows,exercises).forEach(function(history,id){
-      var current=history[0];
-      if(!current.sets.size)return;
-      for(var i=1;i<history.length;i++){
-        var previous=history[i];
-        if(previous.entry.at>=current.entry.at)continue;
-        var shared=Array.from(current.sets.values()).filter(function(row){return previous.sets.has(row.key);});
-        if(!shared.length)continue;
-        // Pick a common load before inspecting the direction of the change.
-        shared.sort(function(a,b){return b.kg-a.kg||a.order-b.order;});
-        var recent=shared[0],prior=previous.sets.get(recent.key);
-        out.push({id:id,name:current.name,kind:recent.kind,unit:recent.kind==='time'?'s':'pon.',
+  function latestComparable(history,id){
+    var current=history[0];
+    if(!current||!current.sets.size)return null;
+    for(var i=1;i<history.length;i++){
+      var previous=history[i];
+      if(previous.entry.at>=current.entry.at)continue;
+      var shared=Array.from(current.sets.values()).filter(function(row){return previous.sets.has(row.key);});
+      if(!shared.length)continue;
+      // Pick a common load before inspecting the direction of the change.
+      shared.sort(function(a,b){return b.kg-a.kg||a.order-b.order;});
+      var recent=shared[0],prior=previous.sets.get(recent.key);
+      return {set:recent,comparison:{id:id,name:current.name,kind:recent.kind,unit:recent.kind==='time'?'s':'pon.',
           current:recent.quantity,previous:prior.quantity,delta:rounded(recent.quantity-prior.quantity),
           currentAt:current.entry.at,previousAt:previous.entry.at,
           currentSessionId:text(current.entry.historyId),previousSessionId:text(previous.entry.historyId),
-          context:context(recent,prior)});
-        break;
-      }
+          context:context(recent,prior)}};
+    }
+    return null;
+  }
+  function comparisons(rows,exercises){
+    var out=[];
+    observations(rows,exercises).forEach(function(history,id){
+      var match=latestComparable(history,id);
+      if(match)out.push(match.comparison);
     });
     return out.sort(function(a,b){return b.currentAt-a.currentAt||a.id.localeCompare(b.id);}).slice(0,3);
+  }
+  function exerciseTrend(input){
+    input=plain(input)?input:{};
+    var id=input.exerciseId;
+    if(!validTime(input.now)||!text(id)||!plain(input.exercises)||!own(input.exercises,id))return null;
+    var rows=records(input.log,input.now);
+    if(finite(input.from))rows=rows.filter(function(row){return row.entry.at>=input.from;});
+    var history=observations(rows,{[id]:input.exercises[id]}).get(id)||[],match=latestComparable(history,id);
+    if(!match)return null;
+    var points=[];
+    history.forEach(function(observation){
+      var row=observation.sets.get(match.set.key),at=observation.entry.at,last=points[points.length-1];
+      if(!row||last&&last.at===at)return;
+      points.push({at:at,value:row.quantity,sessionId:text(observation.entry.historyId),reserve:row.reserve});
+    });
+    return freeze(Object.assign(match.comparison,{kg:match.set.kg,sides:match.set.sides,points:points.reverse()}));
   }
   function summarize(input){
     input=plain(input)?input:{};
@@ -136,5 +156,5 @@
     var rows=records(input.log,input.now),exercises=plain(input.exercises)?input.exercises:{};
     return freeze({comparisons:comparisons(rows,exercises),weeks:weeks(rows,input.now)});
   }
-  return Object.freeze({version:1,summarize:summarize});
+  return Object.freeze({version:1,summarize:summarize,exerciseTrend:exerciseTrend});
 });

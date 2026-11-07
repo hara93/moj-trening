@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const Model=require('../progress-model.js'),History=require('../history-model.js'),Muscles=require('../muscle-work.js');
+const Load=require('../training-load.js');
 const HistoryUI=require('../history.js');
 const now=new Date('2026-11-05T12:00:00').getTime();
 const at=day=>new Date('2026-11-'+String(day).padStart(2,'0')+'T10:00:00').getTime();
@@ -28,6 +29,25 @@ test('a nearest older shared weight is explicit evidence and unshared weights ne
   assert.equal(summarize(log).comparisons[0].previousSessionId,'previous');
   assert.equal(summarize(log.slice(0,2)).comparisons.length,0);
   assert.equal(summarize([entry('one',5)]).comparisons.length,0);
+});
+test('the selected exercise trend includes only comparable series within its local date window',()=>{
+  const from=Load.periodStart(now,'7d');
+  const work=(id,when,reps,extra={})=>entry(id,5,[item({kg:30,reps,rirList:[2,3]})],{at:when,...extra});
+  const log=[work('current',now,8),work('previous',at(3),7),work('earlier',at(1),6),work('boundary',from,5),work('before',from-1,4),
+    work('trial',at(4),99,{kind:'exercise'}),work('future',now+1,99),entry('other-kg',4,[item({kg:40,reps:99})]),
+    work('edited',at(2),99),work('edited',from-2,3,{editedAt:now})];
+  const trend=extra=>Model.exerciseTrend({log,exercises,now,from,exerciseId:'press',...extra});
+  const week=trend();
+  assert.equal(week.kg,30);assert.equal(week.sides,1);
+  assert.deepEqual([week.previousSessionId,week.currentSessionId,week.delta],['previous','current',1]);
+  assert.deepEqual(week.points.map(point=>[point.sessionId,point.value,point.reserve]),[
+    ['boundary',5,2],['earlier',6,2],['previous',7,2],['current',8,2]
+  ]);
+  assert.equal(week.points[0].at,from);assert.ok(Object.isFrozen(week.points[0]));
+  assert.deepEqual(trend({from:null}).points.map(point=>point.value),[3,4,5,6,7,8]);
+  assert.equal(trend({from:at(4)}),null,'an earlier comparable session outside the range cannot fill the gap');
+  const unknown=entry('unknown',5,[item({kg:30,historyRepsUnknown:true})],{at:now});
+  assert.equal(trend({log:[unknown,...log]}),null,'an incomplete latest workout does not revive an earlier trend');
 });
 test('timed values are actual seconds per side at the same recorded kg and side mode',()=>{
   const timed=(sec,extra={})=>item({exId:'hold',measure:'time',sides:true,sideCounts:[2,2],sec,kg:0,...extra});
@@ -82,6 +102,7 @@ test('the latest three comparisons are returned without sorting by positive delt
     log.push(entry('current'+n,5,[item({exId:id,reps:n+2})],{at:at(5)-n*1000}),entry('previous'+n,3,[item({exId:id,reps:5})]));
   }
   const cards=summarize(log,{exercises:map}).comparisons;assert.deepEqual(cards.map(x=>x.id),['lift0','lift1','lift2']);assert.equal(cards[0].delta,-3);
+  assert.equal(Model.exerciseTrend({log,exercises:map,now,exerciseId:'lift3'}).id,'lift3');
 });
 test('weekly duration and AU remain distinct and missing ratings never become zero ratings',()=>{
   const log=[

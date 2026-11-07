@@ -25,7 +25,7 @@
   }
   function dateKey(at){var d=new Date(at);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function midnight(at){var d=new Date(at);d.setHours(0,0,0,0);return d.getTime();}
-  function shift(at,days){var d=new Date(at);d.setDate(d.getDate()+days);return d.getTime();}
+  function shift(at,days){var d=new Date(at);d.setDate(d.getDate()+days);d.setHours(0,0,0,0);return d.getTime();}
   function calendarDay(at){var d=new Date(at);return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;}
   function kind(entry){return entry.kind==='team'?(entry.teamType==='match'?'match':'team'):entry.kind==='protocol'?'protocol':entry.kind==='field'?'field':entry.kind==null?'legacy':null;}
   function records(log,now){
@@ -71,12 +71,16 @@
   }
   var periodLengths={'7d':7,'1m':30,'3m':90,all:null};
   var periods=Object.freeze(Object.keys(periodLengths));
+  function periodStart(now,key){
+    var length=periodLengths[periods.includes(key)?key:'7d'];
+    return time(now)&&length!==null?shift(now,1-length):null;
+  }
   function summary(input){
     input=plain(input)?input:{};
     if(!time(input.now))return freeze({status:'invalid',today:null,range:null,effort:null,muscles:null});
     var key=periods.includes(input.period)?input.period:'7d';
     var today=midnight(input.now),to=shift(today,1),log=records(input.log,input.now);
-    var from=key==='all'?(log.length?midnight(log[log.length-1].at):today):shift(to,-periodLengths[key]);
+    var from=periodStart(input.now,key) ?? (log.length?midnight(log[log.length-1].at):today);
     var count=calendarDay(to)-calendarDay(from),binCount=Math.min(7,count),binDays=Math.ceil(count/binCount);
     var range={from:from,to:to,observedTo:input.now,period:key,binDays:binDays};
     var current=period(log,from,to),baseline=null,days=[];
@@ -157,5 +161,5 @@
     result.reason='Raspon prijavljenog napora vlastitih izvedbi iste zabilježene radne doze. Rezerva, odmor i današnje stanje nisu pretpostavljeni; nije jamstvo napora sljedećeg treninga.';
     return freeze(result);
   }
-  return Object.freeze({version:1,periods:periods,sessionAU:sessionAU,summary:summary,expectation:expectation});
+  return Object.freeze({version:1,periods:periods,periodStart:periodStart,sessionAU:sessionAU,summary:summary,expectation:expectation});
 });

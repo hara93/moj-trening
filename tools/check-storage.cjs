@@ -53,7 +53,7 @@ test('an export sees a deferred second-tab workout/settings without mutating the
   latest.log.unshift({historyId:'new',kind:'team',name:'Novo iz druge kartice',at:2,secs:1800});
   latest.exercises.x.name = 'Noviji naziv';
   h.disk.set('mt.data.v1',JSON.stringify(latest));
-  h.disk.set('mt.settings',JSON.stringify({sound:false,goal:'hipertrofija',trainingLoadPeriod:'3m',morningChecks:{'2026-11-05':{date:'2026-11-05',pain:0}}}));
+  h.disk.set('mt.settings',JSON.stringify({sound:false,goal:'hipertrofija',trainingLoadPeriod:'3m',progressChartPeriod:'1m',morningChecks:{'2026-11-05':{date:'2026-11-05',pain:0}}}));
   const before = JSON.stringify(h.S), stored = h.disk.get('mt.data.v1');
   await h.context.handlers.exportData();
   const backup = h.calls.share[0];
@@ -61,6 +61,7 @@ test('an export sees a deferred second-tab workout/settings without mutating the
   assert.equal(backup.exercises.x.name,'Noviji naziv');
   assert.equal(backup.settings.sound,false);
   assert.equal(backup.settings.trainingLoadPeriod,'3m');
+  assert.equal(backup.settings.progressChartPeriod,'1m');
   assert.equal(backup.settings.morningChecks['2026-11-05'].pain,0);
   assert.equal(JSON.stringify(h.S),before);
   assert.equal(h.disk.get('mt.data.v1'),stored);

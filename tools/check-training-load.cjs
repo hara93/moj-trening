@@ -67,6 +67,7 @@ test('selectable dates share one range for effort, muscle sets and contiguous ch
   for(const [key,start,sessions] of [['7d','2026-10-30',2],['1m','2026-10-07',4],['3m','2026-08-08',6],['all','2025-01-02',8]]){
     const {range,effort,muscles}=summary(log,{period:key}),bins=effort.days;
     assert.equal(range.period,key);assert.equal(range.from,new Date(start+'T00:00:00').getTime());
+    assert.equal(Load.periodStart(now,key),key==='all'?null:range.from);
     assert.equal(range.to,new Date('2026-11-06T00:00:00').getTime());
     assert.equal(effort.current.sessions,sessions);assert.equal(effort.current.totalAU,sessions*25);
     assert.equal(muscles.recordedSets,sessions*2);assert.equal(muscles.groups.find(group=>group.id==='triceps').equivalent,sessions);
@@ -80,6 +81,7 @@ test('selectable dates share one range for effort, muscle sets and contiguous ch
     assert.equal(effort.baseline!==null,key==='7d');
   }
   assert.deepEqual(summary(log,{period:'invalid'}),summary(log));
+  assert.equal(Load.periodStart(now,'invalid'),Load.periodStart(now,'7d'));
   const empty=summary([],{period:'all'});
   assert.equal(empty.effort.days.length,1);assert.equal(empty.effort.days[0].date,'2026-11-05');
   assert.equal(empty.effort.current.totalAU,null);

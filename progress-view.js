@@ -313,19 +313,58 @@
   function modeTabs(mode) {
     return '<nav class="pg-mode-tabs" aria-label="Prikaz analize"><button type="button" data-a="analyticsMode" data-v="progress" aria-pressed="'+(mode==='progress')+'">Napredak</button><button type="button" data-a="analyticsMode" data-v="load" aria-pressed="'+(mode==='load')+'">Opterećenje</button></nav>';
   }
+  function rangeTabs(period) {
+    var options = [['7d','7 dana','Zadnjih 7 dana'],['1m','1 mj.','Zadnjih 30 dana'],['3m','3 mj.','Zadnjih 90 dana'],['all','Sve','Sve vrijeme']];
+    var selected = options.some(function (option) { return option[0]===period; }) ? period : 'all';
+    return '<div class="tl-range-tabs pg-range-tabs" role="group" aria-label="Razdoblje trenda vježbe">' + options.map(function (option) {
+      return '<button type="button" data-a="progressRange" data-v="'+option[0]+'" aria-label="'+option[2]+'" aria-pressed="'+(option[0]===selected)+'">'+option[1]+'</button>';
+    }).join('') + '</div>';
+  }
   function drill(topic,title,subtitle,action) {
     return '<button type="button" class="pg-drill-row" '+(action || 'data-a="progressDetail" data-topic="'+topic+'"')+'><span><strong>'+esc(title)+'</strong>'+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</span><span aria-hidden="true">›</span></button>';
   }
+  function chartComparison(vm, id) {
+    var item = Object.prototype.hasOwnProperty.call(vm,'chartComparison') ? vm.chartComparison : comparisons(vm).find(function (entry) { return entry.id===id; });
+    return item && item.id===id ? item : null;
+  }
+  function chartPoints(item) {
+    return Array.isArray(item.points) && item.points.length>=2 ? item.points : [
+      {at:item.previousAt,value:item.previous},{at:item.currentAt,value:item.current}
+    ];
+  }
+  function pointAttributes(item,point,index,count) {
+    var key=index===count-1?'current':index===count-2?'previous':'point-'+index;
+    return ' data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+key+'" data-point-index="'+index+'" aria-label="'+
+      esc(shortDate(point.at)+', '+amount(point.value)+' '+item.unit+'. Prikaži zapis')+'"';
+  }
+  function pointButton(item,point,index,count,year) {
+    return '<button type="button"'+pointAttributes(item,point,index,count)+'><span>'+esc(year?shortDate(point.at):weekDate(point.at))+'</span><strong>'+
+      esc(amount(point.value))+' <small>'+esc(item.unit)+'</small></strong><i aria-hidden="true">↗</i></button>';
+  }
+  function chartLoadContext(item) {
+    return finite(item.kg) ? 'Najbolja puna serija · '+amount(item.kg)+' kg u zapisu'+(item.sides===2?' · obje strane odrađene':'')+'.' : '';
+  }
   function mainPerformance(item) {
-    if(!item)return '<div class="pg-main-empty"><span aria-hidden="true">↗</span><h3>Prva izvedba je polazište</h3><p>Za ovaj trend trebaju dvije usporedive izvedbe. Količina rada i puna povijest dostupne su zasebno.</p></div>';
-    var min=Math.min(item.previous,item.current),max=Math.max(item.previous,item.current),padding=Math.max(1,max-min)*.25,lo=Math.max(0,min-padding),hi=max+padding;
+    if(!item)return '<div class="pg-main-empty"><h3>Nema dovoljno usporedivih izvedbi</h3><p>Za ovaj trend trebaju barem dvije usporedive izvedbe u odabranom razdoblju.</p></div>';
+    var points=chartPoints(item), count=points.length, first=points[0], last=points[count-1];
+    var min=first.value,max=first.value;
+    points.forEach(function(point){min=Math.min(min,point.value);max=Math.max(max,point.value);});
+    var padding=Math.max(1,max-min)*.25,lo=Math.max(0,min-padding),hi=max+padding;
+    var year=new Date(first.at).getFullYear()!==new Date(last.at).getFullYear();
+    var context=count>2?chartLoadContext(item):item.context||'';
+    var x=function(at){return 48+241*(at-first.at)/Math.max(1,last.at-first.at);};
     var y=function(v){return 115-(v-lo)/(hi-lo)*84;};
-    var text=''+item.name+': '+shortDate(item.previousAt)+' '+amount(item.previous)+' '+item.unit+'; '+shortDate(item.currentAt)+' '+amount(item.current)+' '+item.unit+'. '+(item.context||'');
+    var text=item.name+' · Usporedive izvedbe ('+count+'). '+shortDate(first.at)+' '+amount(first.value)+' '+item.unit+'; '+shortDate(last.at)+' '+amount(last.value)+' '+item.unit+'. '+context;
     var graph='<svg class="pg-main-line" viewBox="0 0 320 150" role="img" aria-label="'+esc(text)+'">';
     [lo,(lo+hi)/2,hi].forEach(function(v){graph+='<line class="pg-main-grid" x1="32" x2="306" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="pg-main-axis" x="25" y="'+(y(v)+3)+'" text-anchor="end">'+esc(amount(v))+'</text>';});
-    graph+='<path class="pg-main-path" d="M48 '+y(item.previous)+' L289 '+y(item.current)+'"/><circle class="pg-main-dot" cx="48" cy="'+y(item.previous)+'" r="4"/><circle class="pg-main-dot pg-main-current" cx="289" cy="'+y(item.current)+'" r="5"/><text class="pg-main-axis" x="48" y="143" text-anchor="middle">'+esc(weekDate(item.previousAt))+'</text><text class="pg-main-axis" x="289" y="143" text-anchor="middle">'+esc(weekDate(item.currentAt))+'</text></svg>';
-    var hits='<div class="pg-point-hits">'+['previous','current'].map(function(point,index){return '<button type="button" class="pg-point-hit" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" style="left:'+(index?90.3125:15)+'%;top:'+(y(item[point])/150*100)+'%" aria-label="'+esc(shortDate(item[point+'At'])+', '+amount(item[point])+' '+item.unit+'. Prikaži zapis')+'"></button>';}).join('')+'</div>';
-    return '<div id="pg-performance" class="pg-main-performance"><p class="pg-main-context">'+esc(item.context||'')+'</p><div class="pg-performance-plot">'+graph+hits+'</div><div class="pg-point-buttons">'+['previous','current'].map(function(point){var n=item[point],at=item[point+'At'];return '<button type="button" data-a="progressDetail" data-topic="point" data-id="'+esc(item.id)+'" data-point="'+point+'" aria-label="'+esc(shortDate(at)+', '+amount(n)+' '+item.unit+'. Prikaži zapis')+'"><span>'+esc(weekDate(at))+'</span><strong>'+esc(amount(n))+' <small>'+esc(item.unit)+'</small></strong><i aria-hidden="true">↗</i></button>';}).join('')+'</div></div>';
+    graph+='<path class="pg-main-path" d="'+points.map(function(point,index){return (index?'L':'M')+x(point.at)+' '+y(point.value);}).join(' ')+'"/>';
+    graph+=points.map(function(point,index){var latest=index===count-1;return '<circle class="pg-main-dot'+(latest?' pg-main-current':'')+'" cx="'+x(point.at)+'" cy="'+y(point.value)+'" r="'+(latest?5:4)+'"/>';}).join('');
+    graph+=[first,last].map(function(point){return '<text class="pg-main-axis" x="'+x(point.at)+'" y="143" text-anchor="middle">'+esc(year?shortDate(point.at):weekDate(point.at))+'</text>';}).join('')+'</svg>';
+    var hits='<div class="pg-point-hits">'+points.map(function(point,index){return '<button type="button" class="pg-point-hit" tabindex="-1"'+pointAttributes(item,point,index,count)+' style="left:'+(x(point.at)/320*100)+'%;top:'+(y(point.value)/150*100)+'%"></button>';}).join('')+'</div>';
+    var rest=count>2?'<details class="pg-trend-records"><summary>Ostali zapisi u razdoblju · '+(count-2)+'</summary><div class="pg-point-buttons">'+
+      points.slice(1,-1).map(function(point,index){return pointButton(item,point,index+1,count,year);}).join('')+'</div></details>':'';
+    return '<div id="pg-performance" class="pg-main-performance"><p class="pg-main-context">'+esc(context)+'</p><div class="pg-performance-plot">'+graph+hits+'</div><div class="pg-point-buttons">'+
+      pointButton(item,first,0,count,year)+pointButton(item,last,count-1,count,year)+'</div>'+rest+'</div>';
   }
   function ringPoint(radius, angle) {
     return (44 + Math.sin(angle) * radius).toFixed(2) + ' ' + (44 - Math.cos(angle) * radius).toFixed(2);
@@ -411,6 +450,7 @@
     if(vm.tab==='doziranje')return renderLegacy(vm);
     var old=renderLegacy(vm),items=choices(vm),selected=items.find(function(e){return e.id===vm.chartExerciseId;}) || items[0],id=selected && selected.id;
     var comparison=comparisons(vm).find(function(e){return e.id===id;}),exercise=(Array.isArray(vm.exercises)?vm.exercises:[]).find(function(e){return e.id===id;}),metric=['performance','volume'].includes(vm.chartMetric)?vm.chartMetric:comparison?'performance':'volume';
+    var volume=Object.prototype.hasOwnProperty.call(vm,'chartVolumeHtml')?vm.chartVolumeHtml:exercise&&exercise.html;
     var stats = Array.isArray(vm.stats) ? vm.stats : [];
     var week = weeklySummary(stats[0] || { value:'—', label:'Ovaj tjedan' }, vm.weekPlan || {});
     var secondary = secondarySummary(stats[1] || { value:'—', label:'Kontinuitet' }, vm.insights || {}, comparison);
@@ -420,8 +460,8 @@
     content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2>'+
       (selected?'<button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button>':'')+'</div>';
     if(selected){
-      content+='<div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
-        (metric==='performance'?mainPerformance(comparison):exercise&&exercise.html?'<div class="pg-main-volume">'+exercise.html+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka o količini rada</h3><p>Odaberi Izvedba za usporedive serije ove vježbe.</p></div>')+
+      content+=rangeTabs(vm.chartPeriod)+'<div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
+        (metric==='performance'?mainPerformance(chartComparison(vm,id)):volume?'<div class="pg-main-volume">'+volume+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka o količini rada</h3><p>U odabranom razdoblju nema zabilježenog rada za ovu vježbu.</p></div>')+
         '<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button>';
     }else content+='<div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div>';
     content+='</section>';
@@ -436,9 +476,14 @@
       if(!list.length)return;
       body='<div class="pg-picker-list">'+list.map(function(e){return '<button type="button" data-a="progressExercise" data-id="'+esc(e.id)+'"><strong>'+esc(e.name)+'</strong><span aria-hidden="true">›</span></button>';}).join('')+'</div>';
     } else if(topic==='point') {
-      var item=comparisons(lastVM).find(function(e){return e.id===(data||{}).id;}),point=(data||{}).point==='previous'?'previous':'current';
-      if(item){title=shortDate(item[point+'At']);body='<h3>'+esc(item.name)+'</h3><div class="pg-point-detail"><span>Najbolja potpuno odrađena serija</span><strong>'+esc(amount(item[point]))+' '+esc(item.unit)+'</strong><p>'+esc(item.context||'')+'</p></div><button type="button" class="pg-exercise-link" data-a="openEx" data-id="'+esc(item.id)+'">Vježba i puna povijest <span aria-hidden="true">↗</span></button>';}
-      else body=empty('Zapis za ovu točku nije dostupan.');
+      var item=chartComparison(lastVM,(data||{}).id),points=item?chartPoints(item):[];
+      var index=data&&data.pointIndex!=null?Number(data.pointIndex):points.length-(data&&data.point==='previous'?2:1),point=points[index];
+      if(point){
+        var reserveLabel=item.kind==='time'?'Rezerva u sekundama':'RIR';
+        var context=point.reserve===undefined?item.context||'':chartLoadContext(item)+' '+(point.reserve===null?'Rezerva nije zabilježena.':reserveLabel+' '+amount(point.reserve)+'.');
+        title=shortDate(point.at);
+        body='<h3>'+esc(item.name)+'</h3><div class="pg-point-detail"><span>Najbolja potpuno odrađena serija</span><strong>'+esc(amount(point.value))+' '+esc(item.unit)+'</strong><p>'+esc(context)+'</p></div><button type="button" class="pg-exercise-link" data-a="openEx" data-id="'+esc(item.id)+'">Vježba i puna povijest <span aria-hidden="true">↗</span></button>';
+      }else body=empty('Zapis za ovu točku nije dostupan.');
     } else {
       var keys={activity:'Aktivnost i kontinuitet',performance:'Usporedive izvedbe',suggestions:'Plan i prijedlozi',load:'Tjedni trendovi',exercises:'Trendovi vježbi',records:'Rekordi',rules:'Pravilo napredovanja'};
       title=keys[topic] || 'Detalji napretka';source=cache.content.querySelector('#pg-'+topic);

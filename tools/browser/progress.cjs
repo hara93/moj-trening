@@ -1,21 +1,10 @@
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const http = require('node:http');
 const path = require('node:path');
-const {launch,repo,artifacts,fixture:baseFixture}=require('./runtime.cjs');
+const {launch,serve,artifacts,fixture:baseFixture}=require('./runtime.cjs');
 const isWebKit = process.argv.includes('webkit');
 const prefix = isWebKit ? 'progress-webkit' : 'progress-chrome';
-const mime = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.webp':'image/webp', '.png':'image/png', '.webmanifest':'application/manifest+json' };
-const server = http.createServer((request,response) => {
-  const url = new URL(request.url, 'http://127.0.0.1');
-  const file = path.resolve(repo, '.' + (url.pathname === '/' ? '/index.html' : decodeURIComponent(url.pathname)));
-  if (!file.startsWith(repo + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
-    response.writeHead(404); response.end(); return;
-  }
-  response.writeHead(200, { 'Content-Type':mime[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(response);
-});
 const fixed = new Date('2026-11-04T12:00:00+01:00');
 const stamp = day => new Date(day + 'T10:00:00+01:00').getTime();
 const A = (page, action) => page.locator('[data-a="' + action + '"]');
@@ -47,6 +36,18 @@ function fixture(empty) {
   ];
   return data;
 }
+function rangeFixture() {
+  const data=fixture(true);
+  const press=[['2026-07-12',1],['2026-08-06',2],['2026-08-07',3],['2026-10-05',4],
+    ['2026-10-06',5],['2026-10-28',6],['2026-10-29',7],['2026-11-04',8],['2026-11-05',17]];
+  const session=(date,item)=>({historyId:'range-'+item.exId+'-'+date,kind:'protocol',refId:'progress-up',
+    name:'Provjera trenda',at:stamp(date),secs:600,srpe:3,items:[{sets:1,setsDone:1,sides:false,done:true,...item}]});
+  data.log=press.map(([date,reps])=>session(date,{exId:'bench-press',measure:'sets',kg:20,reps,repsList:[reps],rirList:[2]}));
+  for(const [date,sec] of [['2026-08-25',12],['2026-10-12',18]]) {
+    data.log.push(session(date,{exId:'side-plank',measure:'time',kg:0,reps:1,sec,secList:[sec],sirList:[5]}));
+  }
+  return data;
+}
 async function home(page) {
   await page.reload({waitUntil:'domcontentloaded'});
   await page.getByRole('button', {name:'Knjižnica vježbi',exact:true}).waitFor();
@@ -73,15 +74,106 @@ async function expand(page, id) {
   const section=page.locator('#pg-'+id);
   if (!await section.evaluate(node=>node.open)) await section.locator(':scope > summary').click();
 }
+function datePattern(date) {
+  const [,month,day]=date.split('-').map(Number);
+  return new RegExp('\\b0?'+day+'\\.\\s*0?'+month+'\\.');
+}
+async function checkExercisePeriods(page) {
+  await importData(page,rangeFixture()); await progress(page);
+  const main=page.locator('.pg-main-card');
+  const select=key=>main.locator('[data-a="progressRange"][data-v="'+key+'"]');
+  const metric=key=>main.locator('[data-a="progressMetric"][data-v="'+key+'"]');
+  const trend=main.locator('svg.pg-main-line');
+  const detail=page.locator('#progress-info');
+  const choose=async id=>{
+    await main.locator('[data-topic="choose"]').click();
+    await detail.locator('[data-a="progressExercise"][data-id="'+id+'"]').click();
+  };
+  assert.equal(await A(page,'progressRange').count(),4);
+  assert.equal(await select('all').getAttribute('aria-pressed'),'true','default preserves the complete exercise history');
+  await choose('bench-press');
+  const title=await main.locator('h2').innerText();
+  const cases=[['7d','2026-10-29',2,7],['1m','2026-10-06',4,5],['3m','2026-08-07',6,3],['all','2026-07-12',8,1]];
+  await page.setViewportSize({width:320,height:850});
+  for(const [key,first,count,reps] of cases) {
+    await select(key).click();
+    assert.equal(await select(key).getAttribute('aria-pressed'),'true');
+    assert.equal(await main.locator('[data-a="progressRange"][aria-pressed="true"]').count(),1);
+    assert.equal(await main.locator('h2').innerText(),title);
+    await metric('performance').click();
+    assert.equal(await trend.locator('.pg-main-dot').count(),count,key+' performance points');
+    const firstPoint=main.locator((key==='7d'?'.pg-point-hit':'#pg-performance > .pg-point-buttons button')+'[data-point-index="0"]');
+    assert.match(await firstPoint.getAttribute('aria-label'),datePattern(first));
+    if(key==='7d')await firstPoint.click();else await firstPoint.press('Enter');
+    assert.match(await detail.locator('h2').innerText(),datePattern(first),key+' detail matches the visible point');
+    assert.match(await detail.locator('.pg-point-detail strong').innerText(),new RegExp('^'+reps+'\\s+pon\\.'));
+    await page.keyboard.press('Escape');
+    assert.equal(await firstPoint.evaluate(node=>document.activeElement===node),true);
+    if(key==='all') {
+      const more=main.locator('.pg-trend-records');
+      await more.locator('summary').click();
+      const middle=more.locator('button[data-point-index="4"]');
+      await middle.click();
+      assert.match(await detail.locator('h2').innerText(),datePattern('2026-10-06'));
+      assert.match(await detail.locator('.pg-point-detail strong').innerText(),/^5\s+pon\./);
+      await page.keyboard.press('Escape');
+      await more.locator('summary').click();
+      await main.locator('.pg-main-title').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(artifacts,prefix+'-all-range-320.png')});
+    }
+
+    await metric('volume').click();
+    const volume=main.locator('.pg-main-volume');
+    assert.equal(await volume.locator('svg .hit').count(),count,key+' volume points');
+    await volume.locator('.ltab summary').click();
+    const rows=volume.locator('tbody tr');
+    assert.equal(await rows.count(),count);
+    assert.match(await rows.last().innerText(),datePattern(first));
+    assert.match(await rows.last().innerText(),new RegExp('\\b'+(reps*20)+'\\s+kg\\b'));
+    assert.match(await rows.first().innerText(),/\b160\s+kg\b/,'the later-dated session is excluded');
+    await noOverflow(page,'exercise-period-'+key+'-320');
+  }
+  await choose('side-plank');
+  const olderTitle=await main.locator('h2').innerText();
+  assert.notEqual(olderTitle,title);
+  await select('7d').click();
+  for(const key of ['performance','volume']) {
+    await metric(key).click();
+    assert.equal(await main.locator('h2').innerText(),olderTitle,'empty range retains the chosen exercise');
+    assert.equal(await main.locator('svg').count(),0,'no out-of-range points on '+key);
+    const empty=main.locator(key==='performance'?'.pg-main-empty':'.pg-main-volume .none');
+    assert.match(await empty.innerText(),/razdoblj/);
+  }
+  await select('3m').click();
+  await metric('performance').click();
+  assert.equal(await trend.locator('.pg-main-dot').count(),2,'a wider range restores the selected exercise trend');
+  await page.screenshot({path:path.join(artifacts,prefix+'-range-320.png')});
+
+  const switchMode=key=>page.locator('[data-a="analyticsMode"][data-v="'+key+'"]');
+  const loadRange=key=>page.locator('[data-a="trainingLoadRange"][data-v="'+key+'"]');
+  await switchMode('load').click();
+  assert.equal(await loadRange('7d').getAttribute('aria-pressed'),'true');
+  await loadRange('1m').click();
+  await switchMode('progress').click();
+  assert.equal(await select('3m').getAttribute('aria-pressed'),'true','Opterećenje has its own range');
+  assert.equal(await main.locator('h2').innerText(),olderTitle);
+  await progress(page);
+  assert.equal(await select('3m').getAttribute('aria-pressed'),'true','exercise range persists after reload');
+  await switchMode('load').click();
+  assert.equal(await loadRange('1m').getAttribute('aria-pressed'),'true');
+  results.push({label:'exercise-periods',ranges:cases.map(([key,first,points])=>({key,first,points})),
+    periodPersists:true,selectionSurvivesEmptyRange:true,independentLoadPeriod:true});
+}
 (async () => {
-  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-  const browser = await launch();
+  const host=await serve();
+  let browser;
   try {
+    browser=await launch();
     const context=await browser.newContext({viewport:{width:375,height:850},serviceWorkers:'block',locale:'hr-HR',timezoneId:'Europe/Zagreb'});
     const page=await context.newPage(), errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(fixed);
-    await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'domcontentloaded'});
+    await page.goto(host.url,{waitUntil:'domcontentloaded'});
     await importData(page,fixture(false)); await progress(page);
     assert.equal(await page.locator('.pg-main-card svg').count(),1,'one actual graph on the overview');
     assert.equal(await page.locator('details.pg-section').count(),0,'advanced data is not mounted until opened');
@@ -178,9 +270,10 @@ async function expand(page, id) {
     await noOverflow(page,'zero320');
     await page.setViewportSize({width:375,height:850});
     await page.screenshot({path:path.join(artifacts,prefix+'-zero375.png')});
+    await checkExercisePeriods(page);
     assert.deepEqual(errors,[]);
     await context.close();
     fs.writeFileSync(path.join(artifacts,prefix+'-smoke.json'),JSON.stringify({engine:prefix,checks:results,errors},null,2));
     console.log(JSON.stringify({engine:prefix,checks:results,errors},null,2));
-  } finally { await browser.close(); server.close(); }
-})().catch(error=>{console.error(error);server.close();process.exitCode=1;});
+  } finally { if(browser)await browser.close(); await host.close(); }
+})().catch(error=>{console.error(error);process.exitCode=1;});
