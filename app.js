@@ -274,10 +274,11 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.5';
+const APP_VERSION = '1.20.6';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
+const PREPARED_WORKOUT = './treninzi/gornji-dio-nakon-utakmice-60min.json';
 // keys only version 2.x wrote (it was never used); the other app on this address keeps its own 'zns:' keys
 const OLD_KEYS = ['mt.data.v2', 'mt.before-import.v2', 'mt.active.v2'];
 const DATA_COLLS = ['exercises', 'protocols', 'field', 'programs'];
@@ -850,6 +851,25 @@ function workoutFileDraft(data){
     return dose;
   });
   return { name: data.name.trim(), desc: data.desc?.trim() || '', items };
+}
+
+async function previewWorkoutImport(read){
+  const sheet = S.sheet, origin = top();
+  if (sheet?.kind !== 'importWorkout' || sheet.loading || origin.v !== 'protocols') return;
+  sheet.loading = true;
+  render();
+  try {
+    const data = await read();
+    if (S.sheet !== sheet || top() !== origin) return;
+    S.draft = { ...workoutFileDraft(data), id: uid('p'), _open: null, _fromWorkoutFile: true };
+    S.draftSig = draftSig(S.draft);
+    go({ v:'build', id: S.draft.id });
+  } catch (error) {
+    if (S.sheet !== sheet || top() !== origin) return;
+    sheet.loading = false;
+    render();
+    toast(error.message, true);
+  }
 }
 // iPhone: the share sheet ("Spremi u Datoteke"); elsewhere a download. The answer says what really happened.
 async function shareOrDownload(name, body){
@@ -1772,7 +1792,7 @@ VIEWS.protocols = function(){
     )) +
     '<div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="newPr">' + I.plus.replace('<svg', '<svg width="18" height="18"') + 'Novi protokol</button>' +
-    (S.dbState === 'ready' ? '<button type="button" class="txtbtn flink" data-a="importWorkout">Uvezi trening</button><input id="importWorkoutFile" type="file" accept="application/json,.json" hidden>' : '') + '</div>';
+    (S.dbState === 'ready' ? '<button type="button" class="txtbtn flink" data-a="importWorkout">Uvezi trening</button>' : '') + '</div>';
 };
 
 // search also knows the words people use for the same thing: English equipment names, everyday words for body zones
@@ -5127,7 +5147,15 @@ function sheetHtml(){
   else if (s.kind === 'workoutReplace') body='<p class="play-dose-note">Potvrdi novu vježbu. Težina prethodne vježbe nije prenesena.</p>'+playDoseEditorHtml({...s,kind:'previewDose'},{apply:'workoutReplaceApply',resize:'workoutReplaceResize',cancel:'workoutClose',applyLabel:'Potvrdi zamjenu'});
   else if (s.kind === 'startingLoad') body=startingLoadHtml(s);
   else if (s.kind === 'bodyRegion') body='<h3>'+esc(muscleLabel(s.region))+'</h3><p class="sub">Zglobno područje. Oznaka pomaže pronaći i opisati vježbe za to područje; ne dodaje zasebne bodove mišićnog opterećenja.</p>'+bodyFig({prime:[s.region],sec:[]},{size:300})+'<button class="btn sec" data-a="sheetDone">Zatvori</button>';
-  else if (s.kind === 'addTo') {
+  else if (s.kind === 'importWorkout') {
+    const disabled = s.loading ? ' disabled' : '';
+    body = '<h3>Uvezi trening</h3>' +
+      '<button type="button" class="opt" data-a="openPreparedWorkout"' + disabled + '><span>Gornji dio nakon utakmice · 60 min</span>' + I.chev + '</button>' +
+      '<button type="button" class="opt" data-a="pickWorkoutFile"' + disabled + '>Odaberi datoteku</button>' +
+      '<input id="importWorkoutFile" type="file" hidden>' +
+      (s.loading ? '<p class="sub" role="status">Otvaram trening…</p>' : '') +
+      '<button type="button" class="btn sec" data-a="sheetDone" style="margin-top:12px">Zatvori</button>';
+  } else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
     body = '<h3>Dodaj u protokol</h3>' + list.map(p => '<button class="opt" data-a="addToPick" data-id="'+esc(p.id)+'"><span>'+esc(p.name)+'</span><span style="color:var(--text-2);font-size:14px">'+nVj((p.items||[]).length)+'</span></button>').join('') +
@@ -5686,7 +5714,15 @@ const A = {
   },
   addToNew: () => { const e = S.ex[S.sheet.exId]; S.sheet = null; S.draft = { id: uid('p'), name:'', desc:'', items: e ? [newItem(e)] : [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   newPr: () => { S.draft = { id: uid('p'), name:'', desc:'', items: [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
-  importWorkout: () => { document.getElementById('importWorkoutFile')?.click(); },
+  importWorkout: () => { S.sheet = { kind:'importWorkout' }; render(); },
+  pickWorkoutFile: () => { document.getElementById('importWorkoutFile')?.click(); },
+  openPreparedWorkout: () => previewWorkoutImport(async () => {
+    try {
+      const response = await fetch(PREPARED_WORKOUT);
+      if (response.ok) return await response.json();
+    } catch (_) {}
+    throw new Error('Trening se nije mogao učitati. Pokušaj ponovno.');
+  }),
   editPr: d => { const p = S.pr[d.id]; if (!p) return; S.draft = Object.assign(clone(p), { _open: null }); S.draft.items = S.draft.items || []; S.draft.items.forEach(it => { it._d0 = doseSig(it); }); S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   builderSectionApply: d => { const name=String(S.draft?._sectionName||'').trim();if(!name){toast('Upiši naziv dijela.');document.getElementById('builder-section-name')?.focus();return;}if(builderSetSection(+d.i,name.slice(0,80)))render(); },
   itOpen: d => { builderCommitSection(); const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
@@ -6180,17 +6216,12 @@ app.addEventListener('change', async ev => {
   if(t.id==='workout-equipment'){A.workoutEquipment({v:t.value});return;}
   if(t.id==='workout-target'){A.workoutTarget({v:t.value,j:t.dataset.j});return;}
   if (t.id === 'importWorkoutFile' && t.files?.[0]) {
-    const file = t.files[0], origin = top(), selection = actionSeq;
+    const file = t.files[0];
     t.value = '';
     if (file.size > 32 * 1024) { toast('Datoteka treninga je prevelika.', true); return; }
-    let data;
-    try { data = JSON.parse(await file.text()); } catch (_) { data = null; }
-    if (top() !== origin || origin.v !== 'protocols' || selection !== actionSeq || S.sheet) return;
-    try {
-      S.draft = { ...workoutFileDraft(data), id: uid('p'), _open: null, _fromWorkoutFile: true };
-      S.draftSig = draftSig(S.draft);
-      go({ v:'build', id: S.draft.id });
-    } catch (error) { toast(error.message, true); }
+    await previewWorkoutImport(async () => {
+      try { return JSON.parse(await file.text()); } catch (_) { return null; }
+    });
     return;
   }
   // a backup only opens the preview sheet; nothing changes before "Zamijeni podatke"

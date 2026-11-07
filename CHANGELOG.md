@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.20.6 — 7. 11. 2026.
+
+- Trening **Gornji dio nakon utakmice · 60 min** može se otvoriti izravno iz izbornika za uvoz.
+- Odabir datoteke treninga oslanja se na provjeru sadržaja, pa radi i kad je uređaj prepoznaje kao običan tekst.
+
 ## 1.20.5 — 7. 11. 2026.
 
 - **Moji protokoli → Uvezi trening** otvara jedan protokol iz JSON datoteke. Trening se dodaje nakon spremanja pregleda.

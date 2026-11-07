@@ -147,10 +147,20 @@ async function singleProtocol(browser, url) {
       await action(page,'dashboardProtocols').click();
       await page.getByRole('heading',{name:'Moji protokoli',exact:true}).waitFor();
     };
-    const choose = async (contents) => {
-      const [picker] = await Promise.all([page.waitForEvent('filechooser'),action(page,'importWorkout').click()]);
+    const importDialog = page.getByRole('dialog',{name:'Uvezi trening',exact:true});
+    const openImport = async () => {
+      if (!await importDialog.isVisible()) await action(page,'importWorkout').click();
+      await importDialog.waitFor();
+    };
+    const choose = async (contents, name = 'trening.json', mimeType = 'application/json') => {
+      await openImport();
+      const [picker] = await Promise.all([
+        page.waitForEvent('filechooser'),
+        importDialog.getByRole('button',{name:'Odaberi datoteku',exact:true}).click()
+      ]);
       assert.equal(await picker.element().getAttribute('id'),'importWorkoutFile');
-      await picker.setFiles({name:'trening.json',mimeType:'application/json',buffer:Buffer.from(contents)});
+      assert.equal(await picker.element().getAttribute('accept'),null,'the native picker must allow any file type');
+      await picker.setFiles({name,mimeType,buffer:Buffer.from(contents)});
     };
     const snapshot = () => page.evaluate(() => ({
       data:JSON.parse(localStorage.getItem('mt.data.v1')),
@@ -171,6 +181,7 @@ async function singleProtocol(browser, url) {
     for (const invalid of ['{',JSON.stringify(backup),JSON.stringify({...plan,items:[{...plan.items[0],exId:'nepoznata-vjezba'}]})]) {
       await choose(invalid);
       await page.locator('.toast[role="alert"]').waitFor();
+      assert.ok(await importDialog.isVisible(),'a rejected file leaves the import dialog open');
       assert.equal(await page.locator('#p-name').count(),0,'invalid file cannot open a draft');
       assert.deepEqual(await snapshot(),before,'invalid file cannot write to storage');
       await home(page);
@@ -188,7 +199,7 @@ async function singleProtocol(browser, url) {
     await action(page,'importWorkout').waitFor();
     assert.deepEqual(await snapshot(),before,'closing the preview leaves the original data');
 
-    await choose(source);
+    await choose(source,'trening.txt','text/plain');
     await name.waitFor();
     await page.locator('.topbar [data-a="savePr"]').click();
     await page.getByRole('heading',{name:plan.name,exact:true}).waitFor();
@@ -223,9 +234,35 @@ async function singleProtocol(browser, url) {
     assert.equal(await missingWeight.count(),1,'only the exercise with no supplied weight asks for it');
     assert.equal(await missingWeight.inputValue(),'');
     assert.deepEqual(await snapshot(),saved);
+
+    await home(page);
+    await showProtocols();
+    await openImport();
+    const preparedTitle = 'Gornji dio nakon utakmice · 60 min';
+    const [response] = await Promise.all([
+      page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/treninzi/gornji-dio-nakon-utakmice-60min.json')),
+      importDialog.getByRole('button',{name:preparedTitle,exact:true}).click()
+    ]);
+    assert.ok(response.ok(),'the prepared workout is available at its published path');
+    const prepared = await response.json();
+    await name.waitFor();
+    assert.equal(await name.inputValue(),preparedTitle);
+    assert.equal(await page.locator('#p-desc').inputValue(),prepared.desc);
+    assert.equal(await action(page,'itOpen').count(),prepared.items.length);
+    assert.deepEqual(await snapshot(),saved,'opening the prepared workout is read-only');
+    await page.locator('.topbar [data-a="savePr"]').click();
+    await page.getByRole('heading',{name:preparedTitle,exact:true}).waitFor();
+    const final = await snapshot();
+    const preparedIds = Object.keys(final.data.protocols).filter(id=>!Object.hasOwn(saved.data.protocols,id));
+    assert.equal(preparedIds.length,1,'saving the prepared workout adds exactly one protocol');
+    const {[preparedIds[0]]:savedPrepared,...previous} = final.data.protocols;
+    const dose = ({exId,sets,reps,rest,section,targetRir}) => ({exId,sets,reps,rest,section,targetRir});
+    assert.deepEqual(savedPrepared.items.map(dose),prepared.items.map(dose));
+    assert.deepEqual({...final.data,protocols:previous},saved.data);
+    assert.equal(final.settings,saved.settings);
     assert.deepEqual(errors,[]);
     console.log('single-protocol-import',JSON.stringify({engine,rejectsInvalid:true,previewWithoutWrites:true,
-      newProtocolOnly:true,reload:true,unknownWeightPrompts:true}));
+      newProtocolOnly:true,reload:true,unknownWeightPrompts:true,textFileAccepted:true,preparedWorkoutSaved:true}));
   } finally {
     await context.close();
   }
