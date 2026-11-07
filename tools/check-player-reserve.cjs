@@ -26,13 +26,16 @@ function pressing(){
   return{mode:'ex',items:[item],steps,done:true,i:steps.length,doneSteps:{1:1},answers:{0:'partial'},auto:{0:'partial'},rir:{1:2}};
 }
 test('partial finish asks about the last recorded closing step, not an unperformed last plan set',()=>{
-  const p=pressing(),h=harness(p);assert.equal(h.ctx.rirStep(),1);assert.equal(h.ctx.lrDefault(0),6);assert.equal(h.ctx.lastAttemptDose(0).reps,8);
+  const p=pressing(),h=harness(p);assert.equal(h.ctx.rirStep(),1);assert.equal(h.ctx.lrDefault(0),6);assert.equal(D.recordedAt(h.ctx.lastAttemptStep(0)).reps,8);
   h.ctx.A.answer({j:'0',v:'0'});assert.equal(p.lastReps[0],6);
   for(let i=0;i<10;i++)h.ctx.A.lrep({j:'0',d:'1'});assert.equal(p.lastReps[0],8);
 });
 test('actual immutable step dose controls failure input after current templates have been edited',()=>{
   const p=pressing();p.items[0].repsList=[3,3,3];p.steps[1].it.repsList=[8,6,4];
-  const h=harness(p);assert.equal(h.ctx.lastAttemptDose(0).reps,8);assert.equal(h.ctx.lrDefault(0),6);
+  const h=harness(p);assert.equal(D.recordedAt(h.ctx.lastAttemptStep(0)).reps,8);assert.equal(h.ctx.lrDefault(0),6);
+  p.steps[1].actualReps=9;
+  assert.equal(h.ctx.lrDefault(0),9);
+  h.ctx.A.answer({j:'0',v:'0'});assert.equal(p.lastReps[0],9);
 });
 test('bilateral holds expose SIR after the right side; partial next left does not hide the last full set',()=>{
   const it={exId:'b',measure:'time',sets:2,sec:10,secList:[10,6],kg:0,sides:true};
