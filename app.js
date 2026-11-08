@@ -3040,6 +3040,16 @@ function cinemaJump(j){
   const k=P.steps.findIndex(st=>isWork(st)&&st.g===j);if(k<0)return;
   delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(landAt(k));savePlay();render();
 }
+// After a touch the browser fires a click where the finger was. When the tap has already redrawn the player (rest
+// phase 2, the pause screen), that click would press the control now lying there, so it is dropped. A browser that
+// sends no click (the tapped node is gone) must not lose the next real tap: a new pointerdown or 400 ms disarm it.
+function cinemaSwallowClick(){
+  const drop=ev=>{ev.preventDefault();ev.stopImmediatePropagation();disarm();};
+  const disarm=()=>{document.removeEventListener('click',drop,true);document.removeEventListener('pointerdown',disarm,true);};
+  document.addEventListener('click',drop,true);
+  document.addEventListener('pointerdown',disarm,true);
+  setTimeout(disarm,400);
+}
 function cinemaPause(){
   if(!P||P.done)return;
   cinemaRestReveal();
@@ -6340,25 +6350,35 @@ function playAfter(){
   keepMedia = null;
   const stage=app.querySelector('.workout-cinema-stage');
   if(stage){
+    // The stage and the part overview above it take the gestures: on a short screen the overview can leave the stage
+    // a thin strip. A gesture that starts in the overview's list while that list scrolls belongs to the list.
+    const areas=[stage,app.querySelector('.workout-cinema-overview')].filter(Boolean);
     let start=null,lastTap=null;
-    stage.addEventListener('pointerdown',ev=>{
+    const down=ev=>{
       if(!ev.isPrimary||ev.button!==0)return;
-      start=ev.target.closest('button,input,a,video[controls]')?null:{x:ev.clientX,y:ev.clientY,id:ev.pointerId};
-    },{passive:true});
-    stage.addEventListener('pointerup',ev=>{
+      const list=ev.target.closest('.cinema-section-items');
+      start=ev.target.closest('button,input,a,video[controls]')||list&&list.scrollHeight>list.clientHeight+1?null:{x:ev.clientX,y:ev.clientY,id:ev.pointerId};
+    };
+    const up=ev=>{
       if(!start||ev.pointerId!==start.id)return;
       const dx=ev.clientX-start.x,dy=ev.clientY-start.y;start=null;
       if(S.sheet)return;
       if(dy< -65&&Math.abs(dy)>Math.abs(dx)){A.cinemaJournal();return;}
       if(Math.abs(dx)>75&&Math.abs(dx)>Math.abs(dy)){jump(dx<0?1:-1,P.paused);return;}
       if(Math.abs(dx)>=12||Math.abs(dy)>=12)return;
-      if(!P.paused&&cinemaRestPhase(P.steps[P.i])===1){cinemaRestReveal();render();return;}
-      if(!P.paused){cinemaPause();return;}
+      // a tap the stage acts on redraws the player here; the click that follows must not reach what now lies under
+      // the finger (a reserve pill, −/+, Nastavi)
+      if(!P.paused&&cinemaRestPhase(P.steps[P.i])===1){cinemaSwallowClick();cinemaRestReveal();render();return;}
+      if(!P.paused){cinemaSwallowClick();cinemaPause();return;}
       const at=performance.now();
-      if(lastTap&&at-lastTap.at<320&&Math.hypot(ev.clientX-lastTap.x,ev.clientY-lastTap.y)<32){lastTap=null;cinemaReplay();return;}
+      if(lastTap&&at-lastTap.at<320&&Math.hypot(ev.clientX-lastTap.x,ev.clientY-lastTap.y)<32){lastTap=null;cinemaSwallowClick();cinemaReplay();return;}
       lastTap={at,x:ev.clientX,y:ev.clientY};
-    },{passive:true});
-    stage.addEventListener('pointercancel',()=>{start=null;},{passive:true});
+    };
+    for(const area of areas){
+      area.addEventListener('pointerdown',down,{passive:true});
+      area.addEventListener('pointerup',up,{passive:true});
+      area.addEventListener('pointercancel',()=>{start=null;},{passive:true});
+    }
     const video=stage.querySelector('video');
     if(video){if(P.paused||stillMotion())video.pause();else video.play()?.catch(()=>{});}
     const picture=stage.querySelector('.cinema-single-media img');

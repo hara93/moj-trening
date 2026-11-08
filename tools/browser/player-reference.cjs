@@ -4,11 +4,16 @@
 // row's taps in rirList/sirList and the "Upis rezerve" modes, no "Slijedi" card during work, the dash progress and
 // its dot, the journal (rows, the open card, the equipment menu, swap/undo back to the journal, the totals,
 // "Prijeđi na vježbu"), the swap sheet (search pill vs the last row, no (i) on thumbnails), no horizontal overflow
-// at 375 and 393 px and no page errors. Synthetic data only.
+// at 375 and 393 px and no page errors. Review fixes: touch taps the stage acts on never press the control drawn
+// under the finger, the phase-1 digits reveal instead of pausing, the part overview takes the gestures on a short
+// screen, the dot holds after +15 s and added prep, the numerals and the arc, the player green on rings and fills,
+// focus in the guide/journal/menu, 13 px on every player sheet, screen-reader names, 390 px with a 34 px safe area.
+// Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve, revealRest, openQuit } = require('./runtime.cjs');
-const parts = 'player-reference', plain = 'player-reference-plain';
+const { artifacts, engine, fixture: baseFixture, launch, serve, revealRest, openQuit, openCinemaControls } = require('./runtime.cjs');
+const parts = 'player-reference', plain = 'player-reference-plain', many = 'player-reference-many';
+const GREEN = 'rgb(45, 216, 90)', ON_GREEN = 'rgb(16, 40, 24)';   // --player-accent, --player-on-accent
 const A = (p, action) => p.locator('[data-a="' + action + '"]');
 const player = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
 const store = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')));
@@ -37,6 +42,10 @@ function fixture({ guideSeen = true, entry } = {}) {
     [plain]: { id: plain, name: 'Trening bez dijelova', tag: 'Teretana', days: [], items: [
       { exId: 'bench-press', measure: 'sets', sets: 2, reps: 8, kg: 60, rest: 60, sides: false, targetRir: 2 },
       { exId: 'db-row', measure: 'sets', sets: 2, reps: 10, kg: 22, rest: 60, sides: false }
+    ] },
+    // six sets: five rests to tap on
+    [many]: { id: many, name: 'Mnogo serija', tag: 'Teretana', days: [], items: [
+      { exId: 'bench-press', measure: 'sets', sets: 6, reps: 8, kg: 60, rest: 60, sides: false, targetRir: 2 }
     ] }
   };
   return data;
@@ -170,7 +179,10 @@ async function firstStartWithParts(p, width) {
     assert.equal(await p.locator('.workout-cinema ' + hidden).count(), 0, 'rest phase 1 hides ' + hidden);
   d = await dashes(p); assert.equal(d.current, 0); assert.ok(d.inside); path.push(d);
   await shot(p, 'rest-1-' + width);
-  await revealRest(p);
+  // a tap on the phase-1 digits themselves reveals too (they were a pause button)
+  const digits = await p.locator('.workout-cinema .cinema-rest-stack #ringN').boundingBox();
+  await p.mouse.click(digits.x + digits.width / 2, digits.y + digits.height / 2);
+  await p.locator('.workout-cinema.is-rest-2').waitFor();
   assert.equal((await player(p)).clock.paused, false, 'the tap shows phase 2 without pausing');
   assert.equal(await p.locator('.workout-cinema .cinema-pause-layer').count(), 0);
   // phase 2: the reserve row above −ODMOR+, the next set's card, the target outlined, a tap filled green
@@ -389,14 +401,92 @@ async function narrow(p, width) {
   return { width, noOverflow: true };
 }
 
+// Touch (375×667). A tap the stage acts on redraws the player inside pointerup; the click the browser then fires
+// must not press the control drawn under the finger: rest phase 1 → phase 2 (reserve pill, +15 s, the clock, the
+// next set's +) and work → the pause screen (Nastavi, Prethodna). revealRest's mouse click cannot show this.
+// On this short screen the part overview with two reserve rows leaves the stage a strip: the overview takes the
+// stage's gestures too.
+async function touch(p, width) {
+  await start(p, many, fixture());
+  await until(p, (s, st) => st.kind === 'manual', 'set 1');
+  let box = await p.locator('.workout-cinema-stage').boundingBox();
+  for (const [label, x] of [['centre', .5], ['left', .2]]) {
+    const before = await player(p);
+    await p.touchscreen.tap(box.x + box.width * x, box.y + box.height / 2); await p.waitForTimeout(450);
+    const after = await player(p);
+    assert.equal(after.clock.paused, true, 'a tap on the ' + label + ' pauses and the pause screen\'s button under the finger stays untouched');
+    assert.equal(after.i, before.i, 'no jump (' + label + ')');
+    await p.locator('.workout-cinema .cinema-pause-layer').waitFor();
+    await A(p, 'cinemaResume').click(); await p.locator('.workout-cinema .cinema-pause-layer').waitFor({ state: 'detached' });
+  }
+  // the first rest: learn where phase 2 puts its controls
+  await markDone(p);
+  await p.locator('.workout-cinema.is-rest-1').waitFor();
+  const phase1 = await p.locator('.workout-cinema-stage').boundingBox();
+  await revealRest(p);
+  const spots = await p.evaluate(() => {
+    const at = sel => { const b = document.querySelector(sel)?.getBoundingClientRect(); return b && b.width ? { x: b.x + b.width / 2, y: b.y + b.height / 2 } : null; };
+    return { pill: at('.workout-cinema-reserve .rirb button:nth-child(4)'), plus: at('.workout-cinema [data-a="cinemaRest"][data-d="15"]'),
+      clock: at('.workout-cinema .cinema-big-clock'), next: at('.workout-cinema .cinema-next-side [data-a="playDoseEdit"]') };
+  });
+  const tested = [];
+  for (const [label, spot] of Object.entries(spots)) {
+    if (!spot || spot.y < phase1.y || spot.y > phase1.y + phase1.height) continue;   // only where phase 1 shows the stage
+    await until(p, (s, st) => st.kind === 'manual', 'the next set');
+    await markDone(p);
+    await p.locator('.workout-cinema.is-rest-1').waitFor();
+    assert.equal(await p.evaluate(({ x, y }) => !!document.elementFromPoint(x, y)?.closest('button'), spot), false, label + ': phase 1 has no control there');
+    const before = await player(p);
+    await p.touchscreen.tap(spot.x, spot.y); await p.waitForTimeout(450);
+    const after = await player(p);
+    assert.equal(await p.locator('.workout-cinema.is-rest-2').count(), 1, label + ': the tap shows phase 2');
+    assert.equal(after.clock.paused, false, label + ': not paused');
+    assert.equal(await p.locator('.sheet').count(), 0, label + ': no sheet opened');
+    assert.deepEqual(after.rir || {}, before.rir || {}, label + ': no reserve stored');
+    assert.equal(after.liveSchedule[after.i].dur, before.liveSchedule[before.i].dur, label + ': the rest is not lengthened');
+    tested.push(label);
+  }
+  assert.ok(tested.includes('pill') && tested.includes('clock'), 'the reserve pill and the clock lie in the phase-1 stage: ' + JSON.stringify({ phase1, spots }));
+  await quit(p);
+  // the part overview before "Trup" over the superset's two reserve rows: tap, swipe up and swipe left start on it
+  await start(p, parts, fixture({ entry: 0 }));
+  await until(p, (s, st) => st.kind === 'rest' && st.trans && s.liveSchedule.slice(s.i).find(x => x.kind === 'work' || x.kind === 'manual')?.g === 3, 'the pause before Trup');
+  await p.locator('.workout-cinema[data-phase="section"]').waitFor();
+  assert.equal(await p.locator('#cinema-section-title').textContent(), 'Trup');
+  assert.equal(await reserve(p).locator('.rirb').count(), 2, 'the superset\'s two reserve rows');
+  const title = await p.locator('#cinema-section-title').boundingBox(), overview = await p.locator('.workout-cinema-overview').boundingBox();
+  box = await p.locator('.workout-cinema-stage').boundingBox();
+  const x = title.x + 30, y = title.y + title.height / 2;
+  assert.ok(y < box.y, 'the gestures start above the stage, on the overview');
+  const drag = async (dx, dy, startY = y) => { await p.mouse.move(x, startY); await p.mouse.down(); await p.mouse.move(x + dx, startY + dy, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(300); };
+  await drag(0, 0);
+  assert.equal((await player(p)).clock.paused, true, 'a tap on the overview pauses');
+  await A(p, 'cinemaResume').click(); await p.locator('.workout-cinema .cinema-pause-layer').waitFor({ state: 'detached' });
+  const lowY = Math.min(overview.y + overview.height - 6, box.y - 2);
+  await drag(0, -70, lowY);
+  await journal(p).waitFor();
+  await A(p, 'cinemaJournalClose').first().click(); await journal(p).waitFor({ state: 'detached' });
+  const i = (await player(p)).i;
+  await p.mouse.move(overview.x + overview.width - 30, y); await p.mouse.down(); await p.mouse.move(overview.x + overview.width - 150, y, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(300);
+  assert.ok((await player(p)).i > i, 'a swipe left on the overview goes forward');
+  await quit(p);
+  return { width, ghostClicks: tested, overviewGestures: true };
+}
+
 async function run() {
   const server = await serve();
   let browser;
   const results = [];
   try {
     browser = await launch();
-    for (const [width, height, scenarios] of [[393, 852, [firstStartWithParts, plainWorkout]], [375, 812, [narrow]]]) {
+    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]]]) {
       const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
+      // an iPhone's 34 px home-indicator area, which the test browser reports as 0
+      if (safeArea) await context.route(/\.css(\?.*)?$/, async route => {
+        const response = await route.fetch();
+        const body = (await response.text()).replace(/env\(safe-area-inset-bottom(?:,\s*0px)?\)/g, safeArea + 'px');
+        await route.fulfill({ response, body, headers: { ...response.headers(), 'content-type': 'text/css' } });
+      });
       const p = await context.newPage(), errors = [];
       p.on('pageerror', error => errors.push(error.message));
       p.setDefaultTimeout(8000);
