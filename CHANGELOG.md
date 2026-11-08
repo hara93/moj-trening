@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.20.22 — 8. 11. 2026.
+
+- Ponavljanja i težinu biraš okomitim kotačićima u playeru. Izbornik se otvara uz tri točkice, a priprema i pauza prikazuju se preko demonstracije.
+- Različiti zvučni signali prate faze treninga, uz zasebnu postavku vibracije na podržanim uređajima.
+- Zamjena prikazuje trenutačnu vježbu, preporuke, slične pokrete, filtre i pretragu.
+
 ## 1.20.21 — 8. 11. 2026.
 
 - Bijele brojke i zeleni segmenti prate odbrojavanje rada. Za serije na ponavljanja zadaj **Vrijeme serije (s)** ili koristi automatsku procjenu. Player prelazi na odmor ili sljedeću seriju kad vrijeme istekne.
