@@ -199,7 +199,7 @@ const S = {
   lib: { cat: lsGet('mt.libcat', 'Sve'), q: '', eq: libArr('mt.libeq'), cats: libArr('mt.libcats'), mus: libMus() },   // 1.8: + Kategorija and Zona of the filter
   pack: lsGet('mt.pack', null),
   draft: null, pick: null, sheet: null, toast: null,
-  settings: Object.assign({ sound: true, switchSec: 5, transSec: 10 }, lsGet('mt.settings', {})),
+  settings: Object.assign({ sound: true, vibration: true, switchSec: 5, transSec: 10 }, lsGet('mt.settings', {})),
   canWrite: true
 };
 const top = () => S.stack[S.stack.length - 1];
@@ -467,12 +467,13 @@ function cleanSettings(s){
   else delete o.progressPinnedIds;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
+  if (typeof s.vibration !== 'boolean') delete o.vibration;
   if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
   if ('planDates' in s) o.planDates = MonthPlan.clean(s.planDates);
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
-const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, analysisPeriod:'7d', progressPinnedIds:[] };
+const SETTINGS_BASE = { sound: true, vibration: true, switchSec: 5, transSec: 10, analysisPeriod:'7d', progressPinnedIds:[] };
 
 /* ---------- photos and videos on the phone (IndexedDB) ---------- */
 const IDB = {
@@ -3589,14 +3590,47 @@ VIEWS.field = function(t){
 /* ---------- player ---------- */
 let P = null, ticker = null, audioCtx = null, wakeLock = null, wakeOk = true, wakeHinted = false, keepMedia = null;
 // iOS leaves the context 'interrupted' after a call, Siri or the app in the background, not only 'suspended'
-function ensureAudio(){ try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state !== 'running' && audioCtx.state !== 'closed') { const r = audioCtx.resume(); if (r && r.catch) r.catch(() => {}); } } catch(e){} }
+function ensureAudio(){
+  if (!S.settings.sound) return;
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) return;
+  try {
+    if (!audioCtx || audioCtx.state === 'closed') audioCtx = new Audio();
+    if (audioCtx.state !== 'running') audioCtx.resume()?.catch(() => {});
+  } catch(e){}
+}
 // On the iPhone Web Audio obeys the silent switch. The opt-in 'playback' session keeps the signals audible (other apps' music may pause).
-function audioMode(on){ try { if ('audioSession' in navigator) navigator.audioSession.type = on && S.settings.silentOk === true ? 'playback' : 'auto'; } catch(e){} }
+function audioMode(on){ try { if ('audioSession' in navigator) navigator.audioSession.type = on && S.settings.sound && S.settings.silentOk === true ? 'playback' : 'auto'; } catch(e){} }
 function beep(freq, ms, vol){
   if (!S.settings.sound || !audioCtx) return;
   try { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = freq; o.type = 'sine'; g.gain.value = vol || 0.18; o.connect(g); g.connect(audioCtx.destination); const t0 = audioCtx.currentTime; g.gain.setValueAtTime(vol||0.18, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + ms/1000); o.start(t0); o.stop(t0 + ms/1000 + 0.02); } catch(e){}
 }
-function buzz(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch(e){} }
+const vibrationAvailable = () => typeof navigator.vibrate === 'function';
+function buzz(pattern){
+  if (!vibrationAvailable() || (!S.settings.vibration && pattern !== 0)) return;
+  try { navigator.vibrate(pattern); } catch(e){}
+}
+const WORKOUT_SIGNALS = {
+  prep: {tone:[587,170,.17], vibration:[45,65,45]},
+  work: {tone:[880,260,.22], vibration:120},
+  rest: {tone:[392,230,.17], vibration:65},
+  switch: {tone:[660,200,.18], vibration:[75,60,75]},
+  countdown: {tone:[740,100,.14], vibration:28},
+  finish: {tone:[988,420,.22], vibration:[120,80,120]}
+};
+function workoutSignal(kind){
+  const cue = WORKOUT_SIGNALS[kind];
+  if (cue) { beep(...cue.tone); buzz(cue.vibration); }
+}
+function playerSignalSettings(){
+  const vibration = vibrationAvailable();
+  return '<div class="prow"><span class="k">Zvučni signali</span><button type="button" class="switch" role="switch" data-a="toggleSound" aria-checked="'+!!S.settings.sound+'" aria-label="Zvučni signali"></button></div>' +
+    (vibration ? '<div class="prow"><span class="k">Vibracija</span><button type="button" class="switch" role="switch" data-a="toggleVibration" aria-checked="'+!!S.settings.vibration+'" aria-label="Vibracija"></button></div>'
+      : '<p class="sub">Vibracija ovisi o podršci uređaja i preglednika. Ovdje su dostupni zvučni signali.</p>') +
+    ('audioSession' in navigator ? '<div class="prow"><span class="k">Zvuk u nečujnom načinu</span><button type="button" class="switch" role="switch" data-a="toggleSilent" aria-checked="'+(S.settings.silentOk === true)+'" aria-label="Zvuk u nečujnom načinu"></button></div><p class="sub">Glazba iz druge aplikacije tada se može pauzirati.</p>'
+      : /iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="sub">Za zvučne signale isključi nečujni način na uređaju.</p>' : '') +
+    '<button type="button" class="btn sec" data-a="previewPlayerSignal"'+(S.settings.sound || vibration && S.settings.vibration ? '' : ' disabled')+'>Isprobaj signal</button>';
+}
 async function keepAwake(on){
   if (on && !('wakeLock' in navigator)) { wakeOk = false; return; }
   try { if (on && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeOk = true; wakeLock.addEventListener('release', () => { wakeLock = null; }); } if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; } }
@@ -3820,6 +3854,12 @@ function positionStep(i, t0){
   return step;
 }
 function signalStep(st){
+  if (P.mode === 'ex') {
+    // The legacy ready marker has no duration. The preparation that follows it has its own cue.
+    if (st.kind === 'ready' || st.dur === 0 && !isWork(st)) return;
+    workoutSignal(st.kind === 'manual' ? 'work' : st.go ? 'prep' : st.kind);
+    return;
+  }
   if (st.kind === 'work' || st.kind === 'manual') { beep(880, 260, 0.22); buzz(120); }
   else if (st.kind === 'switch') { beep(660, 200); buzz([80,60,80]); }
   else if (st.kind === 'rest' || st.kind === 'ready') { beep(520, 220); buzz(60); }
@@ -3838,7 +3878,11 @@ function tick(){
   if (P.mode==='ex' && (st.kind==='ready' || st.dur===0&&!isWork(st))) {enterStep(P.i+1);render();return;}
   if ((st.dur || st.kind==='manual') && !cinemaRecordedStep()) {
     const manual=st.kind==='manual', whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
-    if (whole <= 3 && whole >= 1 && P.lastBeep !== whole) { P.lastBeep = whole; beep(740, 120, 0.14); }
+    if (whole <= 3 && whole >= 1 && P.lastBeep !== whole) {
+      P.lastBeep = whole;
+      if (P.mode === 'ex') workoutSignal('countdown');
+      else beep(740, 120, 0.14);
+    }
     if (whole <= 0) {
       if (manual) A.workoutSetDone({j:st.g,set:st.set,step:P.i,automatic:true});
       else timeUp();
@@ -3894,7 +3938,10 @@ function prepareFinish(){
 }
 function presentFinish(){
   clearInterval(ticker); keepAwake(false);
-  if (!P.quit) { beep(988, 420, 0.22); buzz([120,80,120]); }
+  if (!P.quit) {
+    if (P.mode === 'ex') workoutSignal('finish');
+    else { beep(988, 420, 0.22); buzz([120,80,120]); }
+  }
   if (top().v === 'play') render();
 }
 function finish(){
@@ -5807,14 +5854,11 @@ function sheetHtml(){
     const o = (k, vals, unit) => '<div class="chips wrap" style="margin:8px 0 14px">' + vals.map(v => '<button class="chip" data-a="setSetting" data-k="'+k+'" data-v="'+v+'" aria-pressed="'+(S.settings[k]===v)+'">'+v+' '+unit+'</button>').join('') + '</div>';
     const note = t => '<p style="margin:0 0 10px;font-size:13px;line-height:19px;color:var(--text-2)">' + t + '</p>';
     body = '<h3>Postavke playera</h3>' +
-      '<div class="prow"><span class="k">Zvučni signali</span><button class="switch" role="switch" data-a="toggleSound" aria-checked="'+S.settings.sound+'" aria-label="Zvučni signali"></button></div>' +
-      ('audioSession' in navigator ? '<div class="prow"><span class="k">Signali i kad je iPhone na nečujnom</span><button class="switch" role="switch" data-a="toggleSilent" aria-checked="'+(S.settings.silentOk === true)+'" aria-label="Signali i kad je iPhone na nečujnom"></button></div>' + note('Glazba iz druge aplikacije tada se može pauzirati.')
-        : /iPhone|iPad|iPod/.test(navigator.userAgent) ? note('Kad je iPhone na nečujnom, zvučni signali se ne čuju.') : '') +
-      ('vibrate' in navigator ? '' : note('Ovaj uređaj ne podržava vibraciju, pa su signali samo zvučni.')) +
+      playerSignalSettings() +
       (wakeOk ? '' : note('Ovaj uređaj ne može držati ekran upaljenim tijekom treninga. Na iPhoneu produlji automatsko zaključavanje: Postavke › Zaslon i svjetlina › Automatsko zaključavanje.')) +
       '<p class="label" style="padding:12px 0 0">Promjena strane</p>' + o('switchSec', [5,10,15], 's') +
       '<p class="label" style="padding:0">Pauza između vježbi</p>' + o('transSec', [5,10,15,20], 's') +
-      '<p style="font-size:13px;color:var(--text-2);margin:0">Nove postavke vrijede od sljedećeg pokretanja.</p>';
+      '<p style="font-size:13px;color:var(--text-2);margin:0">Promjene trajanja prijelaza vrijede od sljedećeg pokretanja.</p>';
   } else if (s.kind === 'quit') {
     const any = P && anyDone();
     body = '<h3>Prekinuti trening?</h3>' +
@@ -5870,7 +5914,7 @@ function cinemaSheetHtml(s){
   if(s.kind==='cinemaPrep')return '<h3>Vrijeme za pripremu</h3><p>Dodaj vrijeme prije nastavka. Priprema ne označava seriju kao odrađenu.</p><div class="cinema-prep-picks">'+[0,5,10,30,60].map(n=>'<button type="button" data-a="cinemaPrepPick" data-v="'+n+'" aria-pressed="'+(s.seconds===n)+'">+'+n+' s</button>').join('')+'</div><button type="button" class="btn" data-a="cinemaPrepApply">Potvrdi'+(s.seconds?' · +'+s.seconds+' s':'')+'</button>'+close;
   if(s.kind==='cinemaReserve')return P.steps[s.k]?.kind==='manual' ? workoutResultForm(s.k) : '<h3>Rezerva nakon serije</h3>'+rirRowHtml(s.k,true)+close;
   if(s.kind==='cinemaNotes')return '<h3>Bilješke · '+esc(S.ex[P.items[s.j].exId]?.name||'Vježba')+'</h3><label class="label" for="cinema-note">Kako je išlo?</label><textarea id="cinema-note" class="input" maxlength="2000" rows="5" placeholder="Izvedba, osjećaj, što zapamtiti za sljedeći put…">'+esc(s.text)+'</textarea><button type="button" class="btn" data-a="cinemaNotesSave">Spremi bilješku</button>'+close;
-  if(s.kind==='cinemaAudio')return '<h3>Zvuk treninga</h3><div class="prow"><span>Zvučni signali</span><button type="button" class="switch" role="switch" data-a="toggleSound" aria-checked="'+S.settings.sound+'" aria-label="Zvučni signali"></button></div><p>Signali označavaju početak rada, promjenu strane i kraj odbrojavanja.</p>'+close;
+  if(s.kind==='cinemaAudio')return '<h3>Zvuk i vibracija</h3>'+playerSignalSettings()+'<p>Različiti signali označavaju pripremu, početak serije, odmor, promjenu strane i kraj treninga. Kratki signal odbrojava zadnje tri sekunde.</p>'+close;
   if(s.kind==='cinemaPace')return '<h3>Tempo i prijelazi</h3><p>Odmor trenutačne serije mijenjaš tipkama − i + u playeru.</p><div class="prow"><span>Promjena strane</span><strong>'+S.settings.switchSec+' s</strong></div><div class="prow"><span>Između vježbi</span><strong>'+S.settings.transSec+' s</strong></div><button type="button" class="btn" data-a="cinemaSettings">Postavke sljedećeg treninga</button>'+close;
   if(s.kind==='cinemaPlan'){
     const parts=CinemaModel.sections(P.items,S.ex);
@@ -6703,7 +6747,16 @@ const A = {
   freshSeen: () => { try { localStorage.removeItem('mt.freshAt'); } catch(e){} render(); },
   badSeen: () => { const b = lsGet('mt.badStore', null); if (b) { b.seen = true; lsSet('mt.badStore', b); } render(); },
   setSetting: d => { if (!writeSetting(d.k,+d.v)) return; render(); },
-  toggleSound: () => { if (!writeSetting('sound',!S.settings.sound)) return; ensureAudio(); render(); },
+  toggleSound: () => {
+    if (!writeSetting('sound',!S.settings.sound)) return;
+    audioMode(!!P && !P.done); ensureAudio(); render();
+  },
+  toggleVibration: () => {
+    if (!vibrationAvailable() || !writeSetting('vibration',!S.settings.vibration)) return;
+    if (!S.settings.vibration) buzz(0);
+    render();
+  },
+  previewPlayerSignal: () => { ensureAudio(); workoutSignal('work'); },
   toggleSilent: () => { if (!writeSetting('silentOk',S.settings.silentOk !== true)) return; if (P && !P.done) { audioMode(true); ensureAudio(); } render(); },
   // the arrow asks first (an in-page sheet: confirm() does not work in every view); a timed step waits meanwhile
   quitPlay: () => { if (!P || P.done) return; if (!P.paused) { P.left = remaining(); P.paused = true; P.sheetPause = true; } savePlay(); S.sheet = { kind:'quit' }; render(); },
