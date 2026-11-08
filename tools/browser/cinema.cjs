@@ -17,16 +17,6 @@ const row = (p, exercise, set) => sheet(p).locator('.workout-player-exercise').n
 const doneCount = p => Object.keys(p.doneSteps || {}).length;
 const step = p => p.liveSchedule[p.i];
 
-async function assertOverlayBackground(card) {
-  const {alpha, opacity, backdrop} = await card.evaluate(node => {
-    const style=getComputedStyle(node);
-    return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity,backdrop:style.backdropFilter};
-  });
-  assert.equal(alpha,.3,'player overlay has a 70% transparent background');
-  assert.equal(opacity,'1','the overlay content remains fully opaque');
-  assert.equal(backdrop,'none','the card shows the image details without blur');
-}
-
 function fixture() {
   const data = baseFixture();
   data.log = []; data.programs = {}; data.field = {};
@@ -122,8 +112,14 @@ async function portraitPresentation(p, width, height) {
   await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
   await A(p,'dashboardProtocols').click();await p.locator('[data-a="openPr"][data-id="'+id+'"]').click();
   await A(p,'startPr').click();
-  const firstCard=p.locator('.workout-cinema[data-phase="ready"] .workout-cinema-next:has(>.cinema-next)');
-  await firstCard.waitFor();await assertOverlayBackground(firstCard);await hero(p);
+  // 1.22.0: prep is the big clock under the word PRIPREMA, the exercise named in the heading; no next-set card
+  const prepScreen=p.locator('.workout-cinema[data-phase="ready"] .cinema-prep-entry');
+  await prepScreen.waitFor();
+  assert.equal(await prepScreen.locator('.cinema-phase-word').textContent(),'Priprema');
+  assert.equal(await prepScreen.locator('#ringN').count(),1,'the big prep clock');
+  assert.match(await p.locator('.workout-cinema-heading.is-preparing h1').textContent(),/^10× \S/);
+  assert.equal(await p.locator('.workout-cinema .cinema-next').count(),0,'no next-set card during prep');
+  await hero(p);
   const transport=p.locator('.workout-cinema .cinema-controls,.workout-cinema .cinema-secondary,.workout-cinema [data-a="cinemaMain"]');
   assert.equal(await transport.count(),0,'the player has no bottom transport row during prep');
   const readyFade=await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node,'::after').backgroundImage);
@@ -139,9 +135,12 @@ async function portraitPresentation(p, width, height) {
   await slider.press('Home');
   await A(p,'cinemaPrepApply').tap();
   assert.equal(await prep.count(),0);
-  await firstCard.locator('[data-a="playDoseEdit"]').tap();
+  // 1.22.0: the set timer is edited from the journal's "Uredi" (prep has no next-set card)
+  await openJournal(p,3);
+  await sheet(p).locator('[data-a="playDoseEdit"][data-j="0"]').click();
   const target=p.locator('#play-dose-form [name="repSetSec"]');
   await target.fill('24');await A(p,'playDoseApply').tap();
+  await closeJournal(p);
   assert.equal((await player(p)).items[0].repSetSec,24);
   assert.equal((await store(p)).protocols[id].items[0].repSetSec,undefined,'the timer edit only affects this workout');
   await manual(p,1);await hero(p);
@@ -153,13 +152,13 @@ async function portraitPresentation(p, width, height) {
   assert.equal(await fill.getAttribute('data-count'),'0');
   await advance(p,6);
   assert.equal(await p.locator('#ringN').innerText(),'0:18');
-  assert.equal(await fill.getAttribute('data-count'),'9','the arc fills during the configured countdown');
+  assert.equal(await fill.getAttribute('data-count'),'8','the arc fills during the configured countdown');   // 1.22.0: 31 bars (a quarter of 24 s = 8 of 31)
   assert.equal(await fill.evaluate(node=>getComputedStyle(node).stroke),'rgb(45, 216, 90)');
   const repetitions=p.locator('[data-a="cinemaPickerOpen"][data-field="reps"]');
   const weight=p.locator('[data-a="cinemaPickerOpen"][data-field="kg"]');
   const wheel=p.locator('.cinema-number-wheel');
   const selected=wheel.locator('.is-selected');
-  assert.equal(await repetitions.locator('.cinema-metric-label').innerText(),'Ponavljanja');
+  assert.equal(await repetitions.locator('.cinema-metric-label').innerText(),'pon.');   // 1.22.0: short caption; the wheel keeps the long name
   await repetitions.tap();
   assert.equal(await selected.innerText(),'10');
   assert.equal(await p.locator('#play-dose-form').count(),0);
@@ -195,13 +194,15 @@ async function portraitPresentation(p, width, height) {
   const layout=await p.locator('.workout-cinema').evaluate(view=>{
     const box=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height};};
     const media=view.querySelector('.cinema-single-media'),image=media.querySelector('img');
-    return {view:box(view),header:box(view.querySelector('.workout-cinema-progress')),media:box(media),
+    return {view:box(view),topbar:box(view.querySelector('.workout-cinema-topbar')),header:box(view.querySelector('.workout-cinema-progress')),media:box(media),
       natural:{width:image.naturalWidth,height:image.naturalHeight},image:box(image),fit:getComputedStyle(image).objectFit,
       mediaFade:getComputedStyle(view.querySelector('.workout-cinema-media'),'::after').backgroundImage,
       stageFade:getComputedStyle(view.querySelector('.workout-cinema-stage'),'::after').backgroundImage,
       timerColor:getComputedStyle(view.querySelector('#ringN')).color};
   });
-  assert.ok(layout.media.top>=layout.header.bottom-1,'standing portrait begins below timer/progress header: '+JSON.stringify(layout));
+  // 1.22.0: the dash row (22 px) lies over the photo's opaque top fade; the photo itself starts where it did in 1.21,
+  // below the time and percent
+  assert.ok(layout.media.top>=layout.topbar.bottom-1,'standing portrait begins below timer/progress header: '+JSON.stringify(layout));
   assert.ok(Math.abs(layout.media.width-layout.view.width)<=1,'portrait retains full viewport width');
   assert.ok(Math.abs(layout.media.height/layout.media.width-4/3)<.01,'portrait phase keeps its natural 3:4 proportions');
   assert.equal(layout.fit,'contain','exercise image is not cropped to fill a box');
@@ -244,7 +245,7 @@ async function portraitPresentation(p, width, height) {
   const restColor=await p.locator('#ringN').evaluate(node=>getComputedStyle(node).color);
   assert.equal(restColor,'rgb(255, 255, 255)','the rest countdown is white');
   assert.equal(layout.timerColor,'rgb(255, 255, 255)','the work countdown is white');
-  assert.equal(await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node).opacity),'0.28');
+  assert.equal(await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node).opacity),'0.3');   // 1.22.0: the mockup's rest dim
   assert.equal(await p.locator('.workout-cinema-rest-adjust span').textContent(),'Odmor');
   assert.equal(await p.locator('#ringN').innerText(),'1:00');
   assert.equal(await p.locator('.cinema-clock-arc').count(),0);
@@ -713,54 +714,60 @@ async function supersetPreview(p) {
   await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
   await A(p,'dashboardProtocols').click();await p.locator('[data-a="openPr"][data-id="snaga-a"]').click();
   await A(p,'startPr').click();
-  const stage=p.locator('.workout-cinema'),card=stage.locator('.cinema-next');
+  const stage=p.locator('.workout-cinema'),card=stage.locator('.cinema-next'),heading=stage.locator('.workout-cinema-heading');
   const mark=stage.locator('.cinema-work-mark[data-a="workoutSetDone"]');
-  const nextExercise=async ex=>{
+  // 1.22.0: the next-set card exists only in rest phase 2. Prep, a side change and the pause before an exercise name
+  // the coming exercise in the heading; work shows no card at all.
+  const named=async ex=>{
+    await stage.and(p.locator('[data-ex-id="'+ex+'"]')).waitFor();
+    assert.equal(await card.count(),0,'no next-set card outside rest phase 2');
+  };
+  const working=async ex=>{
+    await named(ex);
+    assert.equal(await stage.getAttribute('data-phase'),'work');
+    assert.doesNotMatch(await stage.innerText(),/Slijedi/);
+  };
+  const nextSet=async (ex,text)=>{
+    assert.equal(await stage.getAttribute('data-phase'),'rest');
+    await revealRest(p);
     await card.and(p.locator('[data-next-ex="'+ex+'"]')).waitFor();
     assert.equal(await card.getAttribute('data-next-kind'),'exercise');
-  };
-  const nextBreak=async (kind,formatted)=>{
-    assert.equal(await card.getAttribute('data-next-kind'),kind);
-    assert.equal(await card.locator('.cinema-next-duration').innerText(),formatted);
-    assert.equal(await card.getByRole('button').count(),0);
+    if(text)assert.match(await card.innerText(),text);
   };
   const finishRest=async()=>advance(p,(await player(p)).left+.1);
-  await stage.waitFor();await nextExercise('deadlift');await finishRest();
+  await stage.waitFor();await named('deadlift');assert.match(await heading.getAttribute('class'),/is-preparing/);await finishRest();
   for(let i=1;i<=4;i++){
-    assert.equal(await stage.getAttribute('data-ex-id'),'deadlift');
-    await nextBreak('rest',i===4?'0:10':'2:30');
-    await mark.tap();await nextExercise(i===4?'bugarski':'deadlift');await finishRest();
+    await working('deadlift');
+    await mark.tap();
+    if(i<4)await nextSet('deadlift',new RegExp('Serija '+(i+1)+' od 4'));
+    else {await named('bugarski');assert.match(await heading.getAttribute('class'),/is-preparing/,'the pause before the superset names it');}
+    await finishRest();
   }
-  await stage.locator('.workout-cinema-heading').getByText(/Lijeva strana/).waitFor();
-  await nextBreak('switch','0:10');
+  await heading.getByText(/Lijeva strana/).waitFor();
+  await working('bugarski');
   await mark.tap();
-  await nextExercise('bugarski');assert.match(await card.innerText(),/Desna strana/);
+  await named('bugarski');assert.match(await heading.innerText(),/Desna strana/,'the side change names the side to come');
   await finishRest();
-  assert.equal(await stage.getAttribute('data-ex-id'),'bugarski');
-  await nextExercise('nordic-curl');
-  assert.equal(await card.getByRole('button').getAttribute('data-j'),'2','the card edits the next exercise, not the current one');
+  await working('bugarski');
   await mark.tap();
-  assert.equal(await stage.getAttribute('data-ex-id'),'nordic-curl');
-  await nextBreak('rest','1:30');
+  await working('nordic-curl');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-next-rest.png')});
   await mark.tap();
-  assert.equal(await stage.getAttribute('data-phase'),'rest');
-  await revealRest(p);   // 1.22.0: the next-set card is part of rest phase 2
-  await nextExercise('bugarski');assert.match(await card.innerText(),/2 \/ 3 serija.*Lijeva strana/s);
+  await nextSet('bugarski',/Serija 2 od 3 · Lijeva strana/);
+  assert.equal(await card.getByRole('button').getAttribute('data-j'),'1','the card edits the next exercise, not the one just done');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-during-rest.png')});
   await openCinemaControls(p);
   await A(p,'cinemaPlan').click();
   await p.locator('[data-a="cinemaBlock"][data-j="3"]').click();
-  assert.equal(await stage.getAttribute('data-ex-id'),'hip-thrust');
-  await nextExercise('kopenhagen-kratka');
+  await working('hip-thrust');
   await mark.tap();
-  await nextExercise('kopenhagen-kratka');
+  await named('kopenhagen-kratka');
   for(let i=0;i<3&&step(await player(p)).kind!=='work';i++)await finishRest();
-  await nextBreak('switch','0:10');
+  await working('kopenhagen-kratka');
   await mark.tap();await finishRest();
-  await nextBreak('rest','1:15');
+  await working('kopenhagen-kratka');
   await mark.tap();
-  await nextExercise('hip-thrust');
+  await nextSet('hip-thrust',/Serija 2 od 3/);
   results.push({shippedStrengthA:true,supersetNextExercise:true,roundRestPreview:true,upcomingSide:true});
 }
 
