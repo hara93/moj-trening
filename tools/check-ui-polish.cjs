@@ -22,7 +22,7 @@ test('the player menu uses one icon set and one divider between groups',()=>{
 });
 test('disclosure rows use the Danas accordion row instead of the bare ▶ marker',()=>{
   const css=read('style.css');
-  for(const cls of ['workout-expectation','workout-protocol-options','tl-analysis-details','dy-previous']){
+  for(const cls of ['workout-expectation','workout-protocol-options','tl-analysis-details','dy-previous','protocol-muscles','ltab','tl-details','tl-model-note','pg-activity-table']){
     assert.match(css,new RegExp(':is\\([^)]*\\b'+cls+'\\b[^)]*\\)>summary\\{[^}]*list-style:none'),cls);
     assert.match(css,new RegExp(':is\\([^)]*\\b'+cls+'\\b[^)]*\\)>summary::-webkit-details-marker\\{display:none\\}'),cls);
   }
@@ -42,4 +42,20 @@ test('small text on the player screen is at least 13 px, the last rule for each 
   assert.match(block,/\{font-size:13px\}/);
   for(const selector of selectors)assert.ok(block.includes(selector),selector);
   assert.equal(css.indexOf('font-size',css.indexOf('{font-size:13px}',css.lastIndexOf('/* 1.21: small text'))+16),-1,'nothing after the block lowers it again');
+});
+test('no stylesheet loaded after workout.css lowers the small player text again (index.html link order)',()=>{
+  const links=[...read('index.html').matchAll(/<link rel="stylesheet" href="([a-z-]+\.css)">/g)].map(m=>m[1]);
+  const later=links.slice(links.indexOf('workout.css')+1);
+  assert.deepEqual(later,['training-load.css','app-layout.css']);
+  const selectors=['.workout-cinema .cinema-next','.workout-cinema .cinema-next small','.workout-cinema-next small','.cinema-weight-value small','.workout-cinema-heading p'];
+  for(const file of later)for(const [,list,body] of read(file).matchAll(/([^{}]+)\{([^{}]*)\}/g)){
+    const size=body.match(/font-size:(\d+(?:\.\d+)?)px/);
+    if(!size||Number(size[1])>=13)continue;
+    for(const selector of list.split(',').map(x=>x.trim()))assert.ok(!selectors.includes(selector),file+': '+selector+' at '+size[1]+'px');
+  }
+});
+test('the load dial total stays on one line',()=>{
+  const rule=read('training-load.css').match(/\.tl-dial-readout strong \{[^}]*\}/)[0];
+  assert.match(rule,/white-space:nowrap/);
+  assert.match(rule,/calc\(34vw \/ var\(--tl-dial-glyphs\)\)/,'six glyphs (11.791) fit 67 % of the dial at 375 px');
 });

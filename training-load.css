@@ -68,7 +68,8 @@
 }
 .tl-dial-readout strong {
   font-size:24px;
-  font-size:clamp(10px, min(calc(38vw / var(--tl-dial-glyphs)), calc(156px / var(--tl-dial-glyphs))), 34px);
+  font-size:clamp(10px, min(calc(34vw / var(--tl-dial-glyphs)), calc(136px / var(--tl-dial-glyphs))), 34px);
+  white-space:nowrap;
   color:var(--text);
   font-weight:650;
   font-variant-numeric:tabular-nums;
