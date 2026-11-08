@@ -8,11 +8,12 @@
 // under the finger, the phase-1 digits reveal instead of pausing, the part overview takes the gestures on a short
 // screen, the dot holds after +15 s and added prep, the numerals and the arc, the player green on rings and fills,
 // focus in the guide/journal/menu, 13 px on every player sheet, screen-reader names, 390 px with a 34 px safe area.
+// 1.22.1: the pause screen's captions say where one tap lands, in every state (and the names say the same).
 // Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { artifacts, engine, fixture: baseFixture, launch, serve, revealRest, openQuit, openCinemaControls } = require('./runtime.cjs');
-const parts = 'player-reference', plain = 'player-reference-plain', many = 'player-reference-many';
+const parts = 'player-reference', plain = 'player-reference-plain', many = 'player-reference-many', rounds = 'player-reference-rounds';
 const GREEN = 'rgb(45, 216, 90)', ON_GREEN = 'rgb(16, 40, 24)';   // --player-accent, --player-on-accent
 const A = (p, action) => p.locator('[data-a="' + action + '"]');
 const player = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -46,6 +47,11 @@ function fixture({ guideSeen = true, entry } = {}) {
     // six sets: five rests to tap on
     [many]: { id: many, name: 'Mnogo serija', tag: 'Teretana', days: [], items: [
       { exId: 'bench-press', measure: 'sets', sets: 6, reps: 8, kg: 60, rest: 60, sides: false, targetRir: 2 }
+    ] },
+    // 1.22.1: a superset whose last two rounds have one exercise left (Sljedeća/Prethodna move by a set there)
+    [rounds]: { id: rounds, name: 'Krugovi', tag: 'Teretana', days: [], items: [
+      { exId: 'bench-press', measure: 'sets', sets: 4, reps: 8, kg: 60, rest: 0, sides: false, ss: 'a' },
+      { exId: 'db-row', measure: 'sets', sets: 2, reps: 10, kg: 22, rest: 30, sides: false, ss: 'a' }
     ] }
   };
   return data;
@@ -525,6 +531,86 @@ async function plainWorkout(p, width) {
 }
 
 // 375 px, and 390 px with a 34 px safe area: the same screens without horizontal overflow
+// 1.22.1 (item 1): Prethodna / Sljedeća / Ponovi react to one tap; their small captions say what that tap does, true in
+// the state shown, and each button's name is the same words. Taps land where the words say.
+const pauseLayer = p => p.locator('.workout-cinema .cinema-pause-layer');
+async function pauseWords(p) {
+  await revealRest(p);
+  if (!(await pauseLayer(p).count())) { await p.locator('.workout-cinema #ring').click(); await pauseLayer(p).waitFor(); }
+  return pauseLayer(p).evaluate(layer => {
+    const jump = d => { const b = layer.querySelector('[data-a="cinemaPauseJump"][data-d="' + d + '"]'); return [b.querySelector('strong').textContent, b.querySelector('small').textContent, b.getAttribute('aria-label')]; };
+    const replay = layer.querySelector('[data-a="cinemaReplay"]');
+    return { back: jump(-1), next: jump(1), replay: replay && [replay.querySelector('small').textContent, replay.getAttribute('aria-label')] };
+  });
+}
+const words = (back, next, replay) => ({ back: [...back, back.join(' ')], next: [...next, next.join(' ')], replay: replay && [replay, 'Ponovi ' + replay] });
+async function resume(p) { await A(p, 'cinemaResume').click(); await pauseLayer(p).waitFor({ state: 'detached' }); }
+async function tapJump(p, d) { await p.locator('.workout-cinema [data-a="cinemaPauseJump"][data-d="' + d + '"]').click(); await p.waitForTimeout(200); return player(p); }
+async function pauseCaptions(p) {
+  await start(p, parts, fixture({ entry: 2 }));
+  // the first preparation (the part overview): back starts it again, as Ponovi does
+  await p.locator('.workout-cinema[data-phase="section"]').waitFor();
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], 'pripremu od početka'), 'the first preparation');
+  await resume(p);
+  await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 1, 'squat set 1');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'squat set 1');
+  assert.doesNotMatch(await pauseLayer(p).innerText(), /Povuci|Dvostruki dodir/, 'no caption names a gesture');
+  await resume(p);
+  await markDone(p);
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'odmor od početka'), 'the rest after set 1');
+  await resume(p);
+  await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 2, 'squat set 2');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'vježbe'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'squat set 2');
+  // ⋯ Postavke treninga: its arrows run the same jump and carry the same names
+  await resume(p);
+  await openCinemaControls(p);
+  assert.deepEqual(await p.locator('.sheet [data-a="jump"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('aria-label'))), ['Početak vježbe', 'Sljedeća vježba']);
+  for (let guard = 0; guard < 3 && await p.locator('.sheet').count(); guard++) { await p.keyboard.press('Escape'); await p.waitForTimeout(200); }
+  // the taps: "Početak vježbe" → set 1 (recorded, so no Ponovi), still paused; then "Sljedeća vježba" → the superset
+  await pauseWords(p);
+  let state = await tapJump(p, -1);
+  assert.deepEqual([step(state).g, step(state).set, step(state).kind, state.clock.paused], [0, 1, 'manual', true], 'back lands on set 1, paused');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], null), 'a recorded set 1');
+  state = await tapJump(p, 1);
+  assert.deepEqual([step(state).g, step(state).set, step(state).side, state.clock.paused], [1, 1, 'Lijeva strana', true], 'next lands on the Bulgarian split squat');
+  // a set played as two sides: Ponovi starts the side again; inside the set, back is the set's start
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'stranu od početka'), 'left side');
+  await resume(p); await markDone(p);
+  assert.equal(step(await player(p)).kind, 'switch');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'promjenu strane od početka'), 'the side change');
+  await resume(p);
+  await until(p, (s, st) => st.kind === 'manual' && st.side === 'Desna strana', 'right side');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'stranu od početka'), 'right side');
+  await resume(p); await markDone(p);
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'Nordic curl, round 1');
+  await resume(p); await markDone(p);
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'odmor od početka'), 'the round\'s rest');
+  await resume(p);
+  // the pause before the next part is shown as "Priprema"
+  await until(p, (s, st) => st.kind === 'rest' && st.trans, 'the pause before Trup');
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'pripremu od početka'), 'the pause before Trup');
+  await resume(p);
+  // the last set of the workout: next is the end
+  await until(p, (s, st) => st.kind === 'work' && st.g === 3 && st.set === 2, 'side plank set 2');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'vježbe'], ['Kraj', 'treninga'], 'seriju od početka'), 'the last set');
+  state = await tapJump(p, 1);
+  assert.equal(state.done, true, '"Kraj treninga" ends the workout');
+  // a superset round with one exercise left moves by a set
+  await start(p, rounds, fixture({ entry: 2 }));
+  await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 3, 'bench round 3');
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'serija'], 'seriju od početka'), 'bench round 3');
+  await resume(p); await markDone(p);
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'serija'], 'odmor od početka'), 'the rest after round 3');
+  await resume(p);
+  await until(p, (s, st) => st.kind === 'manual' && st.set === 4, 'bench round 4');
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'serija'], ['Kraj', 'treninga'], 'seriju od početka'), 'bench round 4');
+  state = await tapJump(p, -1);
+  assert.deepEqual([step(state).g, step(state).set], [0, 3], '"Prethodna serija" lands on round 3');
+  await resume(p);
+  await quit(p);
+  return { pauseCaptions: true };
+}
+
 async function narrow(p, width) {
   await start(p, parts, withPrevious(fixture({ entry: 0 })));
   await p.locator('.workout-cinema[data-phase="section"]').waitFor();
@@ -633,7 +719,7 @@ async function run() {
   const results = [];
   try {
     browser = await launch();
-    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]]]) {
+    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout, pauseCaptions]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]]]) {
       const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
       // an iPhone's 34 px home-indicator area, which the test browser reports as 0
       if (safeArea) await context.route(/\.css(\?.*)?$/, async route => {

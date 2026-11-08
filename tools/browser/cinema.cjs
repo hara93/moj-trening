@@ -616,7 +616,8 @@ async function setRecovery(p,width) {
   assert.equal(await row(p,0,2).locator('[data-field="reps"]').inputValue(),'10');
   await closeJournal(p);
   await openCinemaControls(p);
-  await p.getByRole('button',{name:'Prethodna vježba',exact:true}).click();
+  // 1.22.1: the back arrow is named for where it lands, here the start of the set just recorded
+  await p.getByRole('button',{name:'Početak serije',exact:true}).click();
   const oldPosition = await player(p);
   assert.equal(oldPosition.i,first);
   assert.equal(oldPosition.doneSteps[first],1);

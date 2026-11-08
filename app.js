@@ -2773,19 +2773,48 @@ function cinemaPrepSelect(seconds){
   editor.querySelector('.cinema-prep-track').style.setProperty('--prep-percent',index*25+'%');
   editor.querySelectorAll('[data-a="cinemaPrepPick"]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.v)===seconds)));
 }
+// 1.22.1: the two words on Prethodna / Sljedeća say where ONE tap lands from the current step (jumpTarget); read
+// together they are the button's name. Mostly "Prethodna vježba" / "Sljedeća vježba"; going back inside the current
+// exercise is "Početak vježbe" (or "Početak serije" for the set's other side, and in a superset round); a round
+// with one exercise left moves by "serija"; the first exercise goes back to "Početak treninga"; the last one goes
+// on to "Kraj treninga".
+function cinemaJumpWords(dir){
+  const k = jumpTarget(dir), here = P.steps[P.i] || {};
+  if (k === -1) return ['Kraj', 'treninga'];
+  if (dir < 0 && k === 0) return ['Početak', 'treninga'];
+  // a landing on the countdown before a hold ('ready', 'go') is about the hold after it
+  const to = P.steps.slice(k).find(isWork) || {};
+  if (dir < 0 && k < P.i && slotOf(P.steps[k]) === slotOf(here)) return ['Početak', to.set === here.set ? 'serije' : 'vježbe'];
+  // before an exercise starts (the first preparation, the pause before it) its own first set is the next one
+  const started = here.kind !== 'prep' && !here.trans;
+  return [dir < 0 ? 'Prethodna' : 'Sljedeća', started && to.g === here.g ? 'serija' : 'vježba'];
+}
+function cinemaJumpLabel(dir){ return cinemaJumpWords(dir).join(' '); }
+// Ponovi starts the current step again (cinemaReplay): its caption names that step the way the screen does
+// (cinemaPrepHtml's "Promjena strane" / "Priprema", the rest's "Odmor"; a side of a set played as two steps is a side).
+function cinemaReplayCaption(step){
+  if (isWork(step)) return PlayerDose.splitSide(step) ? 'stranu od početka' : 'seriju od početka';
+  if (step.kind === 'rest' && !step.trans) return 'odmor od početka';
+  if (step.kind === 'switch' && !step.go && !step.nextEx) return 'promjenu strane od početka';
+  return 'pripremu od početka';
+}
 function cinemaPauseHtml(recorded){
-  const transport = (dir,label,caption,icon) => '<button type="button" class="cinema-pause-jump" data-a="cinemaPauseJump" data-d="'+dir+'" aria-label="'+label+'"><strong>'+caption+'</strong><small>'+icon+'Povuci</small></button>';
+  const transport = (dir,icon) => { const [word,caption]=cinemaJumpWords(dir);
+    return '<button type="button" class="cinema-pause-jump" data-a="cinemaPauseJump" data-d="'+dir+'" aria-label="'+word+' '+caption+'"><strong>'+word+'</strong><small>'+icon+caption+'</small></button>'; };
   return '<div class="cinema-pause-layer"><section class="cinema-pause-actions" aria-labelledby="cinema-pause-title">'+
-    '<h2 id="cinema-pause-title">Pauzirano</h2><div class="cinema-pause-row">'+transport(-1,'Prethodna vježba','Prethodna',I.prev)+
+    '<h2 id="cinema-pause-title">Pauzirano</h2><div class="cinema-pause-row">'+transport(-1,I.prev)+
     '<button type="button" class="cinema-pause-resume" data-a="cinemaResume"><span aria-hidden="true">'+I.play+'</span>Nastavi</button>'+
-    transport(1,'Sljedeća vježba','Sljedeća',I.next)+'</div>'+(recorded?'':'<button type="button" class="cinema-pause-replay" data-a="cinemaReplay">'+WorkoutView.icon('rotate-ccw')+'Ponovi<small>Dvostruki dodir</small></button>')+'</section></div>';
+    transport(1,I.next)+'</div>'+(recorded?'':cinemaReplayButton(cinemaReplayCaption(P.steps[P.i]||{})))+'</section></div>';
+}
+function cinemaReplayButton(caption){
+  return '<button type="button" class="cinema-pause-replay" data-a="cinemaReplay" aria-label="Ponovi '+caption+'">'+WorkoutView.icon('rotate-ccw')+'Ponovi<small>'+caption+'</small></button>';
 }
 function cinemaMenuControls(){
   const v=curView(), recorded=cinemaRecordedStep(), paused=P.dosePause?.wasPaused??P.paused;
   const icon=recorded?I.next:paused?I.play:isWork(v.st)?I.checkS:v.st.kind==='rest'?I.next:I.play;
-  return '<div class="cinema-menu-controls"><div class="cinema-controls"><button type="button" class="ib" data-a="jump" data-d="-1" aria-label="Prethodna vježba">'+I.prev+
+  return '<div class="cinema-menu-controls"><div class="cinema-controls"><button type="button" class="ib" data-a="jump" data-d="-1" aria-label="'+cinemaJumpLabel(-1)+'">'+I.prev+
     '</button><button type="button" class="btn cinema-primary" data-a="cinemaMain">'+icon+'<span>'+cinemaLabel(v,paused)+
-    '</span></button><button type="button" class="ib" data-a="jump" data-d="1" aria-label="Sljedeća vježba">'+I.next+'</button></div>'+
+    '</span></button><button type="button" class="ib" data-a="jump" data-d="1" aria-label="'+cinemaJumpLabel(1)+'">'+I.next+'</button></div>'+
     '<div class="cinema-secondary">'+(!recorded&&v.st.kind!=='work'?'<button type="button" class="txtbtn" data-a="cinemaPrep">'+
     WorkoutView.icon('timer')+'Vrijeme za pripremu</button>':'')+cinemaRedoButton('Ponovi seriju')+'</div></div>';
 }
@@ -4491,19 +4520,28 @@ function slotFirstWork(i){
 }
 // a hold you get ready for: skipping lands on its "Sljedeće" step, not inside the running hold
 function landAt(k){ while (k > 0 && (P.steps[k - 1].kind === 'ready' || P.steps[k - 1].go) && slotOf(P.steps[k - 1]) === slotOf(P.steps[k])) k--; return k; }
+// 1.22.1: where one tap on Prethodna / Sljedeća lands: a step index, or -1 for the end of the workout. jump() goes
+// there and the buttons' words (cinemaJumpWords) are read from it, so a caption cannot promise another place.
+// Back: to the start of the current slot when it began earlier, else to the start of the slot before (step 0, the
+// first preparation, when there is none).
+function jumpTarget(dir){
+  const i = P.i;
+  if (dir > 0) {
+    const sl = slotOf(P.steps[i]);
+    const k = P.steps.findIndex((s, x) => x > i && isWork(s) && slotOf(s) !== sl);
+    return k === -1 ? -1 : landAt(k);
+  }
+  const j = slotFirstWork(i);
+  if (isWork(P.steps[j]) && j < i) return j;
+  let k = j - 1; while (k >= 0 && !isWork(P.steps[k])) k--;
+  return k < 0 ? 0 : slotFirstWork(k);
+}
 function jump(dir, stayPaused=false){
   const i = P.i, st = P.steps[i]; if (!st) return;
   ensureAudio();
-  if (dir > 0) {
-    const sl = slotOf(st);
-    const k = P.steps.findIndex((s, x) => x > i && isWork(s) && slotOf(s) !== sl);
-    if (k === -1) { finish(); return; }
-    enterStep(landAt(k));
-  } else {
-    const j = slotFirstWork(i);
-    if (isWork(P.steps[j]) && j < i) enterStep(j);
-    else { let k = j - 1; while (k >= 0 && !isWork(P.steps[k])) k--; enterStep(k < 0 ? 0 : slotFirstWork(k)); }
-  }
+  const k = jumpTarget(dir);
+  if (k === -1) { finish(); return; }
+  enterStep(k);
   P.paused = stayPaused; P.sheetPause = false; savePlay(); render();
 }
 function tapRing(){
