@@ -163,13 +163,14 @@
   // Player journal: a collapsed row (thumb, name, set circles) and the open card.
   function journalRow(vm) {
     vm = vm || {};
-    return '<button type="button" class="cj-row" data-a="cinemaJournalGroup" data-j="' + esc(vm.index) + '" aria-expanded="false" aria-label="' + esc('Prikaži serije · ' + (vm.name || 'Vježba')) + '">' +
+    return '<button type="button" class="cj-row" data-a="cinemaJournalGroup" data-j="' + esc(vm.index) + '" aria-expanded="false" aria-label="' + esc('Prikaži serije · ' + (vm.name || 'Vježba') + (vm.swapped ? ' · zamijenjena' : '')) + '">' +
       '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' +
       '<span class="cj-sets" aria-hidden="true">' + html(vm.setsHtml) + '</span></span></button>';
   }
   function journalCard(vm) {
     vm = vm || {};
-    return '<article class="cj-card" data-index="' + esc(vm.index) + '"><header class="cj-head"><button type="button" class="cj-open" data-a="workoutExercise" data-j="' + esc(vm.index) + '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba')) + '">' +
+    return '<article class="cj-card" data-index="' + esc(vm.index) + '"><header class="cj-head"><button type="button" class="cj-open" data-a="workoutExercise" data-j="' + esc(vm.index) + '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba') + (vm.swapped ? ' · zamijenjena' : '')) + '"' +
+      (vm.describedBy ? ' aria-describedby="' + esc(vm.describedBy) + '"' : '') + '>' +
       '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' + html(vm.metaHtml) + '</span></button>' + html(vm.collapseHtml) + '</header>' +
       (vm.chipsHtml ? '<div class="cj-chips" role="group" aria-label="Mogućnosti vježbe">' + html(vm.chipsHtml) + '</div>' : '') + html(vm.menuHtml) + rows(vm.rowsHtml) + html(vm.footHtml) + '</article>';
   }

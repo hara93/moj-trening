@@ -7,7 +7,7 @@ function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a
 test('the journal target line has no dangling separator when there is no target',()=>{
   // 1.22.0: the player journal's open card has a meta line "Proc. 1RM … · Cilj RIR n"; the separator joins two parts
   // only when both exist, and the rest is no longer glued to it
-  const line=section('const undo=cinemaJournalSwapped(j)','const chips=');
+  const line=section('const undo=swapped,','const chips=');   // 1.22.0: the swapped flag is read once per card
   assert.doesNotMatch(line,/item\.rest/,'no rest glued to the target');
   assert.match(line,/\(e1&&target\?' · ':''\)/);
   assert.match(read('workout.css'),/\.workout-detail-target\{display:flex;[^}]*justify-content:space-between/);

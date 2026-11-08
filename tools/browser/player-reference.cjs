@@ -50,6 +50,44 @@ function fixture({ guideSeen = true, entry } = {}) {
   };
   return data;
 }
+// an earlier back squat session, for the journal card's "Prethodno" line
+function withPrevious(data) {
+  data.log = [{ historyId: 'player-reference-previous', kind: 'protocol', refId: parts, name: 'Referentni trening', at: Date.parse('2026-11-02T18:00:00+01:00'), secs: 2400, srpe: 6,
+    items: [{ exId: 'back-squat', measure: 'sets', sets: 4, reps: 5, kg: 105, rest: 60, sides: false, done: true, setsDone: 4, repsList: [5, 5, 5, 5], kgList: [105, 105, 105, 105], rirList: [2, 2, 2, 1], sideCounts: [1, 1, 1, 1], setNumbers: [1, 2, 3, 4] }] }];
+  return data;
+}
+// Keyboard focus: Tab until the focus lands inside scope (or on the element matching it); returns the focused
+// element's ring colour and whether it is :focus-visible.
+async function tabTo(p, scope, pseudo) {
+  for (let guard = 0; guard < 12; guard++) {
+    await p.keyboard.press('Tab');
+    const hit = await p.evaluate(({ scope, pseudo }) => {
+      const el = document.activeElement;
+      if (!el || !el.closest(scope)) return null;
+      return { a: el.dataset.a || el.className, ring: getComputedStyle(el, pseudo || null).outlineColor, visible: el.matches(':focus-visible') };
+    }, { scope, pseudo });
+    if (hit) return hit;
+  }
+  assert.fail('Tab never reached ' + scope);
+}
+// Keyboard focus on one element (after a key press, so the browser treats it as keyboard focus): its ring colour
+// (of pseudo when given) and whether it is :focus-visible. WebKit's Tab skips buttons unless a setting is on.
+async function ringOf(p, selector, pseudo) {
+  await p.keyboard.press('Tab');
+  return p.locator(selector).first().evaluate((node, pseudo) => { node.focus(); return { visible: node.matches(':focus-visible'), ring: getComputedStyle(node, pseudo || null).outlineColor }; }, pseudo || null);
+}
+// every text node inside root at least 13 px
+async function smallText(p, root) {
+  return p.locator(root).evaluate(node => {
+    const small = [], walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) {
+      const el = walk.currentNode.parentElement;
+      if (!walk.currentNode.textContent.trim() || !el || !el.getClientRects().length || getComputedStyle(el).visibility === 'hidden') continue;
+      if (parseFloat(getComputedStyle(el).fontSize) < 13) small.push(walk.currentNode.textContent.trim().slice(0, 30) + ' ' + getComputedStyle(el).fontSize);
+    }
+    return small;
+  });
+}
 
 async function advance(p, seconds) {
   await p.clock.setFixedTime(new Date(await p.evaluate(() => Date.now()) + seconds * 1000));
@@ -111,6 +149,8 @@ async function dashes(p) {
 function forward(path, label) {
   for (let k = 1; k < path.length; k++)
     assert.ok(path[k].current + path[k].at >= path[k - 1].current + path[k - 1].at - 1e-6, label + ': the dot moved back at ' + k + ' ' + JSON.stringify(path.slice(Math.max(0, k - 2), k + 1)));
+  // the progress bar announces what it shows: the dot's place along the dashes, not the step count
+  for (const d of path) assert.ok(Math.abs(d.value - (d.current + d.at) / d.n * 100) <= .51, label + ': aria-valuenow follows the dot ' + JSON.stringify(d));
 }
 
 async function firstStartWithParts(p, width) {
@@ -131,6 +171,7 @@ async function firstStartWithParts(p, width) {
   const overview = p.locator('.cinema-section');
   assert.equal(await overview.locator('#cinema-section-title').textContent(), 'Snaga');
   assert.deepEqual(await overview.locator('.cinema-section-chips span').allTextContents(), ['Šipka']);
+  assert.equal(await overview.locator('.cinema-section-chips').getAttribute('role'), 'group', 'the "Oprema" label sits on a group');
   assert.equal(await overview.locator('.cinema-section-items li').count(), 1);
   assert.equal(await overview.locator('.cinema-section-items li.is-current').count(), 1);
   assert.match(await overview.locator('.cinema-section-items li strong').textContent(), /^2× \S/);
@@ -207,6 +248,7 @@ async function firstStartWithParts(p, width) {
   // the journal: the current exercise is an open card, the others collapsed rows of set circles
   await A(p, 'cinemaJournal').first().click();
   await journal(p).waitFor();
+  assert.equal(await p.evaluate(() => document.activeElement?.id), 'sheet-h', 'the journal title takes focus');
   const rows = journal(p).locator('.cj-row');
   assert.equal(await rows.count(), 3, 'three collapsed exercises');
   assert.deepEqual(await rows.evaluateAll(list => list.map(node => node.querySelectorAll('.cj-sets>span').length)), [2, 2, 2], 'one circle per set');
@@ -214,6 +256,9 @@ async function firstStartWithParts(p, width) {
   assert.equal(await journal(p).locator('.cj-card').count(), 1, 'one open card');
   assert.equal(await card.locator('.workout-set-row').count(), 2);
   assert.match(await card.innerText(), /Cilj RIR 2/);
+  // a screen reader hears the card's lines too: they describe its open button (whose label is the name)
+  const described = await card.locator('.cj-open').evaluate(node => (node.getAttribute('aria-describedby') || '').split(' ').filter(Boolean).map(id => document.getElementById(id)?.textContent || '?').join(' | '));
+  assert.match(described, /Još nema prethodne izvedbe\. \| .*Cilj RIR 2/);
   assert.equal(await card.locator('[data-a="cinemaGoSet"]').count(), 0, 'no "Prijeđi na vježbu" on the current exercise');
   // the totals: "8 pon. · 1 040 kg" with a narrow no-break space, never "kg × pon."
   const totals = await journal(p).locator('.cinema-journal-footer small').textContent();
@@ -222,14 +267,23 @@ async function firstStartWithParts(p, width) {
   assert.equal(await journal(p).locator('.cj-plan').getAttribute('aria-label'), 'Dijelovi treninga');
   await noOverflow(p, 'journal ' + width);
   await shot(p, 'journal-' + width);
-  // the equipment menu after a finished set: every choice disabled, the reason shown
-  await card.locator('[data-a="cinemaEquipment"][data-j="0"]').first().click();
+  // the equipment menu after a finished set: every choice disabled, the reason shown. Opened by keyboard, focus
+  // goes to its first choice; Escape closes only the menu and gives focus back to the chip.
+  const chip0 = card.locator('[data-a="cinemaEquipment"][data-j="0"]').first();
+  await chip0.focus(); await p.keyboard.press('Enter');
   const locked = journal(p).locator('#cj-menu-0');
   await locked.waitFor();
+  assert.equal(await p.evaluate(() => document.activeElement === document.querySelector('#cj-menu-0 button')), true, 'focus on the menu\'s first choice');
   assert.ok((await locked.locator('[data-a="cinemaEquipmentPick"]').evaluateAll(list => list.map(node => node.disabled))).every(Boolean));
   assert.match(await locked.innerText(), /Oprema se mijenja prije prve serije\./);
   await p.keyboard.press('Escape'); await locked.waitFor({ state: 'detached' });
   assert.equal(await journal(p).count(), 1, 'Escape closes only the menu');
+  assert.equal(await chip0.evaluate(node => node === document.activeElement), true, 'Escape gives focus back to the chip');
+  // the menu does not survive closing the journal
+  await chip0.click(); await locked.waitFor();
+  await A(p, 'cinemaJournalClose').first().click(); await journal(p).waitFor({ state: 'detached' });
+  await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
+  assert.equal(await journal(p).locator('.cj-menu').count(), 0, 'the journal reopens with its equipment menu shut');
   // another exercise: its card ends with "Prijeđi na vježbu"; its menu offers only what the swap candidates use
   await journal(p).locator('[data-a="cinemaJournalGroup"][data-j="1"]').first().click();
   const other = journal(p).locator('.cj-card[data-index="1"]');
@@ -280,6 +334,12 @@ async function firstStartWithParts(p, width) {
   assert.equal(await swap(p).count(), 0);
   assert.equal(await journal(p).locator('.cj-card[data-index="1"]').count(), 1, 'with the swapped exercise open');
   assert.equal((await player(p)).items[1].exId, 'trx-single-leg-squat');
+  // a screen reader hears that the exercise was swapped: in the card's name and the collapsed row's (the badge is decoration)
+  assert.match(await journal(p).locator('.cj-card[data-index="1"] .cj-open').getAttribute('aria-label'), / · zamijenjena$/);
+  assert.equal(await journal(p).locator('.cj-card[data-index="1"] .cj-badge').getAttribute('aria-hidden'), 'true');
+  await journal(p).locator('.cj-card[data-index="1"] .cj-collapse').click();
+  assert.match(await journal(p).locator('.cj-row[data-j="1"]').getAttribute('aria-label'), /^Prikaži serije · .+ · zamijenjena$/);
+  await journal(p).locator('.cj-row[data-j="1"]').click();
   await journal(p).locator('[data-a="workoutUndoSwap"][data-j="1"]').click();
   await p.waitForTimeout(300);
   assert.equal(await p.evaluate(() => document.querySelector('.sheet')?.dataset.kind), 'cinemaJournal', 'an undo started in the journal returns to the journal');
@@ -372,9 +432,9 @@ async function plainWorkout(p, width) {
   return { noOverviewWithoutParts: true, guideFromMenu: true, lastSetMode: true, endMode: true, goToExercise: true };
 }
 
-// 375 px: the same screens without horizontal overflow
+// 375 px, and 390 px with a 34 px safe area: the same screens without horizontal overflow
 async function narrow(p, width) {
-  await start(p, parts, fixture({ entry: 0 }));
+  await start(p, parts, withPrevious(fixture({ entry: 0 })));
   await p.locator('.workout-cinema[data-phase="section"]').waitFor();
   await noOverflow(p, 'part overview ' + width);
   await until(p, (s, st) => st.kind === 'manual', 'set 1');
@@ -385,6 +445,8 @@ async function narrow(p, width) {
   await noOverflow(p, 'rest phase 2 ' + width);
   await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
   await noOverflow(p, 'journal ' + width);
+  // the "Prethodno" line keeps its last number and unit together, so "pon." never wraps onto a line of its own
+  assert.equal(await journal(p).locator('.cj-card[data-index="0"] .cj-meta').first().textContent(), 'Prethodno 105 kg · 5 / 5 / 5 / 5\u00a0pon.');
   await shot(p, 'journal-' + width);
   await journal(p).locator('[data-a="cinemaJournalGroup"][data-j="1"]').first().click();
   await journal(p).locator('[data-a="workoutSwap"][data-j="1"]').first().click();
