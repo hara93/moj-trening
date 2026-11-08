@@ -4598,7 +4598,7 @@ function progCandidates(){
 }
 const progN = () => S.settings.progN === 3 ? 3 : 2;
 // answers: true (or not touched) = every set done, false = failed; 'partial' and 'skip' leave the counters as they are
-const answerOf = j => { const a = P.answers ? P.answers[j] : undefined; return a === false ? 'fail' : a == null || a === true ? 'ok' : 'none'; };
+const answerOf = j => { const a = P.answers ? P.answers[j] : undefined; return a === false ? 'fail' : a == null || a === true ? (painHoldsAt(j) ? 'pain' : 'ok') : 'none'; };
 // counts sessions with every set done (ok) or not (fail); doses change only when you accept a suggestion
 function applyProgress(){
   const cands = progCandidates(); if (!cands.length) return [];
@@ -4616,11 +4616,19 @@ function applyProgress(){
 function doneMsg(c){
   const N = progN(), it = c.it, a = answerOf(c.j);
   if (a === 'none') return c.prog ? '' : 'Ne računa se za napredak';
+  if (a === 'pain') return c.prog ? '' : 'Bol ujutro: ostaje ' + doseBase(it) + ', bez povećanja';
   if (c.prog) return a === 'fail' ? 'Zabilježeno' : '';
   if (a === 'fail') return it.prev && (it.fail || 0) + 1 >= 2 ? 'Dvaput zaredom: na stranici Napredak možeš vratiti ' + doseBase(it.prev) : 'Zabilježeno: ostaje ' + doseBase(it) + ', probaj opet';
   const ok = (it.ok || 0) + 1;
   if (ok >= N) return c.next.item ? 'Spremno: prijedlog ' + c.next.text + ' čeka te na stranici Napredak' : c.next.text;
   return ok + '/' + N + ' · još ' + (N - ok) + ' ' + plural(N - ok, 'ovakav trening', 'ovakva treninga', 'ovakvih treninga');
+}
+// morning pain 1–5 holds progression for the painful area on the day of the session (TodayModel.painHolds)
+function painHoldsAt(j){
+  const checks = S.settings.morningChecks;
+  if (!checks || typeof TodayModel === 'undefined') return false;
+  const it = P && P.items && P.items[j], check = checks[dateKey(P.startedAt || Date.now())];
+  return !!it && !!check && TodayModel.painHolds(check, S.ex[it.exId], it.exId);
 }
 /* ---------- the Progress tab ---------- */
 function progSuggestions(){
@@ -6581,7 +6589,8 @@ const A = {
     const protocol=S.pr[action.id];
     if (!protocol || !protocol.items?.length) return;
     const items=protocol.program || !rec.items?.length ? protocol.items : rec.items;
-    if (items.length!==protocol.items.length || items.some((it,i)=>it.exId!==protocol.items[i].exId || !S.ex[it.exId])) {
+    // A pain-adjusted dose may put a gentler exercise into the same slot (painSwapOf names the original).
+    if (items.length!==protocol.items.length || items.some((it,i)=>(it.exId!==protocol.items[i].exId && it.painSwapOf!==protocol.items[i].exId) || !S.ex[it.exId])) {
       render();toast('Sadržaj protokola se promijenio. Ponovno otvori prijedlog.');return;
     }
     startPlayer({mode:'ex',title:protocol.name,items,originalItems:protocol.items,ref:{kind:'protocol',id:protocol.id}});

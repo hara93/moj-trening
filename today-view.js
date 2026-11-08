@@ -11,6 +11,9 @@
   const energy = ['Vrlo malo','Malo','Uobičajeno','Dosta','Puno'];
   const legs = ['Vrlo lagane','Lagane','Uobičajene','Teške','Vrlo teške'];
   const specs = [['energy','Energija',1,5],['legs','Osjećaj u nogama',1,5],['pain','Bol',0,10]];
+  // Where it hurts (TodayModel.painAreas uses the same keys).
+  const areas = [['hip','Kuk/prepone'],['hamstring','Stražnja loža'],['knee','Koljeno'],['other','Ostalo']];
+  const areaName = key => (areas.find(a=>a[0]===key) || [,''])[1];
   const shortDay = day => calendar.valid(day) ? new Date(calendar.time(day)).toLocaleDateString('hr-HR',{day:'numeric',month:'short'}) : '';
   function cleanChecks(raw) {
     const out = {};
@@ -21,6 +24,8 @@
       for (const [key,,min,max] of specs) {
         if (Number.isInteger(value[key]) && value[key]>=min && value[key]<=max) entry[key]=value[key];
       }
+      if (entry.pain>0 && areas.some(a=>a[0]===value.painArea)) entry.painArea=value.painArea;
+      if (value.newPain===true) entry.newPain=true;
       if (Object.keys(entry).length>1) out[date]=entry;
     }
     return out;
@@ -34,12 +39,17 @@
       if (!Number.isInteger(n) || n<min || n>max) return {error:'Provjeri polje '+label.toLocaleLowerCase('hr-HR')+'.'};
       entry[key]=n;
     }
+    const area=form.elements.namedItem('painArea'), fresh=form.elements.namedItem('newPain');
+    const where=area && (area.value ?? Array.from(area).find(x=>x.checked)?.value);
+    if (where && entry.pain>0 && areas.some(a=>a[0]===where)) entry.painArea=where;
+    if (fresh?.checked) entry.newPain=true;
+    if (entry.newPain && !(entry.pain>0)) return {error:'Za novu bol odaberi i jačinu boli.'};
     return Object.keys(entry).length>1 ? {entry} : {error:'Za spremanje odaberi barem jedan odgovor.'};
   }
   function description(entry) {
     if (!entry) return 'Još nema jutarnje provjere.';
     return [entry.energy != null ? 'Energija '+entry.energy+'/5' : '',entry.legs != null ? 'Noge '+entry.legs+'/5' : '',
-      entry.pain != null ? (entry.pain===0 ? 'Bez boli' : 'Bol '+entry.pain+'/10') : ''].filter(Boolean).join(' · ');
+      entry.pain != null ? (entry.pain===0 ? 'Bez boli' : 'Bol '+entry.pain+'/10'+(entry.painArea?' '+areaName(entry.painArea).toLocaleLowerCase('hr-HR'):'')+(entry.newPain?' (nova)':'')) : ''].filter(Boolean).join(' · ');
   }
   function label(key,n) {
     if (key==='energy') return n+' · '+energy[n-1];
@@ -57,7 +67,9 @@
         const options=[];
         for (let i=min;i<=max;i++) options.push('<option value="'+i+'"'+(original?.[key]===i?' selected':'')+'>'+esc(label(key,i))+'</option>');
         return '<label>'+esc(title)+'<select name="'+key+'"><option value="">Bez unosa</option>'+options.join('')+'</select></label>';
-      }).join('')+'<p class="dy-error" id="morning-error" role="alert"></p><button type="submit" class="dy-primary" data-a="morningSave">Spremi provjeru</button>'+
+      }).join('')+'<fieldset class="dy-chips"><legend>Gdje boli?</legend>'+areas.map(([key,name])=>
+        '<label><input type="radio" name="painArea" value="'+key+'"'+(original?.painArea===key?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+
+        '<label><input type="checkbox" name="newPain"'+(original?.newPain?' checked':'')+'><span>Nova bol</span></label></fieldset>'+'<p class="dy-error" id="morning-error" role="alert"></p><button type="submit" class="dy-primary" data-a="morningSave">Spremi provjeru</button>'+
       (original?'<button type="button" class="dy-delete" data-a="morningDeleteAsk">Izbriši provjeru</button><div id="morning-confirm" hidden><p>Izbrisati provjeru za '+shortDay(date)+'?</p><button type="button" class="dy-delete" data-a="morningDeleteConfirm">Potvrdi brisanje</button> <button type="button" class="dy-secondary" data-a="morningDeleteCancel">Odustani</button></div>':'')+'</form></div>';
   }
   function card(vm) {

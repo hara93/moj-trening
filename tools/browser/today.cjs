@@ -135,7 +135,11 @@ async function recommendationLayout(p,{warmup=false}={}){
 }
 async function morning(p,values){
   await action(p,'morningOpen').click(); const form=p.locator('#morning-form');await form.waitFor();
-  for(const [k,value] of Object.entries(values))await form.locator('[name="'+k+'"]').selectOption(String(value));
+  for(const [k,value] of Object.entries(values)){
+    if(k==='painArea'||k==='newPain'){const chip=form.locator(k==='newPain'?'[name="newPain"]':'[name="painArea"][value="'+value+'"]');
+      if(!await chip.isChecked())await chip.locator('xpath=..').click();assert.equal(await chip.isChecked(),true,k+' is one tap');continue;}
+    await form.locator('[name="'+k+'"]').selectOption(String(value));
+  }
   return form;
 }
 async function morningFlow(p){
@@ -163,10 +167,17 @@ async function morningFlow(p){
   await morning(p,{energy:2,legs:5,pain:0});await action(p,'morningSave').click();
   const low=await advise(p);assert.notEqual(low.kind,ready.kind,'low energy/heavy legs changes advice');
   await revealReasons(p);assert.match((await advise(p)).text,/nog|energ|lakš|oporav|umor/i);
-  await morning(p,{pain:4});await action(p,'morningSave').click();
-  const pain=await advise(p);assert.notEqual(pain.kind,low.kind);assert.match(pain.text,/bol|nelagod|stručn/i);
-  assert.match(await p.locator('.dy-instruction').innerText(),/Preskoči dodatni trening/);
-  assert.equal(await action(p,'todayAct').count(),0);
+  // Pain levels: 1-2 trains, 3-5 a lighter version, 6+ or new pain stops for today.
+  await morning(p,{energy:4,legs:2,pain:1,painArea:'hip'});await action(p,'morningSave').click();
+  const mild=await advise(p);assert.notEqual(mild.kind,'caution');assert.equal(await action(p,'todayAct').count(),1,'pain 1 still trains');
+  await revealReasons(p);assert.match((await advise(p)).text,/Bol 1\/10 \(kuk i prepone\): treniraj normalno, ali bez povećanja težine/);
+  await morning(p,{pain:4,painArea:'hip'});await action(p,'morningSave').click();
+  const lighter=await advise(p);assert.equal(lighter.kind,'reduce');assert.match(lighter.text,/Lakša verzija za kuk i prepone/);
+  assert.equal(await action(p,'todayAct').count(),1,'pain 4 offers a lighter session');
+  await morning(p,{pain:7});await action(p,'morningSave').click();
+  const pain=await advise(p);assert.equal(pain.kind,'caution');assert.match(pain.text,/bol/i);
+  assert.match(await p.locator('.dy-instruction').innerText(),/^Bol je jaka ili nova/);
+  assert.doesNotMatch(await p.locator('#today-recommendation').innerText(),/trener/i,'he trains alone');
   assert.deepEqual((await data(p)).log.map(x=>x.historyId),['strg-seed1']);
   record('morning',{first:first.kind,ready:ready.kind,low:low.kind,pain:pain.kind,persists:true,storageRefusalRetainsInputs:true});
 }

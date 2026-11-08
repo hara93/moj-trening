@@ -118,12 +118,13 @@ test('a club prescription is protected and cannot be changed by optional gym can
   assert.deepEqual(result.items, []);
 });
 
-test('pain is explicit, not inferred from missing data; new pain suppresses optional load', () => {
-  for (const status of [{ pain: 1 }, { pain: 6 }, { pain: null, newPain: true }]) {
+test('pain is explicit, not inferred from missing data; strong or new pain stops optional load', () => {
+  for (const status of [{ pain: 6 }, { pain: 9, painArea: 'knee' }, { pain: null, newPain: true }]) {
     const result = Today.suggest(input({ checkin: { ...checkin, ...status } }));
     assert.equal(result.kind, 'caution');
     assert.equal(result.action.type, 'none');
     assert.deepEqual(result.items, []);
+    assert.doesNotMatch(JSON.stringify(result), /trener/i);
   }
   const unknown = Today.suggest(input({ checkin: { date, energy: 4, legs: 1, pain: null } }));
   assert.equal(unknown.kind, 'planned');
@@ -438,4 +439,64 @@ test('timed zero reserve is distinct from unknown reserve and keeps the stored t
   assert.equal(result.observed[0].rows[2].sir, 0);
   assert.equal(result.observed[0].rows[2].rir, null);
   assert.equal(result.items[0].sec, 30);
+});
+
+const hipExercises = {
+  ...exercises,
+  'nordic-curl': { name: 'Nordic', cat: 'Snaga', equip: ['Bez opreme'], muscles: { prime: ['back_hamstrings'] }, zones: ['Stražnja loža'] },
+  'kopenhagen-duga': { name: 'Copenhagen duga', cat: 'Rehab', measure: 'time', equip: ['Bez opreme'], muscles: { prime: ['front_adductors'] }, zones: ['Aduktori'] },
+  'kopenhagen-kratka': { name: 'Copenhagen kratka', cat: 'Rehab', measure: 'time', sets: 3, sec: 20, sides: true, equip: ['Bez opreme'], muscles: { prime: ['front_adductors'] } },
+  most: { name: 'Glute bridge', cat: 'Rehab', measure: 'sets', sets: 3, reps: 12, equip: ['Bez opreme'], muscles: { prime: ['back_glutes'] } },
+  mob: { name: 'Mobilnost kuka', cat: 'Mobilnost', equip: ['Bez opreme'] }
+};
+const hipPlan = () => plan({ items: [dose('press'), dose('squat', { sets: 4, kgList: [60, 60, 60, 60] }),
+  dose('nordic-curl', { kg: 0, sets: 3, reps: 5 }), dose('kopenhagen-duga', { measure: 'time', sets: 3, sec: 30, kg: 0, sides: true })] });
+const painInput = status => input({ exercises: clone(hipExercises), planned: [hipPlan()], checkin: { ...checkin, ...status },
+  candidates: [template({ id: 'mob', name: 'Mobilnost', items: [dose('mob', { kg: 0 })] })] });
+
+test('pain 1-2 trains normally and holds progression only for the painful area', () => {
+  const result = Today.suggest(painInput({ pain: 2, painArea: 'hip' }));
+  assert.equal(result.kind, 'planned');
+  assert.deepEqual(result.items, hipPlan().items, 'the dose itself is unchanged');
+  assert.equal(result.painHold, 'hip');
+  assert.match(result.reasons.find(r => r.code === 'painMild').text, /^Bol 2\/10 \(kuk i prepone\): treniraj normalno, ali bez povećanja težine za kuk i prepone\.$/);
+  const known = { date, pain: 2, painArea: 'hip' };
+  assert.equal(Today.painHolds(known, hipExercises['kopenhagen-duga'], 'kopenhagen-duga'), true);
+  assert.equal(Today.painHolds(known, hipExercises.press, 'press'), false, 'the bench press may still progress');
+  assert.equal(Today.painHolds({ date, pain: 1 }, hipExercises.press, 'press'), true, 'an unknown area holds everything');
+  assert.equal(Today.painHolds({ date, pain: 0 }, hipExercises.squat, 'squat'), false);
+  assert.equal(Today.painHolds({ date, pain: 6 }, hipExercises.squat, 'squat'), false, 'stop days are not progression days');
+  assert.equal(Today.suggest(painInput({ pain: 1 })).missing.some(text => /Označi gdje boli/.test(text)), true);
+});
+
+test('pain 3-5 at the hip gives a lighter version in the same slots: short-lever Copenhagen, no Nordic', () => {
+  const result = Today.suggest(painInput({ pain: 4, painArea: 'hip' }));
+  assert.equal(result.kind, 'reduce');
+  assert.deepEqual(result.action, { type: 'protocol', id: 'p' });
+  assert.deepEqual(result.items.map(item => item.exId), ['press', 'squat', 'most', 'kopenhagen-kratka']);
+  assert.equal(result.items[2].painSwapOf, 'nordic-curl');
+  assert.equal(result.items[3].painSwapOf, 'kopenhagen-duga');
+  assert.equal(result.items[3].measure, 'time');
+  assert.equal(result.items[0].sets, 3, 'upper body keeps its dose');
+  assert.equal(result.items[1].sets, 4, 'the squat is not a hip-area exercise here');
+  assert.match(result.summary, /Lakša verzija za kuk i prepone/);
+  const hamstring = Today.suggest(painInput({ pain: 3, painArea: 'hamstring' }));
+  assert.equal(hamstring.items[2].exId, 'most', 'no Nordic with hamstring pain');
+  assert.equal(hamstring.items[3].exId, 'kopenhagen-duga');
+  const knee = Today.suggest(painInput({ pain: 5, painArea: 'knee' }));
+  assert.deepEqual(knee.items[1].kgList, [60, 60, 60]);
+  assert.equal(knee.items[1].sets, 3, 'knee pain: one squat set fewer');
+  assert.equal(knee.items[2].exId, 'nordic-curl');
+});
+
+test('pain 6+ or new pain stops today with mobility, but never after the session is recorded', () => {
+  const stop = Today.suggest(painInput({ pain: 7, painArea: 'hip' }));
+  assert.equal(stop.kind, 'caution');
+  assert.equal(stop.title, 'Danas odmor ili lagana mobilnost');
+  assert.deepEqual(stop.action, { type: 'protocol', id: 'mob' });
+  assert.match(stop.reasons[0].text, /bol 7\/10 \(kuk i prepone\)/);
+  const trained = Today.suggest({ ...painInput({ pain: 7, painArea: 'hip' }),
+    logs: [log({ at: now - 3600000, historyId: 'today' })] });
+  assert.equal(trained.kind, 'rest');
+  assert.equal(trained.title, 'Današnji trening je zabilježen');
 });

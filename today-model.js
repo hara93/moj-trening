@@ -18,6 +18,14 @@
   var LOWER_ZONES = ['Kvadriceps', 'Gluteus', 'Gluteus medius', 'Stražnja loža',
     'Kuk', 'Aduktori', 'Lisni mišić'];
   var EASY_CATEGORIES = ['Mobilnost', 'Aktivacija'];
+  // Morning pain location (the chip in the morning check) and the work it covers.
+  var PAIN_AREAS = { hip: 'kuk i prepone', hamstring: 'stražnja loža', knee: 'koljeno', other: 'ostalo' };
+  var PAIN_REGIONS = { hip: ['front_adductors', 'front_hip_flexors', 'hip_joints'], hamstring: ['back_hamstrings'],
+    knee: ['front_quadriceps', 'front_knees'] };
+  var PAIN_ZONES = { hip: ['Kuk', 'Aduktori', 'Fleksori kuka'], hamstring: ['Stražnja loža'], knee: ['Koljeno', 'Kvadriceps'] };
+  // A lighter variant at pain 3-5: the same slot gets a gentler exercise.
+  var PAIN_SWAPS = { 'nordic-curl': { areas: ['hip', 'hamstring', 'other'], to: 'most' },
+    'kopenhagen-duga': { areas: ['hip', 'other'], to: 'kopenhagen-kratka' } };
   var has = function (o, key) { return Object.prototype.hasOwnProperty.call(o, key); };
   var plain = function (o) { return !!o && typeof o === 'object' && !Array.isArray(o); };
   var finite = function (n) { return typeof n === 'number' && Number.isFinite(n); };
@@ -109,6 +117,55 @@
       between: ordered.some(function (date) { return date >= monday && date < today; }) &&
         ordered.some(function (date) { return date > today && date < end; }) };
   }
+  function painLevel(checkin) {
+    if (!checkin) return 0;
+    if (checkin.newPain === true || checkin.pain >= 6) return 3;
+    return checkin.pain >= 3 ? 2 : checkin.pain >= 1 ? 1 : 0;
+  }
+  // The pain areas an exercise loads: its primary muscles and listed zones.
+  function painAreasOf(exercise, id) {
+    if (!plain(exercise)) return [];
+    var prime = plain(exercise.muscles) && Array.isArray(exercise.muscles.prime) ? exercise.muscles.prime : [];
+    var zones = Array.isArray(exercise.zones) ? exercise.zones : [];
+    return Object.keys(PAIN_REGIONS).filter(function (area) {
+      return (area === 'hamstring' && id === 'nordic-curl') ||
+        prime.some(function (region) { return PAIN_REGIONS[area].includes(region); }) ||
+        zones.some(function (zone) { return PAIN_ZONES[area].includes(zone); });
+    });
+  }
+  // Pain 1-5 holds progression for the painful area; an unknown area holds all of it.
+  function painHolds(checkin, exercise, id) {
+    var level = painLevel(checkin);
+    if (level < 1 || level > 2) return false;
+    var area = checkin.painArea && checkin.painArea !== 'other' ? checkin.painArea : null;
+    return !area || painAreasOf(exercise, id).includes(area);
+  }
+  // Pain 3-5: gentler variants in the same slots and one set fewer for the painful area.
+  function painLighter(items, area, exercises) {
+    var changes = [];
+    var result = items.map(function (original) {
+      var item = copy(original), exercise = exerciseFor(exercises, item.exId);
+      var swap = PAIN_SWAPS[item.exId], target = swap && exerciseFor(exercises, swap.to);
+      if (swap && target && swap.areas.includes(area)) {
+        var swapped = { exId: swap.to, measure: target.measure === 'time' ? 'time' : 'sets',
+          sets: Math.max(1, Math.min(integer(item.sets, 1, 20) ? item.sets : 2, integer(target.sets, 1, 20) ? target.sets : 2)),
+          reps: integer(target.reps, 1, 100) ? target.reps : 10, sec: integer(target.sec, 1, 600) ? target.sec : 20,
+          kg: 0, sides: target.sides === true, rest: finite(item.rest) ? item.rest : 60, painSwapOf: item.exId };
+        ['section', 'group', 'targetRir', 'targetSir'].forEach(function (key) { if (has(item, key)) swapped[key] = item[key]; });
+        changes.push(text(exercise && exercise.name, item.exId) + ' → ' + text(target.name, swap.to));
+        return swapped;
+      }
+      var loads = area === 'other' || painAreasOf(exercise, item.exId).includes(area);
+      if (!loads || item.warmup === true || !integer(item.sets, 2, 1000)) return item;
+      item.sets -= 1;
+      ['reps', 'kg', 'sec'].forEach(function (key) {
+        if (Array.isArray(item[key + 'List'])) item[key + 'List'] = item[key + 'List'].slice(0, item.sets);
+      });
+      changes.push(text(exercise && exercise.name, item.exId) + ' ' + (item.sets + 1) + ' → ' + item.sets + ' ' + (item.sets === 1 ? 'serija' : item.sets < 5 ? 'serije' : 'serija'));
+      return item;
+    });
+    return { items: result, changes: changes };
+  }
   function exerciseFor(exercises, id) {
     return typeof id === 'string' && has(exercises, id) && plain(exercises[id]) ? exercises[id] : null;
   }
@@ -163,6 +220,7 @@
     if (integer(value.legs, 1, 5)) checkin.legs = value.legs;
     if (within(value.pain, 0, 10)) checkin.pain = value.pain;
     if (value.newPain === true) checkin.newPain = true;
+    if (typeof value.painArea === 'string' && has(PAIN_AREAS, value.painArea)) checkin.painArea = value.painArea;
     return checkin;
   }
   function historyDose(log, plan) {
@@ -328,13 +386,28 @@
       return has(checkin, key);
     }) ? 'supported' : 'limited';
 
-    if (checkin && (checkin.newPain === true || checkin.pain > 0)) {
-      reason('painGuard', 'Bez mjesta i uzroka boli nije moguće odabrati sigurno dodatno opterećenje.');
+    var pain = painLevel(checkin), painArea = pain && checkin.painArea ? checkin.painArea : 'other';
+    var painPlace = pain ? (checkin.painArea ? ' (' + PAIN_AREAS[checkin.painArea] + ')' : '') : '';
+    var trainedToday = logs.some(function (log) { return dateKey(log.at) === today && actualWork(log); });
+    if (pain && !checkin.painArea) result.missing.push('Označi gdje boli, pa ću smanjiti samo to područje.');
+    // Strong or new pain stops today's training; once a session is recorded the done state wins.
+    if (pain === 3 && !trainedToday) {
+      reason('painStop', checkin.newPain ? 'Upisao si novu bol' + painPlace + '.' : 'Upisao si bol ' + checkin.pain + '/10' + painPlace + '.');
       todayPlans.forEach(planEvidence);
-      return finish('caution', 'Danas bez dodatnog opterećenja koje boli',
-        checkin.newPain || checkin.pain >= 4
-          ? 'Preskoči dodatni trening. Novu ili jaču bol prvo raspravi s trenerom ili fizioterapeutom; klupski plan nije promijenjen.'
-          : 'Ne povećavaj dozu i preskoči pokret koji izaziva bol. Prije dodatnog treninga razjasni s trenerom što možeš odraditi bez boli.');
+      var gentle = (Array.isArray(input.candidates) ? input.candidates : []).filter(function (candidate) {
+        return plain(candidate) && !candidate.frozen && !candidate.external && available(candidate, input, exercises) &&
+          easyPlan(candidate, exercises) && workItems(candidate).every(function (item) {
+            return exerciseFor(exercises, item.exId).cat === 'Mobilnost';
+          });
+      }).sort(function (a, b) { return text(a.id).localeCompare(text(b.id)); })[0];
+      if (gentle) {
+        planEvidence(gentle);
+        result.items = copy(gentle.items);
+      }
+      return finish('caution', gentle ? 'Danas odmor ili lagana mobilnost' : 'Danas odmor',
+        'Bol je jaka ili nova, zato danas bez snage, skokova i trčanja.' + (gentle ? ' Lagana mobilnost bez boli je u redu.' : '') +
+          ' Ako ne popusti za 2–3 dana, javi se fizioterapeutu.',
+        gentle ? { type: 'protocol', id: gentle.id } : null);
     }
     var playedToday = logs.find(function (log) {
       return dateKey(log.at) === today && log.kind === 'team' && log.teamType === 'match' && actualWork(log);
@@ -388,7 +461,7 @@
       var demandingField = plan.kind === 'field' &&
         (!integer(plan.intensity, 0, 3) || plan.intensity > 0 || ['tests', 'speed', 'agility'].includes(plan.category));
       return usable(plan) && !matchBlocks(plan, context, exercises) &&
-        !(demandingField && (lowEnergy || heavyFeeling || recentHard)) &&
+        !(demandingField && (lowEnergy || heavyFeeling || recentHard || pain >= 2)) &&
         !(heavyLegs(plan, exercises) && (heavyFeeling || recentHard));
     }
     var candidates = (Array.isArray(input.candidates) ? input.candidates : []).filter(function (candidate) {
@@ -406,9 +479,10 @@
     if (own && own.frozen) {
       planEvidence(own);
       reason('frozenPlan', 'Današnji plan je zaključan; ovaj prijedlog ne mijenja njegov redoslijed ni dozu.');
-      if (lowEnergy || heavyFeeling || recentHard || matchBlocks(own, context, exercises)) {
+      if (lowEnergy || heavyFeeling || recentHard || pain >= 2 || matchBlocks(own, context, exercises)) {
         return finish('protect', 'Provjeri današnji zaključani plan',
-          'Prije početka pogledaj današnji raspored i dogovori prilagodbu s trenerom. Propisana doza ostaje ista.', { type: 'calendar' });
+          pain >= 2 ? 'Bol ' + checkin.pain + '/10' + painPlace + ': propisana doza ostaje ista, zato preskoči vježbe koje bole.'
+            : 'Prije početka pogledaj današnji raspored. Propisana doza ostaje ista, a prilagodbu odaberi sam.', { type: 'calendar' });
       }
       equipmentMissing(own);
       if (own.kind === 'protocol' && usable(own)) result.items = copy(own.items);
@@ -478,6 +552,21 @@
       else if (observed.length) reason('actualDose', 'Dostupne su stvarne serije zadnjeg istog treninga; povećanje kilograma nije pretpostavljeno.');
     }
     var reduce = !easyPlan(selected, exercises) && (lowEnergy || difficult || !!recentHard);
+    if (pain === 1) {
+      result.painHold = painArea;
+      reason('painMild', 'Bol ' + checkin.pain + '/10' + painPlace + ': treniraj normalno, ali bez povećanja težine za ' +
+        (painArea === 'other' ? 'ovaj trening' : PAIN_AREAS[painArea]) + '.');
+    }
+    if (pain === 2 && !easyPlan(selected, exercises)) {
+      var lighter = painLighter(reduce ? reduceItems(selected, doses) : selected.items, painArea, exercises);
+      result.items = lighter.items;
+      result.painHold = painArea;
+      reason('painLighter', 'Bol ' + checkin.pain + '/10' + painPlace + ': ' +
+        (lighter.changes.length ? lighter.changes.join(', ') : 'bez promjene vježbi') + '. Kilogrami se ne povećavaju.');
+      return finish('reduce', 'Danas lakše: ' + text(selected.name, 'tvoj trening'),
+        'Lakša verzija za ' + (painArea === 'other' ? 'cijeli trening' : PAIN_AREAS[painArea]) + '. Stani ako se bol pojača.',
+        { type: 'protocol', id: selected.id });
+    }
     if (reduce) {
       result.items = reduceItems(selected, doses);
       reason('reducedDose', 'U cijelom treningu ostaje isti redoslijed: jedna radna serija manje po vježbi, najmanje jedna; kilogrami i ponavljanja se ne povećavaju.');
@@ -497,5 +586,6 @@
       { type: 'protocol', id: selected.id });
   }
 
-  return freeze({ version: 1, suggest: suggest, matchRule: matchRule, dateKey: dateKey, validDate: validDate });
+  return freeze({ version: 1, suggest: suggest, matchRule: matchRule, painLevel: painLevel, painAreasOf: painAreasOf,
+    painHolds: painHolds, painAreas: PAIN_AREAS, dateKey: dateKey, validDate: validDate });
 });

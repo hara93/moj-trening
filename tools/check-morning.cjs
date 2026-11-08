@@ -69,3 +69,19 @@ test('Sunday adapter includes Monday plan and flags today’s moved or cancelled
   assert.deepEqual(input.planned.map(({id,date,skip})=>({id,date,skip})),[
     {id:'p',date:monday,skip:false},{id:'p',date:day,skip:true}]);
 });
+test('pain location and new pain are one tap each, kept only with a pain value',()=>{
+  const chips=(fields,area,fresh)=>({elements:{namedItem(key){
+    if(key==='painArea')return {value:area||''};if(key==='newPain')return {checked:!!fresh};return {value:fields[key] ?? ''};}}});
+  assert.deepEqual(view.readForm(chips({pain:'4'},'hip'),date),{entry:{date,pain:4,painArea:'hip'}});
+  assert.deepEqual(view.readForm(chips({pain:'0'},'hip'),date),{entry:{date,pain:0}},'no area without pain');
+  assert.deepEqual(view.readForm(chips({pain:'7'},'knee',true),date),{entry:{date,pain:7,painArea:'knee',newPain:true}});
+  assert.ok(view.readForm(chips({energy:'3'},'',true),date).error,'new pain needs a pain value');
+  assert.deepEqual(view.cleanChecks({[date]:{date,pain:3,painArea:'hamstring',newPain:true},'2026-11-03':{pain:0,painArea:'hip'},'2026-11-02':{pain:2,painArea:'leđa'}}),
+    {[date]:{date,pain:3,painArea:'hamstring',newPain:true},'2026-11-03':{date:'2026-11-03',pain:0},'2026-11-02':{date:'2026-11-02',pain:2}});
+  assert.equal(view.description({date,pain:4,painArea:'hip',newPain:true}),'Bol 4/10 kuk/prepone (nova)');
+  const html=view.formView({date,original:{date,pain:3,painArea:'knee'}});
+  assert.match(html,/<legend>Gdje boli\?<\/legend>/);
+  assert.deepEqual([...html.matchAll(/name="painArea" value="([a-z]+)"/g)].map(m=>m[1]),['hip','hamstring','knee','other']);
+  assert.match(html,/value="knee" checked/);
+  assert.doesNotMatch(html,/trener/i);
+});

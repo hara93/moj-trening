@@ -49,3 +49,4 @@
 .dy-dose li::marker{color:var(--accent-text);font-variant-numeric:tabular-nums}
 :is(.dy-dose,.dy-last) li span{display:block;color:var(--text-2);font-size:13px}
 .dy-last{margin-top:8px}
+.dy-chips{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.dy-chips legend{font-weight:600;padding:0;margin-bottom:5px;width:100%}.dy-chips label{position:relative;display:block}.dy-chips input{position:absolute;opacity:0;inset:0;margin:0}.dy-chips span{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--border);border-radius:20px;font:600 14px var(--font);color:var(--text);background:var(--bg)}.dy-chips input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}.dy-chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
