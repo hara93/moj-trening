@@ -583,7 +583,11 @@ async function setRecovery(p,width) {
   const accidental = await player(p);
   assert.equal(step(accidental).kind,'rest');
   assert.deepEqual(accidental.doneSteps,{[first]:1});
-  await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-next)'));
+  await revealRest(p);   // 1.22.0: the next-set card shows in rest phase 2
+  // 1.22.0: in rest phase 2 the next-set card is the mockup's dark glass (80 % with blur) over the dimmed photo
+  const restCard=await p.locator('.workout-cinema-next:has(>.cinema-next)').evaluate(node=>{const style=getComputedStyle(node);
+    return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity,backdrop:style.backdropFilter||style.webkitBackdropFilter};});
+  assert.equal(restCard.alpha,.8);assert.equal(restCard.opacity,'1');assert.match(restCard.backdrop,/blur/);
   assert.equal(await p.locator('.workout-cinema [data-a="cinemaReserve"]').count(),0);
   await openCinemaControls(p);
   await p.locator('.sheet [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();

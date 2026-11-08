@@ -132,7 +132,8 @@ async function run(){
   await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});await cinema.waitFor();
   assert.equal(await info.evaluate(node=>node===document.activeElement),true,'top instructions return focus directly to player info');
   assert.equal((await player()).clock.paused,false);
-  const before=Number(await cinema.locator('.prog').getAttribute('aria-valuenow'));await advance(p,20);const after=await cinema.locator('.prog').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:parseFloat(e.querySelector('i').style.width)}));assert.ok(after.aria>before);assert.ok(Math.abs(after.aria-after.visual)<.6);
+  // 1.22.0: the dashes are the progress bar; the percent in the top bar shows its value
+  const before=Number(await cinema.locator('.cinema-dashes').getAttribute('aria-valuenow'));await advance(p,20);const after=await cinema.locator('.cinema-dashes').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:parseFloat(document.getElementById('cinema-percent').textContent)}));assert.ok(after.aria>before);assert.ok(Math.abs(after.aria-after.visual)<.6);
   const journalButton=cinema.locator('[data-a=cinemaJournal]');await journalButton.focus();await p.keyboard.press('Enter');
   const journal=p.locator('.cinema-journal-sheet');await journal.waitFor();assert.equal(await journal.locator('.workout-set-row').count(),2);
   const paused=await player();assert.equal(paused.clock.paused,true);

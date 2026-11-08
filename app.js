@@ -2868,7 +2868,7 @@ function workoutCinemaHtml() {
     restAdjustHtml:restPhase===2?'<div class="cinema-rest-buttons"><button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button></div>':'',
     nextHtml:restPhase===2?cinemaUpcomingHtml(CinemaModel.upcoming(P)):'',
     prepHtml:(section?(editingPrep?cinemaPrepHtml(st,true):'<div class="cinema-section-clock">'+cinemaBigClock(st,'is-left')+
-      '<button type="button" class="cinema-prep-trigger cinema-section-prep" data-a="cinemaPrep" aria-expanded="false">'+I.plus+'Dodaj vrijeme za pripremu</button></div>'):preparing&&(editingPrep||!S.sheet)?cinemaPrepHtml(st,editingPrep):'')+(restPhase===2?cinemaBigClock(st,'is-rest'):''),
+      '<button type="button" class="cinema-prep-trigger cinema-section-prep" data-a="cinemaPrep" aria-expanded="false">'+I.plus+'Dodaj vrijeme za pripremu</button></div>'):preparing&&(editingPrep||!S.sheet)?cinemaPrepHtml(st,editingPrep):'')+(restPhase===2?(editingPrep?cinemaPrepHtml(st,true):cinemaBigClock(st,'is-rest')):''),
     centerHtml:restPhase===1?restClock:'',
     pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:footer});
 }
