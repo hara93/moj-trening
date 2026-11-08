@@ -144,6 +144,9 @@ jobs:
       - name: Rezerva na odmoru
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/rest-reserve.cjs ${{ matrix.browser }}
+      - name: Referentni player
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/player-reference.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

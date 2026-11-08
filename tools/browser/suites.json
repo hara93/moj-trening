@@ -30,6 +30,7 @@
     {"name": "chart-motion", "title": "Animacija grafova"},
     {"name": "prestart-edit", "title": "Uređivanje prije starta"},
     {"name": "partial-session", "title": "Djelomičan trening"},
-    {"name": "rest-reserve", "title": "Rezerva na odmoru"}
+    {"name": "rest-reserve", "title": "Rezerva na odmoru"},
+    {"name": "player-reference", "title": "Referentni player"}
   ]
 }

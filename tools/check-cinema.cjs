@@ -65,6 +65,11 @@ test('journal totals read "25 pon. · 2 500 kg" with a narrow no-break space, ne
  assert.equal(Cinema.totals({reps:12,volume:600,seconds:0},mixed),'12 pon. · 600 kg','no seconds before the first hold');
  assert.doesNotMatch(Cinema.totals({reps:25,volume:2500,seconds:0},reps),/×/);
 });
+test('the totals group thousands with U+202F, a narrow no-break space, so "2 500 kg" never breaks or reads as two numbers',()=>{
+ const text=Cinema.totals({reps:1250,volume:2500,seconds:0},[{measure:'sets'}]);
+ assert.equal(text,'1\u202F250 pon. · 2\u202F500 kg');
+ assert.doesNotMatch(text,/\d[ \u00A0]\d/,'no ordinary or wide no-break space inside a number');
+});
 test('upcoming follows superset phases, using the next exercise through setup and the planned duration for rest',()=>{
  const left={kind:'manual',g:0,set:1,side:'Lijeva strana'};
  const sideChange={kind:'switch',g:0,set:1,side:'Promjena strane',dur:10};
