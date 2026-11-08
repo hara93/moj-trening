@@ -14,6 +14,7 @@ function fixture(empty) {
   const baseline = Object.values(data.protocols).find(p => p.id.startsWith('pmw'));
   const item = { exId:'bench-press', measure:'sets', sets:2, reps:5, kg:20, rest:60, sides:false };
   data.settings.sound = false; data.settings.planDates = {}; data.settings.matchDates = {}; data.settings.matchDay = -1;
+  data.settings.progressChartPeriod='all'; data.settings.trainingLoadPeriod='7d'; data.settings.goal='snaga';
   for (const protocol of Object.values(data.protocols)) {
     protocol.days = [];
     for (const entry of protocol.items || []) { delete entry.ok; delete entry.fail; }
@@ -59,8 +60,7 @@ async function importData(page, data) {
 }
 async function progress(page) {
   await home(page); await page.locator('.tab[data-tab="analytics"]').click();
-  if (await page.locator('.tl-cinema').count()) await page.locator('[data-a="analyticsMode"][data-v="progress"]').click();
-  await page.locator('.progress-view').waitFor();
+  await page.locator('.progress-view #analysis-load').waitFor();
 }
 async function noOverflow(page, label) {
   const bounds = await page.evaluate(() => {
@@ -81,7 +81,8 @@ function datePattern(date) {
 async function checkExercisePeriods(page) {
   await importData(page,rangeFixture()); await progress(page);
   const main=page.locator('.pg-main-card');
-  const select=key=>main.locator('[data-a="progressRange"][data-v="'+key+'"]');
+  const select=key=>page.locator('[data-a="progressRange"][data-v="'+key+'"]');
+  const load=page.locator('#analysis-load');
   const metric=key=>main.locator('[data-a="progressMetric"][data-v="'+key+'"]');
   const trend=main.locator('svg.pg-main-line');
   const detail=page.locator('#progress-info');
@@ -90,7 +91,8 @@ async function checkExercisePeriods(page) {
     await detail.locator('[data-a="progressExercise"][data-id="'+id+'"]').click();
   };
   assert.equal(await A(page,'progressRange').count(),4);
-  assert.equal(await select('all').getAttribute('aria-pressed'),'true','default preserves the complete exercise history');
+  assert.equal(await select('all').getAttribute('aria-pressed'),'true','the previous progress preference becomes the shared range');
+  assert.equal(await load.getAttribute('data-analysis-period'),'all');
   await choose('bench-press');
   const title=await main.locator('h2').innerText();
   const cases=[['7d','2026-10-29',2,7],['1m','2026-10-06',4,5],['3m','2026-08-07',6,3],['all','2026-07-12',8,1]];
@@ -98,7 +100,8 @@ async function checkExercisePeriods(page) {
   for(const [key,first,count,reps] of cases) {
     await select(key).click();
     assert.equal(await select(key).getAttribute('aria-pressed'),'true');
-    assert.equal(await main.locator('[data-a="progressRange"][aria-pressed="true"]').count(),1);
+    assert.equal(await page.locator('[data-a="progressRange"][aria-pressed="true"]').count(),1);
+    assert.equal(await load.getAttribute('data-analysis-period'),key,'effort uses the same period as the exercise chart');
     assert.equal(await main.locator('h2').innerText(),title);
     await metric('performance').click();
     assert.equal(await trend.locator('.pg-main-dot').count(),count,key+' performance points');
@@ -140,7 +143,7 @@ async function checkExercisePeriods(page) {
   for(const key of ['performance','volume']) {
     await metric(key).click();
     assert.equal(await main.locator('h2').innerText(),olderTitle,'empty range retains the chosen exercise');
-    assert.equal(await main.locator('svg').count(),0,'no out-of-range points on '+key);
+    assert.equal(await main.locator('svg[role="img"]').count(),0,'no out-of-range points on '+key);
     const empty=main.locator(key==='performance'?'.pg-main-empty':'.pg-main-volume .none');
     assert.match(await empty.innerText(),/razdoblj/);
   }
@@ -149,20 +152,12 @@ async function checkExercisePeriods(page) {
   assert.equal(await trend.locator('.pg-main-dot').count(),2,'a wider range restores the selected exercise trend');
   await page.screenshot({path:path.join(artifacts,prefix+'-range-320.png')});
 
-  const switchMode=key=>page.locator('[data-a="analyticsMode"][data-v="'+key+'"]');
-  const loadRange=key=>page.locator('[data-a="trainingLoadRange"][data-v="'+key+'"]');
-  await switchMode('load').click();
-  assert.equal(await loadRange('7d').getAttribute('aria-pressed'),'true');
-  await loadRange('1m').click();
-  await switchMode('progress').click();
-  assert.equal(await select('3m').getAttribute('aria-pressed'),'true','Opterećenje has its own range');
   assert.equal(await main.locator('h2').innerText(),olderTitle);
   await progress(page);
-  assert.equal(await select('3m').getAttribute('aria-pressed'),'true','exercise range persists after reload');
-  await switchMode('load').click();
-  assert.equal(await loadRange('1m').getAttribute('aria-pressed'),'true');
+  assert.equal(await select('3m').getAttribute('aria-pressed'),'true','the shared range persists after reload');
+  assert.equal(await load.getAttribute('data-analysis-period'),'3m');
   results.push({label:'exercise-periods',ranges:cases.map(([key,first,points])=>({key,first,points})),
-    periodPersists:true,selectionSurvivesEmptyRange:true,independentLoadPeriod:true});
+    periodPersists:true,selectionSurvivesEmptyRange:true,sharedAnalysisPeriod:true});
 }
 (async () => {
   const host=await serve();
@@ -175,11 +170,15 @@ async function checkExercisePeriods(page) {
     await page.clock.setFixedTime(fixed);
     await page.goto(host.url,{waitUntil:'domcontentloaded'});
     await importData(page,fixture(false)); await progress(page);
-    assert.equal(await page.locator('.pg-main-card svg').count(),1,'one actual graph on the overview');
+    assert.equal(await page.locator('.pg-main-card svg[role="img"]').count(),1,'one actual graph on the overview');
     assert.equal(await page.locator('details.pg-section').count(),0,'advanced data is not mounted until opened');
     await noOverflow(page,'overview375');
     await page.screenshot({path:path.join(artifacts,prefix+'-overview375.png')});
-    const activitySummary=page.locator('.pg-summary-pair > button').first();
+    assert.match(await page.locator('.pg-focus-goal').innerText(),/Snaga/);
+    await page.locator('.pg-focus-step').click();
+    await page.getByRole('heading',{name:'Danas',exact:true}).waitFor();
+    await A(page,'back').first().click();
+    const activitySummary=page.locator('.pg-focus .pg-ring-card');
     await activitySummary.click();
     assert.equal(await page.locator('#progress-info').evaluate(node=>node.open),true);
     assert.ok(await page.locator('#progress-info-title').evaluate(node=>node===document.activeElement));
@@ -222,15 +221,14 @@ async function checkExercisePeriods(page) {
     await page.locator('[data-a="progressDetail"][data-topic="records"]').click();
     assert.ok(await page.locator('#pg-records .pr').count());await page.keyboard.press('Escape');
     await page.locator('[data-a="progressMetric"][data-v="performance"]').click();
-    assert.equal(await page.locator('.pg-main-card svg').count(),0,'incomparable loads do not create a performance trend');
+    assert.equal(await page.locator('.pg-main-card svg[role="img"]').count(),0,'incomparable loads do not create a performance trend');
     assert.ok(await page.locator('.pg-main-empty').isVisible());
     await page.locator('[data-a="progressMetric"][data-v="volume"]').click();
-    assert.equal(await page.locator('.pg-main-card svg').count(),1);
+    assert.equal(await page.locator('.pg-main-card svg[role="img"]').count(),1);
     await page.locator('[data-a="progressDetail"][data-topic="choose"]').click();
     await page.locator('[data-a="progressExercise"]').first().click();
     assert.equal(await page.locator('#progress-info').evaluate(node=>node.open),false);
-    await page.locator('[data-a="analyticsMode"][data-v="load"]').click();await page.locator('.tl-cinema').waitFor();
-    await page.locator('[data-a="analyticsMode"][data-v="progress"]').click();await page.locator('.pg-cinema').waitFor();
+    await page.locator('.pg-cinema #analysis-load').waitFor();
     await page.setViewportSize({width:320,height:850});await noOverflow(page,'overview320');
     await page.screenshot({path:path.join(artifacts,prefix+'-details320.png')});
     await page.locator('[data-a="progTab"][data-v="doziranje"]').click();
@@ -254,7 +252,7 @@ async function checkExercisePeriods(page) {
     }
     await importData(page,comparable);await progress(page);
     await page.locator('[data-a="progressMetric"][data-v="performance"]').click();
-    assert.equal(await page.locator('.pg-main-card svg').count(),1);
+    assert.equal(await page.locator('.pg-main-card svg[role="img"]').count(),1);
     assert.match(await page.locator('.pg-main-context').innerText(),/20 kg.*RIR.*2/);
     const point=page.locator('.pg-point-hit[data-point="current"]');
     await point.click();
@@ -266,7 +264,7 @@ async function checkExercisePeriods(page) {
     await page.screenshot({path:path.join(artifacts,prefix+'-comparable375.png')});
     await importData(page,fixture(true)); await progress(page);
     if (await page.locator('[data-a="progTab"][data-v="pregled"]').count()) await page.locator('[data-a="progTab"][data-v="pregled"]').click();
-    assert.ok(await page.locator('.pg-zero').isVisible());
+    assert.ok(await page.locator('.pg-main-unavailable').isVisible());
     assert.equal(await page.locator('.pg-choose, .pg-metric-tabs').count(),0,'no unavailable trend controls on an empty overview');
     await noOverflow(page,'zero320');
     await page.setViewportSize({width:375,height:850});

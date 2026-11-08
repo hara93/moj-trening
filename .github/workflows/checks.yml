@@ -58,6 +58,7 @@ jobs:
           node tools/browser/checklist.cjs just-mixed ${{ matrix.browser }}
           node tools/browser/starting-load.cjs ${{ matrix.browser }}
           node tools/browser/progress.cjs ${{ matrix.browser }}
+          node tools/browser/progress-picker.cjs ${{ matrix.browser }}
       - name: Ispravci iz analize
         run: |
           node tools/browser/storage.cjs ${{ matrix.browser }}
@@ -66,6 +67,7 @@ jobs:
           node tools/browser/home-progress.cjs ${{ matrix.browser }}
           node tools/browser/workout.cjs ${{ matrix.browser }}
           node tools/browser/training-load.cjs ${{ matrix.browser }}
+          node tools/browser/load-day-rating.cjs ${{ matrix.browser }}
           node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
           node tools/browser/exercise-media.cjs ${{ matrix.browser }}
           node tools/browser/workout-reference.cjs ${{ matrix.browser }}

@@ -53,20 +53,28 @@ async function discard(p){await a(p,'back').first().click();await a(p,'leaveDisc
 async function progressBack(p){
   const tab=name=>p.getByRole('navigation',{name:'Glavna navigacija'}).getByRole('button',{name,exact:true});
   const progress=tab('Napredak');
+  const overview=p.locator('.pg-cinema');
+  const load=overview.locator('#analysis-load').getByRole('heading',{name:'Opterećenje',exact:true});
+  const chevron=p.locator('.topbar [data-a="back"]');
   await progress.click();await waitView(p,'analytics');
   assert.equal(await progress.getAttribute('aria-current'),'page');
+  await load.waitFor();
+  await overview.locator('.pg-focus-goal').click();
+  await p.locator('#app[data-key="progress:dosing"]').waitFor();
+  assert.equal(await load.count(),0);
+  await chevron.click();await waitView(p,'analytics');
+  await load.waitFor();
   await progress.click();
-  await p.locator('.topbar [data-a="back"]').click();await waitView(p,'library');
+  await chevron.click();await waitView(p,'library');
   assert.equal(await tab('Knjižnica vježbi').getAttribute('aria-current'),'page');
   assert.equal(await p.locator('#libq').inputValue(),'bench');
 
   await tab('Moj pregled').click();await a(p,'dashboardProgress').click();await waitView(p,'progress');
-  const load=p.locator('[data-a="analyticsMode"][data-v="load"]');
-  await load.click();await p.locator('.tl-cinema').waitFor();
-  await progress.click();await p.locator('.pg-cinema').waitFor();
-  await load.click();
-  await p.locator('.tl-cinema').waitFor();
-  await p.locator('.tl-heading [data-a="back"]').click();await waitView(p,'dashboard');
+  await load.waitFor();
+  await overview.locator('.pg-focus-goal').click();
+  await p.locator('#app[data-key="progress:dosing"]').waitFor();
+  await back(p);await load.waitFor();
+  await chevron.click();await waitView(p,'dashboard');
   await progress.click();await waitView(p,'analytics');
   await p.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();await waitView(p,'muscleWeek');
   await back(p);await waitView(p,'analytics');

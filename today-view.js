@@ -65,9 +65,14 @@
     return '<button type="button" data-a="todayOpen" class="dy-dash-card"><span><small>Danas · '+shortDay(vm.date)+'</small><strong>'+esc(vm.recommendation.title)+'</strong><span>'+
       esc(vm.checkin?'Jutarnja provjera spremljena':'Pogledaj prijedlog i jutarnju provjeru')+'</span></span><b aria-hidden="true">›</b></button>';
   }
-  const actionLabels={protocol:'Pokreni predloženi trening',field:'Otvori terenski trening',calendar:'Otvori planer',checkin:'Ispuni jutarnju provjeru',team:'Upiši ekipni trening',history:'Otvori povijest'};
+  const actionLabels={protocol:'Pokreni trening',field:'Otvori terenski trening',calendar:'Otvori planer',checkin:'Ispuni jutarnju provjeru',team:'Upiši ekipni trening',history:'Otvori povijest'};
   const evidenceLabels={history:'Povijest',plan:'Plan',match:'Utakmica',checkin:'Jutarnja provjera',protocol:'Protokol',field:'Terenski trening'};
-  function doseRows(items,exercises) {
+  function disclosure(title,body,key,expanded,status='') {
+    if (!body) return '';
+    return '<details class="dy-disclosure dy-'+key+'" data-today-detail="'+key+'"'+(expanded.includes(key)?' open':'')+'><summary><span>'+esc(title)+
+      (status?'<small>'+esc(status)+'</small>':'')+'</span></summary><div class="dy-disclosure-body">'+body+'</div></details>';
+  }
+  function doseRows(items,exercises,expanded) {
     if (!items?.length) return '';
     const rows=items.map(item=>{
       const e=exercises[item.exId];
@@ -82,15 +87,12 @@
       const kg=series.some(row=>row.kg>0)?list('kg')+' kg':'';
       return '<li><strong>'+esc(e.name)+'</strong><span>'+esc([sets+' × '+qty,kg,item.sides?'po strani':'',item.rest!=null?'odmor '+item.rest+' s':''].filter(Boolean).join(' · '))+'</span></li>';
     }).filter(Boolean);
-    if (!rows.length) return '';
-    const preview=rows.length<=2 ? rows.length : 1;
-    return '<div class="dy-dose"><ul>'+rows.slice(0,preview).join('')+'</ul></div>'+
-      (rows.length>preview?'<details class="dy-dose"><summary>Sve vježbe ('+rows.length+')</summary><ul>'+rows.slice(preview).join('')+'</ul></details>':'');
+    return rows.length ? disclosure('Vježbe i doze ('+rows.length+')','<ol>'+rows.join('')+'</ol>','dose',expanded) : '';
   }
-  function lastPerformance(rec,exercises) {
+  function lastPerformance(rec,exercises,expanded) {
     const entries=rec.observed?.filter(it=>it.rows?.length && exercises[it.exId]);
     if (!entries?.length) return '';
-    return '<details class="dy-dose"><summary>Zadnja usporediva izvedba</summary><ul>'+entries.map(it=>{
+    const rows=entries.map(it=>{
       const ex=exercises[it.exId], item=rec.items.find(i=>i.exId===it.exId), timed=(it.measure || item?.measure || ex.measure)==='time';
       const lines=it.rows.map(row=>{
         const amount=timed?row.sec:row.reps;
@@ -103,28 +105,39 @@
         return '<span>'+esc(parts.join(' · '))+'</span>';
       });
       return '<li><strong>'+esc(ex.name)+'</strong>'+lines.join('')+'</li>';
-    }).join('')+'</ul></details>';
+    }).join('');
+    return disclosure('Zadnja usporediva izvedba','<ul>'+rows+'</ul>','last',expanded);
   }
-  function view(vm) {
-    const rec=vm.recommendation, action=rec.action || {}, reasons=rec.reasons || [], evidence=rec.evidence || [];
+  function recommendationDetails(rec,exercises,expanded) {
+    const reasons=rec.reasons || [], evidence=rec.evidence || [];
+    const sources=evidence.length?'<h3>Korišteni podaci</h3><div class="today-evidence">'+evidence.map(e=>{
+      const type=String(e.type),name=evidenceLabels[type]||'Podatak',canOpen=(['history','protocol','field'].includes(type)&&e.id)||(['checkin','plan','match'].includes(type)&&calendar.valid(e.date));
+      const inside='<strong>'+esc(e.label || name)+'</strong><small>'+esc(name)+(e.date?' · '+shortDay(e.date):'')+'</small>';
+      return canOpen?'<button type="button" data-a="todayEvidence" data-type="'+esc(type)+'" data-id="'+esc(e.id||'')+'" data-date="'+esc(e.date||'')+'">'+inside+'</button>':'<div>'+inside+'</div>';
+    }).join('')+'</div>':'';
+    const why=reasons.length ? '<ul class="dy-reasons">'+reasons.map(r=>'<li>'+esc(r.text)+'</li>').join('')+'</ul>' : '';
+    const note='<p class="dy-note">Prijedlog se računa na ovom uređaju iz tvojih zapisa, rasporeda i jutarnje provjere.</p>';
+    return disclosure('Zašto ovaj prijedlog?',why+lastPerformance(rec,exercises,expanded)+sources+note,'why',expanded);
+  }
+  function view(vm,expanded=[]) {
+    const rec=vm.recommendation, action=rec.action || {}, label=actionLabels[action.type];
+    const startsWorkout=['protocol','field'].includes(action.type);
+    const missing=rec.missing?.length ? '<ul class="dy-reasons">'+rec.missing.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>' : '';
+    const checkStatus=startsWorkout && rec.confidence==='limited' && !rec.summary.includes('jutarnju procjenu') ? 'Jutarnja provjera nije potpuna' : '';
+    const checks=disclosure(startsWorkout?'Provjeri prije početka':'Što još nedostaje',missing,'preflight',expanded,checkStatus);
     const past=Object.values(vm.checks).filter(x=>x.date<vm.date).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-    return '<div class="view dy-view">'+header('Danas',new Date(calendar.time(vm.date)).toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}))+
-      '<div class="dy-tools"><button data-a="morningOpen"><strong>Jutarnja provjera</strong><small>'+esc(description(vm.checkin))+'</small></button><button data-a="teamNew"><strong>+ Ekipni dnevnik</strong><small>Trening ili utakmica</small></button></div>'+
+    return '<div class="view dy-view dy-today">'+header('Danas',new Date(calendar.time(vm.date)).toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}))+
+      '<section class="dy-panel dy-advice" id="today-recommendation" data-kind="'+esc(rec.kind)+'"><p class="dy-eyebrow">'+(rec.kind==='caution'?'Oprez danas':'Prijedlog za danas')+'</p>'+
+      '<h2>'+esc(rec.title.replace(/^Danas: /,''))+'</h2><p class="dy-instruction">'+esc(rec.summary)+'</p>'+
+      (startsWorkout?checks:'')+
+      (label?'<button type="button" class="dy-primary" data-a="todayAct">'+esc(label)+' <span aria-hidden="true">›</span></button>':'')+
+      doseRows(rec.items,vm.exercises,expanded)+recommendationDetails(rec,vm.exercises,expanded)+(startsWorkout?'':checks)+'</section>'+
+      '<div class="dy-tools"><button type="button" data-a="morningOpen"><strong>Jutarnja provjera <span aria-hidden="true">›</span></strong><small>'+esc(description(vm.checkin))+'</small></button><button type="button" data-a="teamNew"><strong>Ekipni dnevnik <span aria-hidden="true">+</span></strong><small>Dodaj trening ili utakmicu</small></button></div>'+
       '<button type="button" class="dy-match" data-a="todayEvidence" data-type="match" data-date="'+esc(vm.nextMatch || vm.date)+'"><span>Sljedeća utakmica</span><strong>'+esc(vm.nextMatch===vm.date?'Danas':vm.nextMatch?shortDay(vm.nextMatch):'Dodaj u planer')+' ›</strong></button>'+
-      '<section class="dy-panel dy-advice" id="today-recommendation" data-kind="'+esc(rec.kind)+'"><p class="dy-eyebrow">Prijedlog za danas</p><h2>'+esc(rec.title)+'</h2><p>'+esc(rec.summary)+'</p>'+
-      doseRows(rec.items,vm.exercises)+(actionLabels[action.type]?'<button type="button" class="dy-primary" data-a="todayAct">'+esc(actionLabels[action.type])+'</button>':'')+
-      (reasons.length?'<h3>Zašto ovaj prijedlog?</h3><ul class="dy-reasons">'+reasons.map(r=>'<li>'+esc(r.text)+'</li>').join('')+'</ul>':'')+lastPerformance(rec,vm.exercises)+
-      (rec.missing?.length?'<p class="dy-missing"><strong>Što još nedostaje</strong><br>'+rec.missing.map(esc).join(' ')+'</p>':'')+'</section>'+
-      (evidence.length?'<section class="dy-panel"><h2>Korišteni podaci</h2><div class="today-evidence">'+evidence.map(e=>{
-        const type=String(e.type),name=evidenceLabels[type]||'Podatak',canOpen=(['history','protocol','field'].includes(type)&&e.id)||(['checkin','plan','match'].includes(type)&&calendar.valid(e.date));
-        const inside='<strong>'+esc(e.label || name)+'</strong><small>'+esc(name)+(e.date?' · '+shortDay(e.date):'')+'</small>';
-        return canOpen?'<button data-a="todayEvidence" data-type="'+esc(type)+'" data-id="'+esc(e.id||'')+'" data-date="'+esc(e.date||'')+'">'+inside+'</button>':'<div>'+inside+'</div>';
-      }).join('')+'</div></section>':'')+
-      '<section class="dy-panel"><h2>Ekipni dnevnik</h2>'+(!vm.team.length?'<p>Zabilježi prvi ekipni trening ili utakmicu da uđu u sljedeći prijedlog.</p>':
-      '<div class="today-evidence">'+vm.team.map(l=>'<button data-a="historyOpen" data-id="'+esc(l.historyId)+'"><strong>'+esc(l.name)+'</strong><small>'+shortDay(calendar.key(l.at))+
-        (Number.isFinite(l.secs)?' · '+esc(Math.round(l.secs/60))+' min':'')+(Number.isFinite(l.srpe)?' · napor '+esc(l.srpe)+'/10':'')+'</small></button>').join('')+'</div>')+'</section>'+
+      (vm.team.length?'<section class="dy-panel"><h2>Zadnji ekipni zapisi</h2><div class="today-evidence">'+vm.team.map(l=>'<button data-a="historyOpen" data-id="'+esc(l.historyId)+'"><strong>'+esc(l.name)+'</strong><small>'+shortDay(calendar.key(l.at))+
+        (Number.isFinite(l.secs)?' · '+esc(Math.round(l.secs/60))+' min':'')+(Number.isFinite(l.srpe)?' · napor '+esc(l.srpe)+'/10':'')+'</small></button>').join('')+'</div></section>':'')+
       (past.length?'<details class="dy-panel dy-previous"><summary>Prethodne jutarnje provjere</summary><div class="today-evidence">'+past.map(x=>'<button data-a="morningOpen" data-date="'+esc(x.date)+'"><strong>'+shortDay(x.date)+'</strong><small>'+esc(description(x))+'</small></button>').join('')+'</div></details>':'')+
-      '<p class="dy-note">Prijedlog se računa na ovom uređaju iz tvojih zapisa, rasporeda i jutarnje provjere.</p></div>';
+      '</div>';
   }
   return {cleanChecks,readForm,description,card,view,formView};
 });

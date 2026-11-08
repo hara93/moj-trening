@@ -90,8 +90,12 @@ async function importData(page, data) {
 async function loadView(page) {
   await home(page);
   await page.locator('.tab[data-tab="analytics"]').click();
-  if (await page.locator('.pg-cinema').count()) await page.locator('[data-a="analyticsMode"][data-v="load"]').click();
-  await page.locator('.view.training-load').waitFor();
+  await page.locator('.view.pg-cinema #analysis-load').waitFor();
+}
+
+async function openLoadDetails(page) {
+  const details = page.locator('#analysis-load .tl-analysis-details');
+  if (!await details.evaluate(node => node.open)) await details.locator(':scope > summary').click();
 }
 
 async function period(page, name) {
@@ -109,11 +113,9 @@ async function layout(page, width, label) {
   results.push({ label, ...bounds });
 }
 
-async function screenshot(page, name, section) {
+async function screenshot(page, name) {
   await page.locator('.toast').waitFor({ state: 'hidden', timeout: 10000 });
-  await page.locator('.view.training-load').evaluate((node, selector) => {
-    node.scrollTop = selector ? node.scrollTop + node.querySelector(selector).getBoundingClientRect().top - node.getBoundingClientRect().top - 10 : 0;
-  }, section || null);
+  await page.locator('#analysis-load').evaluate(node => node.scrollIntoView({block:'start'}));
   await page.screenshot({ path: path.join(artifacts, 'training-load-' + engine + '-' + name + '.png') });
 }
 
@@ -253,8 +255,11 @@ async function runScenarios(page) {
   assert.match(await page.locator('.tl-kind-row[data-load-ring-kind="match"]').innerText(), /Nepoznato/);
   await page.locator('[data-a="trainingLoadDetail"][data-topic="day"][data-date="2026-10-30"]').click();
   assert.ok(await page.locator('[data-load-day-detail="2026-10-30"]').isVisible());
-  assert.match(await page.locator('#training-load-info-body').innerText(),/Protokoli/);
+  const boundaryWorkout = page.locator('#training-load-info [data-load-workout="tl-boundary"]');
+  assert.match(await boundaryWorkout.innerText(),/Poznati trening 2026-10-30/);
+  assert.match(await boundaryWorkout.innerText(),/1 min 28 s/);
   await page.keyboard.press('Escape');
+  await openLoadDetails(page);
   const musclesRow=page.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]');
   await musclesRow.click();
   const chest=page.locator('#training-load-info [data-load-group="chest"]');
@@ -316,6 +321,7 @@ async function runScenarios(page) {
   assert.equal(explicitZero.missingAu, '0');
   assert.match(await page.locator('[data-load-metric="current-au"]').innerText(), /^0/);
   assert.equal(await page.locator('.tl-dial-segment').count(), 0);
+  await openLoadDetails(page);
   assert.doesNotMatch(await page.locator('[data-load-section="readiness"]').innerText(), /7\s*\/\s*10|Bol[^\n]*7/);
   // Mobile can suspend timers overnight. Returning must refresh the daily
   // window immediately rather than waiting for an expired midnight timeout.
@@ -336,11 +342,12 @@ async function runPeriodScenario(page) {
   await page.clock.setFixedTime(fixed);
   await importData(page, periodFixture());
   await loadView(page);
-  const buttons = action(page, 'trainingLoadRange');
-  const option = key => page.locator('[data-a="trainingLoadRange"][data-v="' + key + '"]');
+  const buttons = action(page, 'progressRange');
+  const option = key => page.locator('[data-a="progressRange"][data-v="' + key + '"]');
   const chart = page.locator('svg.tl-days');
   const bins = chart.locator('[data-load-day]');
   const muscleLink = page.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]');
+  await openLoadDetails(page);
   const checkin = await page.locator('.tl-checkin').innerText();
   const savedLog = await page.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1')).log);
   const ranges = [
@@ -354,7 +361,7 @@ async function runPeriodScenario(page) {
   for (const { key, sessions, knownAU, chest } of ranges) {
     await option(key).click();
     assert.equal(await option(key).getAttribute('aria-pressed'), 'true');
-    assert.equal(await page.locator('[data-a="trainingLoadRange"][aria-pressed="true"]').count(), 1);
+    assert.equal(await page.locator('[data-a="progressRange"][aria-pressed="true"]').count(), 1);
     const current = await period(page, 'current');
     assert.equal(Number(current.sessions), sessions);
     assert.equal(current.missingAu, '2');
@@ -365,6 +372,7 @@ async function runPeriodScenario(page) {
     assert.ok(binCount > 0 && binCount <= 7, key + ' keeps the chart readable on mobile');
     closeNumber(await bins.evaluateAll(nodes => nodes.reduce((sum, node) => sum + Number(node.dataset.knownAu), 0)),
       knownAU, key + ' graph covers the selected period');
+    await openLoadDetails(page);
     assert.equal(await page.locator('.tl-checkin').innerText(), checkin, 'morning check remains about today');
 
     await muscleLink.click();

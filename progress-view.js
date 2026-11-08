@@ -28,8 +28,8 @@
   var INFO = {
     overview: {
       title: 'Kako čitati napredak',
-      paragraphs: ['Prvi krug prikazuje odrađeni dio tjednog plana ili dane sa spremljenim treningom u ovom tjednu. Drugi uspoređuje dvije zabilježene serije na istoj ljestvici ili prikazuje koliko si tjedana bio aktivan u zadnjih osam.',
-        'Tjedan po planu prati tvoje planirane treninge. Ekipni treninzi ulaze u ukupan broj odrađenih treninga, a isprobavanje vježbe iz knjižnice ostaje u povijesti te vježbe.']
+      paragraphs: ['Krug prikazuje tjedni plan ili aktivne dane od ponedjeljka do nedjelje. Odabirom razdoblja mijenjaš trend vježbe i graf napora.',
+        'Za usporedbu odaberi vježbu. Dodirni dan ili razdoblje u grafu napora za spremljene treninge i unos ocjene koja nedostaje.']
     },
     performance: {
       title: 'Što točno uspoređujemo',
@@ -305,17 +305,25 @@
     });
   }
   function choices(vm) {
-    var out=[];
-    comparisons(vm).concat(Array.isArray(vm.exercises)?vm.exercises:[]).forEach(function(item){if(item && item.id && !out.some(function(e){return e.id===item.id;}))out.push({id:item.id,name:item.name || 'Vježba'});});
+    var source=Array.isArray(vm.chartExercises)?vm.chartExercises:comparisons(vm).concat(Array.isArray(vm.exercises)?vm.exercises:[]);
+    var seen=new Set(),out=[];
+    source.forEach(function(item){
+      if(!item || typeof item.id!=='string' || !item.id || seen.has(item.id))return;
+      seen.add(item.id);out.push({id:item.id,name:item.name || 'Vježba',alt:item.alt || ''});
+    });
     return out;
   }
-  function modeTabs(mode) {
-    return '<nav class="pg-mode-tabs" aria-label="Prikaz analize"><button type="button" data-a="analyticsMode" data-v="progress" aria-pressed="'+(mode==='progress')+'">Napredak</button><button type="button" data-a="analyticsMode" data-v="load" aria-pressed="'+(mode==='load')+'">Opterećenje</button></nav>';
+  function pinnedChoices(vm,items) {
+    var ids=Array.isArray(vm.chartPinnedIds)?vm.chartPinnedIds:[];
+    return Array.from(new Set(ids)).map(function(id){return items.find(function(item){return item.id===id;});}).filter(Boolean).slice(0,3);
+  }
+  function selectedChoice(vm,items,pinned) {
+    return items.find(function(item){return item.id===vm.chartExerciseId;}) || pinned[0] || items[0];
   }
   function rangeTabs(period) {
     var options = [['7d','7 dana','Zadnjih 7 dana'],['1m','1 mj.','Zadnjih 30 dana'],['3m','3 mj.','Zadnjih 90 dana'],['all','Sve','Sve vrijeme']];
     var selected = options.some(function (option) { return option[0]===period; }) ? period : 'all';
-    return '<div class="tl-range-tabs pg-range-tabs" role="group" aria-label="Razdoblje trenda vježbe">' + options.map(function (option) {
+    return '<div class="tl-range-tabs pg-range-tabs" role="group" aria-label="Razdoblje analize">' + options.map(function (option) {
       return '<button type="button" data-a="progressRange" data-v="'+option[0]+'" aria-label="'+option[2]+'" aria-pressed="'+(option[0]===selected)+'">'+option[1]+'</button>';
     }).join('') + '</div>';
   }
@@ -425,7 +433,7 @@
   function weeklySummary(stats, plan) {
     var card = { key:'week', topic:'activity', label:stats.label, value:stats.value, note:stats.note, fractions:[0] };
     if (finite(plan.done) && finite(plan.planned) && plan.planned > 0) {
-      card.label = 'Tjedni plan';
+      card.label = 'Plan ovaj tjedan';
       card.value = amount(plan.done);
       card.total = amount(plan.planned);
       card.note = stats.note || 'Odrađeni treninzi';
@@ -439,51 +447,84 @@
     }
     return card;
   }
-  function secondarySummary(stats, insights, comparison) {
-    if (comparison) {
-      var delta = comparison.current - comparison.previous;
-      var scale = Math.max(comparison.current, comparison.previous, 1);
-      return { key:'performance', topic:'performance', label:comparison.name,
-        value:delta === 0 ? '0' : (delta > 0 ? '+' : '−') + amount(Math.abs(delta)), up:delta > 0,
-        note:delta === 0 ? 'Bez promjene · ' + comparison.unit : 'Usporediva serija · ' + comparison.unit,
-        comparison:comparison, fractions:[comparison.current / scale, comparison.previous / scale] };
-    }
-    var weeks = activityWeeks(insights);
-    if (!weeks.length) return { key:'cadence', topic:'activity', label:stats.label, value:stats.value, note:stats.note, fractions:[0] };
-    var active = weeks.filter(function (week) { return week.count > 0; }).length;
-    return { key:'cadence', topic:'activity', label:'Aktivni tjedni', value:amount(active), total:weeks.length,
-      note:'Tjedni sa spremljenim treningom', fractions:[active / weeks.length] };
+  var pickerSearchIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg>';
+  var pickerPinIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"/></svg>';
+  function mainChart(vm) {
+    var items=choices(vm),pinned=pinnedChoices(vm,items),selected=selectedChoice(vm,items,pinned);
+    var content='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2>';
+    if(!selected)return content+'</div><div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div></section>';
+    var id=selected.id,isPinned=pinned.some(function(item){return item.id===id;}),pinFull=!isPinned&&pinned.length>=3;
+    var comparison=comparisons(vm).find(function(item){return item.id===id;});
+    var hasComparison=typeof vm.chartHasComparison==='boolean'?vm.chartHasComparison:!!comparison;
+    var metric=['performance','volume'].includes(vm.chartMetric)?vm.chartMetric:hasComparison?'performance':'volume';
+    var exercise=(Array.isArray(vm.exercises)?vm.exercises:[]).find(function(item){return item.id===id;});
+    var volume=Object.prototype.hasOwnProperty.call(vm,'chartVolumeHtml')?vm.chartVolumeHtml:exercise&&exercise.html;
+    content+='<div class="pg-chart-actions"><button type="button" class="pg-pin" data-a="progressPin" data-id="'+esc(id)+'" aria-label="Prati vježbu" aria-pressed="'+isPinned+'"'+(pinFull?' disabled':'')+'>'+pickerPinIcon+'<span>'+(isPinned?'Pratim':'Prati')+'</span></button>'+
+      '<button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf" aria-haspopup="dialog">'+pickerSearchIcon+'</button></div></div>';
+    if(pinned.length)content+='<div class="pg-pinned"><span id="pg-pinned-title">Praćene vježbe</span><div role="group" aria-labelledby="pg-pinned-title">'+pinned.map(function(item){
+      var trend=(Array.isArray(vm.chartPinnedTrends)?vm.chartPinnedTrends:[]).find(function(entry){return entry && entry.id===item.id;});
+      var readout='';
+      if(trend && finite(trend.current) && finite(trend.delta) && ['pon.','s'].includes(trend.unit)){
+        var delta=trend.delta;
+        readout='<small>'+amount(trend.current)+' '+esc(trend.unit)+' <span'+(delta>0?' class="pg-pin-up"':delta<0?' class="pg-pin-down"':'')+' title="Promjena od prethodne usporedive serije">· '+(delta>0?'+':delta<0?'−':'')+amount(Math.abs(delta))+'</span></small>';
+      }
+      return '<button type="button" data-a="progressExercise" data-id="'+esc(item.id)+'" aria-pressed="'+(item.id===id)+'"><span>'+esc(item.name)+'</span>'+readout+'</button>';
+    }).join('')+'</div></div>';
+    if(pinFull)content+='<p class="pg-pin-hint">Pratiš 3 vježbe. Odaberi jednu od njih i isključi praćenje za novi odabir.</p>';
+    return content+'<div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
+      (metric==='performance'?mainPerformance(chartComparison(vm,id)):volume?'<div class="pg-main-volume">'+volume+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka o količini rada</h3><p>U odabranom razdoblju nema zabilježenog rada za ovu vježbu.</p></div>')+
+      '<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button></section>';
+  }
+  function pickerRows(items,selectedId) {
+    if(!items.length)return '<p class="pg-picker-empty" role="status">Nema zabilježenih vježbi koje odgovaraju pretrazi.</p>';
+    return items.map(function(item){
+      return '<button type="button" data-a="progressExercise" data-id="'+esc(item.id)+'"'+(item.id===selectedId?' aria-current="true"':'')+'><strong>'+esc(item.name)+'</strong><span aria-hidden="true">'+(item.id===selectedId?'✓':'›')+'</span></button>';
+    }).join('');
+  }
+  function searchKey(value) {
+    return String(value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+  }
+  function bindPicker(element,items,selectedId) {
+    var input=element.querySelector('#progress-exercise-search'),results=element.querySelector('.pg-picker-list');
+    var entries=items.map(function(item){return {item:item,key:searchKey(item.name+' '+item.alt)};});
+    input.addEventListener('input',function(){
+      var words=searchKey(input.value).trim().split(/\s+/);
+      var matches=entries.filter(function(entry){return words.every(function(word){return entry.key.includes(word);});});
+      results.innerHTML=pickerRows(matches.map(function(entry){return entry.item;}),selectedId);
+    });
+  }
+  function focusPanel(vm, week) {
+    return '<section class="pg-focus" aria-label="Cilj i sljedeći korak"><div class="pg-focus-top">'+
+      '<button type="button" class="pg-focus-goal" data-a="progTab" data-v="doziranje"><small>Tvoj cilj</small><strong>'+
+      esc(vm.goal || 'Postavi cilj')+'</strong><span>'+ (vm.goal ? 'Postavke cilja' : 'Odaberi što želiš razvijati')+' <i aria-hidden="true">›</i></span></button>'+
+      summaryCard(week)+'</div>'+
+      (vm.nextStep?'<button type="button" class="pg-focus-step" data-a="todayOpen"><span><small>'+esc(vm.nextStepLabel||'Sljedeći korak')+'</small><strong>'+
+        esc(vm.nextStep)+'</strong></span><i aria-hidden="true">›</i></button>':'')+'</section>';
   }
   function render(vm) {
     vm=vm || {};lastVM=vm;
     if(vm.tab==='doziranje')return renderLegacy(vm);
-    var old=renderLegacy(vm),items=choices(vm),selected=items.find(function(e){return e.id===vm.chartExerciseId;}) || items[0],id=selected && selected.id;
-    var comparison=comparisons(vm).find(function(e){return e.id===id;}),exercise=(Array.isArray(vm.exercises)?vm.exercises:[]).find(function(e){return e.id===id;}),metric=['performance','volume'].includes(vm.chartMetric)?vm.chartMetric:comparison?'performance':'volume';
-    var volume=Object.prototype.hasOwnProperty.call(vm,'chartVolumeHtml')?vm.chartVolumeHtml:exercise&&exercise.html;
-    var stats = Array.isArray(vm.stats) ? vm.stats : [];
-    var week = weeklySummary(stats[0] || { value:'—', label:'Ovaj tjedan' }, vm.weekPlan || {});
-    var secondary = secondarySummary(stats[1] || { value:'—', label:'Kontinuitet' }, vm.insights || {}, comparison);
-    var content='<div class="view progress-view pg-cinema" data-progress-tab="pregled">'+(vm.topbarHtml || '')+'<header class="pg-heading"><div><p class="pg-kicker">Tvoj rad, kroz vrijeme</p><h1>Napredak</h1></div>'+info('overview','Kako čitati Napredak')+'</header>'+modeTabs('progress')+
-      '<section class="pg-summary-pair" aria-label="Kratki pregled">'+summaryCard(week)+summaryCard(secondary)+'</section>';
-    if(vm.zero)content+='<section class="pg-zero pg-cinema-zero"><h2>Prvi trening, prvi pomak</h2><p>Spremi odrađeni trening i postavi svoje polazište.</p><button type="button" data-a="tab" data-tab="home">Odaberi trening</button></section>';
-    content+='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2>'+
-      (selected?'<button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf">⌃⌄</button>':'')+'</div>';
-    if(selected){
-      content+=rangeTabs(vm.chartPeriod)+'<div class="pg-metric-tabs" role="group" aria-label="Mjera napretka"><button type="button" data-a="progressMetric" data-v="performance" aria-pressed="'+(metric==='performance')+'">Izvedba</button><button type="button" data-a="progressMetric" data-v="volume" aria-pressed="'+(metric==='volume')+'">Količina rada</button></div>'+
-        (metric==='performance'?mainPerformance(chartComparison(vm,id)):volume?'<div class="pg-main-volume">'+volume+'</div>':'<div class="pg-main-empty"><h3>Još nema podataka o količini rada</h3><p>U odabranom razdoblju nema zabilježenog rada za ovu vježbu.</p></div>')+
-        '<button type="button" class="pg-chart-footer" data-a="openEx" data-id="'+esc(id)+'">Vježba i puna povijest <span aria-hidden="true">›</span></button>';
-    }else content+='<div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div>';
-    content+='</section>';
-    content+='<nav class="pg-drill-list" aria-label="Detaljni pregledi">'+drill('','Mišićni tjedan','Izravne i pomoćne serije','data-a="analyticsOpen" data-section="muscles"')+drill('records','Rekordi','Osobni rezultati iz dnevnika')+drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+'</nav><div class="pg-compact-tools">'+drill('activity','Aktivnost i kontinuitet','')+drill('suggestions','Plan i prijedlozi',(vm.counts||{}).ready?vm.counts.ready+' čeka potvrdu':'')+'<button type="button" data-a="progTab" data-v="doziranje">Doziranje i pravila <span aria-hidden="true">›</span></button></div>';
-    return content+'<template id="progress-detail-cache">'+old+'</template>'+dialog()+'</div>';
+    var details=renderLegacy(vm),stats=Array.isArray(vm.stats)?vm.stats:[];
+    var week=weeklySummary(stats[0] || {value:'—',label:'Ovaj tjedan'},vm.weekPlan || {});
+    return '<div class="view progress-view pg-cinema" data-progress-tab="pregled">'+(vm.topbarHtml || '')+
+      '<header class="pg-heading"><div><p class="pg-kicker">Tvoj cilj i tvoj rad</p><h1>Napredak</h1></div>'+info('overview','Kako čitati Napredak')+'</header>'+
+      focusPanel(vm,week)+'<section class="pg-analysis-range" aria-label="Razdoblje trendova i opterećenja">'+
+      '<h2>Razdoblje</h2>'+rangeTabs(vm.chartPeriod)+'</section>'+mainChart(vm)+(vm.loadHtml || '')+
+      '<nav class="pg-drill-list" aria-label="Detaljni pregledi">'+drill('','Mišićni tjedan','Izravne i pomoćne serije','data-a="analyticsOpen" data-section="muscles"')+
+      drill('records','Rekordi','Osobni rezultati iz dnevnika')+drill('performance','Usporedive izvedbe','Cijela povijest')+
+      drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+
+      drill('suggestions','Plan i prijedlozi',(vm.counts||{}).ready?vm.counts.ready+' čeka potvrdu':'')+'</nav>'+
+      '<template id="progress-detail-cache">'+details+'</template>'+dialog()+'</div>';
   }
   function showDetail(topic,trigger,data) {
     var element=document.getElementById('progress-info'),cache=document.getElementById('progress-detail-cache');if(!element || !cache)return;
-    var title='Detalji napretka',body='',source=null;
+    var title='Detalji napretka',body='',source=null,pickerList=null,pickerSelected=null;
     if(topic==='choose') {
-      title='Odaberi vježbu';var list=choices(lastVM);
-      if(!list.length)return;
-      body='<div class="pg-picker-list">'+list.map(function(e){return '<button type="button" data-a="progressExercise" data-id="'+esc(e.id)+'"><strong>'+esc(e.name)+'</strong><span aria-hidden="true">›</span></button>';}).join('')+'</div>';
+      title='Odaberi vježbu';pickerList=choices(lastVM);
+      if(!pickerList.length)return;
+      pickerSelected=selectedChoice(lastVM,pickerList,pinnedChoices(lastVM,pickerList)).id;
+      body='<label class="pg-picker-search">'+pickerSearchIcon+'<input id="progress-exercise-search" type="search" aria-label="Pretraži zabilježene vježbe" placeholder="Traži vježbu" autocomplete="off"></label>'+
+        '<div class="pg-picker-list" role="group" aria-label="Zabilježene vježbe">'+pickerRows(pickerList,pickerSelected)+'</div>';
     } else if(topic==='point') {
       var item=chartComparison(lastVM,(data||{}).id),points=item?chartPoints(item):[];
       var index=data&&data.pointIndex!=null?Number(data.pointIndex):points.length-(data&&data.point==='previous'?2:1),point=points[index];
@@ -503,6 +544,7 @@
     }
     if(!element.open || !element.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;
     element.querySelector('#progress-info-title').textContent=title;element.querySelector('#progress-info-body').innerHTML=body;
+    if(pickerList)bindPicker(element,pickerList,pickerSelected);
     var panel=element.querySelector('details.pg-section');if(panel)panel.open=true;
     openDialog(element);
   }
@@ -528,7 +570,7 @@
   }
   function closeInfo() {
     var element = document.getElementById('progress-info');
-    if (!element) return;
+    if (!element || !element.hasAttribute('open')) return;
     if (typeof element.close === 'function') element.close();
     else element.removeAttribute('open');
     restoreInfoFocus();

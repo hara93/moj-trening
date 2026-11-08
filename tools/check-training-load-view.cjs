@@ -4,10 +4,12 @@ const Load=require('../training-load.js'),View=require('../training-load-view.js
 const now=new Date('2026-11-05T12:00:00').getTime();
 const entry=(extra={})=>({historyId:'entry',kind:'protocol',name:'Trening',at:now-3600000,secs:300,srpe:5,...extra});
 const render=(log,morning)=>View.render({summary:Load.summary({log,now}),morning});
-test('the component exposes three independent indicators and existing accessible navigation',()=>{
+test('the embedded component exposes three independent indicators under the shared analysis controls',()=>{
   const html=render([entry()],{date:'2026-11-05',energy:4,legs:3,pain:0});
+  assert.match(html,/^<section id="analysis-load"/);
+  assert.doesNotMatch(html,/data-a="(?:analyticsMode|trainingLoadRange)"/);
   for(const section of ['effort','muscles','readiness'])assert.match(html,new RegExp('data-load-section="'+section+'"'));
-  for(const action of ['back','morningOpen','historyList'])assert.match(html,new RegExp('data-a="'+action+'"'));
+  for(const action of ['trainingLoadDetail','morningOpen','historyList'])assert.match(html,new RegExp('data-a="'+action+'"'));
   assert.match(html,/data-load-metric="current-au">25/);assert.match(html,/data-load-readiness="pain" data-value="0"/);assert.match(html,/ne ukupna ocjena spremnosti/);
   assert.match(html,/<caption>/);assert.match(html,/scope="col"/);
 });

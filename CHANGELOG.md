@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.20.16 — 8. 11. 2026.
+
+- **Napredak** i **Opterećenje** su na jednom zaslonu s ciljem, krugom za kalendarski tjedan i sljedećim korakom. Trend i napor imaju zajednički odabir razdoblja.
+- U trendu možeš pretražiti vježbe sa zabilježenom izvedbom i pratiti do tri. Dodir na graf napora prikazuje treninge iz odabranog raspona i omogućuje unos nedostajuće ocjene.
+- **Danas** stavlja glavnu uputu i akciju na vrh. Vježbe, provjera opreme i razlozi otvaraju se dodirom.
+
 ## 1.20.15 — 8. 11. 2026.
 
 - Prozori u **Napretku** i **Opterećenju** zatvaraju se povlačenjem s vrha ili dodirom ručke koja je vidljiva i dok listaš sadržaj.

@@ -41,12 +41,16 @@
       .sort(function(a,b){return b.entry.at-a.entry.at||a.index-b.index;}).map(function(row){return row.entry;});
   }
   var labels={protocol:'Protokoli',field:'Teren',team:'Ekipni trening',match:'Utakmice',legacy:'Stariji zapisi'};
-  function period(log,from,to){
+  var workoutLabels={protocol:'Protokol',field:'Trening na terenu',team:'Ekipni trening',match:'Utakmica',legacy:'Stariji zapis'};
+  function period(log,from,to,includeWorkouts){
     var entries=log.filter(function(entry){return entry.at>=from&&entry.at<to;});
     var out={from:from,to:to,sessions:entries.length,rated:0,knownMinutes:0,missingDuration:0,missingRpe:0,missingAU:0,knownAU:0,totalAU:null,complete:false,byKind:[]};
+    if(includeWorkouts)out.workouts=[];
     var buckets=new Map();
     entries.forEach(function(entry){
       var au=sessionAU(entry),type=kind(entry);
+      if(includeWorkouts)out.workouts.push({id:text(entry.historyId),name:text(entry.name)||workoutLabels[type],label:workoutLabels[type],
+        kind:type,at:entry.at,secs:duration(entry.secs)?entry.secs:null,srpe:rating(entry.srpe)?entry.srpe:null,au:au});
       if(duration(entry.secs))out.knownMinutes+=entry.secs/60;else out.missingDuration++;
       if(!rating(entry.srpe))out.missingRpe++;
       if(au===null)out.missingAU++;else{out.rated++;out.knownAU+=au;}
@@ -94,7 +98,7 @@
     }
     for(var i=0;i<binCount;i++){
       var start=Math.floor(i*count/binCount),end=Math.floor((i+1)*count/binCount);
-      var day=period(log,shift(from,start),shift(from,end));
+      var day=period(log,shift(from,start),shift(from,end),true);
       day.date=dateKey(day.from);day.endDate=dateKey(day.to-1);days.push(day);
     }
     return freeze({status:'ready',today:dateKey(input.now),range:range,

@@ -122,7 +122,7 @@ async function screenshot(page, name) {
 
 async function activity(page) {
   if(await page.locator('#progress-info').evaluate(node=>node.open))await page.keyboard.press('Escape');
-  await page.locator('.pg-summary-pair > button').first().click();
+  await page.locator('.pg-focus .pg-ring-card').click();
   const panel = page.locator('#pg-activity');
   await panel.waitFor();
   const table = panel.locator('details.pg-activity-table');
@@ -135,9 +135,7 @@ async function activity(page) {
 
 async function performance(page) {
   if(await page.locator('#progress-info').evaluate(node=>node.open))await page.keyboard.press('Escape');
-  const row=page.locator('.pg-summary-pair [data-a=progressDetail][data-topic=performance]');
-  const metric=page.locator('[data-a=progressMetric][data-v=performance]');
-  if(await row.count())await row.click();else if(await metric.count())await metric.click();
+  await page.locator('.pg-drill-list [data-a=progressDetail][data-topic=performance]').click();
 }
 
 async function openHistory(page, id) {
@@ -172,7 +170,8 @@ async function homeChecks(page) {
     await page.getByRole('button',{name:'Napredak',exact:true}).click();
     await page.locator('.pg-cinema').waitFor();
     assert.equal(await page.locator('.pg-main-card svg').count(),0,'cold main has no invented graph');
-    assert.deepEqual(await action(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>n.dataset.v)),['progress','load']);
+    assert.equal(await page.locator('.pg-cinema #analysis-load').count(),1);
+    assert.equal(await action(page,'progressRange').count(),4);
     await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
     await page.locator('.db-analytics .db-muscle').waitFor();
     assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length);
@@ -253,7 +252,7 @@ async function main() {
 async function runScenarios(page) {
   await homeChecks(page);
   await progress(page);
-  assert.ok(await page.locator('.pg-zero').isVisible());
+  assert.ok(await page.locator('.pg-main-unavailable').isVisible());
   assert.equal(await page.locator('.pg-comparison').count(), 0);
   const zeroWeeks = await activity(page);
   assert.ok(zeroWeeks.every(row => row[1] === '0' && row[2] === '0'));
@@ -264,8 +263,8 @@ async function runScenarios(page) {
   futureOnly.log = fixture().log.filter(entry => entry.historyId === 'hp-future');
   await importData(page, futureOnly);
   await progress(page);
-  assert.ok(await page.locator('.pg-zero').isVisible());
-  assert.deepEqual(await page.locator('.pg-summary-pair strong').allTextContents(), ['0', '0']);
+  assert.ok(await page.locator('.pg-main-unavailable').isVisible());
+  assert.equal(await page.locator('.pg-focus .pg-ring-readout strong').innerText(),'0');
   assert.ok((await activity(page)).every(row => row[1] === '0' && row[2] === '0'));
 
   await importData(page, fixture());
@@ -300,7 +299,7 @@ async function runScenarios(page) {
   }
 
   await performance(page);
-  const summary=page.locator('.pg-summary-pair [data-topic=performance]');
+  const summary=page.locator('.pg-drill-list [data-a=progressDetail][data-topic=performance]');
   const help = page.locator('[data-a="progressInfo"][data-topic="performance"]');
   await help.focus();
   await page.keyboard.press('Enter');
@@ -338,7 +337,7 @@ async function runScenarios(page) {
   await progress(page);
   assert.equal(await page.locator('.pg-comparison').count(), 0);
   await performance(page);
-  assert.ok(await page.locator('.pg-main-empty').isVisible());
+  assert.ok(await page.locator('#progress-info .pg-comparison-empty').isVisible());
   assert.deepEqual((await activity(page))[0].slice(1), ['2', '70', '410']);
   await home(page);
   assert.match(await page.locator('.home').innerText(), /Zadnji trening: Klupski trening/);
@@ -350,7 +349,7 @@ async function runScenarios(page) {
   await progress(page);
   assert.equal(await page.locator('.pg-comparison').count(), 0);
   await performance(page);
-  assert.ok(await page.locator('.pg-main-empty').isVisible());
+  assert.ok(await page.locator('#progress-info .pg-comparison-empty').isVisible());
   assert.deepEqual((await activity(page))[0].slice(1), ['3', '80', '480']);
   results.push({
     label: 'history-driven-insights', repetitions: '4→5→edited6', seconds: '30→40',

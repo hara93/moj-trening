@@ -86,6 +86,16 @@ test('selectable dates share one range for effort, muscle sets and contiguous ch
   assert.equal(empty.effort.days.length,1);assert.equal(empty.effort.days[0].date,'2026-11-05');
   assert.equal(empty.effort.current.totalAU,null);
 });
+test('bin workouts use the same local boundaries, eligible rows and unknowns as the chart',()=>{
+  const before=new Date('2026-10-10T23:59:59').getTime(), boundary=new Date('2026-10-11T00:00:00').getTime();
+  const zero=entry('zero',{at:before,srpe:0,secs:88}),unknown=entry('unknown',{at:boundary,srpe:undefined,secs:undefined,load2:{au:99}});
+  const {effort:{days}}=summary([unknown,zero,entry('trial',{at:before,kind:'exercise'}),entry('future',{at:now+1})],{period:'1m'});
+  assert.deepEqual(days[0].workouts,[{id:'zero',name:'Snaga',kind:'protocol',label:'Protokol',at:before,secs:88,srpe:0,au:0}]);
+  assert.deepEqual(days[1].workouts,[{id:'unknown',name:'Snaga',kind:'protocol',label:'Protokol',at:boundary,secs:null,srpe:null,au:null}]);
+  assert.equal(days.reduce((count,day)=>count+day.workouts.length,0),2);
+  assert.ok(Object.isFrozen(days[0].workouts[0]));
+  assert.equal(Object.isFrozen(zero),false,'view projection does not freeze the mutable history record');
+});
 test('no history and legacy missing data remain unknown rather than complete zero load',()=>{
   const empty=summary([]);assert.equal(empty.effort.current.totalAU,null);assert.equal(empty.effort.baseline.weeklyAverageAU,null);assert.equal(empty.effort.days.length,7);
   const old=summary([entry('old',{kind:null,secs:undefined,srpe:undefined,items:undefined})]);assert.equal(old.effort.current.sessions,1);assert.equal(old.effort.current.totalAU,null);assert.equal(old.muscles.coverage.missingSessions,1);

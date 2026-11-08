@@ -13,11 +13,39 @@
 .dy-tools button,.today-evidence button,.today-evidence>div{font:inherit;color:var(--text);text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:0}
 .dy-tools small,.today-evidence small{margin-top:4px}
 .dy-panel{margin:14px 0;padding:16px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
-.dy-panel h2{font-size:19px}.dy-advice{border-color:#406263}.dy-advice h2{font-size:23px;line-height:1.25}.dy-panel h3{font-size:15px;margin:14px 0 5px}
-.dy-panel p,.dy-panel ul{font-size:14px;line-height:1.5}.dy-reasons{padding-left:18px;color:var(--text-2)}.dy-reasons li{margin-bottom:5px}
+.dy-panel h2{font-size:19px}.dy-panel h3{font-size:15px;margin:14px 0 5px}
+.dy-panel p,.dy-panel ul,.dy-panel ol{font-size:14px;line-height:1.5}
 .dy-primary,.dy-secondary,.dy-delete{min-height:44px;font:600 14px var(--font);border-radius:12px;padding:8px 13px;border:1px solid var(--border);color:var(--text);background:var(--surface-2)}
 .dy-primary{width:100%;background:#95dcd0;color:#122c2b;border-color:#95dcd0}.dy-delete{color:#ffc2b5}
 .dy-form{display:grid;gap:15px}.dy-form label{display:grid;gap:5px;font-weight:600}.dy-form select{font:16px var(--font);padding:10px;color:var(--text);border:1px solid var(--border);border-radius:9px;background:var(--bg);width:100%;height:44px}.dy-form .dy-error{color:#ffc2b5;margin:0}.dy-form .dy-error:empty{display:none}
-.today-evidence{display:grid;gap:6px;margin-top:10px}.today-evidence button,.today-evidence>div{background:var(--bg);overflow-wrap:anywhere}.dy-dose summary,.dy-previous summary{cursor:pointer;padding:8px 0;font-size:14px;font-weight:650}.dy-dose ul{padding-left:18px}.dy-dose li span{display:block;color:var(--text-2);font-size:13px}
+.today-evidence{display:grid;gap:6px;margin-top:10px}.today-evidence button,.today-evidence>div{background:var(--bg);overflow-wrap:anywhere}.dy-previous summary{cursor:pointer;padding:8px 0;font-size:14px;font-weight:650}
 .dy-match{display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;color:var(--text-2);font:14px var(--font);border:0;min-height:44px;padding:8px 2px;width:100%;text-align:left}
-.dy-match strong{color:var(--accent-text);font-weight:600}.dy-advice{margin-top:4px}.dy-missing{color:var(--text-2);font-size:13px}
+.dy-match strong{color:var(--accent-text);font-weight:600}
+.dy-today .dy-heading{margin-bottom:14px}
+.dy-tools button{min-height:66px}
+.dy-tools strong{display:flex;align-items:baseline;justify-content:space-between;gap:4px}
+.dy-tools strong span{flex:none;color:var(--accent-text);font-size:18px;line-height:1}
+.dy-advice{margin-top:0;border-color:#406263}
+.dy-advice h2{font-size:23px;line-height:1.2;overflow-wrap:anywhere}
+.dy-advice .dy-eyebrow{font-size:12px}
+.dy-advice[data-kind="caution"]{border-color:var(--danger)}
+.dy-advice[data-kind="caution"] .dy-eyebrow{color:var(--danger)}
+.dy-advice .dy-instruction{color:var(--text-body);margin:8px 0 12px}
+.dy-advice .dy-primary{margin:6px 0}
+.dy-advice .dy-primary span{margin-left:4px;font-size:18px;line-height:1}
+.dy-disclosure{border-top:1px solid var(--border)}
+.dy-disclosure>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  min-height:44px;padding:8px 0;cursor:pointer;list-style:none;font-size:14px;font-weight:650;
+}
+.dy-disclosure>summary::-webkit-details-marker{display:none}
+.dy-disclosure>summary::after{content:"";width:7px;height:7px;flex:none;margin-right:3px;border:solid var(--text-2);border-width:0 1.5px 1.5px 0;transform:rotate(45deg) translateY(-2px)}
+.dy-disclosure[open]>summary::after{transform:rotate(225deg)}
+.dy-disclosure>summary small{display:block;margin-top:2px;color:var(--text-2);font-weight:500}
+.dy-disclosure-body{padding:0 0 8px}
+.dy-disclosure-body :is(ul,ol){margin:0;padding-left:20px}
+.dy-reasons{color:var(--text-2)}
+.dy-disclosure-body li+li{margin-top:6px}
+.dy-dose li::marker{color:var(--accent-text);font-variant-numeric:tabular-nums}
+:is(.dy-dose,.dy-last) li span{display:block;color:var(--text-2);font-size:13px}
+.dy-last{margin-top:8px}

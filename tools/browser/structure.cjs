@@ -96,24 +96,30 @@ async function navigation(page, width) {
   await noOverflow(page, '.db-home', 'compact dashboard ' + width);
   await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-dashboard-'+width+'.png')});
   await page.getByRole('button', { name: 'Napredak', exact: true }).click();
-  await page.locator('.progress-view.pg-cinema').waitFor();
-  assert.equal(await page.locator('.analytics-hub').count(),0,'fourth tab opens the progress graph directly');
-  assert.equal(await page.locator('.pg-summary-pair > button').count(),2);
-  assert.equal(await page.locator('.pg-main-card').count(),1);
-  assert.equal(await page.locator('.pg-drill-list > button').count(),3);
-  assert.deepEqual(await A(page,'analyticsMode').evaluateAll(nodes=>nodes.map(n=>[n.dataset.v,n.getAttribute('aria-pressed')])),[['progress','true'],['load','false']]);
+  const overview=page.locator('.progress-view.pg-cinema'),load=overview.locator('#analysis-load');
+  await overview.waitFor();
+  assert.equal(await page.locator('.analytics-hub').count(),0,'fourth tab opens the unified overview directly');
+  assert.equal(await overview.locator('.pg-focus .pg-ring-card').count(),1);
+  assert.equal(await overview.locator('.pg-main-card').count(),1);
+  assert.equal(await overview.locator('.pg-drill-list [data-a="historyList"]').count(),1,'shared overview keeps a single entry to history');
+  assert.equal(await A(page,'analyticsMode').count(),0,'no separate mode switch');
+  assert.deepEqual(await A(page,'progressRange').evaluateAll(nodes=>nodes.map(n=>n.dataset.v)),['7d','1m','3m','all']);
+  assert.equal(await overview.locator('.pg-analysis-range [data-a="progressRange"]:visible').count(),4);
+  await load.getByRole('heading',{name:'Opterećenje',exact:true}).waitFor();
   await noOverflow(page,'.progress-view','progress '+width);
   await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-progress-'+width+'.png')});
   assert.equal(await page.locator('.pg-choose, .pg-metric-tabs').count(),0,'no empty trend picker on a fresh overview');
   await page.locator('[data-a="analyticsOpen"][data-section="muscles"]').click();
   await page.locator('.db-analytics').waitFor();assert.equal(await page.locator('.db-comparison-row').count(),MuscleWork.groups.length);
   await noOverflow(page,'.db-analytics','muscles '+width);
-  await page.locator('.view [data-a="back"]').first().click();await page.locator('.progress-view.pg-cinema').waitFor();
-  await page.locator('[data-a="analyticsMode"][data-v="load"]').click();
-  await page.locator('.training-load.tl-cinema').waitFor();await noOverflow(page,'.training-load','load '+width);
-  assert.equal(await page.locator('.tl-drill-list > button').count(),3);
-  await page.locator('[data-a="analyticsMode"][data-v="progress"]').click();
-  await page.locator('.progress-view.pg-cinema').waitFor();
+  await page.locator('.view [data-a="back"]').first().click();await overview.waitFor();
+  const loadDetails=load.locator('.tl-analysis-details');
+  const muscleDetails=loadDetails.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]');
+  assert.equal(await muscleDetails.isVisible(),false);
+  await loadDetails.locator(':scope > summary').click();
+  assert.ok(await muscleDetails.isVisible());
+  assert.equal(await loadDetails.locator('.tl-drill-list > button').count(),2);
+  await noOverflow(page,'#analysis-load','inline load '+width);
   assert.equal((await store(page)).log.length, 0, 'navigation cannot create history');
 }
 
@@ -164,7 +170,7 @@ async function liveWorkout(page,width) {
   await A(page,'cinemaMenu').click();await A(page,'cinemaExit').click();await A(page,'quitDiscard').click();
   assert.equal(await player(page),null);assert.equal(JSON.stringify((await store(page)).log),history);
   assert.equal(JSON.stringify((await store(page)).protocols[protocolId].items),source);
-  results.push({width,navigation:'four tabs, compact dashboard, direct progress and load modes, muscle details and back',retainedRows:7,
+  results.push({width,navigation:'four tabs, compact dashboard, unified progress and load, muscle details and back',retainedRows:7,
     activeRows:5,manualSets:2,futureEditCancelled:true,journalClockPaused:true,reserveOnlyAfterCompletion:true,historyUnchanged:true});
 }
 

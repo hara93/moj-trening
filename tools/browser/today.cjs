@@ -104,6 +104,35 @@ async function advise(p){
   const r=p.locator('#today-recommendation');
   return {kind:await r.getAttribute('data-kind'),text:await r.innerText()};
 }
+async function revealReasons(p){
+  const why=p.locator('#today-recommendation > .dy-why');
+  if(!await why.evaluate(node=>node.open))await why.locator(':scope > summary').click();
+}
+async function recommendationLayout(p,{warmup=false}={}){
+  const recommendation=p.locator('#today-recommendation');
+  const checks=recommendation.locator(':scope > .dy-preflight'), dose=recommendation.locator(':scope > .dy-dose');
+  const start=recommendation.locator('[data-a="todayAct"]');
+  assert.equal(await recommendation.locator('details[open]').count(),0);
+  assert.equal(await dose.locator('li').first().isVisible(),false,'the detailed exercise list stays folded by default');
+  assert.equal(await recommendation.locator('.dy-reasons li').first().isVisible(),false);
+  assert.match(await recommendation.innerText(),/jutarnju procjenu|Jutarnja provjera nije potpuna/);
+  assert.ok(await start.evaluate(button=>!!(button.compareDocumentPosition(button.parentElement.querySelector('.dy-dose')) & Node.DOCUMENT_POSITION_FOLLOWING)));
+  await size(p,320,'.view');await size(p,375,'.view');
+  await p.screenshot({path:path.join(artifacts,'today-'+(warmup?'warmup':'recommendation')+(useWebKit?'-webkit':'')+'-375.png')});
+  await checks.locator(':scope > summary').click();
+  assert.match(await checks.locator('li').first().innerText(),/jutarnju procjenu/i);
+  if(warmup)assert.match(await checks.innerText(),/provjeri imaš li/);
+  await checks.locator(':scope > summary').click();
+  await dose.locator(':scope > summary').click();
+  assert.ok(await dose.locator('li').last().isVisible(),'expanded dose includes all exercises');
+  const displayed=await dose.locator('li').count();
+  if(warmup)assert.ok(displayed>2,'the longer warm-up uses the same complete list');
+  assert.match(await dose.locator(':scope > summary').innerText(),new RegExp('\\('+displayed+'\\)'));
+  await dose.locator(':scope > summary').click();
+  await revealReasons(p);
+  assert.ok(await recommendation.getByRole('heading',{name:'Korišteni podaci'}).isVisible());
+  record(warmup?'warmup-layout':'recommendation-layout',{actionBeforeDose:true,allDoseRows:displayed,visibleCheckInStatus:true,reasonAndSourcesOnDemand:true});
+}
 async function morning(p,values){
   await action(p,'morningOpen').click(); const form=p.locator('#morning-form');await form.waitFor();
   for(const [k,value] of Object.entries(values))await form.locator('[name="'+k+'"]').selectOption(String(value));
@@ -111,12 +140,14 @@ async function morning(p,values){
 }
 async function morningFlow(p){
   await today(p); const first=await advise(p);
+  await recommendationLayout(p);
   const form=await morning(p,{energy:4,legs:2,pain:0});
   await size(p,320,'.view');await size(p,375,'.view');
   const before=await settings(p);
   await refused(p,true,'mt.settings');await action(p,'morningSave').click();await form.waitFor();
   assert.deepEqual(await settings(p),before);assert.equal(await form.locator('[name="energy"]').inputValue(),'4');
   await refused(p,false,'mt.settings');await action(p,'morningSave').click();await form.waitFor({state:'hidden'});
+  assert.equal(await p.locator('#today-recommendation details[open]').count(),0,'new recommendation starts folded');
   const saved=(await settings(p)).morningChecks[day];assert.deepEqual(saved,{date:day,energy:4,legs:2,pain:0});
   const ready=await advise(p);assert.ok(ready.kind);
   const personalBefore=(await data(p)).protocols;
@@ -130,9 +161,12 @@ async function morningFlow(p){
   await today(p);
   assert.deepEqual((await settings(p)).morningChecks[day],saved);
   await morning(p,{energy:2,legs:5,pain:0});await action(p,'morningSave').click();
-  const low=await advise(p);assert.notEqual(low.kind,ready.kind,'low energy/heavy legs changes advice');assert.match(low.text,/nog|energ|lakš|oporav|umor/i);
+  const low=await advise(p);assert.notEqual(low.kind,ready.kind,'low energy/heavy legs changes advice');
+  await revealReasons(p);assert.match((await advise(p)).text,/nog|energ|lakš|oporav|umor/i);
   await morning(p,{pain:4});await action(p,'morningSave').click();
   const pain=await advise(p);assert.notEqual(pain.kind,low.kind);assert.match(pain.text,/bol|nelagod|stručn/i);
+  assert.match(await p.locator('.dy-instruction').innerText(),/Preskoči dodatni trening/);
+  assert.equal(await action(p,'todayAct').count(),0);
   assert.deepEqual((await data(p)).log.map(x=>x.historyId),['strg-seed1']);
   record('morning',{first:first.kind,ready:ready.kind,low:low.kind,pain:pain.kind,persists:true,storageRefusalRetainsInputs:true});
 }
@@ -167,9 +201,12 @@ async function teamFlow(p){
   const changed=await data(p),teams=changed.log.filter(l=>l.kind==='team');assert.equal(teams.length,1);
   const item=teams[0];assert.equal(item.teamType,'training');assert.equal(item.srpe,7);assert.equal(item.secs,4800);assert.ok(!item.muscleWork&&!item.load&&!item.items);assert.deepEqual((await settings(p)).matchDates,original.matchDates);
   const heavy=await advise(p);assert.match(await p.locator('.view').innerText(),/klup|ekip|momčad|560/i);
+  await revealReasons(p);
   const reason=p.locator('[data-a="todayEvidence"][data-type="history"][data-id="'+item.historyId+'"]');
-  await reason.click();await action(p,'historyEdit').waitFor();assert.match(await p.locator('.history').innerText(),/Klupski trening/);
-  await action(p,'back').first().click();await p.locator('#today-recommendation').waitFor();
+  await reason.focus();await p.keyboard.press('Enter');await action(p,'historyEdit').waitFor();assert.match(await p.locator('.history').innerText(),/Klupski trening/);
+  await action(p,'back').first().focus();await p.keyboard.press('Enter');await p.locator('#today-recommendation').waitFor();
+  assert.ok(await reason.isVisible(),'Back restores the open evidence section');
+  assert.equal(await reason.evaluate(button=>document.activeElement===button),true,'Back restores focus to the original source');
   await history(p);const btn=p.locator('[data-a="historyOpen"][data-id="'+item.historyId+'"]');await btn.click();assert.match(await p.locator('.history').innerText(),/560|80 min/i);
   await p.locator('.view').evaluate(el=>el.scrollTo(0,0));await p.screenshot({path:path.join(artifacts,useWebKit?'today-team-detail-webkit-375.png':'today-team-detail-375.png')});
   await action(p,'historyEdit').click();const hf=p.locator('#history-edit-form');
@@ -214,16 +251,17 @@ async function integrity(p,ctx,example){
 }
 async function sources(p){
   const own=seed();await importBackup(p,own);await today(p);
+  await revealReasons(p);
   const planned=p.locator('[data-a="todayEvidence"][data-type="plan"][data-date="'+day+'"]');assert.equal(await planned.count(),1);
   await planned.click();assert.equal(await p.locator('[data-a="monthDate"][aria-pressed="true"]').getAttribute('data-date'),day);
-  const cold=seed({cold:true,ownPlan:false,matchDates:{}});await importBackup(p,cold);await today(p);
+  const cold=seed({cold:true,ownPlan:false,matchDates:{}});await importBackup(p,cold);await today(p);await recommendationLayout(p,{warmup:true});
   const template=p.locator('[data-a="todayEvidence"][data-type="protocol"],[data-a="todayEvidence"][data-type="field"]').first();
   assert.equal(await template.getAttribute('data-date'),'');const source=await template.getAttribute('data-id');
   assert.equal(await p.locator('[data-a="todayEvidence"][data-type="plan"]').count(),0,'library option is not falsely tagged as an existing plan');
   await template.click();const actual=await p.locator('h1').innerText();assert.ok(actual&&actual!=='Danas');
   const played=seed({cold:true,ownPlan:false,matchDates:{}});
   played.log=[{kind:'team',historyId:'actual-match-evidence',name:'Primjer odigrane utakmice',teamType:'match',source:'manual',at:at('2026-11-03',17),secs:4200,srpe:8,teamContent:['tactical']}];
-  await importBackup(p,played);await today(p);
+  await importBackup(p,played);await today(p);await revealReasons(p);
   const actualMatch=p.locator('[data-a="todayEvidence"][data-type="history"][data-id="actual-match-evidence"]');
   assert.equal(await actualMatch.count(),1);assert.equal(await p.locator('[data-a="todayEvidence"][data-type="match"][data-date="2026-11-03"]').count(),0);
   await actualMatch.click();assert.match(await p.locator('.history').innerText(),/Primjer odigrane utakmice/);
@@ -233,6 +271,7 @@ async function matchWindow(p){
   const base=seed({cold:true,ownPlan:false,matchDates:{'2026-11-01':1,'2026-11-04':1}});
   const future=structuredClone(seed().log[0]);future.at=at('2026-11-09');future.historyId='future-example';future.srpe=10;future.secs=8000;base.log=[future];
   await importBackup(p,base);await today(p);const match=await advise(p);assert.match(match.text,/utakmic/i);
+  assert.match(await p.locator('.dy-instruction').innerText(),/Bez dodatnog treninga snage ili intervala/);
   assert.ok(!/u\s+povijesti.*buduć/i.test(match.text));
   const yesterday=seed({cold:true,ownPlan:false,matchDates:{'2026-11-03':1}});yesterday.settings.morningChecks={'2026-11-03':{date:'2026-11-03',pain:9,energy:1,legs:5}};
   await importBackup(p,yesterday);await today(p);const after=await advise(p);assert.notEqual(match.kind,after.kind);assert.doesNotMatch(after.text,/boli [4-9]|9.?10/);

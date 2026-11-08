@@ -89,7 +89,9 @@ async function main() {
     await page.locator('[data-a="dashboardProgress"]').click();
     await page.getByRole('heading',{name:'Napredak',exact:true}).waitFor();
     assert.equal(await page.locator('.pg-main-card').count(),1);
-    assert.equal(await page.locator('.pg-summary-pair>button').count(),2);
+    assert.equal(await page.locator('.pg-focus .pg-ring-card').count(),1);
+    assert.equal(await page.locator('.pg-cinema #analysis-load').count(),1);
+    assert.equal(await page.locator('[data-a="progressRange"]').count(),4);
     await page.locator('[data-a="progressDetail"][data-topic="activity"]').first().click();
     await page.locator('#progress-info[open] #pg-activity').waitFor();
     assert.equal(await page.locator('#progress-info').getByRole('button',{name:/^(×|Jasno)$/}).count(),0);

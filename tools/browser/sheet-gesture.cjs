@@ -107,7 +107,7 @@ async function run(p,width){
   await drag(p,dialog,0,20);assert.equal(await dialog.evaluate(n=>n.open),true);
   await drag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
   assert.equal(await info.evaluate(n=>document.activeElement===n),true,'native dialog restores opener focus');
-  const activity=p.locator('.pg-summary-pair > button').first();
+  const activity=p.locator('.pg-focus .pg-ring-card');
   await activity.click();
   const grip=dialog.getByRole('button',{name:'Zatvori prozor',exact:true});
   assert.equal(await dialog.getByRole('button',{name:/^(×|Jasno)$/}).count(),0);
@@ -126,11 +126,13 @@ async function run(p,width){
   await dialog.waitFor({state:'hidden'});
   await p.waitForTimeout(390);
   assert.equal(await activity.evaluate(n=>n===document.activeElement),true,'activity dialog returns focus to its card');
-  await p.locator('[data-a="analyticsMode"][data-v="load"]').click();await A(p,'trainingLoadInfo').first().click();
+  const load=p.locator('#analysis-load');
+  await load.locator('.tl-analysis-heading [data-a="trainingLoadInfo"]').click();
   dialog=p.locator('#training-load-info');
   assert.ok(await dialog.locator('#training-load-info-title').evaluate(n=>document.activeElement===n));
   await touchDrag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
-  await p.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]').click();
+  await load.locator('.tl-analysis-details > summary').click();
+  await load.locator('[data-a="trainingLoadDetail"][data-topic="muscles"]').click();
   assert.equal(await bodyDrag(dialog.locator('#training-load-info-body'),0,135),true);
   await dialog.waitFor({state:'hidden'});
   await p.waitForTimeout(390);

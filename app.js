@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.15';
+const APP_VERSION = '1.20.16';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -328,7 +328,8 @@ function takeOtherCopy(){
   if (!S.stack.every(ok)) S.stack = [{ v: S.tab }];
 }
 // nothing is open that a change of data under it could disturb (player, editor, picker, sheet)
-const appBusy = () => !!P || !!FORM_VIEWS[top().v] || !!S.sheet || !!S.draft || !!S.pick;
+const loadRatingOpen = () => !!document.querySelector('#training-load-info[open] form[data-load-rating]');
+const appBusy = () => !!P || !!FORM_VIEWS[top().v] || !!S.sheet || !!S.draft || !!S.pick || loadRatingOpen();
 function applyData(d){
   for (const k in S.ex) delete S.ex[k]; for (const k in S.pr) delete S.pr[k]; for (const k in S.field) delete S.field[k];
   Object.keys(d.exercises||{}).forEach(id => S.ex[id] = Object.assign({}, d.exercises[id], { id }));
@@ -447,10 +448,13 @@ function cleanSettings(s){
   Object.keys(s).forEach(k => { const v = s[k]; if (badKey(k)) return; if (plain(v)) o[k] = v;
     else if (isPlainObj(v)) { const m = {}; Object.keys(v).forEach(q => { if (!badKey(q) && plain(v[q])) m[q] = v[q]; }); o[k] = m; } });   // e.g. a map of skipped suggestions
   if (typeof s.goal === 'string' && Object.prototype.hasOwnProperty.call(GOALS, s.goal)) o.goal = s.goal;
-  for (const key of ['trainingLoadPeriod','progressChartPeriod']) {
+  for (const key of ['analysisPeriod','trainingLoadPeriod','progressChartPeriod']) {
     if (TrainingLoad.periods.includes(s[key])) o[key] = s[key];
     else delete o[key];
   }
+  if (!o.analysisPeriod && (o.progressChartPeriod || o.trainingLoadPeriod)) o.analysisPeriod = o.progressChartPeriod || o.trainingLoadPeriod;
+  if (Array.isArray(s.progressPinnedIds)) o.progressPinnedIds = [...new Set(s.progressPinnedIds.filter(id => !badKey(id)))].slice(0,3);
+  else delete o.progressPinnedIds;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
   int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3);
   if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
@@ -458,7 +462,7 @@ function cleanSettings(s){
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
-const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, trainingLoadPeriod: '7d', progressChartPeriod: 'all' };
+const SETTINGS_BASE = { sound: true, switchSec: 5, transSec: 10, analysisPeriod:'7d', progressPinnedIds:[] };
 
 /* ---------- photos and videos on the phone (IndexedDB) ---------- */
 const IDB = {
@@ -1053,7 +1057,7 @@ window.addEventListener('beforeunload',ev=>{
 window.addEventListener('pagehide',checkpointDraft);
 let renderQueued = false;
 function softRender(){
-  if (FORM_VIEWS[top().v]) return; // never clobber an open form or the running player
+  if (FORM_VIEWS[top().v] || loadRatingOpen()) return; // never clobber an open form or the running player
   if (renderQueued) return; renderQueued = true;
   requestAnimationFrame(() => { renderQueued = false; render(); });
 }
@@ -1105,6 +1109,10 @@ function render(){
   if (fk && fk.a && app.dataset.key && app.dataset.key !== key) focusMem[app.dataset.key] = fk;
   const old = app.querySelector('.view');
   if (old && app.dataset.key) scrollMem[app.dataset.key] = old.scrollTop;
+  if (old?.classList.contains('dy-today')) {
+    const today = S.stack.findLast(entry=>entry.v==='today');
+    if (today) todayExpanded.set(today,Array.from(old.querySelectorAll('[data-today-detail][open]'),detail=>detail.dataset.todayDetail));
+  }
   // 1.8: a sheet rebuilt by a tap inside it (the filter's tiles and figure) stays where it was scrolled
   const oldSheet = app.querySelector('.sheet');
   const oldSheetScroller = oldSheet?.querySelector(':scope > .fbody') || oldSheet;
@@ -1125,8 +1133,7 @@ function render(){
   app.dataset.key = key;
   restoreEditForm();
   const v = app.querySelector('.view');
-  if (v && (enteredView || old?.classList.contains('tl-cinema') !== v.classList.contains('tl-cinema')) &&
-      (t.v === 'muscleWeek' || v.matches('.pg-cinema,.tl-cinema'))) v.classList.add('charts-entering');
+  if (v && enteredView && (t.v === 'muscleWeek' || v.matches('.pg-cinema'))) v.classList.add('charts-entering');
   if (v && scrollMem[key] != null) v.scrollTop = scrollMem[key];
   if (sheetTop) {
     const sheet = app.querySelector('.sheet'), scroller = sheet?.querySelector(':scope > .fbody') || sheet;
@@ -1143,14 +1150,15 @@ function render(){
 function go(entry){ S.stack.push(entry); S.sheet = null; render(); }
 function back(){
   if (S.stack.length > 1) S.stack.pop();
-  else if (['analytics','progress'].includes(top().v)) { setTab('home'); return; }
+  else if (['analytics','progress','trainingLoad'].includes(top().v)) { setTab('home'); return; }
   S.sheet = null; render();
 }
 function setTab(tab){
   if (tab==='analytics') {
     // The Progress header has a Back button, so keep its origin on the stack.
-    if (!['analytics','progress'].includes(top().v)) go({v:tab});
-    else if (top().mode==='load') A.analyticsMode({v:'progress'});
+    if (top().dosing) A.progTab({v:'pregled'});
+    else if (!['analytics','progress','trainingLoad'].includes(top().v)) go({v:tab,focus:'overview'});
+    else app.querySelector('.pg-cinema')?.scrollTo(0,0);
     return;
   }
   S.tab = tab; S.pick = null; S.stack = [{v:tab}]; S.sheet = null; render();
@@ -1600,10 +1608,13 @@ function dailyInput(now, week) {
     team:S.log.filter(l=>l.kind==='team' && l.at<=now).slice(0,3)};
 }
 
+const todayExpanded=new WeakMap();
 VIEWS.today = function(t) {
   const vm=dailyInput(Date.now());
-  t.proposalKey=mtCanon([vm.date,vm.recommendation]);
-  return TodayView.view(vm);
+  const key=mtCanon([vm.date,vm.recommendation]);
+  if (t.proposalKey!==key) todayExpanded.delete(t);
+  t.proposalKey=key;
+  return TodayView.view(vm,todayExpanded.get(t));
 };
 VIEWS.morning = t=>TodayView.formView(t);
 
@@ -1697,7 +1708,7 @@ function dashboardModel(t) {
 }
 VIEWS.dashboard = t => TrainingDashboard.render(dashboardModel(t));
 VIEWS.muscleWeek = t => TrainingDashboard.analytics(dashboardModel(t));
-VIEWS.analytics = function(t=top()) {return t.mode==='load'?VIEWS.trainingLoad(t):VIEWS.progress(t);};
+VIEWS.analytics = t => VIEWS.progress(t);
 
 const historyWorkout = l => l && (l.kind == null || ['protocol','exercise','field','team'].includes(l.kind));
 const historyRecord = id => S.log.find(l => historyWorkout(l) && l.historyId === id);
@@ -1748,22 +1759,36 @@ function historyError(message) {
   else toast(message, true);
 }
 
-function changeHistory(original, replacement) {
+function saveLoadRating(form) {
+  const read=TrainingLoadView.readRating(form), error=message=>TrainingLoadView.ratingError(form,message);
+  if(!read.ok){error(read.error);return;}
+  const result=HistoryModel.edit(read.original,{srpe:read.srpe});
+  if(!result.ok){error(result.errors.map(e=>e.message).join(' '));return;}
+  const previousLog=S.log;
+  if(!changeHistory(read.original,{...result.entry,editedAt:Date.now()},error)){
+    if(S.log!==previousLog)top().loadDayNeedsRefresh=true;
+    return;
+  }
+  top().reopenLoadDay={date:read.date,endDate:read.endDate};
+  render();
+}
+
+function changeHistory(original, replacement, reportError=historyError) {
   // Capture edits made in a second tab before comparing the exact record the user opened.
   let raw;
   try { raw = localStorage.getItem(STORE_KEY); }
-  catch (_) { historyError('Ne mogu pristupiti povijesti na ovom uređaju. Pokušaj ponovno.'); return false; }
-  if (!raw && savedJson) { historyError('Pohrana se u međuvremenu promijenila. Ponovno otvori aplikaciju.'); return false; }
+  catch (_) { reportError('Ne mogu pristupiti povijesti na ovom uređaju. Pokušaj ponovno.'); return false; }
+  if (!raw && savedJson) { reportError('Pohrana se u međuvremenu promijenila. Ponovno otvori aplikaciju.'); return false; }
   if (raw && savedJson !== raw) {
-    if (!mergeOtherCopy(raw)) { historyError('Noviju kopiju povijesti nije moguće pročitati. Promjena nije spremljena.'); return false; }
+    if (!mergeOtherCopy(raw)) { reportError('Noviju kopiju povijesti nije moguće pročitati. Promjena nije spremljena.'); return false; }
     savedJson = raw; pendingExt = null;
   }
   const current = historyRecord(original.historyId);
   if (!current || mtCanon(current) !== mtCanon(original)) {
-    historyError('Ovaj se zapis u međuvremenu promijenio. Vrati se na popis i ponovno ga otvori.'); return false;
+    reportError('Ovaj se zapis u međuvremenu promijenio. Zatvori ga i ponovno otvori.'); return false;
   }
   const coupled = masHistoryChange(current,replacement,S.log,uid('h'));
-  if (!coupled.ok) { historyError(coupled.error); return false; }
+  if (!coupled.ok) { reportError(coupled.error); return false; }
   replacement = coupled.entry;
   const before = S.log, previousDeleted = S._deleted;
   const protocol = current.kind === 'protocol' && S.pr[current.refId];
@@ -1785,7 +1810,7 @@ function changeHistory(original, replacement) {
   if (persist()) return true;
   S.log = before; S._deleted = previousDeleted;
   if (protocol) S.pr[protocol.id] = protocol;
-  historyError('Promjena nije spremljena. Tvoj prethodni zapis je sačuvan.');
+  reportError('Promjena nije spremljena. Tvoj prethodni zapis je sačuvan.');
   return false;
 }
 
@@ -2828,10 +2853,7 @@ function workoutExpectationHtml(id,items) {
   const amount=v=>v.toLocaleString('hr-HR',{maximumFractionDigits:2});
   return '<details class="workout-expectation" data-load-expectation data-status="'+estimate.status+'" data-sample-count="'+estimate.sampleCount+'"'+(estimate.min===null?'':' data-min="'+estimate.min+'" data-max="'+estimate.max+'"')+'><summary>Očekivani napor · '+(estimate.status==='available'?amount(estimate.min)+(estimate.min===estimate.max?'':'–'+amount(estimate.max))+' j.n.':'još nema dovoljno usporedivih zapisa')+'</summary><p>'+esc(estimate.reason)+'</p><p>'+estimate.sampleCount+' ocijenjenih usporedivih izvedbi · stvarni napor unosiš nakon treninga.</p><button class="txtbtn" data-a="trainingLoadOpen">Praćenje opterećenja</button></details>';
 }
-VIEWS.trainingLoad=function(){
-  const now=Date.now(),summary=TrainingLoad.summary({log:S.log,now,period:S.settings.trainingLoadPeriod}),morning=S.settings.morningChecks?.[dateKey(now)]||null;
-  return TrainingLoadView.render({summary,morning});
-};
+VIEWS.trainingLoad = t => VIEWS.progress(t);
 
 VIEWS.exerciseLoad = function(t) {
   const e=S.ex[t.id];
@@ -4076,9 +4098,9 @@ function progSuggestions(){
   return out;
 }
 const e1rm = (kg, reps) => kg * (1 + reps / 30);   // Epley estimate of the one-rep max
-function progHistory(){
-  const by = {};
-  S.log.filter(l => l.at <= Date.now()).slice().reverse().forEach(l => (l.items || []).forEach(x => { if (x.skipped) return; (by[x.exId] = by[x.exId] || []).push(Object.assign({ at: l.at }, x)); }));
+function progHistory(now=Date.now()){
+  const by = Object.create(null);
+  S.log.filter(l => l.at <= now).slice().reverse().forEach(l => (l.items || []).forEach(x => { if (x.skipped) return; (by[x.exId] = by[x.exId] || []).push(Object.assign({ at: l.at }, x)); }));
   return by; // oldest first per exercise (exercises skipped in a session are not part of its history)
 }
 function sugCard(x){
@@ -4281,7 +4303,8 @@ function incompleteRecordedDose(x) {
 function exLoadSeries(exId, days, bounds){
   const e = S.ex[exId], now = bounds?.now ?? Date.now();
   const from = bounds ? bounds.from ?? 0 : days ? calDay(now, -days) : 0;
-  const all = historyOf(exId, now).filter(x=>x.at>=from);
+  const history = bounds?.history ? bounds.history.slice().reverse() : historyOf(exId, now);
+  const all = history.filter(x=>x.at>=from);
   const h = all.filter(x=>!x.historySetsUnknown && !x.historyRepsUnknown).reverse();
   if (!h.length) return all.length?{kind:'reps',pts:[],partial:true}:null;
   const time = h[h.length - 1].measure === 'time';
@@ -4916,6 +4939,8 @@ VIEWS.loadInfo = function(){
     '<div style="height:24px"></div></div>';
 };
 VIEWS.progress = function(t=top()){
+  const topbarHtml=topbar(backBtn(), '', 'NAPREDAK');
+  if(t.dosing)return ProgressView.render({topbarHtml,tab:'doziranje',dosingSections:progressDosingSections()});
   const now = Date.now(), plan = planSlots(), ws = weekStart(now), wplan = weekPlan(ws, plan), wk = weekStatus(ws, wplan);
   if (S.dbState === 'ready') notePlan(ws, wk.slots);
   const hasPlan = plan.length || Object.keys(S.settings.planDates || {}).length;
@@ -4926,7 +4951,7 @@ VIEWS.progress = function(t=top()){
   const sugs = progSuggestions(), act = sugs.filter(x => x.kind === 'up' || x.kind === 'revert' || x.kind === 'variant'), way = sugs.filter(x => x.kind === 'way');
   const nokg = {}; sugs.filter(x => x.kind === 'nokg').forEach(x => { (nokg[x.p.id] = nokg[x.p.id] || { p: x.p, names: [] }).names.push(x.e.name); });
   const nokgHtml = Object.values(nokg).map(g => '<div class="lift"><div class="top"><b>Upiši početne težine</b><span>'+esc(g.p.name)+'</span></div><div class="why">'+esc(g.names.join(', '))+': bez kilograma ne mogu predložiti povećanje.</div><div class="acts" style="grid-template-columns:1fr"><button class="bt ghost" data-a="editPr" data-id="'+esc(g.p.id)+'">Upiši kilograme</button></div></div>').join('');
-  const hist = progHistory();
+  const hist = progHistory(now);
   // main exercises: your lifts with kilograms first (most trained first), then strength and trunk exercises without a load
   // and timed work that changed; no activation, rehab or mobility drills, no timed hold that never changed, nothing that
   // is no longer in the library
@@ -4939,10 +4964,18 @@ VIEWS.progress = function(t=top()){
   const exerciseCharts = lifts.map(id => ({ id, name:S.ex[id].name, html:exLoadCard(S.ex[id], 'sve', true, false, { now, from:null }) }));
   const insightInput = { log:S.log, exercises:S.ex, now };
   const insights = ProgressModel.summarize(insightInput);
-  const candidates = insights.comparisons.map(item=>item.id).concat(lifts);
-  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : candidates[0];
-  const chartPeriod = S.settings.progressChartPeriod || 'all', from = TrainingLoad.periodStart(now,chartPeriod);
-  const chartComparison = chartExerciseId ? ProgressModel.exerciseTrend({...insightInput,from,exerciseId:chartExerciseId}) : null;
+  const recordedIds = Object.keys(hist).filter(id => Object.hasOwn(S.ex,id) && exLoadSeries(id,0,{now,history:hist[id]})?.pts.some(point=>point.v>0));
+  recordedIds.sort((a,b)=>hist[b].at(-1).at-hist[a].at(-1).at || S.ex[a].name.localeCompare(S.ex[b].name,'hr'));
+  const candidates = [...new Set(insights.comparisons.map(item=>item.id).concat(recordedIds))];
+  t.chartCandidates=candidates;
+  const chartExercises = candidates.map(id=>({id,name:S.ex[id].name,alt:S.ex[id].alt}));
+  const chartPinnedIds = S.settings.progressPinnedIds.filter(id=>candidates.includes(id));
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || candidates[0];
+  const chartPeriod = S.settings.analysisPeriod, from = TrainingLoad.periodStart(now,chartPeriod);
+  const trend = (id,since) => ProgressModel.exerciseTrend({...insightInput,from:since,exerciseId:id});
+  const chartComparison = chartExerciseId ? trend(chartExerciseId,from) : null;
+  const chartHasComparison = !!(chartComparison || (from!==null && chartExerciseId && trend(chartExerciseId,null)));
+  const chartPinnedTrends = chartPinnedIds.map(id=>id===chartExerciseId?chartComparison:trend(id,from)).filter(Boolean);
   const fullVolume = from === null && exerciseCharts.find(chart=>chart.id===chartExerciseId)?.html;
   const chartVolumeHtml = chartExerciseId ? fullVolume || exLoadCard(S.ex[chartExerciseId], 'sve', true, false, {now,from}) : '';
   // records: a best estimated max that beat an earlier best, set in the last 30 days (your first weight is not a record);
@@ -4959,10 +4992,20 @@ VIEWS.progress = function(t=top()){
   const weeks = weekLoads(8), current = weeks[weeks.length-1];
   const loadParts = [current.vl > 0 ? loadFmt('vl',current.vl) + ' tereta' : '', current.m > 0 ? loadFmt('m',current.m) + ' trčanja' : ''].filter(Boolean);
   const recordsHtml = prs.length ? '<div class="chart">' + prs.map(r => '<div class="pr"><span class="medal">'+I.medal+'</span><div><b>'+esc(S.ex[r.id].name)+' · '+esc(fmtKg(r.best.kg))+' × '+esc(r.best.r)+'</b><br><span>'+esc(shortDate(r.best.x.at))+' · procjena maksimuma '+esc(fmtKg(Math.round(r.best.v * 2) / 2))+'</span></div></div>').join('') + '</div>' : '';
+  const daily = dailyInput(now,wk);
+  const loadHtml = TrainingLoadView.render({summary:TrainingLoad.summary({log:S.log,now,period:chartPeriod}),morning:daily.checkin,detailsOpen:!!t.loadDetailsOpen,
+    readWorkout:id=>{const record=historyRecord(id);return record&&clone(record);},
+    onClose:()=>{
+      if(!appBusy()&&(pendingExt||t.loadDayNeedsRefresh)){
+        delete t.loadDayNeedsRefresh;
+        render();
+      }
+    }});
   return ProgressView.render({
-    chartMetric:t.chartMetric,chartExerciseId,chartPeriod,chartComparison,chartVolumeHtml,
-    topbarHtml:topbar(backBtn(), '', 'NAPREDAK'), tab:S.progTab,
-    dosingSections:S.progTab === 'doziranje' ? progressDosingSections() : [],
+    chartMetric:t.chartMetric,chartExerciseId,chartPeriod,chartComparison,chartVolumeHtml,chartHasComparison,
+    chartExercises,chartPinnedIds,chartPinnedTrends,topbarHtml,loadHtml,
+    goal:GOALS[S.settings.goal]?.name,nextStep:daily.recommendation.title.replace(/^Danas:\s*/,''),
+    nextStepLabel:daily.recommendation.action?.type==='history'?'Danas':'Sljedeći korak',
     zero:total === 0,
     insights,
     weekPlan:{done:wk.done,planned:wk.planned,activeDays:DAYS.filter((_,day)=>days[calDay(ws,day)]).length},
@@ -5589,7 +5632,21 @@ function cinemaSheetHtml(s){
 /* ---------- after-render hooks ---------- */
 function after(t){
   refreshDailyAtMidnight(t);
-  if(t.v==='progress'&&t.focus==='exercises'&&!t.focusOpened){ProgressView.showDetail('exercises',null);t.focusOpened=true;}
+  const loadDetails=app.querySelector('.tl-analysis-details');
+  loadDetails?.addEventListener('toggle',()=>{t.loadDetailsOpen=loadDetails.open;});
+  if(t.focus&&!t.focusOpened){
+    t.focusOpened=true;
+    if(t.focus==='exercises')ProgressView.showDetail('exercises',null);
+    if(t.focus==='effort')document.getElementById('analysis-load')?.scrollIntoView({block:'start'});
+    if(t.focus==='overview')app.querySelector('.pg-cinema')?.scrollTo(0,0);
+  }
+  if(t.reopenLoadDay){
+    const day=t.reopenLoadDay;
+    delete t.reopenLoadDay;
+    const trigger=[...app.querySelectorAll('[data-a="trainingLoadDetail"][data-topic="day"]')]
+      .find(button=>button.dataset.date===day.date&&button.dataset.endDate===day.endDate);
+    if(trigger)TrainingLoadView.showDetail('day',trigger,day);
+  }
   if (t.v === 'home') {
     const car = document.getElementById('car'), dots = document.getElementById('dots');
     if (car && dots) car.addEventListener('scroll', () => {
@@ -5849,7 +5906,7 @@ const A = {
     signalStep(next);
     render();
   },
-  trainingLoadOpen: () => go({v:'trainingLoad'}),
+  trainingLoadOpen: () => go({v:'analytics',focus:'effort'}),
   todayOpen: () => go({v:'today'}),
   morningOpen: (d={}) => {
     const date=MonthPlan.valid(d.date)?d.date:dateKey(Date.now());
@@ -5964,30 +6021,39 @@ const A = {
   },
   dashboardCalendar: d => A.monthOpen(d),
   dashboardProtocols: () => go({ v:'protocols' }),
-  dashboardProgress: () => {S.progTab='pregled';go({v:'progress'});},
+  dashboardProgress: () => go({v:'progress',focus:'overview'}),
   dashboardAnalytics: () => go({v:'muscleWeek'}),
   analyticsOpen: d => {
-    if(d.section==='load'){go({v:'trainingLoad'});return;}
+    if(d.section==='load'){A.trainingLoadOpen();return;}
     if(d.section==='muscles'){go({v:'muscleWeek'});return;}
-    if(['progress','trends'].includes(d.section)){S.progTab='pregled';go({v:'progress',focus:d.section==='trends'?'exercises':null});}
-  },
-  analyticsMode:d=>{
-    if(!['progress','load'].includes(d.v))return;
-    ProgressView.closeInfo();TrainingLoadView.closeInfo();
-    const previous=top();S.stack[S.stack.length-1]={...previous,v:'analytics',mode:d.v};render();
+    if(['progress','trends'].includes(d.section))go({v:'progress',focus:d.section==='trends'?'exercises':'overview'});
   },
   progressMetric:d=>{if(!['performance','volume'].includes(d.v))return;ProgressView.closeInfo();top().chartMetric=d.v;render();},
-  progressExercise:d=>{if(!S.ex[d.id])return;ProgressView.closeInfo();top().chartExerciseId=d.id;render();},
+  progressExercise:d=>{
+    if(!top().chartCandidates?.includes(d.id))return;
+    ProgressView.closeInfo();top().chartExerciseId=d.id;render();
+  },
+  progressPin:d=>{
+    if(!top().chartCandidates?.includes(d.id))return;
+    const pins=S.settings.progressPinnedIds.filter(id=>top().chartCandidates.includes(id));
+    const pinned=pins.includes(d.id);
+    if(!pinned&&pins.length>=3)return;
+    if(!writeSetting('progressPinnedIds',pinned?pins.filter(id=>id!==d.id):[...pins,d.id]))return;
+    top().chartExerciseId=d.id;
+    render();
+  },
   progressRange:d=>{
-    if (!TrainingLoad.periods.includes(d.v) || S.settings.progressChartPeriod === d.v) return;
-    if (writeSetting('progressChartPeriod',d.v)) render();
+    if (!TrainingLoad.periods.includes(d.v) || S.settings.analysisPeriod === d.v) return;
+    if (writeSetting('analysisPeriod',d.v)) render();
   },
   progressDetail:(d,el)=>ProgressView.showDetail(d.topic,el,d),
-  trainingLoadRange:d=>{
-    if (!TrainingLoad.periods.includes(d.v) || S.settings.trainingLoadPeriod === d.v) return;
-    if (writeSetting('trainingLoadPeriod',d.v)) render();
-  },
   trainingLoadDetail:(d,el)=>TrainingLoadView.showDetail(d.topic,el,d),
+  trainingLoadWorkout:d=>{
+    if(!historyRecord(d.id))return;
+    top().reopenLoadDay={date:d.date,endDate:d.endDate};
+    TrainingLoadView.closeInfo();
+    A.historyOpen(d);
+  },
   muscleEligibility: d => {
     if (!S.draft || !['auto','true','false'].includes(d.v)) return;
     if (d.v === 'auto') delete S.draft.muscleWorkEligible;
@@ -6396,7 +6462,10 @@ const A = {
     const max = Math.max(planned, step?.actualReps || 0);
     savePlayerChoice(['lastReps'],()=>{P.lastReps = P.lastReps || {}; P.lastReps[j] = Math.max(0, Math.min(max, lastRepsOf(j) + (+d.d)));});
     const v = app.querySelector('.view'); const st = v ? v.scrollTop : 0; render(); const v2 = app.querySelector('.view'); if (v2) v2.scrollTop = st; },
-  progTab: d => { S.progTab = d.v; render(); },
+  progTab:d=>{
+    if(d.v==='doziranje'&&!top().dosing)go({v:'progress',id:'dosing',dosing:true});
+    if(d.v==='pregled'&&top().dosing)back();
+  },
   progressInfo: (d,el) => ProgressView.showInfo(d.topic,el),
   trainingLoadInfo: (d,el) => TrainingLoadView.showInfo(d.topic,el),
   setGoal: d => { if (!writeSetting('goal',S.settings.goal===d.v?null:d.v)) return; render(); },
@@ -6554,6 +6623,7 @@ app.addEventListener('click', ev => {
   }
 });
 app.addEventListener('submit', ev => {
+  if (ev.target.matches('form[data-load-rating]')) {ev.preventDefault();saveLoadRating(ev.target);return;}
   if (ev.target.id==='starting-load-form') {ev.preventDefault();confirmStartingLoad();return;}
   if (ev.target.id==='morning-form') {ev.preventDefault();A.morningSave();return;}
   if (ev.target.id === 'history-edit-form') { ev.preventDefault(); A.historySave(); }

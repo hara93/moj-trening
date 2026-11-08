@@ -6,7 +6,6 @@ const { engine, fixture, launch, serve } = require('./runtime.cjs');
 
 const fixed = new Date('2026-11-04T12:00:00+01:00');
 const action = (page, name) => page.locator('[data-a="' + name + '"]');
-const mode = (page, name) => action(page, 'analyticsMode').and(page.locator('[data-v="' + name + '"]'));
 
 function data() {
   const backup = fixture(), id = 'chart-motion-press';
@@ -14,7 +13,9 @@ function data() {
     muscleWorkEligible: true };
   backup.exercises[id] = exercise;
   backup.settings.sound = false;
+  backup.settings.analysisPeriod = '7d';
   backup.settings.planDates = {};
+  for (const entry of [...Object.values(backup.protocols), ...Object.values(backup.field)]) entry.days = [];
   backup.log = [2, 4].map(day => {
     const item = { exId: id, measure: 'sets', sets: 2, setsDone: 2, reps: 8, kg: 20 + day, rest: 45,
       done: true, repsList: [8, 8], rirList: [2, 2] };
@@ -70,15 +71,14 @@ async function staticFill(target, property) {
     await page.locator('.toast').waitFor({ state: 'hidden' });
     await page.addStyleTag({ content: '.charts-entering .chart-ring-sweep, .charts-entering .muscle-meter > i { animation-play-state: paused }' });
     await page.locator('.tab[data-tab="analytics"]').click();
-    const progress = page.locator('.pg-cinema .chart-ring-sweep').first();
-    const load = page.locator('.tl-cinema .chart-ring-sweep');
+    const progress = page.locator('.pg-focus .chart-ring-sweep');
+    const load = page.locator('#analysis-load .chart-ring-sweep');
     await motion(progress, 'chart-ring-fill', 'stroke-dasharray');
-    await action(page, 'progressRange').and(page.locator('[data-v="7d"]')).click();
-    await staticFill(progress, 'stroke-dasharray');
-    await mode(page, 'load').click();
     await motion(load, 'chart-ring-fill', 'stroke-dasharray');
-    await action(page, 'trainingLoadRange').and(page.locator('[data-v="1m"]')).click();
+    await action(page, 'progressRange').and(page.locator('[data-v="1m"]')).click();
+    await staticFill(progress, 'stroke-dasharray');
     await staticFill(load, 'stroke-dasharray');
+    await page.locator('#analysis-load .tl-analysis-details > summary').click();
     await action(page, 'trainingLoadDetail').and(page.locator('[data-topic="muscles"]')).click();
     await motion(page.locator('#training-load-info[open] .muscle-meter > i').first(), 'chart-meter-fill', 'width');
     await page.keyboard.press('Escape');
@@ -98,6 +98,10 @@ async function staticFill(target, property) {
     await action(page, 'dashboardAnalytics').click();
     await staticFill(week, 'stroke-dasharray');
     await staticFill(weekMeter, 'width');
+    await page.locator('.db-analytics [data-a="back"]').click();
+    await page.locator('.tab[data-tab="analytics"]').click();
+    await staticFill(progress, 'stroke-dasharray');
+    await staticFill(load, 'stroke-dasharray');
     assert.deepEqual(errors, []);
     await context.close();
     console.log('Passed chart motion (' + engine + '): rings, segmented bars, view entry, reduced motion and incidental redraws.');

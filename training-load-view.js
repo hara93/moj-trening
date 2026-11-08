@@ -1,5 +1,5 @@
-/* Read-only presentation of three independent indicators. All styles and DOM
-   hooks are local to this screen; no home layout or saved totals are changed. */
+/* Presentation of three independent indicators. Rating writes are handled
+   by the history transaction in the app. */
 (function(root,factory){
   'use strict';
   var api=factory();if(typeof module==='object'&&module.exports)module.exports=api;
@@ -25,6 +25,7 @@
   };
   function periodName(range){return periods[range.period]?.label||periods['7d'].label;}
   var focusBeforeInfo=null;
+  var dayRating=null;
   var topics={
     effort:{title:'Napor treninga',paragraphs:['AU su tvoja ocjena cijelog treninga (sRPE, 0–10) × stvarne minute. To je zabilježeni osjećaj napora, a ne izmjeren umor ili postotak oporavka.','Nula je unesena ocjena. Prazna ocjena ili nepoznato trajanje ostaju nepoznati; poznati dio zbroja prikazuje se odvojeno. Linija povezuje samo susjedne točke s poznatim AU.','U prikazu 7 dana usporedba je prosjek zabilježenog napora prethodnih 28 dana podijeljen s četiri.']},
     muscles:{title:'Mišićne serije',paragraphs:['Glavni mišić dobiva 1, a pomoćni 0,5 po stvarno odrađenoj radnoj seriji. Kilogrami i RIR ne ponderiraju te vrijednosti.','Jedna serija može pripasti više mišićnih skupina. Brojevi po mišićima zato nisu ukupan broj serija treninga i ne mjere rast mišića ili oporavak.']},
@@ -157,13 +158,6 @@
       '<details class="tl-model-note"><summary>A što znače stari LM1 bodovi?</summary><p>LM1 je zaseban model s unaprijed zadanim faktorima. Nema osobnu kalibraciju i ne koristi unesene kilograme. Njegovi bodovi nisu ovdje prikazani kao stvarni napor, točan umor ili oporavak.</p><p>Ni mišićne serije ni sRPE × trajanje sami ne određuju što moraš trenirati sutra. Jutarnji odgovori ostaju odvojeni.</p></details>'+dialog()+'</div>';
   }
   var lastVM={};
-  function modeTabs(){return '<nav class="tl-mode-tabs" aria-label="Prikaz analize"><button type="button" data-a="analyticsMode" data-v="progress" aria-pressed="false">Napredak</button><button type="button" data-a="analyticsMode" data-v="load" aria-pressed="true">Opterećenje</button></nav>';}
-  function rangeTabs(period){
-    return '<div class="tl-range-tabs" role="group" aria-label="Razdoblje opterećenja">'+Object.keys(periods).map(function(key){
-      var option=periods[key];
-      return '<button type="button" data-a="trainingLoadRange" data-v="'+key+'" aria-label="'+option.label+'" aria-pressed="'+(key===(period||'7d'))+'">'+option.short+'</button>';
-    }).join('')+'</div>';
-  }
   function drill(topic,title,subtitle,action){return '<button type="button" class="tl-drill-row" '+(action || 'data-a="trainingLoadDetail" data-topic="'+topic+'"')+'><span><strong>'+esc(title)+'</strong>'+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</span><span aria-hidden="true">›</span></button>';}
   function checkin(vm){
     var summary=vm.summary,current=vm.morning&&vm.morning.date===summary.today?vm.morning:{},fields=[['energy','Energija',1,5],['legs','Noge',1,5],['pain','Bol',0,10]];
@@ -172,23 +166,61 @@
   function render(vm){
     vm=vm||{};lastVM=vm;var summary=vm.summary;
     if(!summary||summary.status!=='ready')return renderLegacy(vm);
-    var model=summary.muscles,range=summary.range,known=model.recordedSets>0||model.coverage.coveredSessions>0;
-    var span=range.period==='all'&&!summary.effort.current.sessions?'Nema spremljenih zapisa':dateSpan(range.from,range.to);
-    return '<div class="view training-load tl-cinema"><header class="tl-heading"><button type="button" data-a="back" aria-label="Natrag">‹</button><div><p class="tl-eyebrow">'+periodName(range)+'</p><h1>Opterećenje</h1></div>'+info('effort','Kako računamo opterećenje')+'</header>'+modeTabs()+rangeTabs(range.period)+'<div class="tl-intro"><p>'+esc(span)+'</p><span>Samo zabilježeno</span></div>'+
-      effort(summary,true)+checkin(vm)+'<nav class="tl-drill-list" aria-label="Detalji opterećenja">'+drill('muscles','Rad po mišićima',known?number(model.recordedSets,0)+' radnih serija · '+number(model.coveredGroups,0)+' skupina':'Raspodjela još nije poznata')+drill('effort','Treninzi i utakmice','Brojke i izvori napora')+drill('','Povijest treninga','Pregledaj i uredi zapise','data-a="historyList"')+'</nav><button type="button" class="tl-model-link" data-a="trainingLoadDetail" data-topic="model">Model i pretpostavke <span aria-hidden="true">›</span></button><template id="training-load-detail-cache">'+renderLegacy(vm)+'</template>'+dialog()+'</div>';
+    var model=summary.muscles,known=model.recordedSets>0||model.coverage.coveredSessions>0;
+    return '<section id="analysis-load" class="training-load tl-cinema" data-analysis-period="'+esc(summary.range.period)+'" aria-labelledby="analysis-load-title"><header class="tl-analysis-heading"><h2 id="analysis-load-title">Opterećenje</h2>'+info('effort','Kako računamo opterećenje')+'</header>'+
+      effort(summary,true)+'<details class="tl-analysis-details"'+(vm.detailsOpen?' open':'')+'><summary>Detalji opterećenja</summary>'+checkin(vm)+'<nav class="tl-drill-list" aria-label="Detalji opterećenja">'+drill('muscles','Rad po mišićima',known?number(model.recordedSets,0)+' radnih serija · '+number(model.coveredGroups,0)+' skupina':'Raspodjela još nije poznata')+drill('effort','Treninzi i utakmice','Brojke i izvori napora')+'</nav><button type="button" class="tl-model-link" data-a="trainingLoadDetail" data-topic="model">Model i pretpostavke <span aria-hidden="true">›</span></button></details><template id="training-load-detail-cache">'+renderLegacy(vm)+'</template>'+dialog()+'</section>';
+  }
+  function workoutDuration(secs){
+    if(!finite(secs))return '—';
+    var minutes=Math.floor(secs/60),remainder=secs%60;
+    return minutes?number(minutes,0)+' min'+(remainder?' '+number(remainder)+' s':''):number(secs)+' s';
+  }
+  function dayWorkoutHtml(workout,day,single,canRate){
+    var time=new Date(workout.at).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'});
+    var subtitle=workout.label+' · '+(single?'':date(workout.at,true)+' · ')+time;
+    var header='<span><strong>'+esc(workout.name)+'</strong><small>'+esc(subtitle)+'</small></span>';
+    var action=workout.id?'<button type="button" class="tl-session-link" data-a="trainingLoadWorkout" data-id="'+esc(workout.id)+'" data-date="'+esc(day.date)+'" data-end-date="'+esc(day.endDate)+'" aria-label="'+esc('Otvori zapis · '+workout.name)+'">'+header+'<span aria-hidden="true">›</span></button>':'<div class="tl-session-link">'+header+'</div>';
+    var errorId='tl-rating-error-'+esc(workout.id);
+    var form=canRate?'<form class="tl-session-rating" data-load-rating="'+esc(workout.id)+'" novalidate><label><span>Ocjena napora (0–10)</span><input name="srpe" type="text" inputmode="numeric" autocomplete="off" aria-describedby="'+errorId+'" placeholder="0–10"></label><button type="submit">Spremi ocjenu</button><p id="'+errorId+'" role="alert" hidden></p></form>':'';
+    return '<article class="tl-session-row" data-load-workout="'+esc(workout.id)+'">'+action+'<dl class="tl-session-values">'+
+      '<div><dt>Trajanje</dt><dd>'+workoutDuration(workout.secs)+'</dd></div>'+
+      '<div><dt>sRPE</dt><dd>'+(finite(workout.srpe)?number(workout.srpe)+' / 10':'—')+'</dd></div>'+
+      '<div><dt>Napor</dt><dd>'+(finite(workout.au)?number(workout.au)+' AU':'—')+'</dd></div></dl>'+form+'</article>';
+  }
+  function readRating(form){
+    var dialog=document.getElementById('training-load-info'),original=dayRating?.originals.get(form.dataset.loadRating);
+    if(!dialog?.open||!dialog.contains(form)||!original)return {ok:false,error:'Zapis više nije dostupan. Ponovno otvori razdoblje.'};
+    var input=form.elements.namedItem('srpe'),raw=String(input?.value??'').trim();
+    if(!/^(?:[0-9]|10)$/.test(raw)){
+      input?.setAttribute('aria-invalid','true');
+      return {ok:false,error:'Upiši cijeli broj od 0 do 10.'};
+    }
+    input.removeAttribute('aria-invalid');
+    return {ok:true,original:original,srpe:Number(raw),date:dayRating.date,endDate:dayRating.endDate};
+  }
+  function ratingError(form,message){
+    var error=form.querySelector('[role="alert"]');
+    if(error){error.textContent=message;error.hidden=false;}
+    form.elements.namedItem('srpe')?.focus({preventScroll:true});
   }
   function showDetail(topic,trigger,data){
     var el=document.getElementById('training-load-info'),cache=document.getElementById('training-load-detail-cache');if(!el||!cache)return;
     var title='Detalji opterećenja',body='',summary=lastVM.summary,source;
+    dayRating=null;
     if(topic==='day'){
-      var day=summary.effort.days.find(function(day){return day.date===(data||{}).date;});
+      var day=summary.effort.days.find(function(day){return day.date===data?.date&&day.endDate===data.endDate;});
       if(day){
         var single=day.date===(day.endDate||day.date);
+        dayRating={date:day.date,endDate:day.endDate,originals:new Map()};
         title=dateSpan(day.from,day.to,crossesYear(summary.range.from,summary.range.to))+(single?' · dnevni napor':' · zabilježeni napor');
         body='<div class="tl-day-detail" data-load-day-detail="'+esc(day.date)+'" data-end-date="'+esc(day.endDate||day.date)+'"><span>Zabilježeni napor</span><strong>'+number(day.totalAU,1)+' <small>AU</small></strong>'+(day.missingAU?'<p>Zbroj nije potpun. '+(day.rated?number(day.knownAU)+' AU poznato':'Napor još nije poznat')+'.</p>':'')+'<dl><div><dt>Spremljeni treninzi</dt><dd>'+number(day.sessions,0)+'</dd></div><div><dt>Poznate minute</dt><dd>'+(day.sessions&&day.missingDuration>=day.sessions?'—':number(day.knownMinutes,1))+'</dd></div></dl></div>';
         if(!day.sessions)body+='<p>Nema zabilježenog treninga '+(single?'za ovaj dan':'u ovom razdoblju')+'.</p>';
-        else body+='<div class="tl-session-kinds">'+day.byKind.map(function(kind){return '<div><strong>'+esc(kind.label)+'</strong><span>'+number(kind.sessions,0)+' zapisa · '+(kind.totalAU===null?kind.rated?number(kind.knownAU)+' AU poznato':'napor nije poznat':number(kind.totalAU)+' AU')+'</span></div>';}).join('')+'</div>';
-        body+='<button type="button" class="tl-link" data-a="historyList">Otvori povijest treninga <span aria-hidden="true">↗</span></button>';
+        else body+='<section class="tl-day-workouts" aria-label="Treninzi u odabranom razdoblju"><h3>Spremljeni treninzi</h3>'+day.workouts.map(function(workout){
+          var original=workout.id&&workout.srpe===null?lastVM.readWorkout?.(workout.id):null;
+          var canRate=!!original&&original.historyId===workout.id&&original.at===workout.at&&!(finite(original.srpe)&&original.srpe>=0&&original.srpe<=10);
+          if(canRate)dayRating.originals.set(workout.id,original);
+          return dayWorkoutHtml(workout,day,single,canRate);
+        }).join('')+'</section>';
       }else body='<p>Podaci za odabrano razdoblje nisu dostupni.</p>';
     }else{
       var names={effort:'Treninzi i napor',muscles:'Rad po mišićima',readiness:'Jutarnja provjera',model:'Model i pretpostavke'};title=names[topic]||title;
@@ -204,14 +236,18 @@
     openDialog(el);
   }
   function dialog(){return '<dialog id="training-load-info" class="tl-dialog" aria-labelledby="training-load-info-title"><h2 id="training-load-info-title" tabindex="-1" autofocus></h2><div id="training-load-info-body"></div></dialog>';}
-  function closeInfo(){var el=document.getElementById('training-load-info');if(!el)return;if(typeof el.close==='function')el.close();else el.removeAttribute('open');if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();}
-  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');openDialog(el);}
+  function closeInfo(){var el=document.getElementById('training-load-info');dayRating=null;if(!el)return;if(typeof el.close==='function')el.close();else el.removeAttribute('open');if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();}
+  function showInfo(topic,trigger){var el=document.getElementById('training-load-info'),content=topics[topic]||topics.effort;dayRating=null;if(!el)return;if(!el.open || !el.contains(trigger))focusBeforeInfo=trigger&&typeof trigger.focus==='function'?trigger:document.activeElement;el.querySelector('#training-load-info-title').textContent=content.title;el.querySelector('#training-load-info-body').innerHTML=content.paragraphs.map(function(p){return '<p>'+esc(p)+'</p>';}).join('');openDialog(el);}
   function openDialog(el){
     el.oncancel=function(event){event.preventDefault();closeInfo();};
-    el.onclose=function(){if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();};
+    el.onclose=function(){
+      if(!el.isConnected)return;
+      if(focusBeforeInfo&&focusBeforeInfo.isConnected)focusBeforeInfo.focus();
+      lastVM.onClose?.();
+    };
     if(typeof el.showModal==='function')el.showModal();else el.setAttribute('open','');
     el.querySelector('#training-load-info-body').scrollTop=0;
     el.querySelector('#training-load-info-title').focus({preventScroll:true});
   }
-  return Object.freeze({render:render,showInfo:showInfo,showDetail:showDetail,closeInfo:closeInfo});
+  return Object.freeze({render:render,showInfo:showInfo,showDetail:showDetail,closeInfo:closeInfo,readRating:readRating,ratingError:ratingError});
 });
