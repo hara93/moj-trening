@@ -25,7 +25,7 @@ function fixture() {
   data.protocols = {
     [id]: { id, name: 'Serije na ponavljanja', tag: 'Teretana', days: [], items: [
       // 8 reps at the generic 3 s: 24 s estimate, counts up
-      { exId: 'back-squat', measure: 'sets', sets: 2, reps: 8, kg: 100, rest: 30, sides: false },
+      { exId: 'back-squat', measure: 'sets', sets: 3, reps: 8, kg: 100, rest: 30, sides: false },
       // 6 reps per side, played as two steps (18 s each)
       { exId: 'bugarski', measure: 'sets', sets: 1, reps: 6, kg: 14, rest: 0, sides: true },
       // his own set timer: counts down and ends by itself
@@ -140,6 +140,16 @@ async function countUp(p, width) {
   assert.equal(await clock(p), '1:40');
   assert.equal(step(await player(p)).kind, 'manual');
   await markDone(p);
+  assert.equal(step(await player(p)).kind, 'rest');
+  // set 3: marked in the journal, which holds the clock: not timed live, so no duration
+  await reach(p, 0, 'manual');
+  await advance(p, 20);
+  await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
+  await journal(p).locator('.cj-card[data-index="0"] [data-a="workoutSetDone"]').click();
+  await journal(p).waitFor({ state: 'detached' });
+  state = await player(p);
+  const sets = state.liveSchedule.filter(x => x.kind === 'manual' && x.g === 0);
+  assert.deepEqual(sets.map(x => x.actualDur ?? null), [35, 100, null], 'the raw times; the journal tap has none');
   // the sided set: both sides count up and add up
   await reach(p, 1, 'manual', 'Lijeva strana');
   assert.equal(await clock(p), '0:00');
@@ -160,8 +170,8 @@ async function countUp(p, width) {
   await journal(p).locator('.cj-row[data-j="0"]').click();
   await journal(p).locator('.cj-card[data-index="0"]').waitFor();
   const squat = await detailRows(p, 0);
-  assert.deepEqual(squat.map(row => [row.shown, row.spoken]), [['0:35', 'trajanje 35 s']], 'set 2 was over the guard: no line');
-  assert.equal(await p.locator('.cj-card[data-index="0"] .workout-set-details').count(), 1);
+  assert.deepEqual(squat.map(row => [row.shown, row.spoken]), [['0:35', 'trajanje 35 s']], 'set 2 was over the guard, set 3 untimed: no line');
+  assert.equal(await p.locator('.cj-card[data-index="0"] .workout-set-details').count(), 1, 'sets 2 and 3 have no line');
   await noOverflow(p, 'journal ' + width);
   await shot(p, 'journal-' + width);
   await A(p, 'cinemaJournalClose').first().click(); await journal(p).waitFor({ state: 'detached' });
@@ -185,7 +195,7 @@ async function countUp(p, width) {
   await A(p, 'finishPlay').waitFor();
   await A(p, 'finishPlay').click();
   const logged = (await store(p)).log.find(entry => entry.refId === id).items;
-  assert.deepEqual(logged[0].durList, [35, null], 'the real duration; null over the guard');
+  assert.deepEqual(logged[0].durList, [35, null, null], 'the real duration; null over the guard and when not timed live');
   assert.deepEqual(logged[1].durList, [42], 'both sides added up');
   assert.deepEqual(logged[1].sideCounts, [2]);
   assert.equal(logged[2].durList, undefined, 'a set with its own timer saves no duration');

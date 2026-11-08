@@ -2527,7 +2527,7 @@ const cinemaClockSegments = Array.from({length:CINEMA_CLOCK_TICKS}, (_, index) =
 function cinemaClockProgress(step){
   if (cinemaRecordedStep()) return 1;
   // 1.22.1: a rep set without its own set timer counts up; its arc fills over the estimate and stays full past it
-  if (cinemaCountsUp(step)) return Math.min(1, cinemaManualElapsed(step) / cinemaManualTarget(step));
+  if (cinemaCountsUp(step)) return Math.min(1, cinemaManualElapsed() / cinemaManualTarget(step));
   if (step.kind === 'manual') return 1 - cinemaManualRemaining(step) / cinemaManualTarget(step);
   return step.dur ? 1 - remaining() / step.dur : 0;
 }
@@ -2546,7 +2546,7 @@ function cinemaClockHtml(step, recorded){
 }
 function cinemaClockText(step){
   if (cinemaRecordedStep()) return '✓';
-  if (cinemaCountsUp(step)) return fmt(Math.floor(cinemaManualElapsed(step)));
+  if (cinemaCountsUp(step)) return fmt(Math.floor(cinemaManualElapsed()));
   if (step.kind === 'manual') return fmt(cinemaManualRemaining(step));
   return step.kind === 'ready' ? 'Kreni' : fmt(remaining());
 }
@@ -2728,7 +2728,7 @@ function cinemaManualElapsed(){
   return SessionClock.update(P.stepClock,Date.now(),!!P.paused)?.seconds||0;
 }
 function cinemaManualRemaining(step){
-  return Math.max(0,cinemaManualTarget(step)-cinemaManualElapsed(step));
+  return Math.max(0,cinemaManualTarget(step)-cinemaManualElapsed());
 }
 // 1.22.1: a rep set whose length he decides (no "Tajmer serije") counts up from 0:00: no countdown cues, nothing ends it
 // but his tap. Holds and rep sets with their own set timer keep the countdown, where the time is the task.
@@ -6976,7 +6976,7 @@ const A = {
     const elapsed=step.kind==='work'&&Number.isFinite(step.dur)?Math.round(Math.max(0,step.dur-remaining())):undefined;
     // 1.22.1: how long a rep set that counted up really took (pauses excluded). Only a set timed live: a tap while a sheet
     // (the journal) holds the clock is not timed, and its duration stays unknown.
-    const timed=cinemaCountsUp(step)&&!d.automatic&&!P.paused&&!P.dosePause?Math.round(cinemaManualElapsed(step)):undefined;
+    const timed=cinemaCountsUp(step)&&!d.automatic&&!P.paused&&!P.dosePause?Math.round(cinemaManualElapsed()):undefined;
     advanceWorkout({nextIndex:P.i+1,automatic:!!d.automatic,actualSec:elapsed===step.dur?undefined:elapsed,
       actualDur:PlayerDose.validActualDur(timed)?timed:undefined});
   },
