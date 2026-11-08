@@ -20,6 +20,9 @@ function fixture(empty = false) {
   data.settings.planDates = {};
   data.settings.matchDates = {};
   data.settings.matchDay = -1;
+  // These scenarios measure the 7-day window, picked as the user would.
+  data.settings.analysisPeriod = '7d';
+  data.settings.analysisPeriodChosen = true;
   data.settings.morningChecks = { '2026-11-04': { date: '2026-11-04', energy: 4, legs: 2, pain: 0 } };
   for (const protocol of Object.values(data.protocols)) protocol.days = [];
   const items = [
@@ -63,6 +66,8 @@ function fixture(empty = false) {
 
 function periodFixture() {
   const data = fixture();
+  // A backup from before 1.21 carries the old saved 7-day default without the picked flag: it opens on 3 months.
+  data.settings.analysisPeriodChosen = false;
   const protocol = data.log.find(row => row.historyId === 'tl-today');
   for (const [date, minutes] of [['2026-10-14', 9], ['2026-09-10', 18], ['2026-07-15', 24]]) {
     data.log.push({ ...protocol, historyId: 'tl-period-' + date, name: 'Poznati trening ' + date,
@@ -357,7 +362,7 @@ async function runPeriodScenario(page) {
     { key: 'all', sessions: 12, knownAU: 579.266667, chest: 14 }
   ];
   assert.equal(await buttons.count(), ranges.length);
-  assert.equal(await option('7d').getAttribute('aria-pressed'), 'true', 'default remains seven dates');
+  assert.equal(await option('3m').getAttribute('aria-pressed'), 'true', 'an unpicked 7-day default opens on three months');
   for (const { key, sessions, knownAU, chest } of ranges) {
     await option(key).click();
     assert.equal(await option(key).getAttribute('aria-pressed'), 'true');

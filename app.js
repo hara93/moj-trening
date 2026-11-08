@@ -465,6 +465,9 @@ function cleanSettings(s){
     else delete o[key];
   }
   if (!o.analysisPeriod && (o.progressChartPeriod || o.trainingLoadPeriod)) o.analysisPeriod = o.progressChartPeriod || o.trainingLoadPeriod;
+  // 1.21: the default period became 3 months. Earlier versions saved the old 7-day default with every setting,
+  // so 7 days is kept only when it was picked in Napredak (analysisPeriodChosen).
+  if (o.analysisPeriod === '7d' && s.analysisPeriodChosen !== true) delete o.analysisPeriod;
   if (Array.isArray(s.progressPinnedIds)) o.progressPinnedIds = [...new Set(s.progressPinnedIds.filter(id => !badKey(id)))].slice(0,3);
   else delete o.progressPinnedIds;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
@@ -475,7 +478,7 @@ function cleanSettings(s){
   if ('topKmh' in o && !(typeof o.topKmh === 'number' && o.topKmh >= 20 && o.topKmh <= 40)) delete o.topKmh;   // Najveća brzina
   return o;
 }
-const SETTINGS_BASE = { sound: true, vibration: true, transSec: 10, analysisPeriod:'7d', progressPinnedIds:[] };
+const SETTINGS_BASE = { sound: true, vibration: true, transSec: 10, analysisPeriod:'3m', progressPinnedIds:[] };
 function validSidePrep(seconds){return Number.isInteger(seconds)&&seconds>=0&&seconds<=3600;}
 function workoutSidePrepSeconds(fallback=10){return validSidePrep(S.settings.switchSec)?S.settings.switchSec:fallback;}
 const SIDE_PREP_CHOICES=[5,10,15,30,60];
@@ -4630,6 +4633,14 @@ function painHoldsAt(j){
   const it = P && P.items && P.items[j], check = checks[dateKey(P.startedAt || Date.now())];
   return !!it && !!check && TodayModel.painHolds(check, S.ex[it.exId], it.exId);
 }
+// Napredak opens on a useful chart: deadlift, back squat, then the first main barbell lift, then any exercise with a
+// comparison in the chosen period; the first recorded exercise only when nothing has one.
+const MAIN_LIFTS = ['deadlift','back-squat'];
+function defaultChartExercise(candidates, hasTrend){
+  const main = id => S.ex[id] && S.ex[id].cat === 'Snaga' && loadKind(S.ex[id]) === 'bar';
+  return MAIN_LIFTS.find(id => candidates.includes(id) && hasTrend(id)) || candidates.find(id => main(id) && hasTrend(id)) ||
+    candidates.find(hasTrend) || candidates[0];
+}
 /* ---------- the Progress tab ---------- */
 function progSuggestions(){
   const N = progN(), out = [];
@@ -5519,9 +5530,9 @@ VIEWS.progress = function(t=top()){
   t.chartCandidates=candidates;
   const chartExercises = candidates.map(id=>({id,name:S.ex[id].name,alt:S.ex[id].alt}));
   const chartPinnedIds = S.settings.progressPinnedIds.filter(id=>candidates.includes(id));
-  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || candidates[0];
   const chartPeriod = S.settings.analysisPeriod, from = TrainingLoad.periodStart(now,chartPeriod);
   const trend = (id,since) => ProgressModel.exerciseTrend({...insightInput,from:since,exerciseId:id});
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates,id=>!!trend(id,from));
   const chartComparison = chartExerciseId ? trend(chartExerciseId,from) : null;
   const chartHasComparison = !!(chartComparison || (from!==null && chartExerciseId && trend(chartExerciseId,null)));
   const chartPinnedTrends = chartPinnedIds.map(id=>id===chartExerciseId?chartComparison:trend(id,from)).filter(Boolean);
@@ -6684,7 +6695,8 @@ const A = {
   },
   progressRange:d=>{
     if (!TrainingLoad.periods.includes(d.v) || S.settings.analysisPeriod === d.v) return;
-    if (writeSetting('analysisPeriod',d.v)) render();
+    // the flag first: a 7-day choice saved without it would read back as the 3-month default
+    if ((S.settings.analysisPeriodChosen === true || writeSetting('analysisPeriodChosen',true)) && writeSetting('analysisPeriod',d.v)) render();
   },
   progressDetail:(d,el)=>ProgressView.showDetail(d.topic,el,d),
   trainingLoadDetail:(d,el)=>TrainingLoadView.showDetail(d.topic,el,d),

@@ -175,3 +175,28 @@ test('unknown duration and AU remain missing while a recorded zero remains a rea
   assert.match(ratedZeroMixed, /<td>0 poznato · 1 bez AU<\/td>/);
   assert.match(View.infoHtml('activity'), /nema ocjenu napora ili trajanje/);
 });
+
+test('Napredak opens on 3 months and a main lift with data; a picked 7 days and pinned exercises still win', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const cut = (a, b) => { const i = source.indexOf(a), j = source.indexOf(b, i); assert.ok(i >= 0 && j > i, a); return source.slice(i, j); };
+  assert.match(cut('const SETTINGS_BASE', ';'), /analysisPeriod:'3m'/);
+  const vm = require('node:vm');
+  const ctx = { TrainingLoad: require('../training-load.js'), GOALS: {}, TodayView: require('../today-view.js'), MonthPlan: require('../month-plan.js'),
+    isPlainObj: v => !!v && typeof v === 'object' && !Array.isArray(v), badKey: k => ['__proto__', 'constructor', 'prototype'].includes(k) };
+  vm.createContext(ctx);
+  vm.runInContext(cut('function cleanSettings(s){', 'const SETTINGS_BASE') + cut('const MAIN_LIFTS', '/* ---------- the Progress tab') +
+    ';globalThis.cleanSettings=cleanSettings;globalThis.defaultChartExercise=defaultChartExercise;', ctx);
+  assert.equal(ctx.cleanSettings({ analysisPeriod: '7d' }).analysisPeriod, undefined, 'the old saved default gives way to 3 months');
+  assert.equal(ctx.cleanSettings({ analysisPeriod: '7d', analysisPeriodChosen: true }).analysisPeriod, '7d');
+  assert.equal(ctx.cleanSettings({ analysisPeriod: '1m' }).analysisPeriod, '1m');
+  assert.match(cut('progressRange:d=>{', '},'), /writeSetting\('analysisPeriodChosen',true\)/);
+  ctx.S = { ex: { pallof: { cat: 'Trup' }, rdl: { cat: 'Snaga' }, 'back-squat': { cat: 'Snaga' }, deadlift: { cat: 'Snaga' }, row: { cat: 'Snaga' } } };
+  ctx.loadKind = e => e === ctx.S.ex.row ? 'db' : 'bar';
+  const pick = (ids, withData) => ctx.defaultChartExercise(ids, id => withData.includes(id));
+  assert.equal(pick(['pallof', 'rdl', 'back-squat', 'deadlift'], ['pallof', 'rdl', 'back-squat', 'deadlift']), 'deadlift');
+  assert.equal(pick(['pallof', 'rdl', 'back-squat', 'deadlift'], ['pallof', 'rdl', 'back-squat']), 'back-squat', 'deadlift without a comparison is skipped');
+  assert.equal(pick(['pallof', 'row', 'rdl'], ['pallof', 'row', 'rdl']), 'rdl', 'first barbell lift');
+  assert.equal(pick(['pallof', 'row'], ['row']), 'row');
+  assert.equal(pick(['pallof', 'row'], []), 'pallof');
+  assert.match(cut('const chartExerciseId =', '\n'), /chartPinnedIds\[0\] \|\| defaultChartExercise\(/);
+});
