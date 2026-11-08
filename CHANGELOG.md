@@ -1,5 +1,30 @@
 # Promjene
 
+## 1.21.0 — 8. 11. 2026.
+
+- **Bol** više ne zatvara Danas:
+  - **0–2:** treniraš normalno, samo bolno područje ne dobiva veće kilograme.
+  - **3–5:** dobivaš lakšu inačicu na istim mjestima u treningu, npr. glute bridge umjesto nordijskog pregiba i kratki Copenhagen umjesto dugog.
+  - **6 ili više, ili nova bol:** danas odmor i lagana mobilnost.
+  - U jutarnjoj provjeri jednim dodirom biraš gdje boli: kuk/prepone, stražnja loža, koljeno, ostalo.
+- **Rezervu (RIR)** upisuješ u playeru, na odmoru nakon serije: 0 · 1 · 2 · 3 · 4–5 · 6+. Ciljana rezerva je označena, a upis nije obavezan.
+  - Kod supersetova pita za obje vježbe kruga.
+  - U postavkama playera biraš **Upis rezerve**: nakon svake serije, samo zadnja serija ili na kraju.
+  - Serije na ponavljanja čekaju tvoj dodir, osim ako vježba ima svoj **Tajmer serije**.
+- **Progresija** čita rezervu. Trening vrijedi kao uspješan tek kad su zadnje dvije serije bile blizu ciljane rezerve. Ako si dvije ili više serija išao do kraja (RIR 0), kilogrami ostaju isti. Sljedeći kilogrami računaju se iz procjene 1RM prilagođene rezervi.
+- **Pokreni trening** je uvijek vidljiv na dnu protokola i vježbe. Svaka vježba u protokolu pokazuje **Prethodno**, npr. 95 kg · 5 / 5 / 5 / 5 pon.
+- U **Mišićnom tjednu** broji se i rad za kuk i prepone (Copenhagen, primicanje na boku, mostovi, hip airplane). Skupine važne za nogomet su na vrhu.
+- **Prijedlog za danas:**
+  - nudi i treninge s rehabilitacijskim vježbama;
+  - prednost daje treningu koji najdulje nisi radio;
+  - 4–5 dana prije utakmice prednost daje teškim nogama.
+  - Dan nakon utakmice upozorava na teške noge.
+- **Djelomično odrađen trening** popunjava dan plana tek kad odradiš barem pola radnih serija, ili kad dodirneš **Računaj kao odrađeno**. Inače traka, kalendar i povijest pokazuju **djelomično**.
+- **Napredak** se otvara na 3 mjeseca i na vježbi koju pratiš (inače na mrtvom dizanju ili čučnju).
+- Slika koja se ne može učitati bez interneta zamjenjuje se ikonom.
+- Sitni tekst u playeru je najmanje 13 px. Izbornik … ima jednu crtu i usklađene ikone.
+- Svaka provjera preglednika u CI-ju radi kao zaseban korak, pa jedan pad ne skriva ostale.
+
 ## 1.20.24 — 8. 11. 2026.
 
 - Kod vježbi po strani player odvaja lijevu i desnu stranu. Priprema između strana traje 10 s po zadanom ili koliko je postavljeno u tempu.
