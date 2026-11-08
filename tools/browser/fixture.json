@@ -72,6 +72,7 @@
     }
   ],
   "settings": {
+    "playerGuideSeen": true,
     "sound": true,
     "switchSec": 5,
     "transSec": 10,

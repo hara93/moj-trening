@@ -6249,8 +6249,9 @@ function warmCinemaPicture(imageOrEvent){
 }
 function playAfter(){
   P._lastI = P.i;
+  // the gesture guide opens once, on the first player start (settings without the flag count as not seen)
   if(P.mode==='ex'&&!P.done&&!S.sheet&&!cinemaGuideSeen())setTimeout(()=>{
-    if(P&&!P.done&&!S.sheet&&top().v==='play'&&!cinemaGuideSeen()){try{localStorage.setItem('mt.playerGuide','1');}catch(e){}cinemaOpenSheet({kind:'cinemaGuide'});}
+    if(P&&!P.done&&!S.sheet&&top().v==='play'&&!cinemaGuideSeen()&&writeSetting('playerGuideSeen',true))cinemaOpenSheet({kind:'cinemaGuide'});
   },0);
   setupCinemaPicker();
   const slot = document.getElementById('keepmedia');
@@ -6478,7 +6479,8 @@ const CINEMA_GUIDE_ICONS = {
   left:'<circle cx="19.5" cy="12" r="2.6"/><path d="M16 12H4M8 8l-4 4 4 4"/>',
   tap:'<circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="12" r="6.2"/><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5M2.5 12A9.5 9.5 0 0 1 12 2.5" opacity=".55"/>'
 };
-function cinemaGuideSeen(){try{return !!localStorage.getItem('mt.playerGuide');}catch(e){return true;}}
+// the seen flag lives in the settings, so a backup carries it
+function cinemaGuideSeen(){return S.settings.playerGuideSeen===true;}
 function cinemaGuideHtml(){
   const row=(icon,before,verb,after)=>'<li><span class="cinema-guide-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+CINEMA_GUIDE_ICONS[icon]+'</svg></span><span>'+before+' <b>'+verb+'</b> '+after+'</span></li>';
   return '<div class="cinema-guide-layer"><h3 id="sheet-h" tabindex="-1">Kako koristiti player</h3><p>Ovim pokretima upravljaš treningom.</p><ul>'+
@@ -6622,7 +6624,7 @@ const A = {
   cinemaMenu:()=>cinemaOpenSheet({kind:'cinemaMenu'}),
   cinemaPlayback:()=>cinemaOpenSheet({kind:'cinemaPlayback',returnCinemaMenu:true}),
   cinemaGuide:()=>cinemaOpenSheet({kind:'cinemaGuide'}),
-  cinemaGuideDone:()=>{try{localStorage.setItem('mt.playerGuide','1');}catch(e){}if(S.sheet?.kind==='cinemaGuide')cinemaCloseSheet();},
+  cinemaGuideDone:()=>{if(!cinemaGuideSeen())writeSetting('playerGuideSeen',true);if(S.sheet?.kind==='cinemaGuide')cinemaCloseSheet();},
   cinemaPlan:()=>cinemaOpenSheet({kind:'cinemaPlan',returnCinemaMenu:['cinemaMenu','cinemaPlayback'].includes(S.sheet?.kind)}),
   cinemaSettings:()=>cinemaOpenSheet({kind:'settings',returnCinemaMenu:true}),
   cinemaAudio:()=>cinemaOpenSheet({kind:'cinemaAudio',returnCinemaMenu:true}),
