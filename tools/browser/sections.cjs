@@ -14,6 +14,11 @@ const data=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')));
 const player=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
 const draft=p=>p.evaluate(()=>JSON.parse(sessionStorage.getItem('mt.unsavedDraft.v1')).draft);
 const part=(p,index)=>p.locator('select[data-builder-section="'+index+'"]');
+// 1.22.0: the part heading above the current exercise in the player journal
+const currentPart=p=>p.locator('.cinema-journal .workout-player-exercise[data-current="true"]').evaluate(node=>{
+  for(let n=node.previousElementSibling;n;n=n.previousElementSibling)if(n.matches('.cinema-block-heading'))return n.querySelector('h2').textContent;
+  return null;
+});
 const withoutPart=item=>Object.fromEntries(Object.entries(item).filter(([key])=>!key.startsWith('_')&&key!=='section'));
 const results=[];
 
@@ -84,23 +89,28 @@ async function run(p,width){
 
   await a(p,'startPr').click();await p.locator('.workout-cinema').waitFor();
   await p.clock.setFixedTime(new Date(await p.evaluate(()=>Date.now())+6000));await p.waitForTimeout(350);
-  assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Priprema ·/);
+  // 1.22.0: the set header reads "Serija 1 od 2" without the part; the journal names the part of the current exercise
+  assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Serija 1 od 2$/);
   await openJournal(p);
   assert.deepEqual(await p.locator('.cinema-block-heading h2').allTextContents(),['Priprema','Snaga']);
+  assert.equal(await currentPart(p),'Priprema');
   assert.equal(await p.locator('.cinema-journal .workout-journal-name').filter({hasText:'Copenhagen plank'}).count(),2);
   assert.equal(Object.keys((await player(p)).doneSteps).length,0,'opening and grouping never invents completed work');
   await shot(p,'journal',width);
   await p.locator('.cinema-journal [data-a="cinemaJournalGroup"][data-j="0"]').first().click();
   await shot(p,'journal-parts',width);
   await p.locator('.cinema-block-heading [data-a="cinemaBlock"][data-j="2"]').click();
-  assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Snaga ·/,'the second Copenhagen occurrence belongs to strength');
+  // 1.22.0: the second Copenhagen occurrence (3 sets) belongs to strength: its part is in the journal, not the set header
+  assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Serija 1 od 3$/);
+  await openJournal(p);assert.equal(await currentPart(p),'Snaga','the second Copenhagen occurrence belongs to strength');
+  await a(p,'cinemaJournalClose').click();await p.locator('.cinema-journal').waitFor({state:'hidden'});
   assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'kopenhagen-kratka');
   await a(p,'cinemaTimer').click();
   const snapshot=await player(p);
   assert.equal(snapshot.clock.paused,true);
   assert.deepEqual(snapshot.items.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);
   await p.reload({waitUntil:'domcontentloaded'});await a(p,'resumeGo').click();
-  assert.match(await p.locator('.workout-cinema-heading p').textContent(),/^Snaga ·/);
+  assert.match(await p.locator('.workout-cinema-heading p').textContent(),/^Serija 1 od 3$/);   // 1.22.0: no part in the set header
   assert.equal(await p.locator('.cinema-pause-layer').isVisible(),true);
   const restored=await player(p);assert.deepEqual(restored.items.map(x=>x.section),snapshot.items.map(x=>x.section));
   assert.equal(Object.keys(restored.doneSteps).length,0);assert.equal(restored.clock.paused,true);

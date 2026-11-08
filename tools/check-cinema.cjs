@@ -70,3 +70,39 @@ test('zero-length transitions are skipped and the actual first rest takes priori
  assert.equal(Cinema.upcoming({steps,i:2}),next);
  assert.equal(Cinema.upcoming({steps:[steps[0],steps[1],next],i:0}),next);
 });
+// 1.22.0: the top bar's dash progress
+const walk=(steps,count,ticks=4)=>{
+ const out=[];
+ for(let i=0;i<steps.length;i++)for(let t=0;t<ticks;t++){const {current,within}=Cinema.progress(steps,i,t/ticks,count);out.push(current+within);}
+ out.push(...[1].map(()=>{const {current,within}=Cinema.progress(steps,steps.length-1,1,count);return current+within;}));
+ return out;
+};
+test('the dash progress: one dash per exercise, the dot inside the current dash and never moving backwards',()=>{
+ // prep, A1 rest A2 rest A3, transition, B1 rest B2
+ const steps=[{kind:'prep',g:0},{kind:'manual',g:0},{kind:'rest',g:0},{kind:'manual',g:0},{kind:'rest',g:0},{kind:'manual',g:0},
+  {kind:'rest',g:1,trans:true},{kind:'manual',g:1},{kind:'rest',g:1},{kind:'manual',g:1}];
+ assert.deepEqual(Cinema.progress(steps,0,0,2),{n:2,current:0,within:0});
+ assert.deepEqual(Cinema.progress(steps,3,0.5,2),{n:2,current:0,within:3.5/6});
+ assert.deepEqual(Cinema.progress(steps,6,0,2),{n:2,current:1,within:0},'the transition before B already belongs to its dash');
+ assert.deepEqual(Cinema.progress(steps,9,1,2),{n:2,current:1,within:1});
+ assert.deepEqual(Cinema.progress(steps,12,0,2),{n:2,current:1,within:1},'past the last step: every dash is full');
+ const path=walk(steps,2);
+ for(let k=1;k<path.length;k++)assert.ok(path[k]>=path[k-1]-1e-9,'never backwards at '+k);
+ for(let i=0;i<steps.length;i++)for(const f of [0,.3,.99,1]){const {current,within}=Cinema.progress(steps,i,f,2);assert.ok(within>=0&&within<=1&&current>=0&&current<2);}
+});
+test('a superset advances the dot step by step across its own dashes, never jumping back to the first exercise',()=>{
+ // prep(A), A1 B1 rest A2 B2 rest A3 B3, transition C, C1
+ const steps=[{kind:'prep',g:0},{kind:'manual',g:0},{kind:'manual',g:1},{kind:'rest',g:1},{kind:'manual',g:0},{kind:'manual',g:1},{kind:'rest',g:1},
+  {kind:'manual',g:0},{kind:'manual',g:1},{kind:'rest',g:2,trans:true},{kind:'manual',g:2}];
+ const path=walk(steps,3);
+ for(let k=1;k<path.length;k++)assert.ok(path[k]>=path[k-1]-1e-9,'never backwards at '+k);
+ // the pair's nine steps share dashes 0 and 1: halfway through them the dot crosses into dash 1
+ assert.equal(Cinema.progress(steps,4,0,3).current,0);
+ assert.equal(Cinema.progress(steps,5,0,3).current,1,'B2 sits in the second half of the pair');
+ assert.equal(Cinema.progress(steps,7,0,3).current,1,'A3 does not send the dot back to the first dash');
+ assert.deepEqual(Cinema.progress(steps,9,0,3),{n:3,current:2,within:0});
+ // the frac is clamped and missing data never throws
+ assert.deepEqual(Cinema.progress(steps,1,7,3),Cinema.progress(steps,1,1,3));
+ assert.deepEqual(Cinema.progress([],0,0,0),{n:1,current:0,within:0});
+ assert.deepEqual(Cinema.progress(null,3,NaN,2),{n:2,current:0,within:0});
+});

@@ -2694,8 +2694,8 @@ function cinemaFooter(v, step, item, name, preparing){
     const mark=canMark?'<button type="button" class="cinema-work-mark" data-a="workoutSetDone" data-j="'+step.g+'" data-set="'+step.set+'" data-step="'+P.i+'" aria-label="'+workoutCompletionLabel(v.st)+'"><span>'+I.checkS+'</span></button>':
       '<span class="cinema-work-mark" aria-hidden="true"><span>'+I.checkS+'</span></span>';
     return '<div class="cinema-work-set'+(recorded?' is-recorded':'')+'">'+mark+
-      '<button type="button" class="cinema-work-journal" data-a="cinemaJournal" aria-label="Dnevnik treninga" aria-haspopup="dialog"><strong>'+esc(name)+
-      (cinemaTargetText(item)?'<em class="cinema-effort"> · '+esc(cinemaTargetText(item))+'</em>':'')+'</strong><span>'+
+      '<button type="button" class="cinema-work-journal" data-a="cinemaJournal" aria-label="Dnevnik treninga" aria-haspopup="dialog"><strong><span>'+esc(name)+'</span>'+
+      (cinemaTargetText(item)?'<em class="cinema-effort">· Cilj '+esc(cinemaTargetText(item))+'</em>':'')+'</strong><span>'+
       (step.set||1)+' od '+item.sets+'</span></button></div>';
   }
   return '<button type="button" class="cinema-journal-bar" data-a="cinemaJournal" aria-haspopup="dialog">'+WorkoutView.icon('notebook-text')+'<strong>Dnevnik</strong><span>Upiši rezultate '+WorkoutView.icon('chevrons-up')+'</span></button>';
@@ -2756,19 +2756,34 @@ function cinemaUpcomingHtml(step){
     '<span class="cinema-next-side"><button type="button" class="ib" data-a="playDoseEdit" data-j="'+step.g+'" aria-label="Uredi sljedeću seriju">'+I.plus+'</button>'+
     (target?'<em class="cinema-effort">'+esc(target)+'</em>':'')+'</span></div>';
 }
-// One dash per exercise; the dot marks the exact point inside the current one.
-function cinemaProgressParts(){
-  const n=Math.max(1,P.items.length),st=P.steps[P.i]||{},frac=st.dur?Math.max(0,Math.min(1,1-remaining()/st.dur)):0;
-  const g=Math.max(0,Math.min(n-1,Number.isInteger(st.g)?st.g:0));
-  let first=-1,last=-1;
-  P.steps.forEach((step,k)=>{if(step.g===g){if(first<0)first=k;last=k;}});
-  if(first<0){first=last=P.i;}
-  return {n,g,within:Math.max(0,Math.min(1,(P.i-first+frac)/Math.max(1,last-first+1)))};
+// How far the current step has run (0–1), for the dashes and the percent. It never shrinks while the step lasts:
+// −/+15 s and added prep time rescale the step, and the dot must not slide back. Entering a step resets it.
+let cinemaFracMark = null;
+function cinemaStepFrac(){
+  const st=P.steps[P.i];if(!st)return 0;
+  const raw=cinemaClockProgress(st),frac=Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):0,key=P.startedAt+':'+P.i;
+  if(cinemaFracMark?.key!==key)cinemaFracMark={key,value:frac};else cinemaFracMark.value=Math.max(cinemaFracMark.value,frac);
+  return cinemaFracMark.value;
 }
-function cinemaProgressHtml(percent){
-  const {n,g,within}=cinemaProgressParts(),at=(within*100).toFixed(1)+'%';
-  return '<div class="cinema-dashes" role="progressbar" aria-label="Tijek plana treninga" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'">'+
-    Array.from({length:n},(_,k)=>k<g?'<i class="is-done"></i>':k>g?'<i></i>':'<i class="is-current"><b id="cinema-dash-fill" style="width:'+at+'"></b><em id="cinema-dash-dot" style="left:'+at+'"></em></i>').join('')+'</div>';
+function cinemaPercent(frac){return Math.round(Math.max(0,Math.min(1,(P.i+frac)/Math.max(1,P.steps.length)))*100);}
+// One dash per exercise; the dot marks the exact point inside the current one (CinemaModel.progress).
+function cinemaProgressParts(frac=cinemaStepFrac()){return CinemaModel.progress(P.steps,P.i,frac,P.items.length);}
+function cinemaProgressHtml(percent,frac){
+  const {n,current,within}=cinemaProgressParts(frac);
+  return '<div class="cinema-dashes" role="progressbar" aria-label="Tijek plana treninga" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'" data-current="'+current+'">'+
+    Array.from({length:n},(_,k)=>k<current?'<i class="is-done"></i>':k>current?'<i></i>':'<i class="is-current" id="cinema-dash" style="--at:'+within.toFixed(4)+'"><b></b><em></em></i>').join('')+'</div>';
+}
+// Per tick only the dash, the dot and the percent change; a new current dash rewrites the dashes alone.
+function cinemaProgressPaint(){
+  const bar=app.querySelector('.workout-cinema .cinema-dashes');if(!bar)return;
+  const frac=cinemaStepFrac(),percent=cinemaPercent(frac),parts=cinemaProgressParts(frac);
+  if(bar.dataset.current!==String(parts.current)||bar.children.length!==parts.n){bar.outerHTML=cinemaProgressHtml(percent,frac);}
+  else{
+    const dash=document.getElementById('cinema-dash'),at=parts.within.toFixed(4);
+    if(dash&&dash.style.getPropertyValue('--at')!==at)dash.style.setProperty('--at',at);
+    if(bar.getAttribute('aria-valuenow')!==String(percent))bar.setAttribute('aria-valuenow',String(percent));
+  }
+  const text=document.getElementById('cinema-percent');if(text&&text.textContent!==percent+'%')text.textContent=percent+'%';
 }
 function cinemaSectionStart(st,parts){
   if(st.kind==='prep')return P.i===0||P.steps.slice(0,P.i).every(step=>!isWork(step));
@@ -2809,7 +2824,7 @@ function workoutCinemaHtml() {
   const v=curView(),state=cinemaState(v),active=state.active,st=v.st;
   const step=cinemaDisplayStep(st);
   const item=step.it||P.items[active],dose=step===st&&cinemaRecordedStep()?PlayerDose.recordedAt(step,item):PlayerDose.at(item,step.set||1),e=S.ex[item?.exId]||v.e;
-  const progress=Math.max(0,Math.min(1,(P.i+(st.dur?1-remaining()/st.dur:0))/P.steps.length)),percent=Math.round(progress*100);
+  const frac=cinemaStepFrac(),percent=cinemaPercent(frac);
   const parts=CinemaModel.sections(P.items,S.ex),timed=item.measure==='time',recorded=cinemaRecordedStep();
   const elapsed=SessionClock.update(P.clock,Date.now(),!!P.paused)?.seconds||0;
   const topbar='<div class="cinema-session"><strong id="cinema-elapsed">'+fmt(elapsed)+'</strong><span aria-hidden="true">·</span><b id="cinema-percent">'+percent+'%</b></div><button type="button" class="ib" data-a="cinemaMenu" aria-label="Mogućnosti treninga">'+WorkoutView.icon('ellipsis')+'</button>';
@@ -2827,7 +2842,7 @@ function workoutCinemaHtml() {
   return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
     subtitle:section||rest?'':'Serija '+(step.set||1)+' od '+item.sets+(side?' · '+side:''),prepQuantity:section||rest?'':cinemaQuantity(item,dose),
     overviewHtml:section?cinemaSectionHtml(st,parts):'',
-    mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(percent),
+    mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(percent,frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:phase==='work'?metrics:'',
     reserveHtml:reserveAt.map(k=>rirRowHtml(k,reserveAt.length>1||P.steps[k].g!==active)).join(''),
@@ -2872,7 +2887,7 @@ function workoutJournalHtml() {
     if(!open)return wrap(WorkoutView.journalRow({index:j,name,thumbHtml:thumb,badgeHtml:badge,setsHtml:sets}));
     const undo=cinemaJournalSwapped(j),canSwap=workoutCanSwap(c,j),target=cinemaTargetText(item),e1=cinemaE1Html(item);
     const meta='<small class="cj-meta">'+workoutPreviousCompact(item).replace(/<\/?span>/g,'')+'</small>'+
-      (e1||target?'<small class="cj-meta">'+esc(e1)+(e1&&target?' · ':'')+(target?'Cilj <b class="cj-effort">'+esc(target)+'</b>':'')+'</small>':'');
+      (e1||target?'<small class="cj-meta">'+esc(e1)+(e1&&target?' · ':'')+(target?'<b class="cj-effort">Cilj '+esc(target)+'</b>':'')+'</small>':'');
     const chips='<button type="button" data-a="cinemaEquipment" data-j="'+j+'" aria-expanded="'+(state.equipment===j)+'">'+esc(cinemaEquipmentLabel(e)||'Oprema')+WorkoutView.icon('chevrons-up-down')+'</button>'+
       '<button type="button" data-a="'+(undo?'workoutUndoSwap':'workoutSwap')+'" data-j="'+j+'"'+(canSwap?'':' disabled')+'>'+WorkoutView.icon(undo?'undo-2':'shuffle')+(undo?'Vrati zamjenu':'Zamjena')+'</button>'+
       '<button type="button" data-a="workoutHistory" data-j="'+j+'">'+WorkoutView.icon('notebook-text')+'Povijest</button>'+
@@ -4233,6 +4248,7 @@ function positionStep(i, t0){
   const now = Date.now(), start = t0 || now, step = P.steps[i];
   P.i = i;
   cinemaPicker = null;
+  cinemaFracMark = null;
   P.lastBeep = null;
   P.stepClock = SessionClock.start(start);
   P.endAt = step?.dur ? start + step.dur * 1000 : 0;
@@ -6099,9 +6115,7 @@ function paintPlayer(full){
   const fb = document.getElementById('fbig'); if (fb&&fb.textContent!==v.big) fb.textContent = v.big;
   const arc = document.getElementById('ringArc'); if (arc) { const C = 2*Math.PI*35; arc.setAttribute('stroke-dasharray', (C*Math.max(0,Math.min(1,v.ringFrac))).toFixed(1)+' '+C.toFixed(1)); }
   const pb = document.getElementById('progbar'); if (pb) { const prog = (P.i + (v.st.dur ? 1 - remaining()/v.st.dur : 0)) / P.steps.length; pb.style.width = (prog*100).toFixed(1) + '%'; pb.parentElement.setAttribute('aria-valuenow',String(Math.round(prog*100))); }
-  const percent=document.getElementById('cinema-percent');if(percent)percent.textContent=Math.round((P.i+(v.st.dur?1-remaining()/v.st.dur:0))/P.steps.length*100)+'%';
-  const dash=document.getElementById('cinema-dash-fill');
-  if(dash&&P.mode==='ex'&&!P.done){const at=(cinemaProgressParts().within*100).toFixed(1)+'%';dash.style.width=at;const dot=document.getElementById('cinema-dash-dot');if(dot)dot.style.left=at;}
+  if(P.mode==='ex'&&!P.done)cinemaProgressPaint();
   if(P.mode==='ex'&&!P.done&&app.querySelector('.workout-cinema.is-rest-1')&&cinemaRestPhase(v.st)===2){render();return;}
   if (P._lastI !== P.i) { P._lastI = P.i; render(); }
 }

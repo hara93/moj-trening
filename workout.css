@@ -701,13 +701,14 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .cinema-session :is(strong,b,span){font-size:inherit;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:#fff}
 .workout-cinema-topbar{min-height:58px;padding:6px 15px 2px 20px}
 .workout-cinema-topbar>.ib,.workout-cinema-topbar>button{border-color:#FFFFFF26;background:#1A1E25B3;backdrop-filter:blur(10px)}
+/* Dash progress: one dash per exercise; the dot (--at, 0–1) always lies inside the current dash. */
 .workout-cinema-progress{padding:4px 20px 6px}
 .cinema-dashes{display:flex;align-items:center;gap:7px;width:100%;height:12px}
 .cinema-dashes>i{position:relative;flex:1;min-width:0;height:3px;border-radius:3px;background:#FFFFFF38}
 .workout-cinema-progress .cinema-dashes>i.is-current{background:#FFFFFF38}
 .workout-cinema-progress .cinema-dashes>i.is-done{background:#fff}
-.cinema-dashes>i.is-current>b{position:absolute;inset:0 auto 0 0;border-radius:3px;background:#fff}
-.cinema-dashes>i.is-current>em{position:absolute;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--player-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--player-accent) 30%,transparent),0 0 12px var(--player-accent)}
+.cinema-dashes>i.is-current>b{position:absolute;inset:0 auto 0 0;width:calc(4.5px + (100% - 9px)*var(--at,0));border-radius:3px;background:#fff}
+.cinema-dashes>i.is-current>em{position:absolute;top:50%;left:calc(4.5px + (100% - 9px)*var(--at,0));width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--player-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--player-accent) 30%,transparent),0 0 12px var(--player-accent)}
 /* Set header */
 .workout-cinema-heading{padding:12px 66px 4px 20px}
 .workout-cinema-heading p,.workout-cinema-heading.is-preparing p{margin:0 0 5px;color:var(--cinema-accent);font-size:17px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
@@ -725,7 +726,9 @@ span.workout-exercise-open{cursor:default}
 .cinema-work-mark span{width:28px;height:28px;border:1.5px solid var(--cinema-accent);color:var(--cinema-accent)}
 .cinema-work-mark svg{width:14px;height:14px}
 .cinema-work-set.is-recorded .cinema-work-mark span{color:var(--player-on-accent)}
-.cinema-work-journal strong{font-size:16px;font-weight:650}
+.cinema-work-journal strong{display:flex;align-items:baseline;gap:.3em;font-size:16px;font-weight:650}
+.cinema-work-journal strong>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cinema-work-journal strong>.cinema-effort{flex:none}
 .cinema-work-journal>span{color:var(--cinema-accent);font-size:15px;font-weight:650}
 .workout-cinema .cinema-effort{color:var(--player-effort);font-style:normal;font-weight:650}
 .workout-cinema-journal>button{min-height:62px;border-color:#FFFFFF2B;border-radius:31px;background:#1A1E25D9;backdrop-filter:blur(14px)}
