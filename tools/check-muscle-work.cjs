@@ -277,4 +277,8 @@ test('the muscle week lists the football groups first, then the most worked othe
   const comparison = html.slice(html.indexOf('db-comparison'),html.indexOf('db-groups'));
   const names = [...comparison.matchAll(/class="db-comparison-name">([^<]+)</g)].map(m=>m[1]);
   assert.deepEqual(names,['Aduktori','Gluteus medius','Stražnja loža','Listovi','Kvadriceps','Prsa','Široki leđni mišići','Triceps']);
+  assert.match(comparison,/<p class="db-pinned-label">Za nogomet<\/p>[\s\S]*Kvadriceps[\s\S]*<hr class="db-pinned-divider">[\s\S]*Prsa/,'a label over the pinned block and a divider before the rest');
+  assert.match(comparison,/data-id="adductors" aria-pressed="true"/,'the first football group with work is selected, not chest');
+  const chosen = ctx.window.TrainingDashboard.analytics({range:{},today:'2026-11-04',forecast:false,groups,sessions:[],days:[],quality:{},summary:{},coverage:{},pinnedGroups:M.footballGroups,selectedGroup:'chest'});
+  assert.match(chosen,/data-id="chest" aria-pressed="true"/,'his own choice wins');
 });

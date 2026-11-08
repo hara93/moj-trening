@@ -155,7 +155,10 @@
     };
     const legend='<div class="db-comparison-legend"><span><i class="db-swatch db-swatch-direct"></i>Izravne</span><span><i class="db-swatch db-swatch-indirect"></i>0,5 × neizravne</span>'+(forecast?'<span><i class="db-swatch db-swatch-plan"></i>Preostali plan</span>':'')+'</div>';
     return '<section class="db-comparison" aria-label="Usporedba mišićnih skupina"><div class="db-comparison-heading"><h3>Rad po skupinama</h3><span>procijenjene serije</span></div>'+legend+
-      (hasWork?'<div class="db-comparison-axis" aria-hidden="true"><span>0</span><span>'+fmt(max)+'</span></div>'+shown.map(row).join(''):'<p class="db-empty-copy">U ovom prikazu još nema poznatih serija za usporedbu.</p>')+
+      // the football groups under their own label, a divider, then the rest by work done
+      (hasWork?'<div class="db-comparison-axis" aria-hidden="true"><span>0</span><span>'+fmt(max)+'</span></div>'+
+        (pinned.length?'<p class="db-pinned-label">Za nogomet</p>'+pinned.map(row).join('')+(shown.length>pinned.length?'<hr class="db-pinned-divider">':''):'')+
+        shown.filter(g=>!pinned.includes(g)).map(row).join(''):'<p class="db-empty-copy">U ovom prikazu još nema poznatih serija za usporedbu.</p>')+
       (rest.length?'<details class="db-groups"><summary>'+(hasWork?'Prikaži još '+rest.length+' '+plural(rest.length,'skupinu','skupine','skupina'):'Odaberi mišićnu skupinu')+'<span>'+groups.length+'</span></summary><div>'+rest.map(row).join('')+'</div></details>':'')+'</section>';
   }
 
@@ -212,7 +215,9 @@
     const vm=input || {loading:true};
     if (vm.loading || vm.error) return stateView(vm,true);
     const groups=list(vm.groups), range=vm.range || {}, coverage=vm.coverage || {};
-    const group=groups.find(g=>g.id===vm.selectedGroup) || groups.find(g=>val((g.actual||{}).equivalent)>0) || groups[0];
+    const work=g=>val((g.actual||{}).equivalent)>0, pinnedFirst=list(vm.pinnedGroups).map(id=>groups.find(g=>g.id===id)).filter(Boolean);
+    // with no choice yet the first football group with work is open (Aduktori), not the largest upper-body group
+    const group=groups.find(g=>g.id===vm.selectedGroup) || pinnedFirst.find(work) || groups.find(work) || groups[0];
     const selected=group && group.id;
     const hasKnownWork=groups.some(g=>val((g.actual||{}).equivalent)>0);
     const peak = Math.max(1,...groups.map(g=>val((g.actual||{}).equivalent)+(vm.forecast?val((g.planned||{}).equivalent):0)));

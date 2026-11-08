@@ -194,3 +194,6 @@
 .db-info>div p{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--text-body)}
 @media(max-width:350px){.dashboard{padding-left:12px;padding-right:12px}.db-panel{padding:16px 13px}.db-quick{gap:5px}.db-quick button{font-size:10px;gap:4px}.db-quick svg{width:15px;height:15px}.db-anatomy-row{grid-template-columns:minmax(0,1fr) 91px;gap:7px}.db-ring{width:91px;height:91px}.db-ring strong{font-size:30px}.db-ring small{font-size:15px}.db-coverage>b{font-size:10px}.db-detail-heading h3{font-size:17px}.db-counts dt{font-size:9px}.db-daily{gap:5px}.db-section-head h2{font-size:18px}.db-legend{column-gap:9px;font-size:9px}.db-comparison-row{grid-template-columns:76px minmax(0,1fr) 29px;gap:6px;padding-left:4px;padding-right:4px}.db-comparison-name{font-size:10px}.db-comparison-axis{padding-left:87px;padding-right:32px}}
 @media(prefers-reduced-motion:reduce){.db-region,.db-forecast>i:after{transition:none}}
+/* 1.21: the pinned football groups have a label and a divider before the rest */
+.db-pinned-label{margin:10px 0 2px;font-size:12px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)}
+.db-pinned-divider{height:0;margin:8px 0 4px;border:0;border-top:1px solid var(--border)}
