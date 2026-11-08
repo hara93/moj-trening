@@ -500,3 +500,22 @@ test('pain 6+ or new pain stops today with mobility, but never after the session
   assert.equal(trained.kind, 'rest');
   assert.equal(trained.title, 'Današnji trening je zabilježen');
 });
+
+test('free-day choice: sessions with rehab items qualify, the longest untrained comes first, heavy legs 4-5 days before a match', () => {
+  const rehabExercises = { ...exercises, cph: { name: 'Copenhagen', cat: 'Rehab', equip: ['Bez opreme'], muscles: { prime: ['front_adductors'] } } };
+  const sessions = [template({ id: 'a', name: 'Trening A', items: [dose('squat'), dose('cph', { kg: 0 })] }),
+    template({ id: 'b', name: 'Trening B', items: [dose('press')] }),
+    template({ id: 'c', name: 'Trening C', items: [dose('squat', { reps: 5 })] })];
+  const logs = [log({ historyId: 'la', refId: 'a', at: at('2026-10-26'), items: sessions[0].items }),
+    log({ historyId: 'lb', refId: 'b', at: at('2026-10-30') }),
+    log({ historyId: 'lc', refId: 'c', at: at('2026-10-28'), items: sessions[2].items })];
+  const free = Today.suggest(input({ planned: [], exercises: clone(rehabExercises), candidates: sessions, logs }));
+  assert.equal(free.action.id, 'a', 'Trening A with Copenhagen is offered: trained longest ago');
+  const recentA = logs.map(entry => entry.refId === 'a' ? { ...entry, at: at('2026-10-31') } : entry);
+  assert.equal(Today.suggest(input({ planned: [], exercises: clone(rehabExercises), candidates: sessions, logs: recentA })).action.id, 'c');
+  const legsDay = { matchDates: { '2026-11-08': 1 } }; // Wednesday, match on Sunday: 4 days
+  const upperOldest = logs.map(entry => entry.refId === 'b' ? { ...entry, at: at('2026-10-20') } : entry);
+  assert.equal(Today.suggest(input({ planned: [], exercises: clone(rehabExercises), candidates: sessions, logs: upperOldest })).action.id, 'b');
+  assert.equal(Today.suggest(input({ planned: [], settings: legsDay, exercises: clone(rehabExercises), candidates: sessions, logs: upperOldest })).action.id, 'a',
+    'heavy legs win 4 days before the match');
+});

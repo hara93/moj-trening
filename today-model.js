@@ -502,7 +502,7 @@
         if (!easyPlan(candidate, exercises) && (!last || now - last.at < 48 * 3600000)) return false;
         return candidate.kind === 'protocol' && workItems(candidate).every(function (item) {
           var exercise = exerciseFor(exercises, item.exId);
-          return exercise && ['Snaga', 'Trup', 'Mobilnost', 'Aktivacija'].includes(exercise.cat);
+          return exercise && ['Snaga', 'Trup', 'Mobilnost', 'Aktivacija', 'Rehab'].includes(exercise.cat);
         });
       });
       function familiarity(candidate) {
@@ -510,9 +510,13 @@
           return sameWorkout(log, candidate) && actualWork(log);
         });
       }
+      // 4-5 days before a match is the slot for heavy legs; otherwise the longest
+      // untrained familiar session comes first, untried ones after them.
+      var legsSlot = context.gap === 4 || context.gap === 5;
       choices.sort(function (left, right) {
         var a = familiarity(left), b = familiarity(right);
-        return (b ? b.at : -Infinity) - (a ? a.at : -Infinity) || text(left.id).localeCompare(text(right.id));
+        var legs = legsSlot ? Number(heavyLegs(right, exercises)) - Number(heavyLegs(left, exercises)) : 0;
+        return legs || (a ? a.at : Infinity) - (b ? b.at : Infinity) || text(left.id).localeCompare(text(right.id));
       });
       selected = choices[0] || null;
     }
