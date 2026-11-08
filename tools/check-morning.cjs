@@ -76,6 +76,7 @@ test('pain location and new pain are one tap each, kept only with a pain value',
   assert.deepEqual(view.readForm(chips({pain:'0'},'hip'),date),{entry:{date,pain:0}},'no area without pain');
   assert.deepEqual(view.readForm(chips({pain:'7'},'knee',true),date),{entry:{date,pain:7,painArea:'knee',newPain:true}});
   assert.ok(view.readForm(chips({energy:'3'},'',true),date).error,'new pain needs a pain value');
+  assert.deepEqual(view.readForm(chips({energy:'3'},'knee'),date),{error:'Odaberi i jačinu boli.'},'a place without a pain level says what is missing');
   assert.deepEqual(view.cleanChecks({[date]:{date,pain:3,painArea:'hamstring',newPain:true},'2026-11-03':{pain:0,painArea:'hip'},'2026-11-02':{pain:2,painArea:'leđa'}}),
     {[date]:{date,pain:3,painArea:'hamstring',newPain:true},'2026-11-03':{date:'2026-11-03',pain:0},'2026-11-02':{date:'2026-11-02',pain:2}});
   assert.equal(view.description({date,pain:4,painArea:'hip',newPain:true}),'Bol 4/10 kuk/prepone (nova)');
@@ -84,4 +85,14 @@ test('pain location and new pain are one tap each, kept only with a pain value',
   assert.deepEqual([...html.matchAll(/name="painArea" value="([a-z]+)"/g)].map(m=>m[1]),['hip','hamstring','knee','other']);
   assert.match(html,/value="knee" checked/);
   assert.doesNotMatch(html,/trener/i);
+  assert.match(html,/<\/fieldset><label class="dy-toggle"><input type="checkbox" role="switch" name="newPain">/,'"Nova bol" is a switch on its own row');
+  assert.match(html,/id="morning-form"[^>]*data-area="knee"/,'the chosen place is known, so a second tap clears it');
+  assert.match(fs.readFileSync(path.join(__dirname,'../today.css'),'utf8'),/\.dy-chips span\{[^}]*min-height:44px/);
+});
+test('Danas shows the pain hold on the card and the stop day starts mobility',()=>{
+  const vm=rec=>({date,checks:{},checkin:{date,pain:4},recommendation:{kind:'planned',title:'Danas: Trening B',summary:'Odradi.',reasons:[],evidence:[],missing:[],...rec},exercises:{},nextMatch:null,team:[]});
+  assert.match(view.view(vm({painNote:'Bol 4/10 (koljeno): bez povećanja kilograma za koljeno.',action:{type:'protocol',id:'b'}})),/<p class="dy-pain-note">Bol 4\/10 \(koljeno\): bez povećanja kilograma za koljeno\.<\/p>/);
+  const stop=view.view(vm({kind:'caution',title:'Danas odmor ili lagana mobilnost',action:{type:'protocol',id:'mob'}}));
+  assert.match(stop,/data-a="todayAct">Pokreni mobilnost/);
+  assert.match(view.view(vm({action:{type:'protocol',id:'b'}})),/data-a="todayAct">Pokreni trening/);
 });

@@ -44,6 +44,7 @@
     if (where && entry.pain>0 && areas.some(a=>a[0]===where)) entry.painArea=where;
     if (fresh?.checked) entry.newPain=true;
     if (entry.newPain && !(entry.pain>0)) return {error:'Za novu bol odaberi i jačinu boli.'};
+    if (where && entry.pain==null) return {error:'Odaberi i jačinu boli.'};
     return Object.keys(entry).length>1 ? {entry} : {error:'Za spremanje odaberi barem jedan odgovor.'};
   }
   function description(entry) {
@@ -62,14 +63,14 @@
   }
   function formView({date,original}) {
     return '<div class="view dy-view">'+header('Jutarnja provjera',shortDay(date))+
-      '<p class="dy-intro">'+(date===calendar.key(Date.now())?'Kako se osjećaš danas?':'Kako si se osjećao tog jutra?')+' Dovoljan je jedan odgovor.</p><form id="morning-form" class="dy-panel dy-form">'+
+      '<p class="dy-intro">'+(date===calendar.key(Date.now())?'Kako se osjećaš danas?':'Kako si se osjećao tog jutra?')+' Dovoljan je jedan odgovor.</p><form id="morning-form" class="dy-panel dy-form" data-area="'+esc(original?.painArea||'')+'">'+
       specs.map(([key,title,min,max])=>{
         const options=[];
         for (let i=min;i<=max;i++) options.push('<option value="'+i+'"'+(original?.[key]===i?' selected':'')+'>'+esc(label(key,i))+'</option>');
         return '<label>'+esc(title)+'<select name="'+key+'"><option value="">Bez unosa</option>'+options.join('')+'</select></label>';
       }).join('')+'<fieldset class="dy-chips"><legend>Gdje boli?</legend>'+areas.map(([key,name])=>
         '<label><input type="radio" name="painArea" value="'+key+'"'+(original?.painArea===key?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+
-        '<label><input type="checkbox" name="newPain"'+(original?.newPain?' checked':'')+'><span>Nova bol</span></label></fieldset>'+'<p class="dy-error" id="morning-error" role="alert"></p><button type="submit" class="dy-primary" data-a="morningSave">Spremi provjeru</button>'+
+        '</fieldset><label class="dy-toggle"><input type="checkbox" role="switch" name="newPain"'+(original?.newPain?' checked':'')+'><span>Nova bol</span></label>'+'<p class="dy-error" id="morning-error" role="alert"></p><button type="submit" class="dy-primary" data-a="morningSave">Spremi provjeru</button>'+
       (original?'<button type="button" class="dy-delete" data-a="morningDeleteAsk">Izbriši provjeru</button><div id="morning-confirm" hidden><p>Izbrisati provjeru za '+shortDay(date)+'?</p><button type="button" class="dy-delete" data-a="morningDeleteConfirm">Potvrdi brisanje</button> <button type="button" class="dy-secondary" data-a="morningDeleteCancel">Odustani</button></div>':'')+'</form></div>';
   }
   function card(vm) {
@@ -132,7 +133,7 @@
     return disclosure('Zašto ovaj prijedlog?',why+lastPerformance(rec,exercises,expanded)+sources+note,'why',expanded);
   }
   function view(vm,expanded=[]) {
-    const rec=vm.recommendation, action=rec.action || {}, label=actionLabels[action.type];
+    const rec=vm.recommendation, action=rec.action || {}, label=rec.kind==='caution'&&action.type==='protocol'?'Pokreni mobilnost':actionLabels[action.type];
     const startsWorkout=['protocol','field'].includes(action.type);
     const missing=rec.missing?.length ? '<ul class="dy-reasons">'+rec.missing.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>' : '';
     const checkStatus=startsWorkout && rec.confidence==='limited' && !rec.summary.includes('jutarnju procjenu') ? 'Jutarnja provjera nije potpuna' : '';
@@ -141,6 +142,7 @@
     return '<div class="view dy-view dy-today">'+header('Danas',new Date(calendar.time(vm.date)).toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'}))+
       '<section class="dy-panel dy-advice" id="today-recommendation" data-kind="'+esc(rec.kind)+'"><p class="dy-eyebrow">'+(rec.kind==='caution'?'Oprez danas':'Prijedlog za danas')+'</p>'+
       '<h2>'+esc(rec.title.replace(/^Danas: /,''))+'</h2><p class="dy-instruction">'+esc(rec.summary)+'</p>'+
+      (rec.painNote?'<p class="dy-pain-note">'+esc(rec.painNote)+'</p>':'')+
       (startsWorkout?checks:'')+
       (label?'<button type="button" class="dy-primary" data-a="todayAct">'+esc(label)+' <span aria-hidden="true">›</span></button>':'')+
       doseRows(rec.items,vm.exercises,expanded)+recommendationDetails(rec,vm.exercises,expanded)+(startsWorkout?'':checks)+'</section>'+

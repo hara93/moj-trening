@@ -31,6 +31,7 @@
 .dy-advice[data-kind="caution"]{border-color:var(--danger)}
 .dy-advice[data-kind="caution"] .dy-eyebrow{color:var(--danger)}
 .dy-advice .dy-instruction{color:var(--text-body);margin:8px 0 12px}
+.dy-advice .dy-pain-note{margin:-4px 0 12px;font-size:14px;font-weight:600;color:var(--text)}
 .dy-advice .dy-primary{margin:6px 0}
 .dy-advice .dy-primary span{margin-left:4px;font-size:18px;line-height:1}
 .dy-disclosure{border-top:1px solid var(--border)}
@@ -49,4 +50,10 @@
 .dy-dose li::marker{color:var(--accent-text);font-variant-numeric:tabular-nums}
 :is(.dy-dose,.dy-last) li span{display:block;color:var(--text-2);font-size:13px}
 .dy-last{margin-top:8px}
-.dy-chips{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.dy-chips legend{font-weight:600;padding:0;margin-bottom:5px;width:100%}.dy-chips label{position:relative;display:block}.dy-chips input{position:absolute;opacity:0;inset:0;margin:0}.dy-chips span{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--border);border-radius:20px;font:600 14px var(--font);color:var(--text);background:var(--bg)}.dy-chips input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}.dy-chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.dy-chips{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.dy-chips legend{font-weight:600;padding:0;margin-bottom:5px;width:100%}.dy-chips label{position:relative;display:block}.dy-chips input{position:absolute;opacity:0;inset:0;margin:0}.dy-chips span{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:20px;font:600 14px var(--font);color:var(--text);background:var(--bg)}.dy-chips input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}.dy-chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+/* 1.21: "Nova bol" is a switch on its own row, not one more place */
+.dy-toggle{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-weight:600}
+.dy-toggle input{position:absolute;opacity:0;inset:0;margin:0}
+.dy-toggle::after{content:"";flex:none;width:46px;height:28px;border-radius:14px;background:var(--border) radial-gradient(circle 11px at 14px 50%,#fff 96%,transparent) no-repeat}
+.dy-toggle:has(input:checked)::after{background:var(--accent) radial-gradient(circle 11px at 32px 50%,#fff 96%,transparent) no-repeat}
+.dy-toggle:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}

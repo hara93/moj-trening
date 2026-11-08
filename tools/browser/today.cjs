@@ -146,6 +146,11 @@ async function morningFlow(p){
   await today(p); const first=await advise(p);
   await recommendationLayout(p);
   const form=await morning(p,{energy:4,legs:2,pain:0});
+  const chipHeights=await form.locator('.dy-chips span, .dy-toggle').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().height));
+  assert.ok(chipHeights.length===5&&chipHeights.every(h=>h>=44),'pain chips are full touch targets: '+chipHeights);
+  const hipChip=form.locator('[name="painArea"][value="hip"]');
+  await hipChip.locator('xpath=..').click();assert.equal(await hipChip.isChecked(),true);
+  await hipChip.locator('xpath=..').click();assert.equal(await hipChip.isChecked(),false,'a second tap clears the place');
   await size(p,320,'.view');await size(p,375,'.view');
   const before=await settings(p);
   await refused(p,true,'mt.settings');await action(p,'morningSave').click();await form.waitFor();
@@ -174,13 +179,15 @@ async function morningFlow(p){
   // the seed session is upper body: hip pain leaves it as it is, pain marked Ostalo makes the whole session lighter
   await morning(p,{pain:4,painArea:'hip'});await action(p,'morningSave').click();
   const otherArea=await advise(p);assert.notEqual(otherArea.kind,'caution');
+  assert.equal(await p.locator('#today-recommendation .dy-pain-note').innerText(),'Bol 4/10 (kuk i prepone): bez povećanja kilograma za kuk i prepone.','the hold is on the card, not only under Zašto');
   await revealReasons(p);assert.match((await advise(p)).text,/Bol 4\/10 \(kuk i prepone\): ovaj trening ne opterećuje to područje/);
   await morning(p,{pain:4,painArea:'other'});await action(p,'morningSave').click();
   const lighter=await advise(p);assert.equal(lighter.kind,'reduce');assert.match(lighter.text,/Lakša verzija za cijeli trening/);
   assert.equal(await action(p,'todayAct').count(),1,'pain 4 offers a lighter session');
   await morning(p,{pain:7});await action(p,'morningSave').click();
   const pain=await advise(p);assert.equal(pain.kind,'caution');assert.match(pain.text,/bol/i);
-  assert.match(await p.locator('.dy-instruction').innerText(),/^Bol je jaka ili nova/);
+  assert.match(await p.locator('.dy-instruction').innerText(),/^Bol je jaka,/);
+  if(await action(p,'todayAct').count())assert.match(await action(p,'todayAct').innerText(),/^Pokreni mobilnost/,'the stop day does not say "Pokreni trening"');
   assert.doesNotMatch(await p.locator('#today-recommendation').innerText(),/trener/i,'he trains alone');
   assert.deepEqual((await data(p)).log.map(x=>x.historyId),['strg-seed1']);
   record('morning',{first:first.kind,ready:ready.kind,low:low.kind,pain:pain.kind,persists:true,storageRefusalRetainsInputs:true});

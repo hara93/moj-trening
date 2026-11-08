@@ -1665,7 +1665,8 @@ function dailyInput(now, week) {
     if (change.to!==date) planned.push({id:change.id,kind:change.kind,date,skip:true});
   }
   const recommendation=TodayModel.suggest({now,settings:{matchDay:matchDay(),matchDates:matchDates()},
-    logs:S.log,planned,candidates,exercises:S.ex,checkin:checks[date] || null});
+    // a session with less than half of its work sets (planCounts) leaves the day open: Danas must not call it done
+    logs:S.log.map(l=>planCounts(l)?l:Object.assign({},l,{partial:true})),planned,candidates,exercises:S.ex,checkin:checks[date] || null});
   return {date,checks,checkin:checks[date],recommendation,exercises:S.ex,nextMatch:nextScheduledMatch(date,now),
     team:S.log.filter(l=>l.kind==='team' && l.at<=now).slice(0,3)};
 }
@@ -7414,6 +7415,13 @@ app.addEventListener('click', ev => {
     fn(Object.assign({}, el.dataset), el, ev);
   }
   if(closePicker&&!cinemaPicker&&app.querySelector('.cinema-number-wheel'))render();
+});
+// the morning check's pain location: tapping the chosen place again clears it
+app.addEventListener('click', ev => {
+  const r = ev.target.closest && ev.target.closest('#morning-form input[name="painArea"]');
+  if (!r) return;
+  const form = r.form;
+  if (form.dataset.area === r.value) { r.checked = false; form.dataset.area = ''; } else form.dataset.area = r.value;
 });
 app.addEventListener('submit', ev => {
   if (ev.target.matches('form[data-load-rating]')) {ev.preventDefault();saveLoadRating(ev.target);return;}
