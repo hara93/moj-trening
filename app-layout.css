@@ -132,6 +132,10 @@
 .cinema-option-sheet .rirh em{white-space:normal}
 .cinema-option-sheet .rirb button{min-height:44px}
 .cinema-guide strong{color:#e4efee;font-weight:600}
+/* 1.22: one accent inside the player. The stage and every sheet it opens (the ⋯ options, notes, plan, reserve, dose edit)
+   take the player green for active state; text on a green fill is dark. The rest of the app keeps its blue. */
+.workout-cinema,.sheet.cinema-option-sheet,.sheet[data-kind=playDose]{--accent:var(--player-accent);--accent-text:var(--player-accent);--accent-fill:var(--player-accent);--tag-bg:color-mix(in srgb,var(--player-accent) 16%,transparent)}
+:is(.workout-cinema,.sheet.cinema-option-sheet,.sheet[data-kind=playDose]) .btn:not(.sec):not(.danger){color:var(--player-on-accent)}
 @keyframes cinema-sheet-in{from{transform:translateY(28px);opacity:.6}to{transform:translateY(0);opacity:1}}
 @media(max-width:350px),(max-height:670px){.cinema-journal .cinema-journal-heading{padding:22px 16px 9px}.cinema-journal .workout-journal-blocks{padding-inline:9px}.cinema-journal .workout-journal-exercise{padding-inline:10px}.cinema-block-heading h2{font-size:19px}.workout-cinema .cinema-primary{font-size:12px;min-height:44px}.workout-cinema .cinema-secondary .txtbtn{font-size:10px;min-height:35px}.cinema-option-sheet h3{font-size:19px}.cinema-option-sheet .opt{min-height:48px}.cinema-journal-sheet{height:calc(100% - 22px);max-height:calc(100% - 22px)}}
 @media(prefers-reduced-motion:reduce){.cinema-journal-sheet{animation:none}}
@@ -168,8 +172,8 @@
 .workout-cinema-reserve .rirn{color:#E6ECEE}
 .workout-cinema-reserve .rirb{margin-top:7px;gap:4px}
 .workout-cinema-reserve .rirb button{height:44px;border-color:#FFFFFF40;color:#fff;font-size:16px}
-.workout-cinema-reserve .rirb button.tg{border-style:dashed;border-color:#8FB0F2}
-.workout-cinema-reserve .rirb button[aria-pressed="true"]{border-style:solid;border-color:#5789E8;background:#4271D6;color:#fff}
+.workout-cinema-reserve .rirb button.tg{border-style:solid;border-color:var(--player-accent)}
+.workout-cinema-reserve .rirb button[aria-pressed="true"]{border-style:solid;border-color:var(--player-accent);background:var(--player-accent);color:var(--player-on-accent)}
 
 /* Journal, denser (mockup): rows with set circles, one open card, a finish row. */
 .cinema-journal .cinema-journal-heading{padding:26px 20px 12px;background:var(--surface);border-bottom:0}

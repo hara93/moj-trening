@@ -487,7 +487,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema~.toast{bottom:max(190px,28%)}
 .workout-cinema :is(button,input,select){font-family:inherit}
 .workout-cinema button{touch-action:manipulation}
-.workout-cinema :is(button,input,summary,a):focus-visible{outline:2px solid #6FD4F1;outline-offset:3px}
+.workout-cinema :is(button,input,summary,a):focus-visible{outline:2px solid var(--player-accent);outline-offset:3px}
 .workout-cinema-topbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;min-height:54px;padding:5px 15px;background:var(--cinema-bg)}
 .workout-cinema-topbar>div:only-child{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
 .workout-cinema-topbar .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;margin:0}
@@ -530,7 +530,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-next :is(img,video){display:block;flex:none;width:48px;height:56px;object-fit:contain;border-radius:8px;background:var(--surface-2)}
 .workout-cinema-next strong{font-size:13px;font-weight:550;line-height:1.35}
 .workout-cinema-next small{display:block;font-size:10px;line-height:1.5;color:#AFC5CD}
-.workout-cinema-next .cinema-next-phase{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:11px;background:#252C3770;color:var(--cinema-blue)}
+.workout-cinema-next .cinema-next-phase{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:11px;background:#252C3770;color:var(--cinema-accent)}
 .cinema-next-phase svg{width:22px;height:22px}
 .workout-cinema .cinema-next .cinema-next-duration{font-size:20px;font-variant-numeric:tabular-nums;color:#fff}
 .workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(#191D2500,#191D2599 25%,#191D25EB 50%,var(--cinema-bg) 78%)}
@@ -569,7 +569,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-top:5px}
 .workout-cinema-controls>button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:44px;padding:8px 10px;border:1px solid #5A717B66;border-radius:14px;background:var(--surface-2);color:#DCEBE6;font-size:12px;font-weight:550;line-height:1.3}
 .workout-cinema-controls>button:first-child,.workout-cinema-controls>button:nth-child(3){padding:8px 2px}
-.workout-cinema-controls :is(.workout-cinema-primary,.workout-cinema-done){border-color:transparent;background:var(--player-accent);color:#102818}
+.workout-cinema-controls :is(.workout-cinema-primary,.workout-cinema-done){border-color:transparent;background:var(--player-accent);color:var(--player-on-accent)}
 .workout-cinema-controls>.workout-cinema-done,.workout-cinema-controls>button:nth-child(4):last-child{grid-column:1/-1}
 .workout-cinema-controls svg{width:18px!important;height:18px!important;flex:none}
 .workout-cinema-journal{margin-top:14px}
@@ -577,10 +577,10 @@ span.workout-exercise-open{cursor:default}
 .cinema-work-mark{display:grid;place-items:center;flex:none;width:44px;height:44px;padding:0;border:0;background:transparent;color:#F3F7F5}
 .cinema-work-mark span{display:grid;place-items:center;width:25px;height:25px;border:1px solid currentColor;border-radius:50%}
 .cinema-work-mark svg{width:13px;height:13px}
-.cinema-work-set.is-recorded .cinema-work-mark span{border-color:transparent;background:var(--cinema-accent);color:#102818}
+.cinema-work-set.is-recorded .cinema-work-mark span{border-color:transparent;background:var(--cinema-accent);color:var(--player-on-accent)}
 .cinema-work-journal{display:flex;align-items:center;justify-content:space-between;gap:9px;flex:1;min-width:0;min-height:44px;padding:0 3px;border:0;border-radius:10px;background:transparent;text-align:left}
 .cinema-work-journal strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:680}
-.cinema-work-journal>span{flex:none;color:var(--cinema-blue);font-size:13px;font-weight:600}
+.cinema-work-journal>span{flex:none;color:var(--cinema-accent);font-size:13px;font-weight:600}
 .workout-cinema-journal>button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:55px;width:100%;padding:11px 14px;border:1px solid #516770;border-radius:18px;background:var(--surface);color:#EEF5F2;font-size:12px;font-weight:550;line-height:1.4;text-align:left}
 .workout-cinema-journal>button>span{display:flex;align-items:center;gap:8px;min-width:0}
 .workout-cinema-journal>button>span:last-child{color:var(--player-accent);font-size:13px;line-height:1.4;text-align:right;justify-content:flex-end}
