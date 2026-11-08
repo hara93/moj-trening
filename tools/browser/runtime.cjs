@@ -88,15 +88,18 @@ async function openJournal(page,all=false){
 }
 async function closeJournal(page){if(await page.locator('.sheet[data-kind="cinemaJournal"]').count())await page.locator('[data-a="cinemaJournalClose"]').click();}
 async function openCinemaControls(page){
+  if(await page.locator('.sheet[data-kind="cinemaPlayback"]').count())return;
   if(!await page.locator('.sheet[data-kind="cinemaMenu"]').count())await page.locator('[data-a="cinemaMenu"]').click();
+  await page.locator('[data-a="cinemaPlayback"]').click();
 }
 async function pressCinemaMain(page){
   await openCinemaControls(page);
-  await page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary').click();
+  await page.locator('.sheet[data-kind="cinemaPlayback"] .cinema-primary').click();
 }
 async function openQuit(page){
   await closeJournal(page);
   if(await page.locator('.workout-cinema').count()){
+    if(await page.locator('.sheet[data-kind="cinemaPlayback"]').count())await page.locator('[data-a="cinemaClose"]').click();
     if(!await page.locator('.sheet[data-kind="cinemaMenu"]').count())await page.locator('[data-a="cinemaMenu"]').click();
     await page.locator('[data-a="cinemaExit"]').click();
   }else await page.locator('[data-a="quitPlay"]').click();

@@ -42,6 +42,17 @@
 .workout-cinema .cinema-session strong,.workout-cinema .cinema-session b{font-size:19px;font-weight:650}
 .workout-cinema .cinema-session span{color:#b9c9cc}
 .workout-cinema #ring>*,.ctrl .ring>*{pointer-events:none}
+.workout-cinema .cinema-session b{color:var(--cinema-blue)}
+.cinema-popover-bg{align-items:flex-start;justify-content:flex-end;padding:5px 12px;background:#0A0C1052}
+.sheet.cinema-popover{width:min(255px,calc(100% - 18px));max-height:calc(100% - 10px);padding:11px 13px;border:1px solid #FFFFFF29;border-radius:27px;background:#1E2025EE;box-shadow:0 18px 40px #0007;backdrop-filter:blur(16px)}
+.cinema-popover .cinema-popover-title{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.cinema-popover .cinema-menu-grid{gap:0;margin:0 0 9px}
+.cinema-popover .cinema-menu-grid button{min-height:64px;padding:4px 2px;border:0;background:transparent;color:var(--text);font-size:12px;line-height:1.25}
+.cinema-popover .cinema-menu-grid svg{width:19px;height:19px}
+.cinema-popover-group{padding:6px 0;border-top:1px solid #FFFFFF1F}
+.cinema-popover .opt{min-height:44px;padding:4px 7px;border:0;gap:11px;font-size:14px}
+.cinema-popover .opt>svg{width:17px;height:17px;color:inherit}
+.cinema-popover .cinema-popover-danger{color:var(--danger)}
 .cinema-menu-controls{display:grid;gap:4px;margin:0 0 12px}
 .cinema-menu-controls .cinema-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;align-items:center}
 .cinema-menu-controls .cinema-controls .ib{border:1px solid var(--border);border-radius:13px;background:var(--surface-2);min-height:44px}

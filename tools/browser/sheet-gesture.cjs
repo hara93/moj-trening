@@ -5,7 +5,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {launch,serve,fixture,engine,artifacts,pressCinemaMain}=require('./runtime.cjs');
+const {launch,serve,fixture,engine,artifacts,pressCinemaMain,openCinemaControls}=require('./runtime.cjs');
 const A=(p,a)=>p.locator('[data-a="'+a+'"]');
 const saved=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')));
 const player=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
@@ -65,17 +65,27 @@ async function run(p,width){
   await p.getByRole('button',{name:'Moj pregled',exact:true}).click();await A(p,'dashboardProtocols').click();
   await p.locator('[data-a="openPr"][data-id="sheet-audit"]').click();await A(p,'startPr').click();await manual(p);
 
-  // A small, sideways or cancelled touch gesture leaves the dialog in place.
+  // The overflow menu is anchored at the top and dismisses outside or by keyboard.
   await A(p,'cinemaMenu').click();assert.equal((await player(p)).clock.paused,true);
-  await drag(p,sheet(p),0,20);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
-  await drag(p,sheet(p),70,8);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
-  await touchDrag(p,sheet(p),0,130,true);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
+  const menu=sheet(p);
+  const bounds=await menu.boundingBox();
+  assert.ok(bounds.y<30&&bounds.x>0&&bounds.x+bounds.width<=width);
+  await p.locator('.cinema-popover-bg').click({position:{x:4,y:50}});
+  assert.equal(await menu.count(),0);assert.equal((await player(p)).clock.paused,false);
+  await openCinemaControls(p);
+  await drag(p,sheet(p),0,20);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback');
+  await drag(p,sheet(p),70,8);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback');
+  await touchDrag(p,sheet(p),0,130,true);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback');
   assert.equal(await sheet(p).evaluate(n=>n.style.transform),'','cancelled gesture restores position');
-  await drag(p,sheet(p),0,135);assert.equal(await sheet(p).count(),0);assert.equal((await player(p)).clock.paused,false);
+  await drag(p,sheet(p),0,135);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
+  await p.keyboard.press('Escape');assert.equal(await sheet(p).count(),0);
+  assert.equal((await player(p)).clock.paused,false);
   assert.equal(Object.keys((await player(p)).doneSteps||{}).length,0,'drag never completes a work set');
 
-  // The exact same existing close path retains a pause that predated the sheet.
-  await A(p,'cinemaTimer').click();await A(p,'cinemaMenu').click();await touchDrag(p,sheet(p),0,135);
+  // The exact same close path retains a pause that predated the menu.
+  await A(p,'cinemaTimer').click();await openCinemaControls(p);await touchDrag(p,sheet(p),0,135);
+  assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
+  await p.keyboard.press('Escape');
   assert.equal(await sheet(p).count(),0);assert.equal((await player(p)).clock.paused,true);
   await A(p,'cinemaTimer').click();await A(p,'cinemaJournal').click();
   const journal=sheet(p);assert.equal(await journal.getAttribute('data-kind'),'cinemaJournal');

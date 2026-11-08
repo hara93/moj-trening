@@ -144,7 +144,7 @@ async function completeManual(page) {
   const current = await player(page);
   assert.equal(current.liveSchedule[current.i].kind, 'manual', 'Visible primary action completes the current manual set');
   await openCinemaControls(page);
-  const primary = page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary[data-a="cinemaMain"]');
+  const primary = page.locator('.sheet[data-kind="cinemaPlayback"] .cinema-primary[data-a="cinemaMain"]');
   assert.equal(await primary.innerText(), 'Serija gotova');
   await primary.click();
 }
@@ -297,8 +297,9 @@ async function activeDuration(page) {
   assert.equal(await timer.getAttribute('aria-label'), 'Nastavi brojač');
   assert.match(await timer.locator('.workout-control-action').innerText(), /pauza/);
   await openCinemaControls(page);
-  assert.equal(await page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary').innerText(), 'Nastavi');
+  assert.equal(await page.locator('.sheet[data-kind="cinemaPlayback"] .cinema-primary').innerText(), 'Nastavi');
   await action(page,'cinemaClose').click();
+  await page.keyboard.press('Escape');
   await advance(page, 4);
   assert.equal((await player(page)).clock.seconds, 10);
   assert.equal((await player(page)).i, stepBeforePause, 'Timer pause does not complete a manual set');
