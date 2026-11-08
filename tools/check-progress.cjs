@@ -194,9 +194,9 @@ test('Napredak opens on 3 months and a main lift with data; a picked 7 days and 
   ctx.loadKind = e => e === ctx.S.ex.row ? 'db' : 'bar';
   const pick = (ids, withData) => ctx.defaultChartExercise(ids, id => withData.includes(id));
   assert.equal(pick(['pallof', 'rdl', 'back-squat', 'deadlift'], ['pallof', 'rdl', 'back-squat', 'deadlift']), 'deadlift');
-  assert.equal(pick(['pallof', 'rdl', 'back-squat', 'deadlift'], ['pallof', 'rdl', 'back-squat']), 'back-squat', 'deadlift without a comparison is skipped');
+  assert.equal(pick(['pallof', 'rdl', 'back-squat', 'deadlift'], ['pallof', 'rdl', 'back-squat']), 'back-squat', 'deadlift without data in the period is skipped');
   assert.equal(pick(['pallof', 'row', 'rdl'], ['pallof', 'row', 'rdl']), 'rdl', 'first barbell lift');
   assert.equal(pick(['pallof', 'row'], ['row']), 'row');
   assert.equal(pick(['pallof', 'row'], []), 'pallof');
-  assert.match(cut('const chartExerciseId =', '\n'), /chartPinnedIds\[0\] \|\| defaultChartExercise\(/);
+  assert.match(cut('const chartExerciseId =', '\n'), /chartPinnedIds\[0\] \|\| defaultChartExercise\(candidates,id=>from===null\|\|\(hist\[id\]\|\|\[\]\)\.some\(x=>x\.at>=from\)\)/);
 });

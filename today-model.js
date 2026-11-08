@@ -561,12 +561,17 @@
       reason('painMild', 'Bol ' + checkin.pain + '/10' + painPlace + ': treniraj normalno, ali bez povećanja težine za ' +
         (painArea === 'other' ? 'ovaj trening' : PAIN_AREAS[painArea]) + '.');
     }
-    if (pain === 2 && !easyPlan(selected, exercises)) {
-      var lighter = painLighter(reduce ? reduceItems(selected, doses) : selected.items, painArea, exercises);
+    var lighter = pain === 2 && !easyPlan(selected, exercises) ?
+      painLighter(reduce ? reduceItems(selected, doses) : selected.items, painArea, exercises) : null;
+    if (lighter && !lighter.changes.length) {
+      // nothing in this session loads the painful area: the session stays, without heavier kilograms
+      result.painHold = painArea;
+      reason('painOtherArea', 'Bol ' + checkin.pain + '/10' + painPlace + ': ovaj trening ne opterećuje to područje. Kilogrami se ne povećavaju.');
+    }
+    if (lighter && lighter.changes.length) {
       result.items = lighter.items;
       result.painHold = painArea;
-      reason('painLighter', 'Bol ' + checkin.pain + '/10' + painPlace + ': ' +
-        (lighter.changes.length ? lighter.changes.join(', ') : 'bez promjene vježbi') + '. Kilogrami se ne povećavaju.');
+      reason('painLighter', 'Bol ' + checkin.pain + '/10' + painPlace + ': ' + lighter.changes.join(', ') + '. Kilogrami se ne povećavaju.');
       return finish('reduce', 'Danas lakše: ' + text(selected.name, 'tvoj trening'),
         'Lakša verzija za ' + (painArea === 'other' ? 'cijeli trening' : PAIN_AREAS[painArea]) + '. Stani ako se bol pojača.',
         { type: 'protocol', id: selected.id });

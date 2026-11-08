@@ -171,8 +171,12 @@ async function morningFlow(p){
   await morning(p,{energy:4,legs:2,pain:1,painArea:'hip'});await action(p,'morningSave').click();
   const mild=await advise(p);assert.notEqual(mild.kind,'caution');assert.equal(await action(p,'todayAct').count(),1,'pain 1 still trains');
   await revealReasons(p);assert.match((await advise(p)).text,/Bol 1\/10 \(kuk i prepone\): treniraj normalno, ali bez povećanja težine/);
+  // the seed session is upper body: hip pain leaves it as it is, pain marked Ostalo makes the whole session lighter
   await morning(p,{pain:4,painArea:'hip'});await action(p,'morningSave').click();
-  const lighter=await advise(p);assert.equal(lighter.kind,'reduce');assert.match(lighter.text,/Lakša verzija za kuk i prepone/);
+  const otherArea=await advise(p);assert.notEqual(otherArea.kind,'caution');
+  await revealReasons(p);assert.match((await advise(p)).text,/Bol 4\/10 \(kuk i prepone\): ovaj trening ne opterećuje to područje/);
+  await morning(p,{pain:4,painArea:'other'});await action(p,'morningSave').click();
+  const lighter=await advise(p);assert.equal(lighter.kind,'reduce');assert.match(lighter.text,/Lakša verzija za cijeli trening/);
   assert.equal(await action(p,'todayAct').count(),1,'pain 4 offers a lighter session');
   await morning(p,{pain:7});await action(p,'morningSave').click();
   const pain=await advise(p);assert.equal(pain.kind,'caution');assert.match(pain.text,/bol/i);

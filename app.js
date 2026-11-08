@@ -4716,8 +4716,8 @@ function painHoldsAt(j){
   const it = P && P.items && P.items[j], check = checks[dateKey(P.startedAt || Date.now())];
   return !!it && !!check && TodayModel.painHolds(check, S.ex[it.exId], it.exId);
 }
-// Napredak opens on a useful chart: deadlift, back squat, then the first main barbell lift, then any exercise with a
-// comparison in the chosen period; the first recorded exercise only when nothing has one.
+// Napredak opens on a useful chart: deadlift, back squat, then the first main barbell lift, then any exercise with data in
+// the chosen period; the first recorded exercise only when nothing has any.
 const MAIN_LIFTS = ['deadlift','back-squat'];
 function defaultChartExercise(candidates, hasTrend){
   const main = id => S.ex[id] && S.ex[id].cat === 'Snaga' && loadKind(S.ex[id]) === 'bar';
@@ -5615,7 +5615,9 @@ VIEWS.progress = function(t=top()){
   const chartPinnedIds = S.settings.progressPinnedIds.filter(id=>candidates.includes(id));
   const chartPeriod = S.settings.analysisPeriod, from = TrainingLoad.periodStart(now,chartPeriod);
   const trend = (id,since) => ProgressModel.exerciseTrend({...insightInput,from:since,exerciseId:id});
-  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates,id=>!!trend(id,from));
+  // "with data": recorded in the chosen period (a lift whose weight rises each week has no same-weight comparison, and then
+  // the chart opens on Količina rada)
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates,id=>from===null||(hist[id]||[]).some(x=>x.at>=from));
   const chartComparison = chartExerciseId ? trend(chartExerciseId,from) : null;
   const chartHasComparison = !!(chartComparison || (from!==null && chartExerciseId && trend(chartExerciseId,null)));
   const chartPinnedTrends = chartPinnedIds.map(id=>id===chartExerciseId?chartComparison:trend(id,from)).filter(Boolean);

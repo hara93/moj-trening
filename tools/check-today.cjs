@@ -483,6 +483,10 @@ test('pain 3-5 at the hip gives a lighter version in the same slots: short-lever
   const hamstring = Today.suggest(painInput({ pain: 3, painArea: 'hamstring' }));
   assert.equal(hamstring.items[2].exId, 'most', 'no Nordic with hamstring pain');
   assert.equal(hamstring.items[3].exId, 'kopenhagen-duga');
+  const upper = Today.suggest({ ...painInput({ pain: 4, painArea: 'hip' }), planned: [plan()] });
+  assert.equal(upper.kind, 'planned', 'an upper-body session is not called lighter when nothing loads the hip');
+  assert.match(upper.reasons.find(r => r.code === 'painOtherArea').text, /ne opterećuje to područje/);
+  assert.equal(upper.painHold, 'hip');
   const knee = Today.suggest(painInput({ pain: 5, painArea: 'knee' }));
   assert.deepEqual(knee.items[1].kgList, [60, 60, 60]);
   assert.equal(knee.items[1].sets, 3, 'knee pain: one squat set fewer');
