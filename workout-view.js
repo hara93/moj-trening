@@ -63,7 +63,9 @@
     return '<div class="view workout-overview' + (vm.heroHtml ? ' workout-premium-overview' : '') + '">' +
       (vm.heroHtml ? '<div class="workout-overview-cover">' + html(vm.heroHtml) + '<div class="workout-cover-bar">' + html(vm.topbarHtml) + '</div></div>' : html(vm.topbarHtml)) +
       '<header class="workout-heading"><p class="workout-eyebrow">' + esc(vm.eyebrow || 'Pregled treninga') + '</p><h1>' + esc(vm.title) + '</h1>' +
-      (vm.description ? '<p class="workout-description">' + esc(vm.description) + '</p>' : '') +
+      // a long description shows two lines and "više", so the first exercises stay above Pokreni trening
+      (vm.description ? '<p class="workout-description' + (vm.description.length > 90 ? ' clamp' : '') + '">' + esc(vm.description) + '</p>' +
+        (vm.description.length > 90 ? '<button type="button" class="workout-description-more" data-a="descMore" aria-expanded="false">više</button>' : '') : '') +
       (vm.metaHtml ? '<div class="workout-meta">' + html(vm.metaHtml) + '</div>' : '') + '</header>' +
       '<div class="workout-blocks">' + (html(vm.blocksHtml) || '<p class="workout-empty">Dodaj vježbe kako bi se ovdje prikazale njihove serije.</p>') + '</div>' +
       (vm.detailsHtml ? '<div class="workout-details">' + html(vm.detailsHtml) + '</div>' : '') + footer(vm.footerHtml) + '</div>';

@@ -23,7 +23,7 @@ test('ordinary recorded sets show every actual quantity after the weight, withou
   const html=compact(item(),[entry(recorded)]);
   assert.match(html,/Prethodno 20 kg · 8 \/ 7 \/ 6 pon\./);assert.doesNotMatch(html,/99|5\. 11\.|2026/);
   const varying=compact(item(),[entry({...recorded,kgList:[20,25,30]})]);
-  assert.match(varying,/20 \/ 25 \/ 30 kg · 8 \/ 7 \/ 6 pon\./);
+  assert.match(varying,/20 \/ 25 \/ 30 kg · 8 \/ 7 \/ 6 pon\./,'the protocol row and the exercise page share one format');
 });
 test('explicit unknown weights and repetitions remain gaps, while recorded zero remains zero',()=>{
   const recorded=item({reps:99,kg:99,repsList:[5,null,3],kgList:[20,null,0]});

@@ -177,6 +177,10 @@ async function run() {
     const hero = await metrics(overview.locator('.hero'));
     near((await metrics(overview.locator('.workout-overview-cover'))).width, 375, 'Overview content width');
     await phaseImage(overview.locator('.hero'), 375);
+    // 1.21: the 3:4 window sits on a full-width band of the same picture, blurred, so there are no empty side bands
+    const band = await metrics(overview.locator('.hero-band'));
+    near(band.width, 375, 'The cover band is full width', 1);
+    assert.match(await overview.locator('.hero-band').getAttribute('style'), /--cover:url\('assets\/slike\/[a-z-]+\.webp'\)/);
     assert.match(await overview.locator('.hero img').getAttribute('src'), /assets\/slike\/bench-press\.webp$/);
     assert.equal(await overview.locator('.hero').evaluate(node => getComputedStyle(node, '::before').display), 'none');
     const title = await metrics(overview.locator('h1'));
@@ -192,8 +196,8 @@ async function run() {
     const rows = overview.locator('.workout-compact-row');
     assert.equal(await rows.count(), 3);
     near((await metrics(rows.first())).height, 76.3, 'Compact row height with the Prethodno line', 1);
-    assert.match(await rows.first().locator('.workout-compact-previous').innerText(), /^Prethodno 50 kg · 8\/8\/8$/);
-    assert.match(await rows.nth(1).locator('.workout-compact-previous').innerText(), /^Prethodno 40 kg · 10\/10\/8$/);
+    assert.match(await rows.first().locator('.workout-compact-previous').innerText(), /^Prethodno 50 kg · 8 \/ 8 \/ 8 pon\.$/);
+    assert.match(await rows.nth(1).locator('.workout-compact-previous').innerText(), /^Prethodno 40 kg · 10 \/ 10 \/ 8 pon\.$/);
     near((await metrics(rows.first().locator('.workout-compact-thumb'))).width, 52, 'Thumbnail width');
     assert.match(await rows.first().innerText(), /3 × 8 pon\. · 50 kg/);
     assert.match(await rows.nth(1).innerText(), /10 \/ 10 \/ 8 pon\. · 40 kg/);

@@ -307,11 +307,13 @@ test('premium plain titles, contexts and units stay escaped while supplied marku
 
 test('each protocol row shows the last recorded dose on one line: "Prethodno 95 kg · 5/5/5/5"',()=>{
   const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
-  const body=app.slice(app.indexOf('function workoutPreviousShort(item) {'),app.indexOf('function workoutPreviousCompact(item) {'));
+  const body=app.slice(app.indexOf('function workoutPreviousShort(item) {'),app.indexOf('function workoutCommitItems('));
   const at=new Date('2026-11-03T18:00:00').getTime(),press={exId:'deadlift',measure:'sets',sets:4,reps:5,kg:95,sides:false};
   const log=[{historyId:'h',kind:'protocol',refId:'a',at,items:[{...press,done:true,setsDone:4,repsList:[5,5,5,4],kgList:[95,95,95,95],sideCounts:[1,1,1,1],setNumbers:[1,2,3,4]}]}];
   const short=new Function('WorkoutModel','S','Date','startLoadDescription',body+';return workoutPreviousShort;')(require('../workout-model.js'),{log},Date,()=>({kind:'bar'}));
-  assert.equal(short(press),'Prethodno 95 kg · 5/5/5/4');
+  const dumbbell=new Function('WorkoutModel','S','Date','startLoadDescription','esc',body+';return workoutPreviousShort;')(require('../workout-model.js'),{log},Date,()=>({kind:'db'}),String);
+  assert.equal(short(press),'Prethodno 95 kg · 5 / 5 / 5 / 4 pon.','spaced like the target line above it');
+  assert.equal(dumbbell(press),'Prethodno 95 kg / kom · 5 / 5 / 5 / 4 pon.','the same unit as the target line');
   log.length=0;assert.equal(short(press),'','nothing before the first session');
   const row=View.compactExercise({index:0,name:'Mrtvo dizanje',summary:'4 × 5 pon. · 100 kg',previous:'Prethodno 95 kg · 5/5/5/4'});
   assert.match(row,/<small>4 × 5 pon\. · 100 kg<\/small><small class="workout-compact-previous">Prethodno 95 kg · 5\/5\/5\/4<\/small>/);
@@ -323,4 +325,12 @@ test('the protocol cover stays within ~28 % of the screen and Start is a sticky 
   assert.match(css,/\.workout-overview-cover \.hero\.single\{height:clamp\(180px,28svh,260px\)\}/);
   assert.match(css,/\.workout-overview-cover \.hero\.single\.two\{width:auto;height:clamp\(180px,28svh,260px\);aspect-ratio:3\/4;margin:0 auto\}/);
   assert.match(css,/\.workout-premium-overview>\.workout-footer,\.workout-exercise-page>\.workout-footer\{position:sticky;bottom:0;/);
+});
+
+test('a long protocol description shows two lines and "više"',()=>{
+  const long='Noge i kukovi: mrtvo dizanje, zatim dva superseta. Cilj biraš u Napretku, a kilograme upisuješ sam prije prvog treninga.';
+  const html=View.overview({title:'Snaga A',description:long});
+  assert.match(html,/<p class="workout-description clamp">/);
+  assert.match(html,/<button type="button" class="workout-description-more" data-a="descMore" aria-expanded="false">više<\/button>/);
+  assert.doesNotMatch(View.overview({title:'Snaga A',description:'Kontrolirana izvedba'}),/clamp|više/);
 });

@@ -30,14 +30,23 @@ async function unreachablePictures(browser,url) {
     await action(page,'openPr','[data-id="'+id+'"]').click();
     const overview = page.locator('.workout-overview');
     await overview.locator('.media-fallback').first().waitFor();
-    assert.equal(await overview.locator('img[onerror]').count(),0,'every unreachable list picture became an icon');
+    await overview.locator('.hero .media-fallback').waitFor();
+    await page.waitForFunction(()=>!document.querySelector('.workout-overview img[onerror]'),null,{timeout:5000}).catch(()=>{});   // every abort reports in its own time
+    assert.equal(await overview.locator('img[onerror]').count(),0,'every unreachable list picture and the cover became an icon');
+    assert.ok((await overview.locator('.hero').boundingBox()).height>=150,'the offline cover keeps its height');
+    await overview.locator('.workout-compact-row').nth(1).click();
+    const detail=page.locator('.workout-exercise-page .workout-detail-cover');
+    await detail.locator('.media-fallback').waitFor();
+    assert.equal(await detail.locator('img').count(),0,'no broken exercise picture');
+    assert.ok((await detail.locator('.media').boundingBox()).height>=150,'the offline exercise picture keeps room for the icon');
+    await page.locator('.workout-exercise-page [data-a="back"], .workout-exercise-page [data-a="workoutClose"]').first().click();
     await action(page,'startPr').click();
     const media = page.locator('.cinema-single-media');
     await media.locator('.media-fallback svg').waitFor();
     assert.equal(await media.locator('img').count(),0,'no broken player image');
     assert.equal(await media.locator('.media-fallback').getAttribute('aria-hidden'),'true','no alt text is printed over the labels');
     assert.deepEqual(errors,[]);
-    return {listIcons:true,playerIcon:true};
+    return {listIcons:true,coverIcon:true,exerciseIcon:true,playerIcon:true};
   } finally { await context.close(); }
 }
 

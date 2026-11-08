@@ -2001,7 +2001,7 @@ const PIC_BOX = { '16:10': ' b1610', '3:2': ' b32' };
 function mediaHtml(e, badge, inPlayer){
   const m = exMedia(e); let inner, credit = '';
   if (m) {
-    inner = m.type === 'image' ? '<img class="fit" fetchpriority="high" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'"'+(m.two ? ' style="object-position:50% '+(Number.isFinite(m.picY) ? m.picY : 50)+'%"' : '')+'>' : videoTag(m);
+    inner = m.type === 'image' ? '<img class="fit" fetchpriority="high" alt="'+(m.two ? esc(e.name + ': lijevo početni, desno završni položaj') : '')+'" src="'+esc(m.src)+'"'+(m.two ? ' style="object-position:50% '+(Number.isFinite(m.picY) ? m.picY : 50)+'%"' : '')+mediaFailAttr(e, 44)+'>' : videoTag(m);
     credit = creditHtml(m) + swapHtml(e, m);
   } else inner = '<div class="ph">' + pathIcon(catIcon(e && e.cat), 44) + (inPlayer ? '' : '<span>Dodaj svoj video ili sliku u uređivanju</span>') + '</div>';   // mid-workout only the icon
   return '<div class="media'+(m && m.two ? ' two' + (PIC_BOX[m.picBox] || '') : '')+'">' + inner + credit + (badge ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
@@ -2009,7 +2009,7 @@ function mediaHtml(e, badge, inPlayer){
 // the protocol header: the first exercise's best media, whole (a two-panel picture is never cropped), with its credit and poster
 function heroHtml(p, fm){
   if (!fm) return '<div class="hero"><span class="ic">'+pathIcon(p.home==='aktivacija'?I.rope:p.home==='rehab'?I.pulse:I.dumb,110)+'</span><span class="fade"></span></div>';
-  const el = fm.type === 'image' ? '<img alt="" src="'+esc(fm.src)+'">'
+  const el = fm.type === 'image' ? '<img alt="" src="'+esc(fm.src)+'"'+mediaFailAttr(null, 64)+'>'
     : !stillMotion() ? videoTag(fm)
     : fm.poster ? '<img alt="" src="'+esc(fm.poster)+'">' : '<video src="'+esc(fm.src)+'#t=0.5" preload="metadata" muted playsinline></video>';
   return '<div class="hero'+(fm.two ? ' two' : '')+'">' + el + '<span class="fade"></span>' + creditHtml(fm) + '</div>';
@@ -2322,15 +2322,12 @@ function workoutPanelHtml(s) {
   const footer='<button class="btn" data-a="'+(c.live?'workoutClose':top().v==='pr'?'workoutStart':'playEx')+'"'+(top().v==='ex'?' data-id="'+esc(top().id)+'"':'')+'>'+WorkoutView.icon('play')+ (c.live?'Natrag u trening':'Pokreni '+(top().v==='ex'?'vježbu':'trening'))+'</button>';
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:c.live?'Trening je pauziran':'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(s,c),targetHtml:workoutPrescriptionHtml(s,c),rowsHtml:workoutTableHtml(c,s.j,s)+workoutAddSetHtml(s,c),note:s.error||'',footerHtml:'<div class="footer gut">'+(s.pendingReplacement?'<button class="txtbtn" data-a="workoutCancelPending">Vrati prethodnu vježbu</button>':'')+footer+'</div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="'+(c.live?'live':top().v==='ex'?'library':'preview')+'"');
 }
-// one line for the protocol list: "Prethodno 95 kg · 5/5/5/5" from the last recorded dose ('' when unknown or mixed)
+// one line for the protocol list: "Prethodno 95 kg · 5 / 5 / 5 / 5 pon." from the last recorded dose ('' when unknown or mixed)
 function workoutPreviousShort(item) {
   const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});
   const rows=previous?previous.rows.filter(row=>row.measure===item.measure):[];
   if(!rows.length||rows.some(row=>row.failed||row.sides==null||row.perSide==null||row.perSide!==!!item.sides))return '';
-  const format=value=>value==null?'—':value.toLocaleString('hr-HR'),timed=item.measure==='time',kind=startLoadDescription(item.exId)?.kind;
-  const weights=rows.map(row=>row.kg),loaded=kind||weights.some(value=>value>0);
-  const weight=!loaded?'':(weights.every(value=>value===weights[0])?format(weights[0]):weights.map(format).join('/'))+' kg · ';
-  return 'Prethodno '+weight+rows.map(row=>format(row[timed?'sec':'reps'])).join('/')+(timed?' s':'');
+  return 'Prethodno '+previousDoseText(rows,item);
 }
 function workoutPreviousCompact(item) {
   const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});
@@ -2344,9 +2341,15 @@ function workoutPreviousCompact(item) {
     const sides=row.sides==null?' · strane nisu zabilježene':row.perSide?(timed&&row.sides===2?' prosječno po strani · ':' po strani · ')+row.sides+'/2 strane':row.perSide==null?' · '+row.sides+' strana, način nije zabilježen':'';
     return (row.number||index+1)+'. '+format(row.kg)+weightUnit+' · '+format(row[quantityKey])+quantityUnit+sides+(row.failed?' · nedovršeno':'');
   }).join(' / '))+'</span>';
-  const weights=rows.map(row=>row.kg),weight=(weights.every(value=>value===weights[0])?format(weights[0]):weights.map(format).join(' / '))+weightUnit;
-  const quantity=rows.map(row=>format(row[quantityKey])).join(' / ')+quantityUnit;
-  return '<span>Prethodno '+esc(weight+' · '+quantity+(item.sides?(timed?' prosječno po strani':' po strani'):''))+'</span>';
+  return '<span>Prethodno '+esc(previousDoseText(rows,item))+'</span>';
+}
+// "95 kg · 5 / 5 / 5 / 4 pon." from recorded rows, spaced like the target line: one format for the protocol row and the exercise page (kg / kom for dumbbells,
+// po strani for one side at a time; no kilograms when the exercise carries none)
+function previousDoseText(rows,item){
+  const format=value=>value==null?'—':value.toLocaleString('hr-HR'),timed=item.measure==='time',kind=startLoadDescription(item.exId)?.kind;
+  const weights=rows.map(row=>row.kg),loaded=kind||weights.some(value=>value>0);
+  const weight=!loaded?'':(weights.every(value=>value===weights[0])?format(weights[0]):weights.map(format).join(' / '))+(kind==='db'?' kg / kom':' kg')+' · ';
+  return weight+rows.map(row=>format(row[timed?'sec':'reps'])).join(' / ')+(timed?' s':' pon.')+(item.sides?(timed?' prosječno po strani':' po strani'):'');
 }
 function workoutCommitItems(s,items,{retimeCurrent=false}={}) {
   const c=workoutContext(s);if(!workoutValid(s,c))return 'Podaci su promijenjeni. Ponovno otvori trening.';
@@ -3320,7 +3323,10 @@ function workoutOverviewHero(p,first) {
   const items=viewDoseItems(top(),p.items||[]),sections=CinemaModel.sections(items,S.ex);
   const main=items.find((it,j)=>S.ex[it.exId]?.cat==='Snaga'&&!/prep|priprem|zagrij/i.test(sections[j]))||first;
   const e=main&&S.ex[main.exId],m=e&&exMedia(e,true);
-  return m?'<div class="hero single'+(m.two?' two':'')+'">'+(m.type==='image'?'<img fetchpriority="high" alt="'+esc(e.name)+'" src="'+esc(m.src)+'">':videoTag(m))+'<span class="fade"></span>'+creditHtml(m)+'</div>':heroHtml(p,null);
+  // a two-panel cover is a centred 3:4 window (never cropped); the band behind it is the same picture, blurred, so the
+  // cover reads full width like the exercise page below it
+  const band=m&&m.two&&m.type==='image'?['<div class="hero-band" style="--cover:url(\''+esc(m.src)+'\')">','</div>']:['',''];
+  return m?band[0]+'<div class="hero single'+(m.two?' two':'')+'">'+(m.type==='image'?'<img fetchpriority="high" alt="'+esc(e.name)+'" src="'+esc(m.src)+'"'+mediaFailAttr(e,64)+'>':videoTag(m))+'<span class="fade"></span>'+creditHtml(m)+'</div>'+band[1]:heroHtml(p,null);
 }
 function workoutProtocolOptionsHtml(p,items) {
   return '<h3>Opcije treninga</h3><button type="button" class="opt" data-a="editPr" data-id="'+esc(p.id)+'">'+I.edit+'<span>Uredi trening</span></button>'+workoutExpectationHtml(p.id,items)+'<details class="workout-protocol-options"><summary>Raspored i planirani rad po mišićima</summary>'+protocolMusclePreview({items})+(p.program?'':daysPicker('prDays',p.id,p.days))+'</details>';
@@ -7305,6 +7311,8 @@ const A = {
   ltip: (d, el) => { const svg = el.closest('svg'); if (!svg) return; const g = svg.querySelector('.tipg[data-i="'+d.i+'"]'), on = g && g.classList.contains('on');
     svg.querySelectorAll('.tipg.on').forEach(x => x.classList.remove('on')); if (g && !on) g.classList.add('on'); },
   sheetDone: () => { S.sheet = null; render(); },
+  descMore: (d, el) => { const open = el.getAttribute('aria-expanded') !== 'true', text = el.previousElementSibling;
+    if (text) text.classList.toggle('clamp', !open); el.setAttribute('aria-expanded', String(open)); el.textContent = open ? 'manje' : 'više'; },
   daySheet: d => { clearToast(); S.sheet = { kind:'day', i: +d.i }; render(); },   // (review) a toast would cover the sheet's rows
   // 1.8.2: a missed session off this week's plan (home make-up offer, day sheet), and back
   skipSlot: d => { if (setSkip(weekStart(Date.now()),d.k,true) && !S.sheet) toast('Preskočeno ovaj tjedan.'); render(); },   // in the day sheet the row's tag says it
