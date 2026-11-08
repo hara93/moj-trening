@@ -1444,14 +1444,18 @@ function matchNote(s, i, ws = weekStart(Date.now()), plan){
   }
   const p = s.kind === 'protocol' ? S.pr[s.id] : s.kind === 'program' ? S.pr[s.pr] : null;
   if (!p) return '';
-  const d = g.next, heavy = heavyLegs(p), wm = weekMatches(ws);
-  if (d === 0 && (heavy || gymLike(p))) return 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.';
-  if (d === 1 && (heavy || gymLike(p))) return 'Sutra je utakmica: danas bez teških nogu, samo aktivacija.';
-  if (heavy && wm.some(x => x < i) && wm.some(x => x > i)) return 'Između dviju utakmica bez teških nogu: danas lakši trening s eksplozivnošću ili mobilnost.';
-  if (d === 2 && heavy) return 'Utakmica je za 2 dana: danas bez teških nogu, lakši trening s eksplozivnošću.';
-  if (d === 3 && heavy) return 'Utakmica je za 3 dana: teški trening nogu najkasnije 4 dana prije utakmice.';
-  return '';
+  const heavy = heavyLegs(p), wm = weekMatches(ws);
+  return MATCH_NOTES[TodayModel.matchRule({ gap: g.next < 0 ? null : g.next, since: g.prev < 0 ? null : g.prev,
+    between: wm.some(x => x < i) && wm.some(x => x > i), heavy, easy: !(heavy || gymLike(p)) })] || '';
 }
+const MATCH_NOTES = {
+  matchDay: 'Danas je utakmica: ovaj trening preskoči ili ga pomakni na drugi dan.',
+  dayBefore: 'Sutra je utakmica: danas bez teških nogu, samo aktivacija.',
+  dayAfter: 'Jučer je bila utakmica: danas bez teških nogu, samo oporavak ili mobilnost.',
+  between: 'Između dviju utakmica bez teških nogu: danas lakši trening s eksplozivnošću ili mobilnost.',
+  twoDays: 'Utakmica je za 2 dana: danas bez teških nogu, lakši trening s eksplozivnošću.',
+  threeDays: 'Utakmica je za 3 dana: teški trening nogu najkasnije 4 dana prije utakmice.'
+};
 // a warning box on the home screen and in the day sheet; the day before a match it offers your activation instead, in a
 // week with two matches the lightest field session
 function matchBox(note, i, mg){

@@ -105,7 +105,9 @@
     return { next: next, previous: previous,
       gap: next ? dayDistance(today, next) : null,
       since: previous ? dayDistance(previous, today) : null,
-      weekCount: ordered.filter(function (date) { return date >= monday && date < end; }).length };
+      weekCount: ordered.filter(function (date) { return date >= monday && date < end; }).length,
+      between: ordered.some(function (date) { return date >= monday && date < today; }) &&
+        ordered.some(function (date) { return date > today && date < end; }) };
   }
   function exerciseFor(exercises, id) {
     return typeof id === 'string' && has(exercises, id) && plain(exercises[id]) ? exercises[id] : null;
@@ -220,14 +222,31 @@
       return item;
     });
   }
+  // The one gym-session match rule, shared with the calendar warning (app.js
+  // matchNote). gap = days to the next match, since = days after the previous
+  // one, between = a match earlier and later in the same Monday-Sunday week.
+  // easy = no loaded work (each caller classifies its own sessions); heavy =
+  // heavy lower-body work. Returns '' when the session fits.
+  function matchRule(o) {
+    o = plain(o) ? o : {};
+    var gap = integer(o.gap, 0, 366) ? o.gap : null, since = integer(o.since, 0, 366) ? o.since : null;
+    if (gap === 0 && !o.easy) return 'matchDay';
+    if (gap === 1 && !o.easy) return 'dayBefore';
+    if (since === 1 && !o.easy) return 'dayAfter';
+    if (!o.heavy) return '';
+    if (o.between) return 'between';
+    if (gap === 2) return 'twoDays';
+    if (gap === 3) return 'threeDays';
+    return '';
+  }
   function matchBlocks(plan, context, exercises) {
-    if ((context.gap === 0 || context.gap === 1) && !easyPlan(plan, exercises)) return true;
-    if (context.since === 1 && !easyPlan(plan, exercises)) return true;
     if (plan.kind === 'field') {
+      if ((context.gap === 0 || context.gap === 1 || context.since === 1)) return true;
       return !integer(plan.intensity, 0, 3) ||
         (plan.intensity > 0 && (context.gap === 2 || context.weekCount >= 2));
     }
-    return heavyLegs(plan, exercises) && context.gap !== null && context.gap <= 3;
+    return !!matchRule({ gap: context.gap, since: context.since, between: context.between,
+      easy: easyPlan(plan, exercises), heavy: heavyLegs(plan, exercises) });
   }
 
   function suggest(raw) {
@@ -478,5 +497,5 @@
       { type: 'protocol', id: selected.id });
   }
 
-  return freeze({ version: 1, suggest: suggest, dateKey: dateKey, validDate: validDate });
+  return freeze({ version: 1, suggest: suggest, matchRule: matchRule, dateKey: dateKey, validDate: validDate });
 });
