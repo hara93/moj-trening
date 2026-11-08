@@ -21,8 +21,10 @@ jobs:
       - name: Izračuni, povijest i stanje aplikacije
         run: node --test tools/check-*.cjs
       - name: Isporučene vježbe i model opterećenja
+        if: success() || failure()
         run: node tools/build/check_load.cjs .
       - name: Sintaksa JavaScripta
+        if: success() || failure()
         run: |
           for file in *.js tools/browser/*.cjs; do node --check "$file"; done
   browser:
@@ -47,41 +49,95 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: tools/browser/package-lock.json
-      - run: npm ci --prefix tools/browser --ignore-scripts --no-audit --no-fund
+      - name: Ovisnosti preglednika
+        id: deps
+        run: npm ci --prefix tools/browser --ignore-scripts --no-audit --no-fund
+      # One step per entry of tools/browser/suites.json (tools/check-ci-suites.cjs keeps them equal).
+      # Each step runs after an earlier failure, so one red suite does not hide the rest.
       - name: Cijeli trening i postojeće funkcije
+        if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/whole-app.cjs live ${{ matrix.browser }}
       - name: Danas i ekipni dnevnik
+        if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/today.cjs ${{ matrix.browser }}
-      - name: Serije, početna težina i Napredak
-        run: |
-          node tools/browser/checklist.cjs ${{ matrix.browser }}
-          node tools/browser/checklist.cjs just-mixed ${{ matrix.browser }}
-          node tools/browser/starting-load.cjs ${{ matrix.browser }}
-          node tools/browser/progress.cjs ${{ matrix.browser }}
-          node tools/browser/progress-picker.cjs ${{ matrix.browser }}
-      - name: Ispravci iz analize
-        run: |
-          node tools/browser/storage.cjs ${{ matrix.browser }}
-          node tools/browser/field-results.cjs ${{ matrix.browser }}
-          node tools/browser/navigation.cjs ${{ matrix.browser }}
-          node tools/browser/home-progress.cjs ${{ matrix.browser }}
-          node tools/browser/workout.cjs ${{ matrix.browser }}
-          node tools/browser/training-load.cjs ${{ matrix.browser }}
-          node tools/browser/load-day-rating.cjs ${{ matrix.browser }}
-          node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
-          node tools/browser/exercise-media.cjs ${{ matrix.browser }}
-          node tools/browser/workout-reference.cjs ${{ matrix.browser }}
-          node tools/browser/body-regions.cjs ${{ matrix.browser }}
-          node tools/browser/dashboard-anatomy.cjs ${{ matrix.browser }}
-          node tools/browser/structure.cjs ${{ matrix.browser }}
-          node tools/browser/cinema.cjs ${{ matrix.browser }}
-          node tools/browser/timed-workout.cjs ${{ matrix.browser }}
-          node tools/browser/player-feedback.cjs ${{ matrix.browser }}
-          node tools/browser/live-exercises.cjs ${{ matrix.browser }}
-          node tools/browser/sections.cjs ${{ matrix.browser }}
-          node tools/browser/sheet-gesture.cjs ${{ matrix.browser }}
-          node tools/browser/chart-motion.cjs ${{ matrix.browser }}
-          node tools/browser/prestart-edit.cjs ${{ matrix.browser }}
+      - name: Serije
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/checklist.cjs ${{ matrix.browser }}
+      - name: Serije, mješovite
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/checklist.cjs just-mixed ${{ matrix.browser }}
+      - name: Početna težina
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/starting-load.cjs ${{ matrix.browser }}
+      - name: Napredak
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/progress.cjs ${{ matrix.browser }}
+      - name: Odabir vježbi u Napretku
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/progress-picker.cjs ${{ matrix.browser }}
+      - name: Spremanje i kopije
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/storage.cjs ${{ matrix.browser }}
+      - name: Rezultati na terenu
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/field-results.cjs ${{ matrix.browser }}
+      - name: Navigacija
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/navigation.cjs ${{ matrix.browser }}
+      - name: Napredak na početnoj
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/home-progress.cjs ${{ matrix.browser }}
+      - name: Trening
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/workout.cjs ${{ matrix.browser }}
+      - name: Opterećenje
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/training-load.cjs ${{ matrix.browser }}
+      - name: Ocjena dana
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/load-day-rating.cjs ${{ matrix.browser }}
+      - name: Rad bez mreže
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/offline-bootstrap.cjs ${{ matrix.browser }}
+      - name: Slike vježbi
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/exercise-media.cjs ${{ matrix.browser }}
+      - name: Referentni zasloni treninga
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/workout-reference.cjs ${{ matrix.browser }}
+      - name: Regije tijela
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/body-regions.cjs ${{ matrix.browser }}
+      - name: Figura na pregledu
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/dashboard-anatomy.cjs ${{ matrix.browser }}
+      - name: Struktura
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/structure.cjs ${{ matrix.browser }}
+      - name: Player
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/cinema.cjs ${{ matrix.browser }}
+      - name: Vremenske serije
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/timed-workout.cjs ${{ matrix.browser }}
+      - name: Zvuk i vibracija
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/player-feedback.cjs ${{ matrix.browser }}
+      - name: Vježbe u playeru
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/live-exercises.cjs ${{ matrix.browser }}
+      - name: Odjeljci
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/sections.cjs ${{ matrix.browser }}
+      - name: Povlačenje prozora
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/sheet-gesture.cjs ${{ matrix.browser }}
+      - name: Animacija grafova
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/chart-motion.cjs ${{ matrix.browser }}
+      - name: Uređivanje prije starta
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/prestart-edit.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

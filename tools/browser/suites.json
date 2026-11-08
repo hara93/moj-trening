@@ -1,0 +1,33 @@
+{
+  "note": "The one list of browser suites. tools/browser/run.cjs runs it; .github/workflows/checks.yml has one step per entry, kept equal by tools/check-ci-suites.cjs. published.cjs runs only after a release.",
+  "suites": [
+    {"name": "whole-app", "args": ["live"], "title": "Cijeli trening i postojeće funkcije"},
+    {"name": "today", "title": "Danas i ekipni dnevnik"},
+    {"name": "checklist", "title": "Serije"},
+    {"name": "checklist", "args": ["just-mixed"], "title": "Serije, mješovite"},
+    {"name": "starting-load", "title": "Početna težina"},
+    {"name": "progress", "title": "Napredak"},
+    {"name": "progress-picker", "title": "Odabir vježbi u Napretku"},
+    {"name": "storage", "title": "Spremanje i kopije"},
+    {"name": "field-results", "title": "Rezultati na terenu"},
+    {"name": "navigation", "title": "Navigacija"},
+    {"name": "home-progress", "title": "Napredak na početnoj"},
+    {"name": "workout", "title": "Trening"},
+    {"name": "training-load", "title": "Opterećenje"},
+    {"name": "load-day-rating", "title": "Ocjena dana"},
+    {"name": "offline-bootstrap", "title": "Rad bez mreže"},
+    {"name": "exercise-media", "title": "Slike vježbi"},
+    {"name": "workout-reference", "title": "Referentni zasloni treninga"},
+    {"name": "body-regions", "title": "Regije tijela"},
+    {"name": "dashboard-anatomy", "title": "Figura na pregledu"},
+    {"name": "structure", "title": "Struktura"},
+    {"name": "cinema", "title": "Player"},
+    {"name": "timed-workout", "title": "Vremenske serije"},
+    {"name": "player-feedback", "title": "Zvuk i vibracija"},
+    {"name": "live-exercises", "title": "Vježbe u playeru"},
+    {"name": "sections", "title": "Odjeljci"},
+    {"name": "sheet-gesture", "title": "Povlačenje prozora"},
+    {"name": "chart-motion", "title": "Animacija grafova"},
+    {"name": "prestart-edit", "title": "Uređivanje prije starta"}
+  ]
+}

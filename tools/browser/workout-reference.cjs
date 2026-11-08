@@ -212,7 +212,7 @@ async function run() {
     assert.equal(heading.fontWeight, '650');
     near(parseFloat(heading.letterSpacing), -0.55, 'Exercise title tracking');
     assert.equal(await detail.locator('.workout-detail-previous').innerText(), 'Prethodno 50 kg · 8 / 8 / 8 pon.');
-    assert.match(await detail.locator('.workout-detail-target').innerText(), /Cilj RIR 2\s+Odmor 90 s/);
+    assert.match(await detail.locator('.workout-detail-target').innerText(), /Cilj RIR 2\s+Tajmer serije\s+Odmor 90 s/);
     const table = detail.locator('.workout-set-table');
     assert.deepEqual(await table.locator('thead th').allTextContents(), ['Serija', 'Pon.', 'kg', 'RIR']);
     near((await metrics(table.locator('thead th').first())).width, 39, 'Set-number column width');
