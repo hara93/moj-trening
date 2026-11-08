@@ -967,3 +967,4 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 :is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)>summary::after{content:"";width:7px;height:7px;flex:none;margin-right:3px;border:solid var(--text-2);border-width:0 1.5px 1.5px 0;transform:rotate(45deg) translateY(-2px)}
 :is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)[open]>summary::after{transform:rotate(225deg)}
 .sheet :is(.workout-expectation,.workout-protocol-options){border-bottom:1px solid var(--border)}
+.media-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--text-2)}

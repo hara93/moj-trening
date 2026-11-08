@@ -278,9 +278,25 @@ function exMedia(e, first){
 // rows are 72 px: shipped media has a 192 px square (media.js "thumb"), so a long list never loads the full pictures
 function thumbHtml(e){
   const m = exMedia(e, true);
-  if (m) return m.thumb || m.type === 'image' || m.poster ? '<img alt="" loading="lazy" decoding="async" src="'+esc(m.thumb || (m.type === 'image' ? m.src : m.poster))+'">' : '<video muted playsinline preload="metadata" src="'+esc(m.src)+'#t=0.5"></video>';
+  if (m) return m.thumb || m.type === 'image' || m.poster ? '<img alt="" loading="lazy" decoding="async"'+mediaFailAttr(e, 28)+' src="'+esc(m.thumb || (m.type === 'image' ? m.src : m.poster))+'">' : '<video muted playsinline preload="metadata"'+mediaFailAttr(e, 28)+' src="'+esc(m.src)+'#t=0.5"></video>';
   return pathIcon(catIcon(e && e.cat), 28);
 }
+// A picture that cannot load (offline, missing file) becomes the category icon, like the home covers, so its alt
+// text never prints over the player's labels.
+const MEDIA_CATS = ['Rehab','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
+function mediaFailAttr(e, size){
+  const cat = e && MEDIA_CATS.includes(e.cat) ? e.cat : '';
+  return ' data-fallback-cat="'+cat+'" data-fallback-size="'+size+'" onerror="mediaFail(this)"';
+}
+function mediaFail(el){
+  if (!el || !el.parentNode || el.dataset.failed) return;
+  el.dataset.failed = '1';
+  const icon = document.createElement('span');
+  icon.className = 'ph media-fallback'; icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = pathIcon(catIcon(el.dataset.fallbackCat || ''), Number(el.dataset.fallbackSize) || 28);
+  el.replaceWith(icon);
+}
+window.mediaFail = mediaFail;
 function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; }
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
@@ -2398,9 +2414,11 @@ function cinemaMediaHtml(e) {
   if(same)keepMedia=old;
   else if(reuseWarmed){
     warmed.setAttribute('fetchpriority','high');warmed.alt=e.name;
+    warmed.dataset.fallbackCat=MEDIA_CATS.includes(e.cat)?e.cat:'';warmed.dataset.fallbackSize='72';
+    warmed.addEventListener('error',()=>mediaFail(warmed),{once:true});
     keepMedia=warmed;delete P._warmedPicture;
   }
-  const image=same||reuseWarmed?'<span id="keepmedia"></span>':m.type==='video'?videoTag(m):'<img fetchpriority="high" src="'+esc(m.src)+'" alt="'+esc(e.name)+'">';
+  const image=same||reuseWarmed?'<span id="keepmedia"></span>':m.type==='video'?videoTag(m):'<img fetchpriority="high"'+mediaFailAttr(e,72)+' src="'+esc(m.src)+'" alt="'+esc(e.name)+'">';
   return '<div class="media cinema-single-media'+(m.two?' two':'')+'">'+image+creditHtml(m)+'</div>';
 }
 function cinemaRecordedStep(){

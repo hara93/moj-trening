@@ -7,6 +7,40 @@ const first = 'assets/slike/dead-bug.webp', next = 'assets/slike/goblet-squat.we
 const action = (page, name, suffix = '') => page.locator('[data-a="'+name+'"]'+suffix);
 const playerImage = page => page.locator('.cinema-single-media img');
 
+// Pictures that never arrive (offline without a saved copy) turn into the category icon in lists and in the player,
+// so no broken image or alt text sits over the set label.
+async function unreachablePictures(browser,url) {
+  const context = await browser.newContext({viewport:{width:375,height:812},isMobile:true,hasTouch:true,locale:'hr-HR',reducedMotion:'reduce',serviceWorkers:'block'});
+  try {
+    await context.route(/\/assets\/(slike|thumb)\//,route=>route.abort('internetdisconnected'));
+    const page = await context.newPage(), errors = [];
+    page.on('pageerror',error=>errors.push(error.message));
+    page.setDefaultTimeout(8500);
+    await page.clock.setFixedTime(new Date('2026-11-07T12:00:00+01:00'));
+    await page.goto(url,{waitUntil:'domcontentloaded'});
+    const data = fixture(), id = 'broken-media-audit';
+    data.log = []; data.settings.sound = false;
+    data.protocols = {[id]:{id,name:'Slike bez mreže',items:[
+      {exId:'dead-bug',measure:'sets',sets:4,reps:6,kg:0,rest:30},{exId:'goblet-squat',measure:'sets',sets:1,reps:8,kg:20}]}};
+    await action(page,'dataSheet').click();
+    await page.locator('#importFile').setInputFiles({name:'media-broken.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(data))});
+    await action(page,'restoreApply').click();
+    await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
+    await action(page,'dashboardProtocols').click();
+    await action(page,'openPr','[data-id="'+id+'"]').click();
+    const overview = page.locator('.workout-overview');
+    await overview.locator('.media-fallback').first().waitFor();
+    assert.equal(await overview.locator('img[onerror]').count(),0,'every unreachable list picture became an icon');
+    await action(page,'startPr').click();
+    const media = page.locator('.cinema-single-media');
+    await media.locator('.media-fallback svg').waitFor();
+    assert.equal(await media.locator('img').count(),0,'no broken player image');
+    assert.equal(await media.locator('.media-fallback').getAttribute('aria-hidden'),'true','no alt text is printed over the labels');
+    assert.deepEqual(errors,[]);
+    return {listIcons:true,playerIcon:true};
+  } finally { await context.close(); }
+}
+
 async function run() {
   const server = createServer();
   const [serveFile] = server.listeners('request');
@@ -124,7 +158,8 @@ async function run() {
       assert.equal(await privatePhoto.evaluate(img=>img.naturalWidth),192);
     });
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({engine,cacheHitMs:Math.round(elapsed),delayedOriginMs:3900,oneUpcomingPicture:true,offlineTransition:true,privatePhotoOffline:true}));
+    const brokenMedia=await unreachablePictures(browser,url);
+    console.log(JSON.stringify({engine,cacheHitMs:Math.round(elapsed),delayedOriginMs:3900,oneUpcomingPicture:true,offlineTransition:true,privatePhotoOffline:true,brokenMedia}));
   } finally {
     release?.();
     if(browser)await browser.close();
