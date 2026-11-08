@@ -5,10 +5,11 @@ const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 const source=read('app.js');
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,start);return source.slice(a,b);}
 test('the journal target line has no dangling separator when there is no target',()=>{
-  const line=section('WorkoutView.journalExercise({','rowsHtml:');
-  assert.doesNotMatch(line,/\+\(item\.rest\?' · odmor/,'no separator glued to the rest');
-  // the row is a space-between flex row: target and rest are separate spans, no text separator at all
-  assert.match(line,/targetHtml:\[workoutTargetHtml\(item\),item\.rest\?'<span class="workout-rest">Odmor '\+esc\(item\.rest\)\+' s<\/span>':''\]\.filter\(Boolean\)\.join\(''\)/);
+  // 1.22.0: the player journal's open card has a meta line "Proc. 1RM … · Cilj RIR n"; the separator joins two parts
+  // only when both exist, and the rest is no longer glued to it
+  const line=section('const undo=cinemaJournalSwapped(j)','const chips=');
+  assert.doesNotMatch(line,/item\.rest/,'no rest glued to the target');
+  assert.match(line,/\(e1&&target\?' · ':''\)/);
   assert.match(read('workout.css'),/\.workout-detail-target\{display:flex;[^}]*justify-content:space-between/);
 });
 test('the player menu uses one icon set and one divider between groups',()=>{
@@ -41,7 +42,12 @@ test('small text on the player screen is at least 13 px, the last rule for each 
     '.workout-cinema-clock .workout-control-action','.workout-cinema-journal>button>span:last-child','.cinema-pause-actions button small'];
   assert.match(block,/\{font-size:13px\}/);
   for(const selector of selectors)assert.ok(block.includes(selector),selector);
-  assert.equal(css.indexOf('font-size',css.indexOf('{font-size:13px}',css.lastIndexOf('/* 1.21: small text'))+16),-1,'nothing after the block lowers it again');
+  // 1.22.0: the player redesign styles these after the block; a later size may be larger, never below 13 px
+  const after=css.slice(css.indexOf('{font-size:13px}',css.lastIndexOf('/* 1.21: small text'))+16);
+  for(const [,list,body] of after.matchAll(/([^{}]+)\{([^{}]*)\}/g)){
+    const size=body.match(/font-size:(\d+(?:\.\d+)?)px/);
+    if(size&&Number(size[1])<13)for(const selector of list.split(',').map(x=>x.trim()))assert.ok(!selectors.includes(selector),'nothing after the block lowers it again: '+selector);
+  }
 });
 test('no stylesheet loaded after workout.css lowers the small player text again (index.html link order)',()=>{
   const links=[...read('index.html').matchAll(/<link rel="stylesheet" href="([a-z-]+\.css)">/g)].map(m=>m[1]);

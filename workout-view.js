@@ -38,7 +38,15 @@
     "settings-2": "<path d=\"M20 7h-9M4 7h1M4 17h10M20 17h-1\"/><circle cx=\"8\" cy=\"7\" r=\"3\"/><circle cx=\"17\" cy=\"17\" r=\"3\"/>",
     "volume-2": "<path d=\"m11 5-5 4H3v6h3l5 4V5Z\"/><path d=\"M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14\"/>",
     "book-open": "<path d=\"M12 7v14M3 3h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5v16h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3V3Z\"/>",
-    "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m8 12 3 3 5-6\"/>"
+    "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m8 12 3 3 5-6\"/>",
+    "circle-x": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6M9 9l6 6\"/>",
+    "crosshair": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"M12 2v4M12 18v4M2 12h4M18 12h4\"/>",
+    "undo-2": "<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/>",
+    "list": "<path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/>",
+    "skip-forward": "<path d=\"M5 4.5v15L16 12z\"/><path d=\"M19 5v14\"/>",
+    "arrow-right": "<path d=\"M5 12h14M13 6l6 6-6 6\"/>",
+    "check": "<path d=\"M20 6 9 17l-5-5\"/>",
+    "plus": "<path d=\"M12 5v14M5 12h14\"/>"
   };
   function icon(name) {
     return ICONS[name] ? '<svg class="workout-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>' : '';
@@ -152,24 +160,39 @@
       (vm.toolsHtml ? '<div class="workout-detail-tools" role="group" aria-label="Mogućnosti vježbe">' + html(vm.toolsHtml) + '</div>' : '') +
       (vm.targetHtml ? '<div class="workout-detail-target">' + html(vm.targetHtml) + '</div>' : '') + rows(vm.rowsHtml) + '</article>';
   }
+  // Player journal: a collapsed row (thumb, name, set circles) and the open card.
+  function journalRow(vm) {
+    vm = vm || {};
+    return '<button type="button" class="cj-row" data-a="cinemaJournalGroup" data-j="' + esc(vm.index) + '" aria-expanded="false" aria-label="' + esc('Prikaži serije · ' + (vm.name || 'Vježba')) + '">' +
+      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' +
+      '<span class="cj-sets" aria-hidden="true">' + html(vm.setsHtml) + '</span></span></button>';
+  }
+  function journalCard(vm) {
+    vm = vm || {};
+    return '<article class="cj-card" data-index="' + esc(vm.index) + '"><header class="cj-head"><button type="button" class="cj-open" data-a="workoutExercise" data-j="' + esc(vm.index) + '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba')) + '">' +
+      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' + html(vm.metaHtml) + '</span></button>' + html(vm.collapseHtml) + '</header>' +
+      (vm.chipsHtml ? '<div class="cj-chips" role="group" aria-label="Mogućnosti vježbe">' + html(vm.chipsHtml) + '</div>' : '') + html(vm.menuHtml) + rows(vm.rowsHtml) + html(vm.footHtml) + '</article>';
+  }
   function cinema(vm) {
     vm = vm || {};
-    var phase = ['ready', 'rest', 'work'].indexOf(vm.phase) === -1 ? 'work' : vm.phase;
+    var phase = ['ready', 'rest', 'work', 'section'].indexOf(vm.phase) === -1 ? 'work' : vm.phase;
     // Every interactive fragment is supplied by the app. This renderer never
     // advances a phase, estimates a dose or invents a completion value.
-    return '<div class="view workout-cinema is-' + phase + (vm.paused ? ' is-paused' : '') + (vm.pauseHtml ? ' has-pause-overlay' : '') + '" data-phase="' + phase + '"' +
+    return '<div class="view workout-cinema is-' + phase + (vm.phaseClass ? ' ' + esc(vm.phaseClass) : '') + (vm.paused ? ' is-paused' : '') + (vm.pauseHtml ? ' has-pause-overlay' : '') + '" data-phase="' + phase + '"' +
       (vm.exerciseId ? ' data-ex-id="' + esc(vm.exerciseId) + '"' : '') + '>' +
       '<header class="workout-cinema-topbar">' + html(vm.topbarHtml) +
       (vm.menuHtml ? '<div class="workout-cinema-menu">' + html(vm.menuHtml) + '</div>' : '') + '</header>' +
       (vm.progressHtml ? '<div class="workout-cinema-progress">' + html(vm.progressHtml) + '</div>' : '') +
-      '<div class="workout-cinema-heading' + (vm.prepQuantity ? ' is-preparing' : '') + '">' +
+      (vm.overviewHtml ? '<div class="workout-cinema-overview">' + html(vm.overviewHtml) + '</div>' :
+      vm.subtitle || vm.prepQuantity ? '<div class="workout-cinema-heading' + (vm.prepQuantity ? ' is-preparing' : '') + '">' +
       (vm.subtitle ? '<p>' + esc(vm.subtitle) + '</p>' : '') + '<h1>' +
-      (vm.prepQuantity ? '<b>' + esc(vm.prepQuantity) + '</b> ' : '') + esc(vm.name || 'Trening') + '</h1></div>' +
+      (vm.prepQuantity ? '<b>' + esc(vm.prepQuantity) + '</b> ' : '') + esc(vm.name || 'Trening') + '</h1></div>' : '') +
       (vm.noticeHtml ? '<div class="workout-cinema-notice">' + html(vm.noticeHtml) + '</div>' : '') +
       '<div class="workout-cinema-stage"><div class="workout-cinema-media">' +
       (html(vm.mediaHtml) || '<div class="workout-cinema-media-empty" aria-label="Demonstracija vježbe nije dostupna">' + icon('dumbbell') + '</div>') + '</div>' +
       (vm.infoHtml ? '<div class="workout-cinema-info">' + html(vm.infoHtml) + '</div>' : '') +
-      (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') + html(vm.pauseHtml) + '</div>' +
+      (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') +
+      (vm.centerHtml ? '<div class="workout-cinema-center">' + html(vm.centerHtml) + '</div>' : '') + html(vm.pauseHtml) + '</div>' +
       '<div class="workout-cinema-bottom">' +
       (vm.reserveHtml ? '<div class="workout-cinema-reserve">' + html(vm.reserveHtml) + '</div>' : '') +
       (vm.restAdjustHtml ? '<div class="workout-cinema-rest-adjust">' + html(vm.restAdjustHtml) + '</div>' : '') +
@@ -189,8 +212,8 @@
     var density = setCount >= 5 ? 'compact' : 'comfortable';
     return '<table class="workout-series-table workout-set-table' + (density === 'compact' ? ' workout-series-compact' : '') + '" data-set-count="' + setCount + '" data-row-density="' + density + '" aria-label="' + esc('Serije za ' + (vm.name || 'vježbu')) + '">' +
       (vm.caption ? '<caption>' + esc(vm.caption) + '</caption>' : '') +
-      '<thead><tr><th scope="col">Serija</th><th scope="col">' + (timed ? 'Sek.' : 'Pon.') + '</th><th scope="col">' + esc(vm.weightLabel || 'kg') +
-      '</th><th scope="col">' + (timed ? 'SIR (s)' : 'RIR') + '</th></tr></thead><tbody>' +
+      '<thead><tr><th scope="col">Serija</th><th scope="col">' + (timed ? (vm.short ? 's' : 'Sek.') : 'Pon.') + '</th><th scope="col">' + esc(vm.weightLabel || 'kg') +
+      '</th><th scope="col">' + (timed ? (vm.short ? 'Rez. s' : 'SIR (s)') : 'RIR') + '</th></tr></thead><tbody>' +
       (html(vm.rowsHtml) || '<tr><td colspan="4" class="workout-table-empty">Serije nisu navedene.</td></tr>') + '</tbody></table>';
   }
   function names(value) {
@@ -277,5 +300,5 @@
   }
   return Object.freeze({ icon:icon, overview:overview, block:block, exercise:exercise, panel:panel, list:list,
     compactExercise:compactExercise, exercisePage:exercisePage, journal:journal, journalExercise:journalExercise,
-    cinema:cinema, seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
+    cinema:cinema, journalRow:journalRow, journalCard:journalCard, seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
 });

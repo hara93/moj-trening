@@ -10,6 +10,8 @@
   --font:'Figtree', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme:dark;
 }
+/* 1.22: the player has one accent (green) for active state and the effort colour only for RIR values. */
+:root{--player-accent:#2DD85A;--player-effort:#77B9EB;--player-on-accent:#102818}
 html,body{height:100%;margin:0}
 html{background:#191D25}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;-webkit-font-smoothing:antialiased;overflow:hidden}
