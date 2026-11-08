@@ -1252,9 +1252,10 @@ function sessionShare(l){
   let planned = 0, done = 0;
   l.items.forEach(x => {
     if (!x || x.warmup === true) return;
-    const n = Number.isInteger(x.sets) && x.sets > 0 ? x.sets : 0; if (!n) return;
+    const n = Number.isInteger(x.sets) && x.sets > 0 ? x.sets : 0; if (!n || x.historySetsUnknown === true) return;   // unknown, never zero
     planned += n;
-    done += x.skipped ? 0 : Number.isInteger(x.setsDone) ? Math.min(n, Math.max(0, x.setsDone)) : x.done === true || x.done === false ? n : 0;
+    // an older log item (1.1/1.2) without done or setsDone did its planned sets, as HistoryModel.recordedRows assumes
+    done += x.skipped ? 0 : Number.isInteger(x.setsDone) ? Math.min(n, Math.max(0, x.setsDone)) : n;
   });
   return planned ? done / planned : 1;
 }
@@ -5916,7 +5917,7 @@ VIEWS.play = function(){
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
-        (partial ? '<div class="partial-count"><span>'+(P.countAsDone ? 'Računa se kao odrađen dan plana.' : 'Djelomično: '+Math.round(share * 100)+' % radnih serija. Dan plana računa se od pola.')+'</span>'+
+        (partial ? '<div class="partial-count"><span>'+(P.countAsDone ? 'Računa se kao odrađen dan plana.' : 'Odrađeno '+Math.round(share * 100)+' % radnih serija. Za dan plana treba barem pola.')+'</span>'+
           '<button type="button" class="txtbtn" data-a="countAsDone" aria-pressed="'+(P.countAsDone === true)+'">'+(P.countAsDone ? 'Ne računaj' : 'Računaj kao odrađeno')+'</button></div>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
       // the decisions first (fits a 375 × 812 iPhone): the session rating, the last set, "Kako je išlo?"; the load card after them
@@ -7698,7 +7699,7 @@ function monthItem(t, s, ws, st, editable){
     return '<div class="mc-item mc-itemrow mc-inactive"><div><b>'+esc(s.name)+'</b><small>Preskočeno</small></div>'+restore+'</div>';
   }
   const status = s.done ? 'Odrađeno'+(s.l && dateKey(s.l.at)!==t.date?' '+monthShort(dateKey(s.l.at)):'') :
-    t.date < dateKey(Date.now()) ? 'Propušteno' : ref !== t.date ? 'Premješteno s '+monthShort(ref) : s.extra ? 'Dodano za ovaj dan' : '';
+    s.partial ? 'Djelomično' : t.date < dateKey(Date.now()) ? 'Propušteno' : ref !== t.date ? 'Premješteno s '+monthShort(ref) : s.extra ? 'Dodano za ovaj dan' : '';
   const meta = [monthCat(s),s.min?s.min+' min':'',status].filter(Boolean).join(' · ');
   const warnSlot = s.kind==='program' && !s.pr && S.prog[s.id] ? {...s,pr:progStatus(S.prog[s.id]).next?.pr} : s;
   const warning = editable && !s.done ? matchNote(warnSlot,s.day,ws,st.slots) : '';
@@ -7755,8 +7756,8 @@ VIEWS.month = function(t){
       esc(r.to?'Premješteno na '+monthShort(r.to):'Preskočeno')+'</small></div>'+
       (editable && !r.to?'<button class="mc-link" data-a="monthPick"'+monthRef(r)+'>Vrati</button>':'')+'</div>';
   }
-  for (const l of st.log.filter(l=>dayIdx(l.at)===i && !slots.some(s=>s.l===l))) {
-    agenda += '<div class="mc-item"><b>'+esc(l.name||'Trening')+'</b><small>Odrađeno · dnevnik</small></div>';
+  for (const l of st.log.filter(l=>dayIdx(l.at)===i && !slots.some(s=>s.l===l || s.partial===l))) {
+    agenda += '<div class="mc-item"><b>'+esc(l.name||'Trening')+'</b><small>'+(planCounts(l)?'Odrađeno':'Djelomično')+' · dnevnik</small></div>';
   }
   const moving = t.move ? '<div class="mc-moving"><div><b>Odaberi novi datum</b><small>'+esc(t.move.name)+'</small></div>'+
     '<button class="mc-link" data-a="monthCancel">Odustani</button></div>' : '';

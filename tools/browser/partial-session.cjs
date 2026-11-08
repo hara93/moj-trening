@@ -57,7 +57,7 @@ async function run() {
     await home(page);
     await page.getByRole('button', { name: 'Moj pregled', exact: true }).click();
     await action(page, 'historyList').click();
-    assert.match(await page.locator('.hy-row').first().innerText(), /Djelomično/);
+    assert.match(await page.locator('.hy-row').first().innerText(), /· djelomično/);
 
     // Today: 1 of 4 sets, then counted on the done screen.
     await home(page);
@@ -72,7 +72,7 @@ async function run() {
     await action(page, 'quitSave').click();
     const partial = page.locator('.partial-count');
     await partial.waitFor();
-    assert.match(await partial.innerText(), /Djelomično: 25 % radnih serija/);
+    assert.match(await partial.innerText(), /Odrađeno 25 % radnih serija\. Za dan plana treba barem pola\./);
     assert.match(await page.locator('.done').innerText(), /Ovaj tjedan 0\/2 po planu/);
     await action(page, 'countAsDone').click();
     assert.equal(await action(page, 'countAsDone').getAttribute('aria-pressed'), 'true');

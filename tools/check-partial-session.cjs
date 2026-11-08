@@ -13,6 +13,9 @@ test('a protocol session fills a plan day from half of its work sets or when cou
   assert.equal(ctx.planCounts(entry([item(4,{setsDone:2})])),true,'half counts');
   assert.equal(ctx.planCounts(entry([item(4),item(4,{done:false,lastReps:3})])),true,'"Nisam uspio" attempted every set');
   assert.equal(ctx.sessionShare(entry([item(2,{warmup:true,setsDone:0}),item(4,{setsDone:3})])),3/4,'warm-ups are not work sets');
+  assert.equal(ctx.sessionShare(entry([{exId:'x',sets:4,reps:5,kg:100}])),1,'a 1.2 item without done did its planned sets');
+  assert.equal(ctx.sessionShare(entry([item(4,{historySetsUnknown:true}),item(4,{historySetsUnknown:true})])),1,'unknown set counts are left out, not zero');
+  assert.equal(ctx.sessionShare(entry([item(4,{historySetsUnknown:true}),item(4,{setsDone:1})])),1/4);
   for(const other of [{kind:'field',refId:'f',at:1},{kind:'team',at:1},{kind:'protocol',refId:'p',at:1},entry([{exId:'x'}])])assert.equal(ctx.planCounts(other),true);
 });
 test('the week, strip, day sheet, history and done screen read the same rule',()=>{
@@ -22,7 +25,12 @@ test('the week, strip, day sheet, history and done screen read the same rule',()
   assert.match(section('function weekHtml(){','\n}'),/planCounts\(l\) \? trainedDays : partDays/);
   assert.match(source,/x\.partial \? 'djelomično'/);
   assert.match(source,/partial:!planCounts\(l\)/);
+  const month=section('function monthItem(t, s, ws, st, editable){','\n}');
+  assert.match(month,/s\.partial \? 'Djelomično'/,'the planner slot says djelomično too');
+  assert.match(source,/!slots\.some\(s=>s\.l===l \|\| s\.partial===l\)/,'the partial log is not listed again as done');
+  assert.match(source,/\(planCounts\(l\)\?'Odrađeno':'Djelomično'\)\+' · dnevnik</);
+  assert.match(source,/'Odrađeno '\+Math\.round\(share \* 100\)\+' % radnih serija\. Za dan plana treba barem pola\.'/);
   assert.match(section('function sessionEntry(){','\n}'),/if \(P\.countAsDone === true\) entry\.countsAsDone = true;/);
   assert.match(source,/countAsDone:P\.countAsDone === true,/,'the choice survives a reload of the done screen');
-  assert.match(fs.readFileSync(path.join(__dirname,'../history.js'),'utf8'),/entry\.partial\?' · Djelomično':''/);
+  assert.match(fs.readFileSync(path.join(__dirname,'../history.js'),'utf8'),/entry\.partial\?' · djelomično':''/);
 });
