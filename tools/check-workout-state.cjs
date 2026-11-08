@@ -121,6 +121,7 @@ test('a legacy stopwatch past the new target resumes with a fresh countdown and 
   const saved={mode:'ex',ref:{kind:'protocol',id:'p'},items:[item],at:1000,startedAt:1000,i:0,doneSteps:{},
     clock:{seconds:100,at:1000,paused:true},stepClock:{seconds:100,at:1000,paused:true},liveSchedule:timeline};
   const h=checkpointHarness(null);
+  h.ctx.Date={now:()=>2000};
   assert.equal(h.ctx.restorePlay(saved),true);
   assert.equal(h.ctx.P.steps[0].targetSec,30);
   assert.equal(h.ctx.P.stepClock.seconds,0);
