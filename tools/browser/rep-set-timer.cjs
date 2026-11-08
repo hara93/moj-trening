@@ -208,7 +208,7 @@ async function countUp(p, width) {
   assert.equal(sided.length, 1);
   assert.equal(sided[0].shown, '0:42');
   assert.equal(sided[0].spoken, 'trajanje 42 sekunde');
-  assert.match(sided[0].text, /lijeva · .*desna · 0:42/);
+  assert.match(sided[0].text, /lijeva · .*desna · ukupno 0:42/);   // 1.22.1: the total of both sides says so
   assert.equal(sided[0].fontSize, '13px');
   assert.ok(sided[0].fits && sided[0].spokenHidden, JSON.stringify(sided[0]));
   await journal(p).locator('.cj-row[data-j="0"]').click();

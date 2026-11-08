@@ -9,7 +9,7 @@
   if (root) root.SetPace = api;
 })(typeof window !== 'undefined' ? window : null,function(History){
   'use strict';
-  var SESSIONS = 3, MIN_DURATIONS = 2, MIN_REP = 1, MAX_REP = 15, MAX_SET = 300;
+  var SESSIONS = 3, MIN_DURATIONS = 2, MIN_REP = 1, MAX_REP = 15, MAX_REP_DRILL = 60, MAX_SET = 300;
   var plain = function(o){return !!o && typeof o === 'object' && !Array.isArray(o);};
   var finite = function(n){return typeof n === 'number' && Number.isFinite(n);};
   // Seconds per repetition of each set with a saved duration. A set of 8 reps on both sides counts 16 repetitions;
@@ -31,9 +31,10 @@
     return n % 2 ? list[(n - 1) / 2] : (list[n / 2 - 1] + list[n / 2]) / 2;
   }
   // Every exercise with enough of his own durations: the median over the last 3 sessions that timed it, at least 2
-  // durations, clamped to 1–15 s per repetition and rounded to 0.1 s. Sessions are taken newest first; a workout saved
+  // durations, clamped to 1–15 s per repetition (opts.maxRep(id) may give another cap, e.g. 60 s for a drill at the
+  // pitch, whose generic guess is 20 s) and rounded to 0.1 s. Sessions are taken newest first; a workout saved
   // twice under one historyId (an edit) counts once.
-  function index(log){
+  function index(log, opts){
     var seen = new Set(), sessions = new Map(), values = new Map();
     (Array.isArray(log) ? log : []).filter(function(entry){
       return plain(entry) && finite(entry.at) && Array.isArray(entry.items) && (entry.kind == null || entry.kind === 'protocol' || entry.kind === 'exercise');
@@ -58,14 +59,16 @@
     var out = new Map();
     values.forEach(function(list, id){
       if (list.length < MIN_DURATIONS) return;
-      out.set(id, Math.round(Math.max(MIN_REP, Math.min(MAX_REP, median(list))) * 10) / 10);
+      var cap = opts && typeof opts.maxRep === 'function' ? opts.maxRep(id) : MAX_REP;
+      if (!finite(cap) || cap < MIN_REP) cap = MAX_REP;
+      out.set(id, Math.round(Math.max(MIN_REP, Math.min(cap, median(list))) * 10) / 10);
     });
     return out;
   }
-  function repSeconds(log, exerciseId){
-    var value = index(log).get(exerciseId);
+  function repSeconds(log, exerciseId, opts){
+    var value = index(log, opts).get(exerciseId);
     return value === undefined ? null : value;
   }
-  return Object.freeze({version:1, SESSIONS:SESSIONS, MIN_DURATIONS:MIN_DURATIONS, MIN_REP:MIN_REP, MAX_REP:MAX_REP,
+  return Object.freeze({version:1, SESSIONS:SESSIONS, MIN_DURATIONS:MIN_DURATIONS, MIN_REP:MIN_REP, MAX_REP:MAX_REP, MAX_REP_DRILL:MAX_REP_DRILL,
     perRep:perRep, median:median, index:index, repSeconds:repSeconds});
 });

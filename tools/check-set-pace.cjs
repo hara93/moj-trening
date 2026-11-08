@@ -98,6 +98,18 @@ test('the learned pace replaces only the generic 3 s or 20 s per rep; his set ti
   assert.equal(r.manualSetEstimate({it:{exId:'squat', measure:'sets', sets:3, reps:7}, e:r.S.ex.squat, set:1}), 20);
 });
 
+test('a drill at the pitch (Kondicija) may learn up to 60 s per run; strength work keeps the 15 s cap', () => {
+  // 1.22.1: the generic guess for a drill is 20 s per rep, so a 15 s cap would only make his timed drills worse
+  const log = [session(1, [done('ttest', 1, [30, 34])]), session(2, [done('squat', 4, [100, 120])])];
+  assert.equal(Pace.repSeconds(log, 'ttest', {maxRep:() => Pace.MAX_REP_DRILL}), 32);
+  assert.equal(Pace.repSeconds(log, 'ttest'), 15, 'without a cap function: 15 s');
+  assert.equal(Pace.repSeconds([session(1, [done('ttest', 1, [90, 90])])], 'ttest', {maxRep:() => Pace.MAX_REP_DRILL}), 60, 'clamped to 60 s');
+  const a = app(log, {ttest:{id:'ttest', cat:'Kondicija'}, squat:{id:'squat', cat:'Snaga'}});
+  assert.equal(a.learnedRepSeconds('ttest'), 32, 'Kondicija: his 32 s per run');
+  assert.equal(a.learnedRepSeconds('squat'), 15, 'strength: still at most 15 s per rep');
+  assert.equal(a.manualSetEstimate({it:{exId:'ttest', measure:'sets', sets:4, reps:1}, e:a.S.ex.ttest, set:1}), 32);
+});
+
 test('sides: one side of a split set, or both sides of a combined set', () => {
   const a = app(learned);
   // lunge: 24 s / 12 reps and 36 s / 12 reps → 2 s and 3 s per rep, median 2.5 s
@@ -125,7 +137,7 @@ test('the learned pace feeds the step estimates (the arc) and the total time; a 
 test('the log is indexed once per log array, also while the done screen projects the week on another one', () => {
   const a = app(learned.slice(), {squat:{id:'squat', cat:'Snaga'}});
   let built = 0;
-  a.SetPace = {...Pace, index:log => { built++; return Pace.index(log); }};
+  a.SetPace = {...Pace, index:(log, opts) => { built++; return Pace.index(log, opts); }};
   const saved = a.S.log;
   assert.equal(a.learnedRepSeconds('squat'), 4);
   // weekAfter: S.log is a projected copy for a moment, then the saved log again

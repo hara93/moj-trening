@@ -225,10 +225,12 @@ function manualSetEstimate({it, e, set, side}){
 // read once and kept until the log changes (every history write replaces or resizes S.log). Kept per log array: the
 // done screen's week projection (weekAfter) swaps S.log for a moment, and the saved log keeps its index meanwhile.
 const setPaceCache = new WeakMap(), noLog = Object.freeze([]);
+// a drill at the pitch (Kondicija) may learn up to 60 s per run; strength work keeps the 15 s cap
+function learnedRepCap(exId){return S.ex[exId]?.cat === 'Kondicija' ? SetPace.MAX_REP_DRILL : SetPace.MAX_REP;}
 function learnedRepSeconds(exId){
   const log = Array.isArray(S.log) ? S.log : noLog;
   let hit = setPaceCache.get(log);
-  if (!hit || hit.n !== log.length) { hit = { n:log.length, pace:SetPace.index(log) }; setPaceCache.set(log, hit); }
+  if (!hit || hit.n !== log.length) { hit = { n:log.length, pace:SetPace.index(log, {maxRep:learnedRepCap}) }; setPaceCache.set(log, hit); }
   return hit.pace.get(exId) ?? null;
 }
 function protoMin(p){
@@ -2252,9 +2254,9 @@ function workoutRowsHtml(items,player,j,s=workoutState(j)) {
     const showSides=live&&item.sides&&(timed||setSteps.some(({st})=>PlayerDose.splitSide(st)));
     const details=[item.sides?(showSides?sideDetails('lijeva',row.left,row.leftSec)+' · '+sideDetails('desna',row.right,row.rightSec):s?.journal?'':'po strani'):'',live&&!s?.journal?SET_STATUS[row.state][1]:''].filter(Boolean).join(' · ');
     const redoPartial=canComplete&&redo?'<button type="button" class="set-edit"'+redoAttrs+'>Ponovi seriju</button>':'';
-    // 1.22.1: how long a done rep set really took, on the row's second line ("✓ lijeva · ✓ desna · 0:42")
+    // 1.22.1: how long a done rep set really took, on the row's second line ("0:42"; "✓ lijeva · ✓ desna · ukupno 0:42")
     const duration=done&&!timed?workoutSetDurationHtml(row.dur):'';
-    return '<tr class="workout-set-row" data-set="'+row.set+'" data-state="'+row.state+'"'+(row.current?' aria-current="step"':'')+'><td>'+marker+'</td><td>'+workoutControl(s,row,timed?'sec':'reps',row.dose[timed?'sec':'reps'],locked && !(done && !timed),heading)+'</td><td>'+workoutControl(s,row,'kg',kg,locked||!weightKind,heading)+'</td><td>'+workoutControl(s,row,timed?'sir':'rir',row.reserve,!editableReserve,heading)+'</td></tr>'+(details||duration?'<tr class="workout-set-details" data-state="'+row.state+'"><td></td><td colspan="3">'+esc(details)+(details&&duration?' · ':'')+duration+redoPartial+'</td></tr>':'');
+    return '<tr class="workout-set-row" data-set="'+row.set+'" data-state="'+row.state+'"'+(row.current?' aria-current="step"':'')+'><td>'+marker+'</td><td>'+workoutControl(s,row,timed?'sec':'reps',row.dose[timed?'sec':'reps'],locked && !(done && !timed),heading)+'</td><td>'+workoutControl(s,row,'kg',kg,locked||!weightKind,heading)+'</td><td>'+workoutControl(s,row,timed?'sir':'rir',row.reserve,!editableReserve,heading)+'</td></tr>'+(details||duration?'<tr class="workout-set-details" data-state="'+row.state+'"><td></td><td colspan="3">'+esc(details)+(details&&duration?(showSides?' · ukupno ':' · '):'')+duration+redoPartial+'</td></tr>':'');
   }).join('');
 }
 // The real duration of a rep set: "0:42" on screen, "trajanje 42 sekunde" for a screen reader (units written out, as
