@@ -318,6 +318,9 @@ span.workout-exercise-open{cursor:default}
 .workout-series-table tr[data-state=skipped] .workout-set-number>span{color:#b5b5b4}
 .workout-series-table .workout-set-details td{height:auto;padding:0 0 7px 44px;color:#aeb6a7;font-size:10px;line-height:1.5;text-align:left}
 .workout-series-table .workout-set-details td:last-child{padding-left:4px}
+/* 1.22.1: the real duration of a done rep set; the spoken form ("trajanje 42 s") is for screen readers only */
+.workout-set-duration{white-space:nowrap;font-variant-numeric:tabular-nums}
+.workout-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .workout-series-table .workout-table-empty{padding:14px 0;color:#aeb6a7;font-size:12px}
 .workout-journal{padding:0 0 22px}
 .workout-journal>.topbar{margin-left:11px;margin-right:11px}

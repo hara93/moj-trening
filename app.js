@@ -376,7 +376,7 @@ function storedItem(coll, id){
 const isPlainObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
 const badKey = k => typeof k !== 'string' || !k || k in Object.prototype;   // "__proto__", "constructor"… break lookups
 const CLEAN_NUMS = { srpe:1, sets:1, reps:1, sec:1, rest:1, kg:1, ok:1, fail:1, snoozeOk:1, up:1, easy:1, r0:1, r1:1, cap:1, at:1, secs:1, week:1, total_min:1, order:1, updatedAt:1, lastReps:1, setsDone:1, value:1, phase:1, work_s:1, rest_s:1, set_rest_s:1, distance_m:1 };
-const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1, rirList:1, sirList:1, kgList:1, secList:1, sideCounts:1, setNumbers:1 };
+const CLEAN_LISTS = { items:1, blocks:1, steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1, weeks:1, sessions:1, days:1, repsList:1, rirList:1, sirList:1, kgList:1, secList:1, sideCounts:1, setNumbers:1, durList:1 };
 const CLEAN_WORDS = { steps:1, mistakes:1, zones:1, equip:1, how_hr:1, notes:1 };
 const CLEAN_LINKS = { video:1, source:1, source_url:1 };
 let cleanFixes = 0;   // how many values the last checks had to drop or convert
@@ -409,17 +409,18 @@ function cleanVal(k, v, depth){
   }
   if (CLEAN_LINKS[k]) return typeof v === 'string' && (v === '' || /^https?:\/\//i.test(v)) ? v : drop();
   if (CLEAN_LISTS[k]) {
-    const perSet = ['repsList','kgList','secList','rirList','sirList','sideCounts','setNumbers'].includes(k);
+    const perSet = ['repsList','kgList','secList','rirList','sirList','sideCounts','setNumbers','durList'].includes(k);
     if (!Array.isArray(v)) { if (perSet) { cleanFixes++; return []; } return drop(); }
     let a;
     if (k === 'days') a = Array.from(new Set(v.filter(i => Number.isInteger(i) && i >= 0 && i < 7))).sort();
     else if (perSet) {
-      const limit = { repsList:10000, kgList:10000, secList:86400, rirList:40, sirList:40, sideCounts:2, setNumbers:1000 }[k];
+      // 1.22.1: durList = the real seconds of each rep set (whole seconds, 1 or more), null = not known
+      const limit = { repsList:10000, kgList:10000, secList:86400, rirList:40, sirList:40, sideCounts:2, setNumbers:1000, durList:3600 }[k];
       a = v.slice(0,1000).map(n => {
         if (n === null) return null;
         const value = typeof n === 'string' ? cleanVal(k === 'repsList' ? 'reps' : 'kg', n, depth + 1) : n;
         if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= limit &&
-            (!['sideCounts','setNumbers'].includes(k) || Number.isInteger(value) && value >= 1) &&
+            (!['sideCounts','setNumbers','durList'].includes(k) || Number.isInteger(value) && value >= 1) &&
             (k !== 'repsList' || Number.isInteger(value))) return value;
         cleanFixes++; return null;
       });
@@ -2240,8 +2241,16 @@ function workoutRowsHtml(items,player,j,s=workoutState(j)) {
     const showSides=live&&item.sides&&(timed||setSteps.some(({st})=>PlayerDose.splitSide(st)));
     const details=[item.sides?(showSides?sideDetails('lijeva',row.left,row.leftSec)+' · '+sideDetails('desna',row.right,row.rightSec):s?.journal?'':'po strani'):'',live&&!s?.journal?SET_STATUS[row.state][1]:''].filter(Boolean).join(' · ');
     const redoPartial=canComplete&&redo?'<button type="button" class="set-edit"'+redoAttrs+'>Ponovi seriju</button>':'';
-    return '<tr class="workout-set-row" data-set="'+row.set+'" data-state="'+row.state+'"'+(row.current?' aria-current="step"':'')+'><td>'+marker+'</td><td>'+workoutControl(s,row,timed?'sec':'reps',row.dose[timed?'sec':'reps'],locked && !(done && !timed),heading)+'</td><td>'+workoutControl(s,row,'kg',kg,locked||!weightKind,heading)+'</td><td>'+workoutControl(s,row,timed?'sir':'rir',row.reserve,!editableReserve,heading)+'</td></tr>'+(details?'<tr class="workout-set-details" data-state="'+row.state+'"><td></td><td colspan="3">'+esc(details)+redoPartial+'</td></tr>':'');
+    // 1.22.1: how long a done rep set really took, on the row's second line ("✓ lijeva · ✓ desna · 0:42")
+    const duration=done&&!timed?workoutSetDurationHtml(row.dur):'';
+    return '<tr class="workout-set-row" data-set="'+row.set+'" data-state="'+row.state+'"'+(row.current?' aria-current="step"':'')+'><td>'+marker+'</td><td>'+workoutControl(s,row,timed?'sec':'reps',row.dose[timed?'sec':'reps'],locked && !(done && !timed),heading)+'</td><td>'+workoutControl(s,row,'kg',kg,locked||!weightKind,heading)+'</td><td>'+workoutControl(s,row,timed?'sir':'rir',row.reserve,!editableReserve,heading)+'</td></tr>'+(details||duration?'<tr class="workout-set-details" data-state="'+row.state+'"><td></td><td colspan="3">'+esc(details)+(details&&duration?' · ':'')+duration+redoPartial+'</td></tr>':'');
   }).join('');
+}
+// The real duration of a rep set: "0:42" on screen, "trajanje 42 s" for a screen reader. Nothing when it is not known.
+function workoutSetDurationHtml(seconds){
+  if(!Number.isInteger(seconds)||seconds<1)return '';
+  const m=Math.floor(seconds/60),r=seconds%60,spoken='trajanje '+(m?m+' min'+(r?' '+r+' s':''):r+' s');
+  return '<span class="workout-set-duration"><span aria-hidden="true">'+fmt(seconds)+'</span><span class="workout-sr">'+spoken+'</span></span>';
 }
 function workoutTableHtml(c,j,s=workoutState(j)) {
   const item=c.items[j],e=S.ex[item.exId],kind=startLoadDescription(item.exId)?.kind;
@@ -2508,6 +2517,8 @@ const cinemaClockSegments = Array.from({length:CINEMA_CLOCK_TICKS}, (_, index) =
 });
 function cinemaClockProgress(step){
   if (cinemaRecordedStep()) return 1;
+  // 1.22.1: a rep set without its own set timer counts up; its arc fills over the estimate and stays full past it
+  if (cinemaCountsUp(step)) return Math.min(1, cinemaManualElapsed(step) / cinemaManualTarget(step));
   if (step.kind === 'manual') return 1 - cinemaManualRemaining(step) / cinemaManualTarget(step);
   return step.dur ? 1 - remaining() / step.dur : 0;
 }
@@ -2526,6 +2537,7 @@ function cinemaClockHtml(step, recorded){
 }
 function cinemaClockText(step){
   if (cinemaRecordedStep()) return '✓';
+  if (cinemaCountsUp(step)) return fmt(Math.floor(cinemaManualElapsed(step)));
   if (step.kind === 'manual') return fmt(cinemaManualRemaining(step));
   return step.kind === 'ready' ? 'Kreni' : fmt(remaining());
 }
@@ -2702,9 +2714,17 @@ function cinemaLabel(v, paused) {
 function cinemaManualTarget(step){
   return step.targetSec ?? Math.max(1,Math.min(3600,manualSetEstimate(step)));
 }
+// The step's own time without pauses (SessionClock).
+function cinemaManualElapsed(){
+  return SessionClock.update(P.stepClock,Date.now(),!!P.paused)?.seconds||0;
+}
 function cinemaManualRemaining(step){
-  const elapsed=SessionClock.update(P.stepClock,Date.now(),!!P.paused)?.seconds||0;
-  return Math.max(0,cinemaManualTarget(step)-elapsed);
+  return Math.max(0,cinemaManualTarget(step)-cinemaManualElapsed(step));
+}
+// 1.22.1: a rep set whose length he decides (no "Tajmer serije") counts up from 0:00: no countdown cues, nothing ends it
+// but his tap. Holds and rep sets with their own set timer keep the countdown, where the time is the task.
+function cinemaCountsUp(step){
+  return step?.kind==='manual'&&repSetSeconds(step.it||{})===null;
 }
 function cinemaFooter(v, step, item, name, preparing){
   const recorded=cinemaRecordedStep();
@@ -4337,7 +4357,8 @@ function tick(){
   const st = P.steps[P.i]; if (!st) return;
   if (P.mode==='ex' && (st.kind==='ready' || st.dur===0&&!isWork(st))) {enterStep(P.i+1);render();return;}
   if ((st.dur || st.kind==='manual') && !cinemaRecordedStep()) {
-    // a rep set ends on its own only with a set timer (Tajmer serije); otherwise it waits for the tap
+    // a rep set ends on its own only with a set timer (Tajmer serije); otherwise it counts up and waits for the tap
+    // (the same rule as cinemaCountsUp: no countdown cues for it)
     const manual=st.kind==='manual', timer=!manual||repSetSeconds(st.it||{})!==null, whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
     if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole) {
       P.lastBeep = whole;
@@ -4370,13 +4391,17 @@ function timeUp(){
 }
 // work the player saw you finish: a set closed with the ring, a timed set that ran to the end
 function markDone(i){ if (isWork(P.steps[i])) P.doneSteps[i] = 1; }
-function advanceWorkout({nextIndex,start=0,automatic=false,actualSec}){
+function advanceWorkout({nextIndex,start=0,automatic=false,actualSec,actualDur}){
   const before=P,sheet=S.sheet,pause=P.dosePause,picker=cinemaPicker;
   const keepExerciseOpen=sheet?.kind==='workoutExercise',left=remaining();
   P={...P,doneSteps:{...P.doneSteps}};delete P.dosePause;
   if(pause)P.paused=pause.wasPaused;
   if(actualSec!==undefined){
     P.steps=P.steps.slice();P.steps[P.i]={...P.steps[P.i],actualSec};
+  }
+  if(actualDur!==undefined){   // 1.22.1: with the estimate it was timed against, for the forgotten-tap guard
+    const step=P.steps[P.i];
+    P.steps=P.steps.slice();P.steps[P.i]={...step,actualDur,targetSec:cinemaManualTarget(step)};
   }
   for(let k=P.i;k<nextIndex;k++)markDone(k);
   const next=positionStep(nextIndex,start);
@@ -6892,10 +6917,11 @@ const A = {
       if (!matches(step)) return;
       delete P.doneSteps[index];
       delete P.rir[index];
-      if (step.actualReps !== undefined || step.actualSec !== undefined) {
+      if (step.actualReps !== undefined || step.actualSec !== undefined || step.actualDur !== undefined) {
         P.steps[index] = {...step};
         delete P.steps[index].actualReps;
         delete P.steps[index].actualSec;
+        delete P.steps[index].actualDur;
       }
     });
     // Never let an earlier review answer credit a set that is now open again.
@@ -6939,7 +6965,11 @@ const A = {
     const step=P.steps[P.i],j=Number(d.j),set=Number(d.set);
     if(!isWork(step)||step.g!==j||step.set!==set||P.i!==Number(d.step)||P.doneSteps[P.i])return;
     const elapsed=step.kind==='work'&&Number.isFinite(step.dur)?Math.round(Math.max(0,step.dur-remaining())):undefined;
-    advanceWorkout({nextIndex:P.i+1,automatic:!!d.automatic,actualSec:elapsed===step.dur?undefined:elapsed});
+    // 1.22.1: how long a rep set that counted up really took (pauses excluded). Only a set timed live: a tap while a sheet
+    // (the journal) holds the clock is not timed, and its duration stays unknown.
+    const timed=cinemaCountsUp(step)&&!d.automatic&&!P.paused&&!P.dosePause?Math.round(cinemaManualElapsed(step)):undefined;
+    advanceWorkout({nextIndex:P.i+1,automatic:!!d.automatic,actualSec:elapsed===step.dur?undefined:elapsed,
+      actualDur:PlayerDose.validActualDur(timed)?timed:undefined});
   },
   trainingLoadOpen: () => go({v:'analytics',focus:'effort'}),
   todayOpen: () => go({v:'today'}),

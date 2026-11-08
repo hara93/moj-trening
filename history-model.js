@@ -46,7 +46,8 @@
         sides:int(sides,1,x.sides?2:1)?sides:null, kg:rowValue(x,'kg',i),
         reps:x.historyRepsUnknown?null:failed?x.lastReps:rowValue(x,'reps',i), sec:rowValue(x,'sec',i),
         failed:failed, rir:failed?0:Array.isArray(x.rirList)&&finite(x.rirList[i])&&x.rirList[i]>=0&&x.rirList[i]<=40?x.rirList[i]:null,
-        sir:Array.isArray(x.sirList)&&finite(x.sirList[i])&&x.sirList[i]>=0&&x.sirList[i]<=40?x.sirList[i]:null };
+        sir:Array.isArray(x.sirList)&&finite(x.sirList[i])&&x.sirList[i]>=0&&x.sirList[i]<=40?x.sirList[i]:null,
+        dur:Array.isArray(x.durList)&&int(x.durList[i],1,3600)?x.durList[i]:null };
     });
   }
   function performedSets(x) {
@@ -113,7 +114,7 @@
           seen[edit.index]=true;
           var index=edit.index,x=out.items[index],base='items.'+index,actualKeys=['sets','setsDone','done','skipped','lastReps'];
           if(!plain(x)){error(base,'Spremljena vježba nije ispravna.');return;}
-          var keys=['index','sets','setsDone','reps','kg','sec','done','skipped','lastReps','repsList','kgList','secList','rirList','sirList'];
+          var keys=['index','sets','setsDone','reps','kg','sec','done','skipped','lastReps','repsList','kgList','secList','rirList','sirList','durList'];
           Object.keys(edit).forEach(function(k){if(keys.indexOf(k)===-1)error(base+'.'+k,'Nepodržano polje vježbe.');});
           var before=clone(x),startChanges=changes.length;
           ['sets','setsDone','reps','kg','sec','lastReps','done','skipped'].forEach(function(k){
@@ -144,10 +145,11 @@
           if(has(x,'setsDone') && int(x.sets,1,1000) && x.setsDone>x.sets)error(base+'.setsDone','Odrađenih serija ne može biti više od spremljenog plana.');
           if(x.skipped===true && has(x,'setsDone') && x.setsDone>0)error(base+'.skipped','Preskočena vježba ne može imati odrađene serije.');
           var count=recordedSetSlots(x),actualChanged=actualKeys.some(function(k){return has(edit,k);})&&actualKeys.some(function(k){return !equal(before[k],x[k]);})||before.historySetsUnknown!==x.historySetsUnknown;
-          ['repsList','kgList','secList','rirList','sirList'].forEach(function(k){
+          // 1.22.1: durList (the real seconds of each rep set) follows the performed sets like the reserve lists
+          ['repsList','kgList','secList','rirList','sirList','durList'].forEach(function(k){
             if(has(edit,k)){
               var a=edit[k],limit=k==='kgList'?10000:k==='secList'?86400:40;
-              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return v===null||(k==='repsList'?int(v,0,10000):finite(v)&&v>=0&&v<=limit);})))error(base+'.'+k,'Provjeri vrijednost za svaku seriju.');
+              if(a!==null && (!Array.isArray(a)||a.length>1000||!a.every(function(v){return v===null||(k==='repsList'?int(v,0,10000):k==='durList'?int(v,1,3600):finite(v)&&v>=0&&v<=limit);})))error(base+'.'+k,'Provjeri vrijednost za svaku seriju.');
               else if(a!==null && int(x.sets,1,1000) && a.length>x.sets)error(base+'.'+k,'Popis ima više serija od spremljenog plana.');
               else put(x,k,a,base+'.'+k);
             }

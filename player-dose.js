@@ -41,6 +41,33 @@
   function validActualSeconds(seconds) {
     return Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600;
   }
+  // 1.22.1: the raw time of a rep step he ended by a tap (whole seconds, pauses excluded).
+  const validActualDur = validActualSeconds;
+  // The forgotten-tap guard: a set's real duration is kept only from 1 s up to max(60 s, 3 × its estimate), and never
+  // over 300 s. Longer means he most likely forgot to tap, so the duration stays unknown.
+  const SET_DURATION_MAX = 300;
+  function validSetDuration(seconds, estimate) {
+    const planned = finite(estimate) && estimate > 0 ? estimate : 0;
+    return Number.isInteger(seconds) && seconds >= 1 && seconds <= Math.min(SET_DURATION_MAX, Math.max(60, 3 * planned));
+  }
+  // The set's duration over its rep steps (both sides of a set played as two steps): known only when every side that
+  // counts was timed live, and within the guard. claimAll counts the sides not done as well (the done screen's "Sve
+  // odrađeno"), so such a set stays unknown.
+  function setDuration(player, group, set, claimAll) {
+    let total = 0, estimate = 0, timed = 0;
+    for (let index = 0; index < player.steps.length; index++) {
+      const step = player.steps[index];
+      if (!step || step.kind !== 'manual' || step.g !== group || (step.set || 1) !== set) continue;
+      if (!player.doneSteps?.[index]) {
+        if (claimAll) return null;
+        continue;
+      }
+      if (!validActualDur(step.actualDur)) return null;
+      total += step.actualDur; timed++;
+      estimate += finite(step.targetSec) ? step.targetSec : 0;
+    }
+    return timed && validSetDuration(total, estimate) ? total : null;
+  }
   const repSetSecondsError = 'Vrijeme serije mora biti cijeli broj od 1 do 3.600 sekundi.';
   function recordedAt(step, item) {
     const dose = at(step.it || item, step.set);
@@ -315,6 +342,7 @@
       // the left and right holds have different durations.
       if (item.measure === 'time' && row.sides) row.sec = row.seconds / row.sides;
       delete row.seconds;
+      if (item.measure !== 'time') row.dur = setDuration(player, itemIndex, row.set, claimAll);
       return row;
     });
   }
@@ -324,7 +352,7 @@
     const count = Number.isInteger(item.sets) && item.sets > 0 ? item.sets : 1;
     const result = Array.from({length:count}, (_,index) => ({
       set:index + 1, dose:at(item,index + 1), state:player ? 'waiting' : 'planned',
-      current:false, step:null, left:false, right:false, reserve:null
+      current:false, step:null, left:false, right:false, reserve:null, dur:null
     }));
     if (!player) return result;
     const seen = new Map();
@@ -363,6 +391,7 @@
       else if (row.current) row.state = 'active';
       else if (entry && (entry.last < player.i || player.done)) row.state = 'skipped';
       if (row.state === 'done' && entry?.sides) row.dose.sec = entry.seconds / entry.sides;
+      row.dur = row.state === 'done' && item.measure !== 'time' ? setDuration(player, group, row.set, false) : null;
       const planned = at(item,row.set).sec;
       if (entry && [entry.leftSec,entry.rightSec].some(seconds => seconds !== undefined && seconds !== planned)) {
         row.leftSec = entry.leftSec;
@@ -413,6 +442,11 @@
     if (reserve.some(v => v !== null)) {
       out[it.measure === 'time' ? 'sirList' : 'rirList'] = reserve;
     }
+    // 1.22.1: the real duration of each rep set, null = not known (not timed live, or over the guard)
+    var durations = actual.map(r => r.dur == null ? null : r.dur);
+    if (it.measure !== 'time' && durations.some(v => v !== null)) {
+      out.durList = durations;
+    }
     return {
       fields: out,
       rows: actual
@@ -450,6 +484,7 @@
         g = st.g;
       if (st.kind !== 'manual' || !validActualReps(st.actualReps)) delete st.actualReps;
       if (st.kind !== 'work' || !validActualSeconds(st.actualSec)) delete st.actualSec;
+      if (st.kind !== 'manual' || !validActualDur(st.actualDur)) delete st.actualDur;
       if (st.kind !== 'manual' || !finite(st.targetSec) || st.targetSec < 1 || st.targetSec > 3600) delete st.targetSec;
       if (!Number.isInteger(g) || g < 0 || g >= input.length) {
         return null;
@@ -530,6 +565,9 @@
     recordedAt: recordedAt,
     validActualReps: validActualReps,
     validRepSetSeconds: validRepSetSeconds,
+    validActualDur: validActualDur,
+    validSetDuration: validSetDuration,
+    setDuration: setDuration,
     splitSide: splitSide,
     setWorkEnd: setWorkEnd,
     items: items,
