@@ -206,8 +206,9 @@ const top = () => S.stack[S.stack.length - 1];
 
 /* ---------- durations ---------- */
 // estimated from the same step list the player runs, so supersets and circuits are timed the way they are trained.
-// A set with reps: 3 s per rep for lifting; a drill at the pitch (category Kondicija) about 20 s per rep (a run plus the
-// walk back), or the item's own repSec (e.g. 100 for a box-to-box length run)
+// A set with reps: the item's own set time (Vrijeme serije, repSetSec) or tempo (repSec, e.g. 100 for a box-to-box
+// length run) first; then his own pace, learned from the real durations of his last sessions (SetPace, 1.22.1); else
+// 3 s per rep for lifting, and about 20 s per rep for a drill at the pitch (category Kondicija: a run plus the walk back)
 function repSetSeconds(item){
   const value = typeof item.repSetSec === 'string' ? workoutNumber(item.repSetSec) : item.repSetSec;
   return PlayerDose.validRepSetSeconds(value) ? value : null;
@@ -216,9 +217,17 @@ function manualSetEstimate({it, e, set, side}){
   const custom = repSetSeconds(it);
   const split=side==='Lijeva strana'||side==='Desna strana';
   if (custom !== null) return split ? Math.max(1,side==='Lijeva strana'?Math.ceil(custom/2):Math.floor(custom/2)) : custom;
-  const repSeconds = +it.repSec > 0 ? +it.repSec : e?.cat === 'Kondicija' ? 20 : 3;
+  const repSeconds = +it.repSec > 0 ? +it.repSec : learnedRepSeconds(it.exId) ?? (e?.cat === 'Kondicija' ? 20 : 3);
   const combined=it.sides&&!split;
-  return repsOf(it, set || 1) * repSeconds * (combined ? 2 : 1) + (combined ? 5 : 0);
+  return Math.max(1, Math.round(repsOf(it, set || 1) * repSeconds * (combined ? 2 : 1) + (combined ? 5 : 0)));
+}
+// His seconds per rep for an exercise, from the history (null = not enough of his own durations yet). The whole log is
+// read once and kept until the log changes (every history write replaces or resizes S.log).
+let setPaceCache = null;
+function learnedRepSeconds(exId){
+  const log = Array.isArray(S.log) ? S.log : [];
+  if (!setPaceCache || setPaceCache.log !== log || setPaceCache.n !== log.length) setPaceCache = { log, n:log.length, pace:SetPace.index(log) };
+  return setPaceCache.pace.get(exId) ?? null;
 }
 function protoMin(p){
   const s = stepsFromItems(p.items || []).reduce((a, st) => a + (st.dur || st.targetSec || 0), 0);

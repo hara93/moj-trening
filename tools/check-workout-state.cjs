@@ -81,6 +81,7 @@ function checkpointHarness(P){
     render(){},keepAwake(){},remaining:()=>ctx.P.left||0,PLAY_KEY:'mt.play',localStorage:{setItem:(key,value)=>writes.set(key,value)},
     clearInterval(){},setInterval:()=> 1,tick(){},ticker:null};
   ctx.repsOf=(item,set)=>D.at(item,set).reps;
+  ctx.SetPace=require('../set-pace.js');   // 1.22.1: the estimate reads his learned pace (none in this empty history)
   vm.createContext(ctx);vm.runInContext(timingHelpers+section('function repSetSeconds(','function protoMin(')+
     section('function cinemaManualTarget(','function cinemaFooter(')+section('function savePlay(){','function clearPlay(){')+
     section('function restorePlay(s){','// leaves the player'),ctx);
