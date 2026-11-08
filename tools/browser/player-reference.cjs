@@ -609,7 +609,8 @@ async function plainWorkout(p, width) {
 
 // 375 px, and 390 px with a 34 px safe area: the same screens without horizontal overflow
 // 1.22.1 (item 1): Prethodna / Sljedeća / Ponovi react to one tap; their small captions say what that tap does, true in
-// the state shown, and each button's name is the same words. Taps land where the words say.
+// the state shown, and each button's name is the same words. Taps land where the words say. The words are said from the
+// exercise on screen: a rest or a preparation shows the set that comes next, so a tap that starts it is "Preskoči".
 const pauseLayer = p => p.locator('.workout-cinema .cinema-pause-layer');
 async function pauseWords(p) {
   await revealRest(p);
@@ -627,14 +628,15 @@ async function pauseCaptions(p) {
   await start(p, parts, fixture({ entry: 2 }));
   // the first preparation (the part overview): back starts it again, as Ponovi does
   await p.locator('.workout-cinema[data-phase="section"]').waitFor();
-  assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], 'pripremu od početka'), 'the first preparation');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Preskoči', 'pripremu'], 'pripremu od početka'), 'the first preparation');
   await resume(p);
   await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 1, 'squat set 1');
   assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'squat set 1');
   assert.doesNotMatch(await pauseLayer(p).innerText(), /Povuci|Dvostruki dodir/, 'no caption names a gesture');
   await resume(p);
   await markDone(p);
-  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'odmor od početka'), 'the rest after set 1');
+  // the screen shows set 2; back goes to set 1, the exercise's start, as from set 2 itself
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'vježbe'], ['Sljedeća', 'vježba'], 'odmor od početka'), 'the rest after set 1');
   await resume(p);
   await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 2, 'squat set 2');
   assert.deepEqual(await pauseWords(p), words(['Početak', 'vježbe'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'squat set 2');
@@ -656,18 +658,24 @@ async function pauseCaptions(p) {
   assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'stranu od početka'), 'left side');
   await resume(p); await markDone(p);
   assert.equal(step(await player(p)).kind, 'switch');
-  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'promjenu strane od početka'), 'the side change');
+  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'promjenu strane'), 'the side change');
   await resume(p);
   await until(p, (s, st) => st.kind === 'manual' && st.side === 'Desna strana', 'right side');
   assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'stranu od početka'), 'right side');
   await resume(p); await markDone(p);
   assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'seriju od početka'), 'Nordic curl, round 1');
   await resume(p); await markDone(p);
-  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'vježba'], 'odmor od početka'), 'the round\'s rest');
+  // the round's rest shows the Bulgarian split squat's round 2: on skips the rest into it, back is the Nordic curl
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Preskoči', 'odmor'], 'odmor od početka'), 'the round\'s rest');
+  state = await tapJump(p, 1);
+  assert.deepEqual([step(state).g, step(state).set, step(state).side, state.clock.paused], [1, 2, 'Lijeva strana', true], '"Preskoči odmor" starts the set on screen');
   await resume(p);
   // the pause before the next part is shown as "Priprema"
   await until(p, (s, st) => st.kind === 'rest' && st.trans, 'the pause before Trup');
-  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'vježba'], 'pripremu od početka'), 'the pause before Trup');
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Preskoči', 'pripremu'], 'pripremu od početka'), 'the pause before Trup');
+  state = await tapJump(p, 1);
+  const hold = state.liveSchedule.slice(state.i).find(x => x.kind === 'work' || x.kind === 'manual');
+  assert.deepEqual([hold.g, hold.set, state.liveSchedule.slice(state.i, state.liveSchedule.indexOf(hold)).every(x => x.g === 3)], [3, 1, true], '"Preskoči pripremu" starts the side plank on screen');
   await resume(p);
   // the last set of the workout: next is the end
   await until(p, (s, st) => st.kind === 'work' && st.g === 3 && st.set === 2, 'side plank set 2');
@@ -681,7 +689,8 @@ async function pauseCaptions(p) {
   await until(p, (s, st) => st.kind === 'manual' && st.g === 0 && st.set === 3, 'bench round 3');
   assert.deepEqual(await pauseWords(p), words(['Prethodna', 'vježba'], ['Sljedeća', 'serija'], 'seriju od početka'), 'bench round 3');
   await resume(p); await markDone(p);
-  assert.deepEqual(await pauseWords(p), words(['Početak', 'serije'], ['Sljedeća', 'serija'], 'odmor od početka'), 'the rest after round 3');
+  // the screen shows round 4: on skips the rest into it, back is round 3
+  assert.deepEqual(await pauseWords(p), words(['Prethodna', 'serija'], ['Preskoči', 'odmor'], 'odmor od početka'), 'the rest after round 3');
   await resume(p);
   await until(p, (s, st) => st.kind === 'manual' && st.set === 4, 'bench round 4');
   assert.deepEqual(await pauseWords(p), words(['Prethodna', 'serija'], ['Kraj', 'treninga'], 'seriju od početka'), 'bench round 4');
@@ -809,13 +818,47 @@ async function phone(p, width) {
   return { width, arc: cases.map(fit => ({ label: fit.label, bottom: +fit.bottom.toFixed(1), top: +fit.top.toFixed(1), captionToPill: fit.captionToPill && +fit.captionToPill.toFixed(1) })) };
 }
 
+// 1.22.1: paused on a preparation ("Priprema") or a side change ("Promjena strane"), the pause buttons and their
+// captions never sit on the dimmed phase word, also on short screens and with a 34 px safe area. Ponovi's button is as
+// wide as its caption, with the icon centred over it: the side change's caption is no wider than the preparation's
+// ("promjenu strane od početka" pushed the icon about 23 px further right than any other state).
+async function pauseClear(p, width) {
+  const cases = [];
+  for (const [label, protocol, predicate] of [['the preparation', plain, (s, st) => st.kind === 'prep'],
+    ['the side change', parts, (s, st) => st.kind === 'switch' && !st.go && !st.nextEx]]) {
+    await start(p, protocol, fixture({ entry: 0 }));
+    await until(p, predicate, label);
+    await pauseWords(p);
+    const fit = await p.evaluate(() => {
+      const word = document.querySelector('.workout-cinema .cinema-prep-entry .cinema-phase-word');
+      const range = document.createRange(); if (word) range.selectNodeContents(word);
+      const ink = word && getComputedStyle(word).visibility !== 'hidden' && word.getClientRects().length ? range.getBoundingClientRect() : null;
+      const box = r => [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * 10) / 10);
+      const buttons = [...document.querySelectorAll('.workout-cinema .cinema-pause-actions button')].map(node => ({ name: node.getAttribute('aria-label') || node.textContent.trim(), box: box(node.getBoundingClientRect()) }));
+      const replay = document.querySelector('.workout-cinema .cinema-pause-replay'), back = document.querySelector('.workout-cinema .cinema-pause-jump[data-d="-1"]');
+      const centre = node => { const r = node.getBoundingClientRect(); return r.left + r.width / 2; };
+      return { phaseWord: !!word, word: ink && box(ink), hits: ink ? buttons.filter(({ box: b }) => b[0] < ink.right && b[2] > ink.left && b[1] < ink.bottom && b[3] > ink.top).map(b => b.name) : [],
+        replayIcon: replay && centre(replay.querySelector('svg')), backCentre: back && centre(back) };
+    });
+    assert.ok(fit.phaseWord, label + ' shows a phase word under the pause layer');
+    assert.deepEqual(fit.hits, [], label + ' at ' + width + ': the pause buttons clear the phase word ' + JSON.stringify(fit));
+    cases.push({ label, word: fit.word, replayOffset: Math.round(fit.replayIcon - fit.backCentre) });
+    await noOverflow(p, label + ', paused, ' + width);
+    await resume(p);
+    await quit(p);
+  }
+  assert.ok(cases[1].replayOffset <= cases[0].replayOffset, 'Ponovi\'s icon in the side change sits no further right than in a preparation at ' + width + ': ' + JSON.stringify(cases));
+  return { width, cases };
+}
+
 async function run() {
   const server = await serve();
   let browser;
   const results = [];
   try {
     browser = await launch();
-    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout, pauseCaptions]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]], [393, 852, [phone], 34]]) {
+    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout, pauseCaptions]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch, pauseClear]], [393, 852, [phone, pauseClear], 34],
+      [375, 667, [pauseClear], 34], [414, 736, [pauseClear]], [375, 812, [pauseClear], 34]]) {
       const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
       // an iPhone's 34 px home-indicator area, which the test browser reports as 0
       if (safeArea) await context.route(/\.css(\?.*)?$/, async route => {

@@ -2778,20 +2778,26 @@ function cinemaPrepSelect(seconds){
   editor.querySelectorAll('[data-a="cinemaPrepPick"]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.v)===seconds)));
 }
 // 1.22.1: the two words on Prethodna / Sljedeća say where ONE tap lands from the current step (jumpTarget); read
-// together they are the button's name. Mostly "Prethodna vježba" / "Sljedeća vježba"; going back inside the current
-// exercise is "Početak vježbe" (or "Početak serije" for the set's other side, and in a superset round); a round
-// with one exercise left moves by "serija"; the first exercise goes back to "Početak treninga"; the last one goes
-// on to "Kraj treninga".
+// together they are the button's name. They are said from the exercise on screen (cinemaDisplayStep: a rest or a
+// preparation shows the set that comes next), so they never promise to skip what the tap starts:
+// - mostly "Prethodna vježba" / "Sljedeća vježba";
+// - when the tap starts the set on screen, it skips the rest or the preparation before it: "Preskoči odmor" /
+//   "Preskoči pripremu";
+// - going back to set 1 of the exercise on screen is "Početak vježbe", to the start of its set (the set's other side,
+//   a superset round) "Početak serije";
+// - a superset round with one exercise left moves by "serija";
+// - back from the first exercise is "Početak treninga", on from the last one "Kraj treninga".
 function cinemaJumpWords(dir){
   const k = jumpTarget(dir), here = P.steps[P.i] || {};
   if (k === -1) return ['Kraj', 'treninga'];
   if (dir < 0 && k === 0) return ['Početak', 'treninga'];
   // a landing on the countdown before a hold ('ready', 'go') is about the hold after it
-  const to = P.steps.slice(k).find(isWork) || {};
-  if (dir < 0 && k < P.i && slotOf(P.steps[k]) === slotOf(here)) return ['Početak', to.set === here.set ? 'serije' : 'vježbe'];
-  // before an exercise starts (the first preparation, the pause before it) its own first set is the next one
-  const started = here.kind !== 'prep' && !here.trans;
-  return [dir < 0 ? 'Prethodna' : 'Sljedeća', started && to.g === here.g ? 'serija' : 'vježba'];
+  const workAt = from => P.steps.findIndex((step, x) => x >= from && isWork(step));
+  const at = workAt(k), to = P.steps[at] || {};
+  const shown = isWork(here) ? P.i : workAt(P.i + 1), view = P.steps[shown] || here;
+  if (dir > 0 && !isWork(here) && at === shown) return ['Preskoči', here.kind === 'rest' && !here.trans ? 'odmor' : 'pripremu'];
+  if (dir < 0 && slotOf(to) === slotOf(view)) return ['Početak', to.set === view.set ? 'serije' : 'vježbe'];
+  return [dir < 0 ? 'Prethodna' : 'Sljedeća', to.g === view.g ? 'serija' : 'vježba'];
 }
 function cinemaJumpLabel(dir){ return cinemaJumpWords(dir).join(' '); }
 // Ponovi starts the current step again (cinemaReplay): its caption names that step the way the screen does
@@ -2799,7 +2805,7 @@ function cinemaJumpLabel(dir){ return cinemaJumpWords(dir).join(' '); }
 function cinemaReplayCaption(step){
   if (isWork(step)) return PlayerDose.splitSide(step) ? 'stranu od početka' : 'seriju od početka';
   if (step.kind === 'rest' && !step.trans) return 'odmor od početka';
-  if (step.kind === 'switch' && !step.go && !step.nextEx) return 'promjenu strane od početka';
+  if (step.kind === 'switch' && !step.go && !step.nextEx) return 'promjenu strane';   // a 10 s countdown: "od početka" adds little
   return 'pripremu od početka';
 }
 function cinemaPauseHtml(recorded){

@@ -817,6 +817,9 @@ span.workout-exercise-open{cursor:default}
   .workout-cinema-info{top:94px}
   .cinema-big-clock .n{font-size:clamp(70px,24vw,92px)}
   .cinema-phase-word,.cinema-rest-buttons{font-size:25px}
+  /* 1.22.1: paused on a preparation or a side change, Ponovi and its caption come down onto the dimmed phase word;
+     the caption already names the step, so the word steps aside (the clock keeps its place) */
+  .workout-cinema.has-pause-overlay .cinema-prep-entry .cinema-phase-word{visibility:hidden}
   .cinema-section-items li{padding-block:6px}
   .workout-cinema-reserve{margin-bottom:10px}
 }
