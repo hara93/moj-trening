@@ -2545,8 +2545,13 @@ function cinemaClockHtml(step, recorded){
   const arc = step.kind === 'rest' ? '' : '<svg class="cinema-clock-arc" viewBox="0 0 176 88" aria-hidden="true">'+
     '<path d="'+cinemaClockSegments.join('')+'"/><path id="cinema-clock-fill" data-count="'+count+'" d="'+cinemaClockSegments.slice(0,count).join('')+'"/></svg>';
   return '<button type="button" class="workout-cinema-clock" id="ring" data-a="cinemaTimer" aria-label="'+label+'"'+(recorded?' disabled':'')+'>'+
-    arc+'<strong class="n" id="ringN">'+cinemaClockText(step)+'</strong>'+
+    arc+'<strong class="n'+cinemaClockLength(cinemaClockText(step))+'" id="ringN">'+cinemaClockText(step)+'</strong>'+
     (status?'<span class="workout-control-action">'+status+'</span>':'')+'</button>';
+}
+// 1.22.1: a rep set counts up without an end, so a forgotten tap reaches "10:15" or "60:15"; the arc clock's digits
+// get smaller from 5 characters on (is-long) and again from 6 (is-longer), so they stay clear of the arc.
+function cinemaClockLength(text){
+  return text.length >= 6 ? ' is-long is-longer' : text.length >= 5 ? ' is-long' : '';
 }
 function cinemaClockText(step){
   if (cinemaRecordedStep()) return '✓';
@@ -6265,7 +6270,7 @@ function paintPlayer(full){
   const v = curView();
   const n = document.getElementById('ringN');
   if(P.mode==='ex'&&!P.done){
-    const text=cinemaClockText(v.st);if(n&&n.textContent!==text)n.textContent=text;
+    const text=cinemaClockText(v.st);if(n&&n.textContent!==text){n.textContent=text;n.className='n'+cinemaClockLength(text);}
     const fill=document.getElementById('cinema-clock-fill');
     if(fill){
       const count=cinemaClockCount(v.st);

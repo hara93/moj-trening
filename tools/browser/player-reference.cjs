@@ -495,6 +495,17 @@ async function arcFit(p, label, { digits = true } = {}) {
   await noOverflow(p, label);
   return cases;
 }
+// 1.22.1: a rep set counts up without an end, so a forgotten tap reaches 10:15, 60:15 and 100:00: the digits get
+// smaller and stay on the diameter and clear of the arc (arcFit), in both font cases
+async function longClock(p, label) {
+  const cases = [];
+  for (const [seconds, text] of [[615, '10:15'], [3000, '60:15'], [2385, '100:00']]) {
+    await advance(p, seconds);
+    assert.equal(await p.locator('.workout-cinema-clock #ringN').innerText(), text);
+    cases.push(...await arcFit(p, label + ' at ' + text));
+  }
+  return cases;
+}
 async function arcFitPaused(p, label) {
   await p.locator('.workout-cinema-clock').click(); await p.locator('.workout-cinema .cinema-pause-layer').waitFor();
   assert.equal(await p.locator('.workout-cinema-clock .workout-control-action').textContent(), 'pauza');
@@ -710,6 +721,7 @@ async function narrow(p, width) {
   const d = await dashes(p); assert.ok(d.inside, JSON.stringify(d));
   await arcFit(p, 'rep set ' + width); await arcFitPaused(p, 'rep set ' + width);
   await shot(p, 'work-' + width);
+  await longClock(p, 'a forgotten rep set ' + width);
   await markDone(p); await revealRest(p); await reserve(p).waitFor();
   await noOverflow(p, 'rest phase 2 ' + width);
   await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
@@ -810,7 +822,8 @@ async function touch(p, width) {
 async function phone(p, width) {
   await start(p, parts, fixture({ entry: 0 }));
   await until(p, (s, st) => st.kind === 'manual', 'set 1');
-  const cases = [...await arcFit(p, 'rep set ' + width + ', 34 px safe area'), ...await arcFitPaused(p, 'rep set ' + width + ', 34 px safe area')];
+  const cases = [...await arcFit(p, 'rep set ' + width + ', 34 px safe area'), ...await arcFitPaused(p, 'rep set ' + width + ', 34 px safe area'),
+    ...await longClock(p, 'a forgotten rep set ' + width + ', 34 px safe area')];
   await until(p, (s, st) => st.kind === 'work' && st.g === 3, 'side plank set 1');
   cases.push(...await arcFit(p, 'a timed hold ' + width + ', 34 px safe area'), ...await arcFitPaused(p, 'a timed hold ' + width + ', 34 px safe area'));
   await shot(p, 'hold-' + width + '-safe-area');
