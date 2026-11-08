@@ -242,7 +242,7 @@
 .cinema-journal-footer .cj-plan svg{width:19px;height:19px}
 
 /* Gesture guide: a full-screen layer over the dimmed player. */
-.sheet-bg.cinema-guide-bg{align-items:stretch;justify-content:stretch;padding:0;background:#0B0E13E0;backdrop-filter:blur(6px)}
+.sheet-bg.cinema-guide-bg{align-items:stretch;justify-content:stretch;padding:0;background:#0B0E13F0;backdrop-filter:blur(10px)}
 .sheet.cinema-guide-sheet{width:100%;max-width:540px;height:100%;max-height:none;margin:0 auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto}
 .cinema-guide-layer{box-sizing:border-box;display:flex;flex-direction:column;min-height:100%;padding:max(76px,12vh) 24px calc(24px + env(safe-area-inset-bottom,0px));color:#fff}
 .cinema-guide-layer h3{margin:0 auto;max-width:300px;font-size:clamp(30px,9.5vw,40px);font-weight:850;line-height:1;letter-spacing:-.035em;text-align:center;text-transform:uppercase}

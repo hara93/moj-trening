@@ -39,8 +39,12 @@ async function run(){
     await submit.click();assert.match(await p.locator('#start-weight-error').innerText(),/nije spremljena/);
     assert.equal(await weight.inputValue(),'19,5');assert.equal((await store(p)).exercises['bench-press'].kg,0);
     await p.evaluate(()=>window.restoreWeightTest());await submit.click();await p.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
+    // 1.22.0: a fresh install shows "Kako koristiti player" once, on the first start; NASTAVI closes it for good
+    const guide=p.locator('.sheet[data-kind="cinemaGuide"]');await guide.waitFor();await select(p,'cinemaGuideDone').click();await guide.waitFor({state:'hidden'});
+    assert.equal((await p.evaluate(()=>JSON.parse(localStorage.getItem('mt.settings')))).playerGuideSeen,true);
     assert.equal((await session(p)).items[0].kg,19.5);assert.equal((await store(p)).exercises['bench-press'].kg,19.5);
-    await quit(p);await p.reload();await library(p,'bench-press');await select(p,'playEx').click();await p.locator('.workout-cinema,[data-a=quitPlay]').waitFor();assert.equal(await form.count(),0);await quit(p);
+    await quit(p);await p.reload();await library(p,'bench-press');await select(p,'playEx').click();await p.locator('.workout-cinema,[data-a=quitPlay]').waitFor();assert.equal(await form.count(),0);
+    await p.waitForTimeout(200);assert.equal(await guide.count(),0,'1.22.0: the guide shows only on the first start');await quit(p);
     await p.reload({waitUntil:'domcontentloaded'});await p.locator('.tab[data-tab="dashboard"]').click();await select(p,'dashboardProtocols').first().click();
     const target=await p.evaluate(()=>Object.entries(JSON.parse(localStorage.getItem('mt.data.v1')).protocols).find(([,pr])=>!pr.program&&pr.items?.some(it=>it.exId==='bench-press'))?.[0]);
     assert.ok(target);await p.locator('[data-a="openPr"][data-id="'+target+'"]').first().click();await select(p,'startPr').click();await form.waitFor();

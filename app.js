@@ -6329,7 +6329,10 @@ function playAfter(){
   P._lastI = P.i;
   // the gesture guide opens once, on the first player start (settings without the flag count as not seen)
   if(P.mode==='ex'&&!P.done&&!S.sheet&&!cinemaGuideSeen())setTimeout(()=>{
-    if(P&&!P.done&&!S.sheet&&top().v==='play'&&!cinemaGuideSeen()&&writeSetting('playerGuideSeen',true))cinemaOpenSheet({kind:'cinemaGuide'});
+    if(!P||P.done||S.sheet||top().v!=='play'||cinemaGuideSeen()||!writeSetting('playerGuideSeen',true))return;
+    // the guide gives focus back to ⋯ when it closes (it reopens from there), not to the page
+    app.querySelector('.workout-cinema [data-a="cinemaMenu"]')?.focus({preventScroll:true});
+    cinemaOpenSheet({kind:'cinemaGuide'});
   },0);
   setupCinemaPicker();
   const slot = document.getElementById('keepmedia');
