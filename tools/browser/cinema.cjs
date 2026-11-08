@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve, openCinemaControls, pressCinemaMain } = require('./runtime.cjs');
+const { artifacts, engine, fixture: baseFixture, launch, serve, openCinemaControls, pressCinemaMain, revealRest } = require('./runtime.cjs');
 const fixed = new Date('2026-11-06T10:00:00+01:00');
 const id = 'cinema-audit';
 const redoId = 'cinema-redo-audit';
@@ -239,6 +239,7 @@ async function portraitPresentation(p, width, height) {
   assert.equal(step(automatic).kind,'rest','the rep-set countdown enters rest automatically');
   assert.deepEqual(automatic.doneSteps,{[firstStep]:1});
   assert.equal(await transport.count(),0,'the player has no bottom transport row during rest');
+  await revealRest(p);   // 1.22.0: rest phase 1 is the clock alone; a tap on the stage shows −ODMOR+ and the reserve row
   const restColor=await p.locator('#ringN').evaluate(node=>getComputedStyle(node).color);
   assert.equal(restColor,'rgb(255, 255, 255)','the rest countdown is white');
   assert.equal(layout.timerColor,'rgb(255, 255, 255)','the work countdown is white');
@@ -338,6 +339,7 @@ async function runPlayer(p, width, url) {
   await p.locator('.cinema-work-set [data-a="workoutSetDone"]').click(); await closeCompletionPanel(p);
   const completed = await player(p); assert.equal(doneCount(completed), 1); assert.equal(completed.doneSteps[firstStep], 1);
   assert.equal(step(completed).kind, 'rest');
+  await revealRest(p);   // 1.22.0: −/+ appear in rest phase 2
   for (const delta of [15, -15]) {
     const before = await player(p);
     await p.locator('[data-a="cinemaRest"][data-d="' + delta + '"]').click();
@@ -736,6 +738,7 @@ async function supersetPreview(p) {
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-next-rest.png')});
   await mark.tap();
   assert.equal(await stage.getAttribute('data-phase'),'rest');
+  await revealRest(p);   // 1.22.0: the next-set card is part of rest phase 2
   await nextExercise('bugarski');assert.match(await card.innerText(),/2 \/ 3 serija.*Lijeva strana/s);
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-during-rest.png')});
   await openCinemaControls(p);

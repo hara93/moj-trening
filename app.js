@@ -2814,7 +2814,9 @@ function cinemaDoseLine(item){
   const dose=PlayerDose.at(item,1),timed=item.measure==='time';
   return (timed?dose.sec+' s':dose.reps+' pon.')+(item.sides?' po strani':'')+(dose.kg?' · '+fmtKg(dose.kg):'');
 }
-function cinemaBigClock(step,cls){
+// still: rest phase 1, where a tap anywhere on the stage (the time too) reveals phase 2 and never pauses
+function cinemaBigClock(step,cls,still){
+  if(still)return '<p class="cinema-big-clock'+(cls?' '+cls:'')+'" role="timer"><span class="n" id="ringN">'+cinemaClockText(step)+'</span></p>';
   return '<button type="button" class="cinema-big-clock'+(cls?' '+cls:'')+'" id="ring" data-a="cinemaTimer" aria-label="'+(P.paused?'Nastavi brojač':'Pauziraj brojač')+'"><span class="n" id="ringN">'+cinemaClockText(step)+'</span></button>';
 }
 // Shown during the countdown before the first exercise of each part.
@@ -2831,12 +2833,12 @@ function cinemaSectionHtml(st,parts){
       return '<li'+(j+k===j?' class="is-current" aria-current="step"':'')+'><strong><b>'+(item.sets||1)+'×</b> '+esc(e?.name||'Vježba')+'</strong><small>'+esc(cinemaDoseLine(item))+'</small></li>';
     }).join('')+'</ol></section>';
 }
-// Rest: phase 1 is the time alone; a tap or the first 3 s reveal the rest.
+// Rest: phase 1 is the time alone for 3 s; a tap on the stage, a pause or an opened sheet reveals phase 2 for this rest.
 function cinemaRestPhase(st){
-  if(st.kind!=='rest'||st.trans)return 0;
-  if(P.paused||S.sheet||P._restReveal===P.i)return 2;
-  return (st.dur||0)-remaining()<3?1:2;
+  if(!P||st?.kind!=='rest')return 0;
+  return CinemaModel.restPhase(st,(st.dur||0)-remaining(),!!(P.paused||S.sheet||P._restReveal===P.i));
 }
+function cinemaRestReveal(){if(P?.mode==='ex'&&!P.done&&P.steps[P.i]?.kind==='rest')P._restReveal=P.i;}
 function workoutCinemaHtml() {
   const v=curView(),state=cinemaState(v),active=state.active,st=v.st;
   const step=cinemaDisplayStep(st);
@@ -2853,7 +2855,7 @@ function workoutCinemaHtml() {
   const pause=P.paused&&!S.sheet,name=e?.name||P.title;
   const side=PlayerDose.splitSide(step)?step.side:'';
   const footer=cinemaFooter({st:rest||section?st:isWork(st)?st:{...st,kind:'prep'}},step,item,name,preparing&&!rest);
-  const restClock=rest?'<div class="cinema-rest-stack"><p class="cinema-phase-word">Odmor</p>'+cinemaBigClock(st,'is-rest')+'</div>':'';
+  const restClock=restPhase===1?'<div class="cinema-rest-stack"><p class="cinema-phase-word">Odmor</p>'+cinemaBigClock(st,'is-rest',true)+'</div>':'';
   // the reserve (RIR) rows of the sets just closed: rest phase 2, and the pause before the next exercise or part
   const reserveAt=!editingPrep&&!pause&&st.kind==='rest'&&restPhase!==1?cinemaReserveSteps():[];
   return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
@@ -2862,7 +2864,7 @@ function workoutCinemaHtml() {
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(percent,frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:phase==='work'?metrics:'',
-    reserveHtml:reserveAt.map(k=>rirRowHtml(k,reserveAt.length>1||P.steps[k].g!==active)).join(''),
+    reserveHtml:cinemaReserveHtml(reserveAt,active),
     restAdjustHtml:restPhase===2?'<div class="cinema-rest-buttons"><button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button></div>':'',
     nextHtml:restPhase===2?cinemaUpcomingHtml(CinemaModel.upcoming(P)):'',
     prepHtml:(section?'<div class="cinema-section-clock">'+cinemaBigClock(st,'is-left')+'</div>':preparing&&(editingPrep||!S.sheet)?cinemaPrepHtml(st,editingPrep):'')+(restPhase===2?cinemaBigClock(st,'is-rest'):''),
@@ -2997,6 +2999,7 @@ function cinemaCommitExercises(s, added) {
 }
 function cinemaOpenSheet(sheet){
   if(!P||P.done||P.mode!=='ex')return;
+  cinemaRestReveal();
   if(S.sheet?.kind==='cinemaJournal')sheet.returnCinema=true;
   if(P.dosePause){S.sheet=sheet;render();}else openPlayDoseSheet(sheet);
 }
@@ -3022,6 +3025,7 @@ function cinemaJump(j){
 }
 function cinemaPause(){
   if(!P||P.done)return;
+  cinemaRestReveal();
   const before={...P};P={...P,left:remaining(),paused:!P.paused,sheetPause:false};
   if(!P.paused)P.endAt=Date.now()+P.left*1000;
   if(!savePlay()){P=before;toast('Pauza nije spremljena. Pokušaj ponovno.',true);return;}
@@ -5877,19 +5881,43 @@ function rirSetPts(k){
   const failed=failedReserveStep(k), v=failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null, dose=PlayerDose.recordedAt(st);
   return setLoad(e, fx, it.measure === 'time' ? { t:dose.sec, sir:v } : { n:failed?lastRepsOf(st.g):dose.reps, rir:v }, { k: lmNovelty(it.exId, Date.now(), S.log) }).B;
 }
-function rirRowHtml(k, other){
+// one reserve row: its taps (holds in seconds), the marked tap (the item's target, else the exercise's default reserve)
+// and the stored tap; the done screen and the rest screen draw it differently
+function rirRow(k){
   const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
   const goal = it[time ? 'targetSir' : 'targetRir'], failed=failedReserveStep(k), def = Number.isFinite(goal) ? goal : time ? fx.rir * LM.HOLD_S : fx.rir, v = failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null;
   let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
-  const q = failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', tap = v==null?'':time?'SIR '+v+' s':'RIR '+v;
+  return { st, time, taps, txt, goal, failed, v, tg };
+}
+function rirRowLabel(k, r, other){
+  return (r.failed ? 'Neuspjela serija · RIR 0' : r.time ? 'Koliko si još mogao držati, u sekundama?' : 'Koliko si još mogao?') + ' ' + (other ? r.st.e.name + ', ' : '') + 'Serija ' + r.st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova';
+}
+function rirButtonsHtml(k, r){
+  return '<div class="rirb" role="group" aria-label="' + (r.time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + r.taps.map((t, x) =>
+    '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (r.v === t) + '"'+(r.failed?' disabled':'')+' class="' + [x === r.tg ? 'tg' : '', r.txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + r.txt[x] + (r.time ? ' s' : '') + (x === r.tg ? (Number.isFinite(r.goal) ? ' (cilj)' : ' (uobičajeno)') : '') + '">' + r.txt[x] + '</button>').join('') +
+    '</div>';
+}
+function rirRowHtml(k, other){
+  const r = rirRow(k), st = r.st, v = r.v, time = r.time;
+  const q = r.failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', tap = v==null?'':time?'SIR '+v+' s':'RIR '+v;
   const what = other ? tap || 'nije uneseno' : 'S' + st.set + ' · ' + (tap || 'rezerva nije unesena');
-  // the question and, on the right, the tap; a set of another exercise than the one on screen (the rest before the next
-  // one, a superset round, the done screen) names it on its own line ("Deadlift · 4. serija"), so the name never shrinks
-  return '<section class="rir" aria-label="' + esc((time ? 'Koliko si još mogao držati, u sekundama?' : q) + ' ' + (other ? st.e.name + ', ' : '') + 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova') + '"><div class="rirh"><b>' + q + '</b><span>' +
+  // the question and, on the right, the tap; a set of another exercise than the one on screen (the done screen) names it
+  // on its own line ("Deadlift · 4. serija"), so the name never shrinks
+  return '<section class="rir" aria-label="' + esc(rirRowLabel(k, r, other)) + '"><div class="rirh"><b>' + q + '</b><span>' +
     '<em>' + esc(what) + '</em></span></div>' + (other ? '<p class="rirn">' + esc(st.e.name + ' · ' + st.set + '. serija') + '</p>' : '') +
-    '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
-      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '"'+(failed?' disabled':'')+' class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? (Number.isFinite(goal) ? ' (cilj)' : ' (uobičajeno)') : '') + '">' + txt[x] + '</button>').join('') +
-    '</div></section>';
+    rirButtonsHtml(k, r) + '</section>';
+}
+// 1.22: the rest screen's rows, over −ODMOR+: "Koliko si još mogao? · serija N" over six round pills, the target
+// outlined, the tap filled. Sets of another exercise than the one on screen (a superset round, the pause before the next
+// exercise) share one question and each is named on its own full-width line ("Deadlift · 4. serija").
+function cinemaReserveHtml(ks, active){
+  if (!ks.length) return '';
+  const rows = ks.map(k => [k, rirRow(k)]), other = ks.length > 1 || P.steps[ks[0]].g !== active;
+  const holds = rows.every(([, r]) => r.time), ask = holds ? 'Koliko si još sekundi mogao držati?' : 'Koliko si još mogao?';
+  return (other ? '<p class="cinema-rest-rir-q">' + ask + '</p>' : '') + rows.map(([k, r]) => {
+    const line = r.failed ? 'Neuspjela serija · RIR 0' : other ? r.st.e.name + ' · ' + r.st.set + '. serija' + (r.time && !holds ? ' · sekunde' : '') : ask + ' · serija ' + r.st.set;
+    return '<section class="rir cinema-rest-rir" aria-label="' + esc(rirRowLabel(k, r, other)) + '"><p class="' + (other ? 'rirn' : 'rirq') + '">' + esc(line) + '</p>' + rirButtonsHtml(k, r) + '</section>';
+  }).join('');
 }
 function saveRecordedSet(index, reps, reserve){
   const step = P?.steps[index];
@@ -6302,7 +6330,7 @@ function playAfter(){
       if(dy< -65&&Math.abs(dy)>Math.abs(dx)){A.cinemaJournal();return;}
       if(Math.abs(dx)>75&&Math.abs(dx)>Math.abs(dy)){jump(dx<0?1:-1,P.paused);return;}
       if(Math.abs(dx)>=12||Math.abs(dy)>=12)return;
-      if(!P.paused&&cinemaRestPhase(P.steps[P.i])===1){P._restReveal=P.i;render();return;}
+      if(!P.paused&&cinemaRestPhase(P.steps[P.i])===1){cinemaRestReveal();render();return;}
       if(!P.paused){cinemaPause();return;}
       const at=performance.now();
       if(lastTap&&at-lastTap.at<320&&Math.hypot(ev.clientX-lastTap.x,ev.clientY-lastTap.y)<32){lastTap=null;cinemaReplay();return;}

@@ -96,6 +96,13 @@ async function pressCinemaMain(page){
   await openCinemaControls(page);
   await page.locator('.sheet[data-kind="cinemaPlayback"] .cinema-primary').click();
 }
+// 1.22.0: rest phase 1 shows only the clock for 3 s; a tap on the stage reveals phase 2 (reserve row, −/+) without pausing
+async function revealRest(page){
+  if(!await page.locator('.workout-cinema.is-rest-1').count())return;
+  const box=await page.locator('.workout-cinema-stage').boundingBox();
+  await page.mouse.click(box.x+box.width/2,box.y+Math.min(80,box.height/4));
+  await page.locator('.workout-cinema.is-rest-2').waitFor();
+}
 async function openQuit(page){
   await closeJournal(page);
   if(await page.locator('.workout-cinema').count()){
@@ -104,4 +111,4 @@ async function openQuit(page){
     await page.locator('[data-a="cinemaExit"]').click();
   }else await page.locator('[data-a="quitPlay"]').click();
 }
-module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture,openJournal,closeJournal,openCinemaControls,pressCinemaMain,openQuit};
+module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture,openJournal,closeJournal,openCinemaControls,pressCinemaMain,revealRest,openQuit};

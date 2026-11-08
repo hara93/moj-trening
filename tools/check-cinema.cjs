@@ -106,3 +106,14 @@ test('a superset advances the dot step by step across its own dashes, never jump
  assert.deepEqual(Cinema.progress([],0,0,0),{n:1,current:0,within:0});
  assert.deepEqual(Cinema.progress(null,3,NaN,2),{n:2,current:0,within:0});
 });
+test('rest phase 1 is the time alone for 3 s; a reveal (tap, pause, sheet) shows phase 2; the pause before an exercise has no phases',()=>{
+ const rest={kind:'rest',dur:90,g:0};
+ assert.equal(Cinema.restPhase(rest,0,false),1);
+ assert.equal(Cinema.restPhase(rest,2.9,false),1);
+ assert.equal(Cinema.restPhase(rest,3,false),2,'after 3 s the reserve row and −/+ appear by themselves');
+ assert.equal(Cinema.restPhase(rest,0.5,true),2,'a tap on the stage reveals phase 2 at once');
+ assert.equal(Cinema.restPhase({...rest,trans:true},0,false),0);
+ for(const kind of ['prep','manual','work','switch','ready'])assert.equal(Cinema.restPhase({kind,dur:10},0,false),0,kind);
+ assert.equal(Cinema.restPhase(rest,NaN,false),2,'an unknown elapsed time never hides the rest controls');
+ assert.equal(Cinema.restPhase(null,0,false),0);
+});

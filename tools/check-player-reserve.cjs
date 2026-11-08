@@ -105,8 +105,9 @@ test('the rest screen asks for the finished set, following Upis rezerve; rep set
   const tick=cut('function tick(){','\n}');
   assert.match(tick,/timer=!manual\|\|repSetSeconds\(st\.it\|\|\{\}\)!==null/);
   assert.match(tick,/if \(whole <= 0 && timer\)/,'no automatic set end without Tajmer serije');
-  assert.match(cut('function workoutCinemaHtml() {','\n}'),/reserveHtml:reserveAt\.map\(k=>rirRowHtml\(k,/);
-  assert.match(cut('function rirRowHtml(k, other){','\n}'),/Number\.isFinite\(goal\) \? goal :/,'the item target is the marked chip');
+  // 1.22.0: the rest screen draws the rows in the player's look (cinemaReserveHtml); the row facts live in rirRow
+  assert.match(cut('function workoutCinemaHtml() {','\n}'),/reserveHtml:cinemaReserveHtml\(reserveAt,active\)/);
+  assert.match(cut('function rirRow(k){','\n}'),/Number\.isFinite\(goal\) \? goal :/,'the item target is the marked chip');
 });
 test('a superset round asks about each exercise in it; the done screen asks about the last set of every exercise',()=>{
   const a={exId:'a',measure:'sets',sets:3,reps:8,kg:20},b={exId:'a',measure:'sets',sets:2,reps:5,kg:0};
@@ -129,4 +130,33 @@ test('a superset round asks about each exercise in it; the done screen asks abou
   assert.match(html,/<em>nije uneseno<\/em>/);
   assert.match(h.ctx.rirRowHtml(1,false),/<em>S1 · rezerva nije unesena<\/em>/);
   assert.doesNotMatch(h.ctx.rirRowHtml(1,false),/rirn/);
+});
+test('1.22.0: the rest screen rows: one question with the set number, round pills, the target marked; other sets share one question',()=>{
+  const a={exId:'a',measure:'sets',sets:3,reps:8,kg:20,targetRir:2},h1={exId:'b',measure:'time',sets:2,sec:30,kg:0,targetSir:10};
+  const set=(g,n,it,name)=>({kind:it.measure==='time'?'work':'manual',g,set:n,it,e:{name}});
+  const steps=[{kind:'prep'},set(0,1,a,'Potisak'),{kind:'rest',dur:60},set(0,2,a,'Potisak'),set(1,1,h1,'Izdržaj'),{kind:'rest',dur:60}];
+  const p={mode:'ex',items:[a,h1],steps,i:2,doneSteps:{1:1},rir:{}},h=harness(p);
+  const one=h.ctx.cinemaReserveHtml([1],0);
+  assert.match(one,/<section class="rir cinema-rest-rir" aria-label="Koliko si još mogao\? Serija 1 · ≈ \d+ bodova"><p class="rirq">Koliko si još mogao\? · serija 1<\/p>/);
+  assert.doesNotMatch(one,/cinema-rest-rir-q|rirn|rirh/,'one question line, no status text and no name for the set on screen');
+  assert.equal((one.match(/data-a="rir"/g)||[]).length,6);
+  assert.match(one,/class="tg" aria-label="2 \(cilj\)">2<\/button>/,'the target RIR 2 is marked');
+  assert.match(one,/aria-label="4–5">4–5<\/button><button [^>]*aria-label="6\+">6\+<\/button><\/div><\/section>$/);
+  p.rir={1:1};assert.match(h.ctx.cinemaReserveHtml([1],0),/data-v="1" aria-pressed="true"/,'the stored tap is pressed');
+  assert.equal(h.ctx.cinemaReserveHtml([],0),'');
+  // a superset round with a hold: one shared question, each set named on its own line, the hold in seconds
+  p.i=5;Object.assign(p.doneSteps,{3:1,4:1});
+  const two=h.ctx.cinemaReserveHtml([3,4],1);
+  assert.match(two,/^<p class="cinema-rest-rir-q">Koliko si još mogao\?<\/p>/);
+  assert.match(two,/<p class="rirn">Potisak · 2\. serija<\/p>/);
+  assert.match(two,/<p class="rirn">Izdržaj · 1\. serija · sekunde<\/p>/);
+  assert.match(two,/aria-label="Koliko si još mogao držati, u sekundama\? Izdržaj, Serija 1/);
+  assert.match(two,/class="tg" aria-label="10 s \(cilj\)">10<\/button>/,'the 10 s target');
+  assert.match(two,/class="lg" aria-label="20–30 s">20–30<\/button>/);
+  assert.doesNotMatch(two,/class="rirq"/);
+  // holds only: the question itself is in seconds
+  assert.match(h.ctx.cinemaReserveHtml([4],0),/^<p class="cinema-rest-rir-q">Koliko si još sekundi mogao držati\?<\/p>.*<p class="rirn">Izdržaj · 1\. serija<\/p>/s);
+  assert.match(h.ctx.cinemaReserveHtml([4],1),/<p class="rirq">Koliko si još sekundi mogao držati\? · serija 1<\/p>/);
+  // the done screen keeps its own rows
+  assert.match(h.ctx.rirRowHtml(3,true),/<div class="rirh"><b>Koliko si još mogao\?<\/b>/);
 });

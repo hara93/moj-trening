@@ -4,7 +4,7 @@
 // Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve, pressCinemaMain, openQuit } = require('./runtime.cjs');
+const { artifacts, engine, fixture: baseFixture, launch, serve, pressCinemaMain, revealRest, openQuit } = require('./runtime.cjs');
 const id = 'rest-reserve';
 const A = (p, action) => p.locator('[data-a="' + action + '"]');
 const player = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -83,22 +83,26 @@ async function run() {
     await p.locator('.sheet[data-kind="cinemaPlayback"]').waitFor({ state: 'detached' }).catch(() => {});
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
     assert.equal(step(await player(p)).kind, 'rest');
+    // 1.22.0: rest phase 1 is the clock alone; a tap on the stage reveals the row (and does not pause)
+    assert.equal(await reserve(p).count(), 0, 'rest phase 1 shows only the clock');
+    await revealRest(p);
+    assert.equal((await player(p)).clock.paused, false, 'the tap that reveals phase 2 does not pause');
     const row = reserve(p);
     await row.waitFor();
     const buttons = row.locator('.rirb button');
     assert.deepEqual(await buttons.allInnerTexts(), ['0', '1', '2', '3', '4–5', '6+']);
     assert.match(await buttons.nth(2).getAttribute('class'), /\btg\b/, 'the target RIR 2 is marked');
     assert.match(await buttons.nth(2).getAttribute('aria-label'), /\(cilj\)/);
-    assert.match(await row.innerText(), /Koliko si još mogao\?[\s\S]*S1 · rezerva nije unesena/);
+    assert.match(await row.innerText(), /^Koliko si još mogao\? · serija 1\n/);   // 1.22.0: the question names the set
     const size = await buttons.first().boundingBox();
     assert.ok(size.height >= 44 && size.width >= 44, 'full touch target: ' + JSON.stringify(size));
-    const fontSize = await row.locator('.rirh b').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+    const fontSize = await row.locator('.rirq').evaluate(node => parseFloat(getComputedStyle(node).fontSize));   // 1.22.0: .rirq
     assert.ok(fontSize >= 13, 'readable from the floor');
     await buttons.nth(1).click();
     const first = await player(p), finished = Object.keys(first.doneSteps).map(Number)[0];
     assert.equal(first.rir[finished], 1, 'one tap stores RIR 1 for the finished set');
     assert.equal(await buttons.nth(1).getAttribute('aria-pressed'), 'true');
-    assert.match(await row.innerText(), /S1 · RIR 1/);
+    assert.equal(await buttons.nth(1).evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(45, 216, 90)', 'the tap is filled green');   // 1.22.0: no status text
     await p.screenshot({ path: path.join(artifacts, 'rest-reserve-' + engine + '-393.png') });
     await buttons.nth(1).click();
     assert.equal((await player(p)).rir[finished], undefined, 'the same tap takes it back (optional)');
@@ -107,10 +111,12 @@ async function run() {
     assert.equal(await reserve(p).count(), 0, 'the row leaves with the rest');
     await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
+    await revealRest(p);   // 1.22.0
     await reserve(p).waitFor();
-    assert.match(await reserve(p).innerText(), /S2/);
+    assert.match(await reserve(p).innerText(), /serija 2/);   // 1.22.0: "· serija 2"
     await toSet(p, 3); await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
+    await revealRest(p);   // 1.22.0
     await reserve(p).locator('.rirb button').nth(3).click();
     // the hold asks in seconds, with its own target
     const afterHold = state => step(state)?.kind === 'rest' && state.liveSchedule.slice(0, state.i).reverse().find(x => x.kind === 'work' || x.kind === 'manual')?.g === 1;
@@ -120,7 +126,9 @@ async function run() {
       else await advance(p, (now.left || 1) + 0.1);
     }
     assert.equal(afterHold(await player(p)), true, 'rest after the first hold');
+    await revealRest(p);   // 1.22.0
     await reserve(p).waitFor();
+    assert.match(await reserve(p).innerText(), /^Koliko si još sekundi mogao držati\? · serija 1\n/, 'the hold asks in seconds');   // 1.22.0
     assert.deepEqual(await reserve(p).locator('.rirb button').allInnerTexts(), ['0', '5', '10', '15', '20–30', '30+']);
     assert.match(await reserve(p).locator('.rirb button').nth(2).getAttribute('class'), /\btg\b/, 'the 10 s target is marked');
     // finish and check the stored per-set fields the load model reads
@@ -138,6 +146,7 @@ async function run() {
     await toSet(p, 1); await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
     assert.equal(step(await player(p)).kind, 'rest');
+    await revealRest(p);   // 1.22.0
     assert.equal(await reserve(p).count(), 0, 'not after set 1 of 3');
     await toSet(p, 3); await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
@@ -161,6 +170,7 @@ async function run() {
     await toSet(p, 1); await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
     assert.equal(step(await player(p)).kind, 'rest');
+    await revealRest(p);   // 1.22.0
     assert.equal(await reserve(p).count(), 0, 'nothing asked during the session');
     await finishAll(p);
     const doneRows = p.locator('.rirlast .rir');
@@ -179,7 +189,9 @@ async function run() {
       if (step(now).kind === 'manual') { await pressCinemaMain(p); if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click(); }
       else await advance(p, (now.left || 1) + 0.1);
     }
+    await revealRest(p);   // 1.22.0
     await reserve(p).locator('.rir').nth(1).waitFor();
+    assert.equal(await reserve(p).locator('.cinema-rest-rir-q').innerText(), 'Koliko si još mogao?', '1.22.0: one shared question');
     assert.deepEqual(await reserve(p).locator('.rirn').allInnerTexts(), ['Bench press · 1. serija', 'Jednoručno veslanje bučicom uz oslonac · 1. serija']);
     const names = await reserve(p).locator('.rirn').evaluateAll(nodes => nodes.map(node => ({ width: node.clientWidth, font: parseFloat(getComputedStyle(node).fontSize) })));
     for (const name of names) assert.ok(name.width > 250 && name.font >= 13, 'the name has its own full-width line: ' + JSON.stringify(name));

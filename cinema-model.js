@@ -23,12 +23,20 @@
   // Parts belong to this occurrence in the authored workout. The exercise's
   // library category (and its warmup metadata) never chooses a part for it.
   // Older sparse plans retain the title until the next authored title.
+  const DEFAULT_PART='Glavni dio';
   function sections(items){
-    let label='Glavni dio';
+    let label=DEFAULT_PART;
     return (items||[]).map(item=>{
       label=String(item.section||'').trim()||label;
       return label;
     });
+  }
+  // Rest phase 1 is the time alone: the first 3 s of a rest between sets, unless a tap, a pause or a sheet revealed
+  // the rest (phase 2). The pause before the next exercise has no phases (0).
+  const REST_ALONE_S=3;
+  function restPhase(step,elapsed,revealed){
+    if(!step||step.kind!=='rest'||step.trans)return 0;
+    return revealed||!(finite(elapsed)&&elapsed<REST_ALONE_S)?2:1;
   }
   // The top bar's dashes: one per exercise. index is the current step, frac how far it has run (0–1). Exercises
   // whose steps interleave (a superset) share their dashes and the dot crosses them step by step, so it only moves
@@ -88,5 +96,5 @@
     });
     return {total,complete,reps,seconds,volume,percent:total?Math.round(complete/total*100):0};
   }
-  return Object.freeze({prepare,rest,summary,sections,upcoming,progress});
+  return Object.freeze({prepare,rest,summary,sections,restPhase,upcoming,progress});
 });
