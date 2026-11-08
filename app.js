@@ -487,7 +487,7 @@ function cleanSettings(s){
   if (Array.isArray(s.progressPinnedIds)) o.progressPinnedIds = [...new Set(s.progressPinnedIds.filter(id => !badKey(id)))].slice(0,3);
   else delete o.progressPinnedIds;
   const int = (k, lo, hi) => { if (k in o && o[k] !== null && !(Number.isInteger(o[k]) && o[k] >= lo && o[k] <= hi)) delete o[k]; };
-  int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3); int('switchSec', 0, 3600);
+  int('ballN', 0, 7); int('matchDay', -1, 6); int('progN', 2, 3); int('switchSec', 0, 3600); int('reserveEntry', 0, 2);
   if (typeof s.vibration !== 'boolean') delete o.vibration;
   if ('morningChecks' in s) o.morningChecks = TodayView.cleanChecks(s.morningChecks);
   if ('planDates' in s) o.planDates = MonthPlan.clean(s.planDates);
@@ -2754,11 +2754,13 @@ function workoutCinemaHtml() {
   const pause=P.paused&&!S.sheet, setLabel='Serija '+(step.set||1)+' od '+item.sets, name=e?.name||P.title;
   const side=v.st.kind==='switch'||PlayerDose.splitSide(v.st)?v.st.side:'';
   const journal=cinemaFooter(v,step,item,name,preparing);
+  const reserveAt=!editingPrep&&!pause&&v.st.kind==='rest'?cinemaReserveStep():-1;
   return WorkoutView.cinema({phase:v.st.kind==='rest'?'rest':['prep','ready','switch'].includes(v.st.kind)?'ready':'work',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
     subtitle:preparing?setLabel:parts[active]+' · '+setLabel+(side?' · '+side:''),prepQuantity:preparing?(timed?dose.sec+' s':dose.reps+'×'):'',
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml,infoHtml:'<button type="button" class="ib" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:preparing?'':metrics,restAdjustHtml:!editingPrep&&v.st.kind==='rest'?'<button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button>':'',
-    nextHtml:next,prepHtml:editingPrep||preStart&&!S.sheet?cinemaPrepHtml(v.st,editingPrep):'',pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:journal});
+    nextHtml:next,prepHtml:editingPrep||preStart&&!S.sheet?cinemaPrepHtml(v.st,editingPrep):'',pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:journal,
+    reserveHtml:reserveAt>=0?rirRowHtml(reserveAt,P.steps[reserveAt].g!==active):''});
 }
 function cinemaJournalTotals({reps, volume, seconds}) {
   return reps+' pon. · '+Math.round(volume)+' kg × pon.'+(seconds?' · '+fmt(seconds)+' rada':'');
@@ -4140,13 +4142,14 @@ function tick(){
   const st = P.steps[P.i]; if (!st) return;
   if (P.mode==='ex' && (st.kind==='ready' || st.dur===0&&!isWork(st))) {enterStep(P.i+1);render();return;}
   if ((st.dur || st.kind==='manual') && !cinemaRecordedStep()) {
-    const manual=st.kind==='manual', whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
-    if (whole <= 3 && whole >= 1 && P.lastBeep !== whole) {
+    // a rep set ends on its own only with a set timer (Tajmer serije); otherwise it waits for the tap
+    const manual=st.kind==='manual', timer=!manual||repSetSeconds(st.it||{})!==null, whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
+    if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole) {
       P.lastBeep = whole;
       if (P.mode === 'ex') workoutSignal('countdown');
       else beep(740, 120, 0.14);
     }
-    if (whole <= 0) {
+    if (whole <= 0 && timer) {
       if (manual) A.workoutSetDone({j:st.g,set:st.set,step:P.i,automatic:true});
       else timeUp();
       return;
@@ -5645,6 +5648,15 @@ function rirStep(){
   if (k < 0 || !P.doneSteps[k] || !setEnd(P.steps[k]) || (!P.done && isWork(P.steps[i]) && rest)) return -1;
   const fx = stepFx(P.steps[k]); return fx && LM.ASK[fx.pat] ? k : -1;
 }
+// 1.21: the set just finished asks for its reserve on the rest screen, following "Upis rezerve" (reserveEntry):
+// 0 after every work set (default), 1 only after the last set of an exercise, 2 only at the end (done screen)
+const RESERVE_ENTRY = ['Nakon svake serije', 'Samo zadnja serija vježbe', 'Na kraju'];
+const reserveEntry = () => [0, 1, 2].includes(S.settings.reserveEntry) ? S.settings.reserveEntry : 0;
+function cinemaReserveStep(){
+  const mode = reserveEntry(), k = mode === 2 ? -1 : rirStep(), st = k >= 0 && P.steps[k];
+  if (!st) return -1;
+  return mode === 1 && st.set !== (st.ss ? st.rounds : st.it.sets) ? -1 : k;
+}
 function failedReserveStep(k){
   const st=P && P.steps[k];
   if (!st || !P.done || !P.answers || P.answers[st.g] !== false || !st.it || st.it.measure === 'time') return false;
@@ -5659,7 +5671,7 @@ function rirSetPts(k){
 }
 function rirRowHtml(k, other){
   const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
-  const failed=failedReserveStep(k), def = time ? fx.rir * LM.HOLD_S : fx.rir, v = failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null;
+  const goal = it[time ? 'targetSir' : 'targetRir'], failed=failedReserveStep(k), def = Number.isFinite(goal) ? goal : time ? fx.rir * LM.HOLD_S : fx.rir, v = failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null;
   let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
   const q = failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', what = 'S' + st.set + (v==null?' · rezerva nije unesena':time?' · SIR '+v+' s':' · RIR '+v);
   // one header line: the question; on the right the set and its points, after another exercise's name (a rest before the next
@@ -5667,7 +5679,7 @@ function rirRowHtml(k, other){
   return '<section class="rir" aria-label="' + esc((time ? 'Koliko si još mogao držati, u sekundama?' : q) + ' ' + (other ? st.e.name + ', ' : '') + 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova') + '"><div class="rirh"><b>' + q + '</b><span>' +
     (other ? '<i>' + esc(st.e.name) + '</i><i class="sep"> · </i>' : '') + '<em>' + esc(what) + '</em></span></div>' +
     '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
-      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '"'+(failed?' disabled':'')+' class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? ' (uobičajeno)' : '') + '">' + txt[x] + '</button>').join('') +
+      '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '"'+(failed?' disabled':'')+' class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? (Number.isFinite(goal) ? ' (cilj)' : ' (uobičajeno)') : '') + '">' + txt[x] + '</button>').join('') +
     '</div></section>';
 }
 function saveRecordedSet(index, reps, reserve){
@@ -6226,6 +6238,7 @@ function sheetHtml(){
       (wakeOk ? '' : note('Ovaj uređaj ne može držati ekran upaljenim tijekom treninga. Na iPhoneu produlji automatsko zaključavanje: Postavke › Zaslon i svjetlina › Automatsko zaključavanje.')) +
       '<p class="label" style="padding:12px 0 0">Priprema pri promjeni strane</p>' + playerTimingChoices('switchSec',SIDE_PREP_CHOICES) +
       '<p class="label" style="padding:0">Pauza između vježbi</p>' + playerTimingChoices('transSec',[5,10,15,20]) +
+      '<p class="label" style="padding:0">Upis rezerve (RIR)</p><div class="chips wrap" style="margin:8px 0 14px">' + RESERVE_ENTRY.map((label, value) => '<button class="chip" data-a="setSetting" data-k="reserveEntry" data-v="' + value + '" aria-pressed="' + (reserveEntry() === value) + '">' + label + '</button>').join('') + '</div>' +
       '<p style="font-size:13px;color:var(--text-2);margin:0">Promjene trajanja prijelaza vrijede od sljedećeg pokretanja.</p>';
   } else if (s.kind === 'quit') {
     const any = P && anyDone();

@@ -29,6 +29,7 @@
     {"name": "sheet-gesture", "title": "Povlačenje prozora"},
     {"name": "chart-motion", "title": "Animacija grafova"},
     {"name": "prestart-edit", "title": "Uređivanje prije starta"},
-    {"name": "partial-session", "title": "Djelomičan trening"}
+    {"name": "partial-session", "title": "Djelomičan trening"},
+    {"name": "rest-reserve", "title": "Rezerva na odmoru"}
   ]
 }

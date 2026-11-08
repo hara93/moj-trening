@@ -96,3 +96,20 @@ test('field repeat retains explicit season/full dose and rebuilds the selected d
     assert.equal(started.cfg.dose,dose);assert.equal(started.cfg.steps[0].seasonDose,dose==='season');assert.equal(started.repeating,true);
   }
 });
+test('the rest screen asks for the finished set, following Upis rezerve; rep sets wait without a set timer',()=>{
+  const cut=(a,b)=>{const i=source.indexOf(a),j=source.indexOf(b,i);assert.ok(i>=0&&j>i,a);return source.slice(i,j);};
+  const ctx={S:{settings:{}},P:{steps:[{g:0,set:1,it:{sets:3}},{g:0,set:3,it:{sets:3}},{g:1,set:2,ss:{L:'A'},rounds:2,it:{sets:2}}]},rirStep:()=>ctx.k};
+  require('node:vm').createContext(ctx);
+  require('node:vm').runInContext(cut('const RESERVE_ENTRY','function failedReserveStep(k){')+';globalThis.ask=cinemaReserveStep;globalThis.mode=reserveEntry;globalThis.labels=RESERVE_ENTRY;',ctx);
+  assert.deepEqual([...ctx.labels],['Nakon svake serije','Samo zadnja serija vježbe','Na kraju']);
+  for(const [setting,k,expected] of [[undefined,0,0],[0,1,1],[1,0,-1],[1,1,1],[1,2,2],[2,1,-1],[7,0,0]]){
+    ctx.S.settings.reserveEntry=setting;ctx.k=k;assert.equal(ctx.ask(),expected,JSON.stringify([setting,k]));
+  }
+  ctx.k=-1;ctx.S.settings.reserveEntry=0;assert.equal(ctx.ask(),-1);
+  assert.match(cut('function cleanSettings(s){','const SETTINGS_BASE'),/int\('reserveEntry', 0, 2\)/);
+  const tick=cut('function tick(){','\n}');
+  assert.match(tick,/timer=!manual\|\|repSetSeconds\(st\.it\|\|\{\}\)!==null/);
+  assert.match(tick,/if \(whole <= 0 && timer\)/,'no automatic set end without Tajmer serije');
+  assert.match(cut('function workoutCinemaHtml() {','\n}'),/reserveHtml:reserveAt>=0\?rirRowHtml\(reserveAt,/);
+  assert.match(cut('function rirRowHtml(k, other){','\n}'),/Number\.isFinite\(goal\) \? goal :/,'the item target is the marked chip');
+});

@@ -168,6 +168,7 @@
       (vm.infoHtml ? '<div class="workout-cinema-info">' + html(vm.infoHtml) + '</div>' : '') +
       (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') + html(vm.pauseHtml) + '</div>' +
       '<div class="workout-cinema-bottom">' +
+      (vm.reserveHtml ? '<div class="workout-cinema-reserve">' + html(vm.reserveHtml) + '</div>' : '') +
       (vm.restAdjustHtml ? '<div class="workout-cinema-rest-adjust">' + html(vm.restAdjustHtml) + '</div>' : '') +
       (vm.metricsHtml ? '<div class="workout-cinema-metrics">' + html(vm.metricsHtml) + '</div>' : '') +
       (vm.controlsHtml ? '<div class="workout-cinema-controls">' + html(vm.controlsHtml) + '</div>' : '') +
