@@ -24,6 +24,8 @@ async function run(page,context,url){
     {historyId:'bin-last',kind:'team',teamType:'training',name:'Zadnji trening u razdoblju',at:at('2026-10-10T23:59:59','+02:00'),secs:900},
     {historyId:'bin-out',kind:'protocol',name:'Sljedeće razdoblje',at:at('2026-10-11T00:00:00','+02:00'),secs:100,srpe:5}
   ];
+  // the day buttons belong to the 7-day window, picked as the user would (the default is 3 months since 1.21)
+  data.settings.analysisPeriod='7d';data.settings.analysisPeriodChosen=true;
   await page.clock.setFixedTime(new Date('2026-11-05T12:00:00+01:00'));
   await page.goto(url,{waitUntil:'domcontentloaded'});
   await action(page,'dataSheet').click();
