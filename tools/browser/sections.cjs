@@ -100,7 +100,8 @@ async function run(p,width){
   assert.equal(snapshot.clock.paused,true);
   assert.deepEqual(snapshot.items.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);
   await p.reload({waitUntil:'domcontentloaded'});await a(p,'resumeGo').click();
-  assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Snaga ·/);
+  assert.match(await p.locator('.workout-cinema-heading p').textContent(),/^Snaga ·/);
+  assert.equal(await p.locator('.cinema-pause-layer').isVisible(),true);
   const restored=await player(p);assert.deepEqual(restored.items.map(x=>x.section),snapshot.items.map(x=>x.section));
   assert.equal(Object.keys(restored.doneSteps).length,0);assert.equal(restored.clock.paused,true);
   await openQuit(p);await a(p,'quitDiscard').click();assert.deepEqual((await data(p)).log,[]);

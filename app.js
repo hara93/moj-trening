@@ -2590,7 +2590,7 @@ function cinemaPrepHtml(step, editing){
     '<div class="cinema-prep-label"><label id="cinema-prep-label" for="cinema-prep-range">Dodaj vrijeme za pripremu</label><output for="cinema-prep-range">+'+S.sheet.seconds+' s</output></div>'+
     '<div class="cinema-prep-track" style="--prep-percent:'+selected*25+'%"><div class="cinema-prep-rail" aria-hidden="true">'+CINEMA_PREP_TIMES.map(()=>'<i></i>').join('')+'</div>'+
     '<input type="range" id="cinema-prep-range" min="0" max="4" step="1" value="'+selected+'" aria-valuetext="'+S.sheet.seconds+' sekundi"></div>'+
-    '<div class="cinema-prep-picks">'+CINEMA_PREP_TIMES.map(n=>'<button type="button" data-a="cinemaPrepPick" data-v="'+n+'" aria-pressed="'+(S.sheet.seconds===n)+'" aria-label="Dodaj '+n+' sekundi">'+n+' s</button>').join('')+'</div>'+
+    '<div class="cinema-prep-picks">'+CINEMA_PREP_TIMES.map(n=>'<button type="button" data-a="cinemaPrepPick" data-v="'+n+'" aria-pressed="'+(S.sheet.seconds===n)+'" aria-label="Dodaj '+n+' sekundi">+'+n+' s</button>').join('')+'</div>'+
     '<button type="button" class="cinema-prep-done" data-a="cinemaPrepApply">Gotovo</button></section>';
 }
 function cinemaPrepSelect(seconds){
@@ -2605,11 +2605,11 @@ function cinemaPrepSelect(seconds){
   editor.querySelectorAll('[data-a="cinemaPrepPick"]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.v)===seconds)));
 }
 function cinemaPauseHtml(recorded){
-  const transport = (dir,label,icon) => '<button type="button" class="cinema-pause-jump" data-a="cinemaPauseJump" data-d="'+dir+'" aria-label="'+label+'">'+icon+'<small>Povuci</small></button>';
+  const transport = (dir,label,caption,icon) => '<button type="button" class="cinema-pause-jump" data-a="cinemaPauseJump" data-d="'+dir+'" aria-label="'+label+'"><strong>'+caption+'</strong><small>'+icon+'Povuci</small></button>';
   return '<div class="cinema-pause-layer"><section class="cinema-pause-actions" aria-labelledby="cinema-pause-title">'+
-    '<h2 id="cinema-pause-title">Pauzirano</h2><div class="cinema-pause-row">'+transport(-1,'Prethodna vježba',I.prev)+
+    '<h2 id="cinema-pause-title">Pauzirano</h2><div class="cinema-pause-row">'+transport(-1,'Prethodna vježba','Prethodna',I.prev)+
     '<button type="button" class="cinema-pause-resume" data-a="cinemaResume"><span aria-hidden="true">'+I.play+'</span>Nastavi</button>'+
-    transport(1,'Sljedeća vježba',I.next)+'</div>'+(recorded?'':'<button type="button" class="cinema-pause-replay" data-a="cinemaReplay">'+WorkoutView.icon('rotate-ccw')+'Ponovi<small>Dvostruki dodir</small></button>')+'</section></div>';
+    transport(1,'Sljedeća vježba','Sljedeća',I.next)+'</div>'+(recorded?'':'<button type="button" class="cinema-pause-replay" data-a="cinemaReplay">'+WorkoutView.icon('rotate-ccw')+'Ponovi<small>Dvostruki dodir</small></button>')+'</section></div>';
 }
 function cinemaMenuControls(){
   const v=curView(), recorded=cinemaRecordedStep(), paused=P.dosePause?.wasPaused??P.paused;

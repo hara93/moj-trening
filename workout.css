@@ -642,7 +642,7 @@ span.workout-exercise-open{cursor:default}
 .cinema-prep-picks{display:flex;justify-content:space-between;margin:-4px -10px 2px}
 .cinema-prep-picks button{min-height:44px;min-width:44px;padding:0;border:0;border-radius:10px;background:transparent;color:#D2DCDE;font-size:12px;font-variant-numeric:tabular-nums}
 .cinema-prep-picks button[aria-pressed=true]{color:#fff;font-weight:750}
-.cinema-prep-done{display:block;margin:auto;min-width:84px}
+.cinema-prep-done{display:block;margin:auto;width:min(190px,60%)}
 .workout-cinema.has-pause-overlay .workout-cinema-stage{touch-action:none}
 .workout-cinema.has-pause-overlay :is(.workout-cinema-heading,.workout-cinema-next){visibility:hidden}
 .workout-cinema.has-pause-overlay :is(.workout-cinema-progress,.workout-cinema-metrics,.workout-cinema-rest-adjust,.cinema-prep-entry){opacity:.35}
@@ -653,7 +653,9 @@ span.workout-exercise-open{cursor:default}
 .cinema-pause-actions button{display:grid;place-items:center;gap:5px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:13px;background:transparent;color:#F3F7F5;pointer-events:auto;font-size:13px;font-weight:700}
 .cinema-pause-resume>span{display:grid;place-items:center;width:clamp(66px,24vw,96px);aspect-ratio:1;border:1px solid #FFFFFF3B;border-radius:50%;background:#30363ADB;box-shadow:0 4px 24px #0002}
 .cinema-pause-resume svg{width:42%;height:42%;fill:currentColor;transform:translateX(3%)}
-.cinema-pause-jump svg{width:34px;height:34px}
+.cinema-pause-jump strong{font-size:12px;text-transform:uppercase}
+.cinema-pause-jump small{display:flex;align-items:center;gap:4px}
+.cinema-pause-jump svg{width:15px;height:15px}
 .cinema-pause-actions button small{color:var(--cinema-accent);font-size:10px;font-weight:650}
 .cinema-pause-actions .cinema-pause-replay{margin:14px 0 0 5%;gap:2px}
 .cinema-pause-replay .workout-icon{width:23px!important;height:23px!important}
