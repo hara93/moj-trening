@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.20.23 — 8. 11. 2026.
+
+- Vremensku seriju možeš završiti prije isteka iz playera ili Dnevnika. Kod vježbi po stranama player prikazuje aktivnu stranu, a Dnevnik bilježi svaku zasebno.
+- Ponavljanja, sekunde i kilograme biraš istim kotačićem. Okreni ga do željene vrijednosti i dodirni broj za potvrdu i povratak u player.
+
 ## 1.20.22 — 8. 11. 2026.
 
 - Ponavljanja i težinu biraš okomitim kotačićima u playeru. Izbornik se otvara uz tri točkice, a priprema i pauza prikazuju se preko demonstracije.

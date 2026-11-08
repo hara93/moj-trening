@@ -531,7 +531,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-next strong{font-size:13px;font-weight:550;line-height:1.35}
 .workout-cinema-next small{display:block;font-size:10px;line-height:1.5;color:#AFC5CD}
 .workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(#191D2500,#191D2599 25%,#191D25EB 50%,var(--cinema-bg) 78%)}
-.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);align-items:end;min-height:104px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(29px,9.6vw,41px);--cinema-clock-size:clamp(41px,14vw,60px)}
+.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(29px,9.6vw,41px);--cinema-clock-size:clamp(41px,14vw,60px)}
 .workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0;min-height:72px;padding:4px 1px 7px;border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center}
 .workout-cinema-metric strong,.cinema-wheel-number,.workout-cinema-clock .n{font-weight:900;line-height:1;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
 .workout-cinema-metric strong,.cinema-wheel-number{font-size:var(--cinema-side-size);transform:scaleX(.82)}
@@ -539,20 +539,23 @@ span.workout-exercise-open{cursor:default}
 .cinema-metric-label svg{flex:none;width:13px;height:13px}
 .cinema-weight-value{display:flex;align-items:baseline;justify-content:center;gap:1px;white-space:nowrap}
 .cinema-weight-value strong{font-size:min(var(--cinema-side-size),8.3vw)}
-.cinema-weight-value.is-wide strong,.cinema-wheel-number.is-wide{font-size:calc(var(--cinema-side-size)*.66)}
+.cinema-weight-value.is-wide strong{font-size:calc(var(--cinema-side-size)*.66)}
 .cinema-weight-value small{font-size:10px;font-weight:750}
 .cinema-weight-add{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:1px solid #F4F5F629;background:#2E3541B3}
 .cinema-weight-add svg{width:20px;height:20px}
 .workout-cinema-metric:disabled,.cinema-weight-unavailable{opacity:.55;cursor:default}
-.cinema-number-picker{--wheel-row:34px;align-self:end;min-width:0;height:calc(3 * var(--wheel-row));mask-image:linear-gradient(transparent,#000 24%,#000 76%,transparent)}
+.cinema-number-picker{--wheel-row:40px;align-self:end;min-width:0;height:calc(3 * var(--wheel-row));margin-bottom:-10px;mask-image:linear-gradient(transparent,#000 25%,#000 75%,transparent)}
 .cinema-number-wheel{height:100%;padding-block:var(--wheel-row);overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:none;touch-action:pan-y;user-select:none}
 .cinema-number-wheel::-webkit-scrollbar{display:none}
 .cinema-number-wheel.is-dragging{scroll-snap-type:none;cursor:grabbing}
 .cinema-number-wheel:focus-visible{outline-offset:-3px}
-.workout-cinema .cinema-wheel-number{display:block;width:100%;height:var(--wheel-row);padding:0 2px;border:0;border-radius:8px;background:transparent;text-align:center;scroll-snap-align:center;opacity:.43;touch-action:pan-y}
-.cinema-wheel-number.is-selected{opacity:1}
-.cinema-wheel-number:not(.is-selected){font-size:calc(var(--cinema-side-size)*.76)}
-.cinema-wheel-number.is-wide:not(.is-selected){font-size:calc(var(--cinema-side-size)*.60)}
+.workout-cinema .cinema-wheel-number{display:block;width:100%;height:var(--wheel-row);padding:0 2px;border:0;border-radius:8px;background:transparent;text-align:center;scroll-snap-align:center;opacity:.48;touch-action:pan-y}
+.cinema-wheel-number.is-selected{opacity:1;font-size:calc(var(--cinema-side-size)*1.13)}
+.cinema-wheel-number:not(.is-selected){font-size:calc(var(--cinema-side-size)*.70)}
+.cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg) scaleX(.82)}
+.cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg) scaleX(.82)}
+.cinema-wheel-number.is-wide.is-selected{font-size:calc(var(--cinema-side-size)*.80)}
+.cinema-wheel-number.is-wide:not(.is-selected){font-size:calc(var(--cinema-side-size)*.58)}
 .workout-cinema-clock{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;align-self:stretch;gap:3px;width:100%;min-width:0;margin:0;padding:4px 0 7px;border:0;border-radius:14px;background:transparent;color:#fff}
 .cinema-clock-arc{position:absolute;inset:auto 0 4px;width:100%;height:auto;overflow:visible;pointer-events:none;fill:none;stroke:#A9B6BD55;stroke-width:3.5}
 #cinema-clock-fill{stroke:var(--cinema-arc)}
@@ -597,9 +600,9 @@ span.workout-exercise-open{cursor:default}
   .workout-cinema-notice{padding:3px 16px;font-size:10px}
   .workout-cinema-info{top:68px}
   .workout-cinema-bottom{padding:2px 13px 8px}
-  .workout-cinema-metrics{min-height:90px;margin-bottom:3px;--cinema-clock-size:clamp(37px,13.6vw,48px)}
+  .workout-cinema-metrics{min-height:105px;margin-bottom:3px;--cinema-clock-size:clamp(37px,13.6vw,48px)}
   .workout-cinema-metric{min-height:64px}
-  .cinema-number-picker{--wheel-row:30px}
+  .cinema-number-picker{--wheel-row:35px;margin-bottom:-7px}
   .workout-cinema-journal{margin-top:9px}
   .cinema-work-set{min-height:52px;padding-block:3px}
   .workout-cinema-journal>button{min-height:50px;padding:9px 11px}

@@ -28,10 +28,17 @@
   function validRepSetSeconds(seconds) {
     return Number.isInteger(seconds) && seconds >= 1 && seconds <= 3600;
   }
+  function validActualSeconds(seconds) {
+    return Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600;
+  }
   const repSetSecondsError = 'Vrijeme serije mora biti cijeli broj od 1 do 3.600 sekundi.';
   function recordedAt(step, item) {
     const dose = at(step.it || item, step.set);
     if (step.kind === 'manual' && validActualReps(step.actualReps)) dose.reps = step.actualReps;
+    if (step.kind === 'work') {
+      if (validActualSeconds(step.actualSec)) dose.sec = step.actualSec;
+      else if (finite(step.dur)) dose.sec = step.dur;
+    }
     return dose;
   }
   function items(input) {
@@ -193,10 +200,11 @@
       index
     }));
 
-    // Completed evidence and the current timer survive literally. An unfinished
-    // manual set may receive its edited dose without becoming a second set.
+    // Preserve the current timed step unless the player explicitly retimes it.
+    // Completed steps always keep their original dose.
     const updatedCurrent = generated.find(step => key(step) === currentKey);
-    const current = !options.afterPassed && currentStep && currentStep.kind === 'manual' && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
+    const editableCurrent = currentStep?.kind === 'manual' || options.retimeCurrent && currentStep?.kind === 'work';
+    const current = !options.afterPassed && editableCurrent && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
     // Rebuilding again after a removal can generate a rest for an earlier
     // round that ended differently before the exercise was removed.
     const after = options.afterPassed || player.liveBaseItems
@@ -266,6 +274,7 @@
           reps: dose.reps,
           kg: dose.kg,
           sec: dose.sec,
+          seconds: 0,
           sides: 0,
           reserve: null,
           seen: new Set()
@@ -276,6 +285,7 @@
       if (!row.seen.has(side)) {
         row.seen.add(side);
         row.sides += step.kind === 'manual' ? expectedSides : 1;
+        if (step.kind === 'work') row.seconds += dose.sec;
       }
       if (step.side !== 'Lijeva strana' && player.rir && player.rir[index] != null) {
         row.reserve = player.rir[index];
@@ -284,6 +294,10 @@
     return Array.from(bySet.values()).sort((a, b) => a.set - b.set).map(row => {
       delete row.seen;
       row.sides = Math.min(expectedSides, row.sides);
+      // History stores seconds per recorded side. Keep the total exact when
+      // the left and right holds have different durations.
+      if (item.measure === 'time' && row.sides) row.sec = row.seconds / row.sides;
+      delete row.seconds;
       return row;
     });
   }
@@ -301,17 +315,23 @@
       const row = result[step.set - 1];
       if (step.g !== group || !work(step) || !row) return;
       let summary = seen.get(row.set);
-      if (!summary) { summary = {last:index, done:false}; seen.set(row.set,summary); }
+      if (!summary) { summary = {last:index, done:false, seconds:0, sides:0}; seen.set(row.set,summary); }
       summary.last = index;
       const done = !!player.doneSteps?.[index];
       if (done) row.dose = recordedAt(step, item);
       else if (index === player.i) row.dose = at(step.it || item,row.set);
       if (index === player.i && !player.done) {
         row.current = true;
-        if (step.kind === 'manual' && !done && !player.paused) row.step = index;
+        if (!done && !player.paused) row.step = index;
       }
       if (!done) return;
       summary.done = true;
+      if (step.kind === 'work') {
+        const seconds = row.dose.sec;
+        summary.seconds += seconds; summary.sides++;
+        if (step.side === 'Lijeva strana') summary.leftSec = seconds;
+        if (step.side === 'Desna strana') summary.rightSec = seconds;
+      }
       if (item.sides) {
         if (step.kind === 'manual' || step.side === 'Lijeva strana') row.left = true;
         if (step.kind === 'manual' || step.side === 'Desna strana') row.right = true;
@@ -323,6 +343,12 @@
       if (entry?.done) row.state = !item.sides || (row.left && row.right) ? 'done' : 'partial';
       else if (row.current) row.state = 'active';
       else if (entry && (entry.last < player.i || player.done)) row.state = 'skipped';
+      if (row.state === 'done' && entry?.sides) row.dose.sec = entry.seconds / entry.sides;
+      const planned = at(item,row.set).sec;
+      if (entry && [entry.leftSec,entry.rightSec].some(seconds => seconds !== undefined && seconds !== planned)) {
+        row.leftSec = entry.leftSec;
+        row.rightSec = entry.rightSec;
+      }
     }
     return result;
   }
@@ -336,6 +362,8 @@
       return false;
     }
     var current = p.items[j];
+    if (current.measure === 'time' && p.steps.some((step,index) => step.kind === 'work' && step.g === j &&
+      p.doneSteps[index] && recordedAt(step,current).sec !== at(baseline,step.set).sec)) return true;
     return current.sets !== (baseline.sets || 1) || actual.some(r => r.set > (baseline.sets || 1) || ['reps', 'kg', 'sec'].some(k => (k !== 'sec' || current.measure === 'time') && (k !== 'reps' || current.measure !== 'time') && r[k] !== at(baseline, r.set)[k]));
   }
   function logDose(p, j, answer) {
@@ -397,6 +425,7 @@
       var st = copy(row),
         g = st.g;
       if (st.kind !== 'manual' || !validActualReps(st.actualReps)) delete st.actualReps;
+      if (st.kind !== 'work' || !validActualSeconds(st.actualSec)) delete st.actualSec;
       if (st.kind !== 'manual' || !finite(st.targetSec) || st.targetSec < 1 || st.targetSec > 3600) delete st.targetSec;
       if (!Number.isInteger(g) || g < 0 || g >= input.length) {
         return null;

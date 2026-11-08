@@ -27,7 +27,7 @@ test('only the current manual step can be confirmed and reserve 0 remains visibl
 });
 test('two different left holds remain two partial rows, and a right-side reserve stays with its ordinal',()=>{
   const p=state();p.doneSteps={2:1,6:1};p.i=7;
-  let rows=D.checklist(plank,p,1);assert.deepEqual(rows.map(r=>[r.left,r.right,r.state,r.step]),[[true,false,'partial',null],[true,false,'partial',null]]);
+  let rows=D.checklist(plank,p,1);assert.deepEqual(rows.map(r=>[r.left,r.right,r.state,r.step]),[[true,false,'partial',null],[true,false,'partial',7]]);
   assert.equal(rows[1].current,true);
   p.doneSteps[7]=1;p.rir[7]=5;p.i=8;
   rows=D.checklist(plank,p,1);assert.deepEqual(rows.map(r=>[r.dose.sec,r.state,r.reserve]),[[15,'partial',null],[20,'done',5]]);
@@ -36,4 +36,16 @@ test('two different left holds remain two partial rows, and a right-side reserve
 test('one manual confirmation credits both sides and stale or revisited completed rows cannot be checked again',()=>{
   const it={...bench,sides:true};const p=state();p.items[0]=it;p.steps[1].it=it;p.doneSteps[1]=1;
   const r=D.checklist(it,p,0)[0];assert.deepEqual([r.left,r.right,r.state,r.step],[true,true,'done',null]);
+});
+test('confirmed holds keep the actual seconds per side and history totals the recorded time',()=>{
+  const p=state();p.i=5;p.doneSteps={2:1,4:1};
+  p.steps[2]={...p.steps[2],dur:15,actualSec:4};p.steps[4]={...p.steps[4],dur:20};
+  const restored=D.restoreSteps(D.packSteps(p.steps),p.items,id=>({id}));
+  p.steps=restored;
+  const [row]=D.checklist(plank,p,1);
+  assert.deepEqual([row.state,row.leftSec,row.rightSec,row.dose.sec],['done',4,20,12]);
+  const {fields}=D.logDose(p,1,'partial');
+  assert.deepEqual(fields.secList,[12]);assert.deepEqual(fields.sideCounts,[2]);
+  const History=require('../history-model.js');
+  assert.equal(History.timeTotal({...plank,...fields}),24);
 });
