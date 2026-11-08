@@ -260,16 +260,26 @@ async function main() {
       await page.locator('#starting-load-form button[type="submit"]').click();
     }
     await page.locator('.workout-cinema').waitFor();
-    const nextCard = page.locator('.workout-cinema-next:has(>.cinema-next)');
-    await nextCard.waitFor();
-    const nextOpacity = await nextCard.evaluate(node=>Number(/,\s*([\d.]+)\)$/.exec(getComputedStyle(node).backgroundColor)?.[1]));
-    assert.equal(nextOpacity,.3,'next exercise card has a 70% transparent background');
-    assert.equal(await nextCard.evaluate(node=>getComputedStyle(node).backdropFilter),'none','the first card keeps the exercise image sharp');
-    report.checks.nextCardOpacity=nextOpacity;
-    await page.locator('.workout-cinema .cinema-single-media img').evaluate(img=>img.decode());
+    // 1.22.0: the gesture guide opens once, on the first start (this fresh context has no playerGuideSeen)
+    const guide=page.locator('.sheet.cinema-guide-sheet');
+    await guide.waitFor();
+    assert.equal(await guide.locator('li').count(),4,'the guide lists the four gestures');
+    await guide.locator('[data-a="cinemaGuideDone"]').click();
+    await guide.waitFor({state:'detached'});
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('mt.settings')||'{}').playerGuideSeen),true,'the guide is remembered in the settings');
+    report.checks.playerGuideFirstStart=true;
+    // 1.22.0: dash progress and the compressed system numerals (or the narrowed fallback where the font has no width axis)
+    assert.equal(await page.locator('.workout-cinema .cinema-dashes[role="progressbar"]').count(),1,'dash progress');
+    const numerals=await page.locator('#cinema-percent').evaluate(node=>{const cs=getComputedStyle(node);return {stretch:cs.fontStretch,weight:cs.fontWeight,transform:cs.transform,fallback:document.documentElement.classList.contains('no-font-width')};});
+    assert.ok(numerals.fallback||(numerals.stretch==='40%'&&numerals.weight==='900'&&numerals.transform==='none'),'player numerals: '+JSON.stringify(numerals));
+    report.checks.playerNumerals=numerals;
+    const media=page.locator('.workout-cinema .cinema-single-media img').first();
+    if(await media.count())await media.evaluate(img=>img.decode().catch(()=>{}));
     await page.screenshot({path:path.join(artifacts,'published-cinema-player-375.png'),animations:'disabled'});
     report.checks.cinematicPlayer=true;
-    await page.locator('[data-a="playDoseEdit"]').first().click();
+    // 1.22.0: the dose editor opens from the journal's open card ("Uredi"); the next-set card shows only in rest
+    await openJournal(page,true);
+    await page.locator('.cinema-journal [data-a="playDoseEdit"]').first().click();
     await page.locator('#play-dose-form').waitFor();
     assert.ok(await page.locator('#play-dose-form input').count()>=2);
     await page.screenshot({path:path.join(artifacts,'published-release-dose-proof.png'),animations:'disabled'});
