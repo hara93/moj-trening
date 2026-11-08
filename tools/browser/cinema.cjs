@@ -123,7 +123,7 @@ async function portraitPresentation(p, width, height) {
   const transport=p.locator('.workout-cinema .cinema-controls,.workout-cinema .cinema-secondary,.workout-cinema [data-a="cinemaMain"]');
   assert.equal(await transport.count(),0,'the player has no bottom transport row during prep');
   const readyFade=await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node,'::after').backgroundImage);
-  assert.match(readyFade,/rgba\(25, 29, 37, 0\) 16%/,'the upper fade clears before most of the first card');
+  assert.match(readyFade,/rgba\(25, 29, 37, 0\) 32%/,'prep keeps the work screen\'s upper shade');   // 1.22.0: no prep card any more; the set label sits deeper in the photo and needs the shade (was 16 %)
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-prep-'+width+'x'+height+'.png')});
   await p.locator('.cinema-prep-trigger').tap();
   const prep=p.locator('.cinema-prep-editor');
