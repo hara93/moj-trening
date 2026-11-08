@@ -152,22 +152,24 @@
     var phase = ['ready', 'rest', 'work'].indexOf(vm.phase) === -1 ? 'work' : vm.phase;
     // Every interactive fragment is supplied by the app. This renderer never
     // advances a phase, estimates a dose or invents a completion value.
-    return '<div class="view workout-cinema is-' + phase + (vm.paused ? ' is-paused' : '') + '" data-phase="' + phase + '"' +
+    return '<div class="view workout-cinema is-' + phase + (vm.paused ? ' is-paused' : '') + (vm.pauseHtml ? ' has-pause-overlay' : '') + '" data-phase="' + phase + '"' +
       (vm.exerciseId ? ' data-ex-id="' + esc(vm.exerciseId) + '"' : '') + '>' +
       '<header class="workout-cinema-topbar">' + html(vm.topbarHtml) +
       (vm.menuHtml ? '<div class="workout-cinema-menu">' + html(vm.menuHtml) + '</div>' : '') + '</header>' +
       (vm.progressHtml ? '<div class="workout-cinema-progress">' + html(vm.progressHtml) + '</div>' : '') +
-      '<div class="workout-cinema-heading">' +
-      (vm.subtitle ? '<p>' + esc(vm.subtitle) + '</p>' : '') + '<h1>' + esc(vm.name || 'Trening') + '</h1></div>' +
+      '<div class="workout-cinema-heading' + (vm.prepQuantity ? ' is-preparing' : '') + '">' +
+      (vm.subtitle ? '<p>' + esc(vm.subtitle) + '</p>' : '') + '<h1>' +
+      (vm.prepQuantity ? '<b>' + esc(vm.prepQuantity) + '</b> ' : '') + esc(vm.name || 'Trening') + '</h1></div>' +
       (vm.noticeHtml ? '<div class="workout-cinema-notice">' + html(vm.noticeHtml) + '</div>' : '') +
       '<div class="workout-cinema-stage"><div class="workout-cinema-media">' +
       (html(vm.mediaHtml) || '<div class="workout-cinema-media-empty" aria-label="Demonstracija vježbe nije dostupna">' + icon('dumbbell') + '</div>') + '</div>' +
       (vm.infoHtml ? '<div class="workout-cinema-info">' + html(vm.infoHtml) + '</div>' : '') +
-      (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') + '</div>' +
+      (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') + html(vm.pauseHtml) + '</div>' +
       '<div class="workout-cinema-bottom">' +
       (vm.restAdjustHtml ? '<div class="workout-cinema-rest-adjust">' + html(vm.restAdjustHtml) + '</div>' : '') +
       (vm.metricsHtml ? '<div class="workout-cinema-metrics">' + html(vm.metricsHtml) + '</div>' : '') +
       (vm.controlsHtml ? '<div class="workout-cinema-controls">' + html(vm.controlsHtml) + '</div>' : '') +
+      html(vm.prepHtml) +
       (vm.journalHtml ? '<div class="workout-cinema-journal">' + html(vm.journalHtml) + '</div>' : '') + '</div></div>';
   }
   function seriesTable(vm) {

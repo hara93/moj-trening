@@ -127,9 +127,6 @@
 .cinema-menu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding-bottom:14px;border-bottom:1px solid #61757d66}
 .cinema-menu-grid>button{border:0;background:var(--surface-2);border-radius:16px;padding:14px 5px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#e8f1ef;font-size:12px;min-height:77px}
 .cinema-menu-grid svg{width:21px;height:21px}
-.cinema-prep-picks{display:flex;gap:6px;justify-content:space-between;margin:20px 0}
-.cinema-prep-picks button{min-height:48px;min-width:44px;flex:1;border:1px solid #667d85;border-radius:12px;background:transparent;color:#d6e7e6;font-size:13px}
-.cinema-prep-picks button[aria-pressed=true]{background:#2dd85a;color:#16341c;border-color:#2dd85a}
 .cinema-option-sheet textarea{min-height:135px;margin-bottom:10px;font-size:16px;line-height:1.5;background:var(--bg);color:#f0f5f4;border-color:#617780}
 .cinema-option-sheet .rir{margin-inline:0;background:var(--surface-2);border-color:#61778055}
 .cinema-option-sheet .rirh{flex-wrap:wrap;gap:7px}

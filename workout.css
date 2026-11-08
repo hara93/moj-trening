@@ -568,6 +568,46 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema.is-ready{--cinema-arc:var(--cinema-blue);--cinema-upper-tint:12%;--cinema-upper-clear:16%}
 @media(max-width:350px),(max-height:670px){.workout-cinema{--cinema-media-top:56px}}
 
+/* Preparation and pause sit over the same portrait as the running player. */
+.workout-cinema-heading.is-preparing :is(p,b){color:var(--cinema-accent);font-weight:700}
+.workout-cinema-heading.is-preparing p{font-size:clamp(13px,4vw,17px)}
+.cinema-prep-entry{display:flex;align-items:center;justify-content:center;gap:8px}
+.cinema-prep-entry button,.cinema-prep-done{min-height:44px;padding:0 13px;border:1px solid #FFFFFF26;border-radius:999px;background:#242A32E8;color:#fff;font-size:13px;font-weight:650}
+.cinema-prep-entry .cinema-prep-trigger{display:inline-flex;align-items:center;gap:5px}
+.cinema-prep-trigger svg{width:15px;height:15px}
+.cinema-prep-entry .cinema-prep-clock{padding-inline:10px;color:#EEF5F2;font-variant-numeric:tabular-nums}
+.cinema-prep-editor{--prep-thumb:25px;padding:6px 8px 0;color:#F3F7F5}
+.cinema-prep-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:clamp(15px,4.8vw,20px);font-weight:750;line-height:1.2}
+.cinema-prep-label output{color:var(--cinema-accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cinema-prep-track{position:relative;height:44px;margin-top:4px}
+.cinema-prep-rail{position:absolute;inset:0 calc(var(--prep-thumb)/2);display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.cinema-prep-rail::before{content:"";position:absolute;inset:calc(50% - 1px) 0 auto;height:2px;border-radius:2px;background:linear-gradient(to right,#F3F7F5 var(--prep-percent),#B6C2C866 var(--prep-percent))}
+.cinema-prep-rail i{width:2px;height:13px;border-radius:2px;background:#E9F0ED99}
+.cinema-prep-track input{position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;appearance:none;-webkit-appearance:none;border:0;border-radius:4px;background:transparent;touch-action:none}
+.cinema-prep-track input::-webkit-slider-runnable-track{height:var(--prep-thumb);background:transparent}
+.cinema-prep-track input::-moz-range-track{height:var(--prep-thumb);background:transparent}
+.cinema-prep-track input::-webkit-slider-thumb{-webkit-appearance:none;width:var(--prep-thumb);height:var(--prep-thumb);border:0;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0005}
+.cinema-prep-track input::-moz-range-thumb{width:var(--prep-thumb);height:var(--prep-thumb);border:0;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0005}
+.cinema-prep-picks{display:flex;justify-content:space-between;margin:-4px -10px 2px}
+.cinema-prep-picks button{min-height:44px;min-width:44px;padding:0;border:0;border-radius:10px;background:transparent;color:#D2DCDE;font-size:12px;font-variant-numeric:tabular-nums}
+.cinema-prep-picks button[aria-pressed=true]{color:#fff;font-weight:750}
+.cinema-prep-done{display:block;margin:auto;min-width:84px}
+.workout-cinema.has-pause-overlay .workout-cinema-stage{touch-action:none}
+.workout-cinema.has-pause-overlay :is(.workout-cinema-heading,.workout-cinema-next){visibility:hidden}
+.workout-cinema.has-pause-overlay :is(.workout-cinema-progress,.workout-cinema-metrics,.workout-cinema-rest-adjust,.cinema-prep-entry){opacity:.35}
+.cinema-pause-layer{position:absolute;inset:var(--cinema-media-top) 0 0;z-index:2;background:#11151BAA;pointer-events:none}
+.cinema-pause-actions{position:absolute;top:44%;left:50%;width:min(94%,345px);transform:translate(-50%,-50%);text-align:center}
+.cinema-pause-actions h2{margin:0 0 15px;font-size:clamp(24px,8vw,33px);line-height:1.1;letter-spacing:-.04em}
+.cinema-pause-row{display:grid;grid-template-columns:minmax(44px,1fr) auto minmax(44px,1fr);align-items:center}
+.cinema-pause-actions button{display:grid;place-items:center;gap:5px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:13px;background:transparent;color:#F3F7F5;pointer-events:auto;font-size:13px;font-weight:700}
+.cinema-pause-resume>span{display:grid;place-items:center;width:clamp(66px,24vw,96px);aspect-ratio:1;border:1px solid #FFFFFF3B;border-radius:50%;background:#30363ADB;box-shadow:0 4px 24px #0002}
+.cinema-pause-resume svg{width:42%;height:42%;fill:currentColor;transform:translateX(3%)}
+.cinema-pause-jump svg{width:34px;height:34px}
+.cinema-pause-actions button small{color:var(--cinema-accent);font-size:10px;font-weight:650}
+.cinema-pause-actions .cinema-pause-replay{margin:14px 0 0 5%;gap:2px}
+.cinema-pause-replay>span{font-size:27px;line-height:1}
+@media(max-height:600px){.cinema-pause-actions h2{margin-bottom:8px}.cinema-pause-actions .cinema-pause-replay{margin-top:7px}.cinema-pause-resume>span{width:66px}}
+
 /* Parts belong to this occurrence in the workout, independent of the library. */
 .builder-part{gap:7px;margin-top:13px}.builder-part>label{font-size:12px;color:var(--text-2)}
 .builder-part select{height:46px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);font-size:16px;padding:0 12px}
