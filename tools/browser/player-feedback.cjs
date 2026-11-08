@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const {engine, fixture, launch, serve, openCinemaControls} = require('./runtime.cjs');
+const {engine, fixture, launch, serve} = require('./runtime.cjs');
 const id = 'player-feedback-audit';
 const action = (page, name) => page.locator('[data-a="'+name+'"]');
 const settings = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.settings')));
@@ -33,7 +33,7 @@ async function move(page, seconds, expectedToneCount) {
 }
 
 async function openAudio(page) {
-  await openCinemaControls(page);
+  await action(page,'cinemaMenu').click();
   await action(page,'cinemaAudio').click();
   await page.getByRole('heading',{name:'Zvuk i vibracija',exact:true}).waitFor();
 }
