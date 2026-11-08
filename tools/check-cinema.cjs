@@ -52,6 +52,19 @@ test('journal totals use completed work evidence, including both sides, rather t
  const h={mode:'ex',i:1,items:[hold],steps:[{kind:'work',g:0,set:1,side:'Lijeva strana',it:hold},{kind:'work',g:0,set:1,side:'Desna strana',it:hold}],doneSteps:{0:1}};
  assert.deepEqual(Cinema.summary(h,Dose),{total:1,complete:0,reps:0,seconds:20,volume:0,percent:0});
 });
+test('journal totals read "25 pon. · 2 500 kg" with a narrow no-break space, never "kg × pon."',()=>{
+ const reps=[{measure:'sets'}],holds=[{measure:'time'}],mixed=reps.concat(holds);
+ assert.equal(Cinema.totals({reps:25,volume:2500,seconds:0},reps),'25 pon. · 2 500 kg');
+ assert.equal(Cinema.totals({reps:16,volume:320,seconds:0},reps),'16 pon. · 320 kg');
+ assert.equal(Cinema.totals({reps:1200,volume:1234567.4,seconds:0},reps),'1 200 pon. · 1 234 567 kg');
+ assert.equal(Cinema.totals({reps:0,volume:0,seconds:0},reps),'0 pon.','a rep workout starts at 0 repetitions, without 0 kg');
+ assert.equal(Cinema.totals({reps:12,volume:0,seconds:0},reps),'12 pon.','bodyweight sets add no kilograms');
+ assert.equal(Cinema.totals({reps:0,volume:0,seconds:11},holds),'0:11 rada','holds only: no repetitions or kilograms');
+ assert.equal(Cinema.totals({reps:0,volume:0,seconds:0},holds),'0:00 rada');
+ assert.equal(Cinema.totals({reps:12,volume:600,seconds:75},mixed),'12 pon. · 600 kg · 1:15 rada');
+ assert.equal(Cinema.totals({reps:12,volume:600,seconds:0},mixed),'12 pon. · 600 kg','no seconds before the first hold');
+ assert.doesNotMatch(Cinema.totals({reps:25,volume:2500,seconds:0},reps),/×/);
+});
 test('upcoming follows superset phases, using the next exercise through setup and the planned duration for rest',()=>{
  const left={kind:'manual',g:0,set:1,side:'Lijeva strana'};
  const sideChange={kind:'switch',g:0,set:1,side:'Promjena strane',dur:10};

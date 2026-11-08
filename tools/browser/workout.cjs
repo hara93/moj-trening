@@ -117,7 +117,7 @@ async function openProtocol(page, id = ids.protocol) {
 
 async function exercise(page, index) {
   if (await page.locator('.workout-cinema').count()) await openJournal(page, true);
-  const button = page.locator((await page.locator('.sheet[data-kind="cinemaJournal"]').count() ? '.workout-journal-open' : '') + '[data-a="workoutExercise"][data-j="' + index + '"]').first();
+  const button = page.locator((await page.locator('.sheet[data-kind="cinemaJournal"]').count() ? '.cj-open' : '') + '[data-a="workoutExercise"][data-j="' + index + '"]').first();   // 1.22.0: the card's name
   await button.focus();
   await page.keyboard.press('Enter');
   await page.locator('.workout-exercise-page').waitFor();
@@ -549,7 +549,7 @@ async function live(page, baseline) {
   await page.locator('.workout-cinema,[data-a=quitPlay]').waitFor();
   await noSliders(page);
   await openJournal(page, true);
-  assert.equal(await page.locator('.workout-journal-exercise').count(), 2);
+  assert.equal(await page.locator('.cinema-journal .cj-card').count(), 2);   // 1.22.0: "Prikaži sve" opens every exercise as a card
   assert.equal(await page.locator('.workout-journal .workout-set-row').count(), 4);
   await closeJournal(page);
   await advance(page, 6);

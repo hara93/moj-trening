@@ -42,7 +42,7 @@ async function openProtocol(p,key=id){
 }
 async function exercise(p,index){
   const live=await p.locator('.workout-cinema').count();if(live)await openJournal(p,true);
-  await p.locator((live?'.cinema-journal .workout-journal-open':'')+'[data-a="workoutExercise"][data-j="'+index+'"]').first().click();
+  await p.locator((live?'.cinema-journal .cj-open':'')+'[data-a="workoutExercise"][data-j="'+index+'"]').first().click();   // 1.22.0: the card's name opens the exercise
   await detail(p).waitFor();
 }
 async function closeExercise(p){await p.keyboard.press('Escape');await detail(p).waitFor({state:'hidden'});await closeJournal(p);}

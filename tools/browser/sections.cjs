@@ -94,7 +94,7 @@ async function run(p,width){
   await openJournal(p);
   assert.deepEqual(await p.locator('.cinema-block-heading h2').allTextContents(),['Priprema','Snaga']);
   assert.equal(await currentPart(p),'Priprema');
-  assert.equal(await p.locator('.cinema-journal .workout-journal-name').filter({hasText:'Copenhagen plank'}).count(),2);
+  assert.equal(await p.locator('.cinema-journal .cj-text>strong').filter({hasText:'Copenhagen plank'}).count(),2);   // 1.22.0: rows and cards
   assert.equal(Object.keys((await player(p)).doneSteps).length,0,'opening and grouping never invents completed work');
   await shot(p,'journal',width);
   await p.locator('.cinema-journal [data-a="cinemaJournalGroup"][data-j="0"]').first().click();

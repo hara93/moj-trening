@@ -2872,29 +2872,44 @@ function workoutCinemaHtml() {
     centerHtml:restPhase===1?restClock:'',
     pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:footer});
 }
-function cinemaJournalTotals({reps, volume, seconds}) {
-  const group=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
-  return reps+' pon. · '+group(volume)+' kg'+(seconds?' · '+fmt(seconds):'');
-}
+// the footer line from CinemaModel.totals: "25 pon. · 2 500 kg", seconds only for holds
+function cinemaJournalTotals(stats) {return CinemaModel.totals(stats,P?.items);}
 function cinemaE1Html(item){
   const best=bestE1(item.exId);
   return best>0?'Proc. 1RM '+fmtKg(Math.round(best)):'';
 }
 function cinemaJournalSwapped(j){const undo=P.swapUndo?.[j];return !!undo&&undo.exId!==P.items[j]?.exId;}
+// The exercise's own equipment as the journal chip names it ("Bez opreme" for a bodyweight exercise).
+function cinemaOwnEquipment(e){return cinemaEquipmentLabel(e)||(e&&exEquip(e).includes('Bez opreme')?'Bez opreme':'');}
+const CINEMA_EQUIPMENT=['Šipka','Bučice','Girja','Landmine','TRX','Bez opreme'];
+// The equipment menu offers only equipment that real swap candidates use, and "Sva oprema" only when there is a
+// candidate at all. After a finished set (or once the set runs) the choices are disabled, with the reason.
 function cinemaEquipmentMenuHtml(j){
-  const item=P.items[j],e=S.ex[item.exId],current=cinemaEquipmentLabel(e)||'Oprema',c=workoutContext({live:true}),can=workoutCanSwap(c,j);
+  const item=P.items[j],e=S.ex[item.exId],current=cinemaOwnEquipment(e)||'Oprema',c=workoutContext({live:true}),can=workoutCanSwap(c,j);
   const candidates=workoutCandidates(item),available=new Set(candidates.flatMap(candidate=>candidate.equipment));
-  const options=[current].concat(['Šipka','Bučice','Girja','Landmine','TRX','Bez opreme'].filter(label=>label!==current&&available.has(label))).slice(0,5);
-  return '<div class="cj-menu" role="group" aria-label="'+esc('Oprema · '+(e?.name||'vježba'))+'">'+options.map(label=>label===current?
-    '<button type="button" data-a="cinemaEquipment" data-j="'+j+'" aria-pressed="true">'+WorkoutView.icon('check')+'<span>'+esc(label)+'</span></button>':
-    '<button type="button" data-a="cinemaEquipmentPick" data-j="'+j+'" data-eq="'+esc(label)+'" aria-pressed="false"'+(can?'':' disabled')+'><span>'+esc(label)+'</span></button>').join('')+
-    '<button type="button" class="cj-menu-all" data-a="cinemaEquipmentPick" data-j="'+j+'" data-eq=""'+(can?'':' disabled')+'><span>Sva oprema</span>'+WorkoutView.icon('chevron-down')+'</button>'+
-    (can?'':'<p>Oprema se mijenja prije prve serije.</p>')+'</div>';
+  const options=CINEMA_EQUIPMENT.filter(label=>label!==current&&available.has(label)).slice(0,4),off=can?'':' disabled';
+  return '<div class="cj-menu" id="cj-menu-'+j+'" role="group" aria-label="'+esc('Oprema · '+(e?.name||'vježba'))+'">'+
+    '<button type="button" data-a="cinemaEquipment" data-j="'+j+'" data-menu="1" aria-pressed="true">'+WorkoutView.icon('check')+'<span>'+esc(current)+'</span></button>'+
+    options.map(label=>'<button type="button" data-a="cinemaEquipmentPick" data-j="'+j+'" data-eq="'+esc(label)+'" aria-pressed="false"'+off+'><span>'+esc(label)+'</span></button>').join('')+
+    (candidates.length?'<button type="button" class="cj-menu-all" data-a="cinemaEquipmentPick" data-j="'+j+'" data-eq=""'+off+'><span>Sva oprema</span>'+WorkoutView.icon('chevron-down')+'</button>':'')+
+    (!can?'<p>Oprema se mijenja prije prve serije.</p>':!candidates.length?'<p>Za ovu vježbu nema zamjene.</p>':'')+'</div>';
 }
+// A swap, equipment change or undo started in the journal (its chips, its equipment menu) returns to the journal with
+// that exercise open; one started on the exercise page stays there.
 function cinemaAfterSwap(j){
   const s=S.sheet;
-  if(s?.kind!=='workoutExercise'||!s.returnCinema||s.pendingReplacement||s.error)return;
-  S.sheet={kind:'cinemaJournal'};const state=cinemaState();state.all=false;state.group=j;state.equipment=-1;render();
+  if(s?.kind!=='workoutExercise'||!s.returnCinema||!s.fromJournal||s.pendingReplacement||s.error)return;
+  S.sheet={kind:'cinemaJournal'};const state=cinemaState();state.all=false;state.group=j;state.equipment=-1;render();cinemaJournalFocus(s);
+}
+// Back in the journal from a sheet it opened: focus returns to the control that opened that sheet, else to the
+// exercise's swap chip ("Zamjena" became "Vrati zamjenu") or its name.
+function cinemaJournalFocus(back){
+  const sheet=app.querySelector('.cinema-journal-sheet');if(!sheet||!back)return;
+  const j=Number(back.j),card=Number.isInteger(j)?sheet.querySelector('.cj-card[data-index="'+j+'"]'):null;
+  const el=focusEl(back.journalFocus,sheet)||card?.querySelector('[data-a="workoutUndoSwap"],[data-a="workoutSwap"]')||card?.querySelector('.cj-open');
+  if(!el||el===document.activeElement)return;
+  try{el.focus({preventScroll:true});}catch(e){}
+  el.scrollIntoView?.({block:'nearest'});
 }
 function workoutJournalHtml() {
   const c=workoutContext({live:true}),v=curView(),state=cinemaState(v),sections=CinemaModel.sections(c.items,S.ex),stats=CinemaModel.summary(P,PlayerDose);
@@ -2908,7 +2923,8 @@ function workoutJournalHtml() {
     const undo=cinemaJournalSwapped(j),canSwap=workoutCanSwap(c,j),target=cinemaTargetText(item),e1=cinemaE1Html(item);
     const meta='<small class="cj-meta">'+workoutPreviousCompact(item).replace(/<\/?span>/g,'')+'</small>'+
       (e1||target?'<small class="cj-meta">'+esc(e1)+(e1&&target?' · ':'')+(target?'<b class="cj-effort">Cilj '+esc(target)+'</b>':'')+'</small>':'');
-    const chips='<button type="button" data-a="cinemaEquipment" data-j="'+j+'" aria-expanded="'+(state.equipment===j)+'">'+esc(cinemaEquipmentLabel(e)||'Oprema')+WorkoutView.icon('chevrons-up-down')+'</button>'+
+    const gear=cinemaOwnEquipment(e)||'Oprema',menuOpen=state.equipment===j;
+    const chips='<button type="button" data-a="cinemaEquipment" data-j="'+j+'" aria-expanded="'+menuOpen+'"'+(menuOpen?' aria-controls="cj-menu-'+j+'"':'')+' aria-label="'+esc('Oprema: '+gear)+'">'+esc(gear)+WorkoutView.icon('chevrons-up-down')+'</button>'+
       '<button type="button" data-a="'+(undo?'workoutUndoSwap':'workoutSwap')+'" data-j="'+j+'"'+(canSwap?'':' disabled')+'>'+WorkoutView.icon(undo?'undo-2':'shuffle')+(undo?'Vrati zamjenu':'Zamjena')+'</button>'+
       '<button type="button" data-a="workoutHistory" data-j="'+j+'">'+WorkoutView.icon('notebook-text')+'Povijest</button>'+
       '<button type="button" data-a="workoutTrends" data-j="'+j+'">'+WorkoutView.icon('chart-no-axes-combined')+'Trend</button>'+
@@ -3001,7 +3017,7 @@ function cinemaCommitExercises(s, added) {
 function cinemaOpenSheet(sheet){
   if(!P||P.done||P.mode!=='ex')return;
   cinemaRestReveal();
-  if(S.sheet?.kind==='cinemaJournal')sheet.returnCinema=true;
+  if(S.sheet?.kind==='cinemaJournal'){sheet.returnCinema=true;sheet.journalFocus=focusKey(document.activeElement);}
   if(P.dosePause){S.sheet=sheet;render();}else openPlayDoseSheet(sheet);
 }
 function cinemaReleaseTransport(){
@@ -3014,7 +3030,7 @@ function cinemaReleaseTransport(){
   P.endAt=Date.now()+pause.left*1000;
 }
 function cinemaCloseSheet(){
-  if(S.sheet?.returnCinema){S.sheet={kind:'cinemaJournal'};render();return;}
+  if(S.sheet?.returnCinema){const back=S.sheet;S.sheet={kind:'cinemaJournal'};render();cinemaJournalFocus(back);return;}
   if(S.sheet?.returnCinemaMenu){S.sheet={kind:'cinemaMenu'};render();return;}
   if(P?.dosePause){playDoseResumeEditing();return;}
   S.sheet=null;render();
@@ -3150,7 +3166,7 @@ function workoutClose() {
   const s=S.sheet;
   if(s?.kind==='workoutSwap'&&s.swap?.preview){A.workoutSwapBack();return;}
   if(s?.pendingReplacement){s.error='Unesi težinu nove varijante ili vrati prethodnu vježbu.';render();return;}
-  if(s?.returnCinema){S.sheet={kind:'cinemaJournal'};render();return;}
+  if(s?.returnCinema){S.sheet={kind:'cinemaJournal'};render();cinemaJournalFocus(s);return;}
   if(s?.returnCinemaPlayer){playDoseResumeEditing();return;}
   if(s?.panel){delete s.panel;render();return;}
   if(s?.pendingReplacement){s.error='Unesi težinu nove varijante ili vrati prethodnu vježbu.';render();return;}
@@ -6768,9 +6784,9 @@ const A = {
     top().runDose={...top().runDose,base:mtCanon(c.source),items};render();
   },
   workoutSwap: d => {
-    const s=workoutState(Number(d?.j)||0),c=workoutContext(s);if(!workoutCanSwap(c,s?.j))return;
+    const fromJournal=S.sheet?.kind==='cinemaJournal',s=workoutState(Number(d?.j)||0),c=workoutContext(s);if(!workoutCanSwap(c,s?.j))return;
     const item=c.items[s.j];if(!item||!S.ex[item.exId])return;
-    s.kind='workoutSwap';s.swap=workoutSwapState(item);delete s.panel;
+    s.fromJournal=fromJournal;s.kind='workoutSwap';s.swap=workoutSwapState(item);delete s.panel;
     if(c.live)cinemaOpenSheet(s);else{S.sheet=s;render();}
   },
   workoutSwapPreview:d=>{
@@ -6792,11 +6808,11 @@ const A = {
     [...app.querySelectorAll('[data-a="workoutSwapPreview"]')].find(button=>button.dataset.id===id)?.focus({preventScroll:true});
   },
   workoutUndoSwap:d=>{
-    const s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c||!workoutCanSwap(c,s.j)||s.pendingReplacement)return;
+    const fromJournal=S.sheet?.kind==='cinemaJournal',s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c||!workoutCanSwap(c,s.j)||s.pendingReplacement)return;
     const original=c.live?P.swapUndo?.[s.j]:c.source[s.j];if(!original||original.exId===c.items[s.j].exId)return;
     const items=clone(c.items);items[s.j]=clone(original);const error=workoutCommitItems(s,items);
-    if(error){toast(error,true);return;}delete s.panel;delete s.equipmentMenu;S.sheet=s;
-    if(s.returnCinema){cinemaAfterSwap(s.j);return;}render();
+    if(error){toast(error,true);return;}delete s.panel;delete s.equipmentMenu;S.sheet=s;s.fromJournal=fromJournal;
+    if(fromJournal){cinemaAfterSwap(s.j);return;}render();
   },
   cinemaEquipment: d => {
     if(!P||S.sheet?.kind!=='cinemaJournal')return;
@@ -6806,9 +6822,11 @@ const A = {
     const j=Number(d.j),item=P?.items[j];if(!item||S.sheet?.kind!=='cinemaJournal')return;
     cinemaState().equipment=-1;
     const variant=d.eq&&workoutEquipmentVariants(item).find(candidate=>candidate.equipment.includes(d.eq));
-    if(variant){const s=workoutState(j);s.returnCinema=true;workoutQuickReplace(s,variant.id,true);cinemaAfterSwap(j);return;}
+    if(variant){const s=workoutState(j);s.returnCinema=true;s.fromJournal=true;s.journalFocus={a:'cinemaEquipment',ds:'a=cinemaEquipment&j='+j};workoutQuickReplace(s,variant.id,true);cinemaAfterSwap(j);return;}
     A.workoutSwap({j});
-    if(S.sheet?.kind==='workoutSwap'&&d.eq){S.sheet.swap.filters.equipment=d.eq;render();}
+    if(S.sheet?.kind!=='workoutSwap')return;
+    S.sheet.journalFocus={a:'cinemaEquipment',ds:'a=cinemaEquipment&j='+j};
+    if(d.eq){S.sheet.swap.filters.equipment=d.eq;render();}
   },
   workoutEquipment: d => {
     const s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c)return;

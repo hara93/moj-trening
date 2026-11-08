@@ -257,8 +257,9 @@ async function liveFlow(p,pr){
   await advance(p,pr.items[1].sec+1);await openCinemaControls(p);await p.locator('[data-a="jump"][data-d="1"]').click();
   await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='manual'),20);
   const shown=await p.locator('.workout-cinema-heading').innerText();await openJournal(p,true);
-  assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="kg"]').inputValue(),'30');
-  assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="reps"]').inputValue(),'3');
+  // 1.22.0: with "Prikaži sve" every exercise is an open card
+  assert.equal(await p.locator('.cinema-journal .cj-card').first().locator('[data-set="2"][data-field="kg"]').inputValue(),'30');
+  assert.equal(await p.locator('.cinema-journal .cj-card').first().locator('[data-set="2"][data-field="reps"]').inputValue(),'3');
   await closeJournal(p);await pressCinemaMain(p);
   await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const data=await store(p),log=data.log.find(l=>l.refId===pr.id&&l.items[0].liveDoseChanged===true);

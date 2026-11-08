@@ -66,7 +66,8 @@ async function openJournal(p, rows = 7) {
   if (!await sheet(p).isVisible()) await A(p, 'cinemaJournal').click();
   await sheet(p).waitFor();
   assert.equal((await player(p)).clock.paused, true, 'journal pauses the actual session clock');
-  assert.equal(await sheet(p).locator('.workout-set-row').count(), rows);
+  // 1.22.0: a collapsed exercise is a row of set circles; the journal still shows every set (table rows + circles)
+  assert.equal(await sheet(p).locator('.workout-set-row, .cj-row .cj-sets>span').count(), rows);
 }
 
 async function closeJournal(p) {
@@ -443,7 +444,8 @@ async function runPlayer(p, width, url) {
   await sir.fill('3');await sir.press('Tab');assert.equal((await player(p)).rir[right.i],3);
   assert.equal(await row(p,1,2).locator('[data-field="sir"]').isEnabled(),false);
   assert.match(await sheet(p).locator('.cinema-journal-footer').innerText(),/40 pon\./);
-  assert.match(await sheet(p).locator('.cinema-journal-footer').innerText(),/2000 kg × pon\./);
+  assert.match(await sheet(p).locator('.cinema-journal-footer').innerText(),/2\u202f000 kg/);   // 1.22.0: "2 000 kg", never "kg × pon."
+  assert.doesNotMatch(await sheet(p).locator('.cinema-journal-footer').innerText(),/×/);
   assert.match(await sheet(p).locator('.cinema-journal-footer').innerText(),/0:12 rada/);
   await closeJournal(p);
   await advance(p,ended.left+.1);
@@ -474,8 +476,9 @@ async function notesAndUndo(p,width) {
   const original=await store(p),source=JSON.stringify(original.protocols[id].items);
   await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();await manual(p,1);
   const before=await player(p);await openJournal(p);
-  await sheet(p).locator('[data-a="workoutEquipment"][data-j="0"]').click();
-  await p.locator('[data-a="workoutQuickCandidate"][data-id="db-bench-press"]').click();
+  // 1.22.0: the equipment menu sits in the journal card; the direct variant "Bučice" needs its weight on the exercise page
+  await sheet(p).locator('.cj-chips [data-a="cinemaEquipment"][data-j="0"]').click();
+  await sheet(p).locator('[data-a="cinemaEquipmentPick"][data-j="0"][data-eq="Bučice"]').click();
   const detail=p.locator('.workout-exercise-page');await detail.waitFor();
   assert.equal((await player(p)).items[0].exId,'bench-press','unknown replacement weight cannot change the live exercise');
   for(let set=1;set<=5;set++){

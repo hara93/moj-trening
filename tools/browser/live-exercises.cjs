@@ -48,8 +48,9 @@ async function run(page, url) {
   await action(page, 'cinemaRest', '[data-d="15"]').click();
   await openJournal(page,true);
   const remove = group => action(page,'cinemaRemoveExercise','[data-j="'+group+'"]');
-  await remove(0).click();
-  await page.getByRole('alert').filter({hasText:'zabilježenu seriju'}).waitFor();
+  // 1.22.0: an exercise with a recorded set offers no "Ukloni vježbu" (the action still refuses it)
+  assert.equal(await remove(0).count(),0);
+  assert.equal(await remove(1).count(),1);
   assert.equal((await snapshot(page)).items.length,3);
 
   await action(page,'cinemaNotes','[data-j="2"]').click();

@@ -119,5 +119,17 @@
     });
     return {total,complete,reps,seconds,volume,percent:total?Math.round(complete/total*100):0};
   }
-  return Object.freeze({prepare,rest,summary,sections,groupSections,hasParts,partOpening,restPhase,upcoming,progress});
+  // The journal footer line: "25 pon. · 2 500 kg" (thousands grouped by a narrow no-break space), never "kg × pon.".
+  // Repetitions show while the workout has rep sets (0 at the start), kilograms once lifted, seconds only for holds.
+  function totals(stats,items){
+    const list=Array.isArray(items)?items:[],timed=list.some(item=>item?.measure==='time'),counted=list.some(item=>item?.measure!=='time');
+    const group=n=>String(Math.round(Math.max(0,n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+    const clock=s=>{s=Math.max(0,Math.ceil(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+    const reps=stats?.reps||0,volume=stats?.volume||0,seconds=stats?.seconds||0,parts=[];
+    if(counted||!timed||reps>0)parts.push(group(reps)+' pon.');
+    if(volume>0)parts.push(group(volume)+' kg');
+    if(seconds>0||timed&&!counted)parts.push(clock(seconds)+' rada');
+    return parts.join(' · ');
+  }
+  return Object.freeze({prepare,rest,summary,totals,sections,groupSections,hasParts,partOpening,restPhase,upcoming,progress});
 });

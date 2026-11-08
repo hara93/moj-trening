@@ -60,7 +60,8 @@ async function noOverflow(page, selector, label) {
 async function openJournal(page) {
   await A(page,'cinemaJournal').click();
   await page.locator('.sheet[data-kind="cinemaJournal"]').waitFor();
-  assert.equal(await journal(page).locator('.workout-set-row').count(),7);
+  // 1.22.0: a collapsed exercise is a row of set circles; the journal still shows every set (table rows + circles)
+  assert.equal(await journal(page).locator('.workout-set-row, .cj-row .cj-sets>span').count(),7);
 }
 
 async function closeJournal(page) {
