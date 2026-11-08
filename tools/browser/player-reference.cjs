@@ -195,6 +195,9 @@ async function firstStartWithParts(p, width) {
   assert.doesNotMatch(await stage(p).innerText(), /Slijedi/);
   assert.equal(await p.locator('.workout-cinema-heading p').innerText(), 'Serija 1 od 2');
   assert.equal(await p.locator('.cinema-work-journal .cinema-effort').innerText(), '· Cilj RIR 2');
+  assert.match(await p.locator('.cinema-work-journal').getAttribute('aria-label'), /^Dnevnik treninga · \S.* · Cilj RIR 2 · 1 od 2$/, 'the pill\'s name includes the target and the set');
+  // with a target the set count gets its own divider
+  assert.equal(await p.locator('.cinema-work-journal>span').evaluate(node => getComputedStyle(node).borderLeftWidth), '1px');
   const path = [];
   let d = await dashes(p);
   assert.equal(d.n, 4, 'one dash per exercise');
@@ -233,6 +236,7 @@ async function firstStartWithParts(p, width) {
   const pills = row.locator('.rirb button');
   assert.deepEqual(await pills.allInnerTexts(), ['0', '1', '2', '3', '4–5', '6+']);
   assert.match(await pills.nth(2).getAttribute('class'), /\btg\b/, 'the target RIR 2 is outlined');
+  assert.equal(await pills.nth(2).evaluate(node => getComputedStyle(node).borderTopColor), GREEN, 'in the player green');
   assert.equal(await p.locator('.workout-cinema .cinema-rest-buttons').count(), 1, '−ODMOR+');
   const rowBox = await row.boundingBox(), adjustBox = await p.locator('.workout-cinema .cinema-rest-buttons').boundingBox();
   assert.ok(rowBox.y + rowBox.height <= adjustBox.y + 1, 'the reserve row sits above −ODMOR+');
@@ -314,6 +318,12 @@ async function firstStartWithParts(p, width) {
   assert.equal(await swap(p).locator('.workout-swap-photo.is-current .workout-swap-preview-icon').count(), 1, 'the big "Trenutna" picture keeps its icon');
   await noOverflow(p, 'swap ' + width);
   await shot(p, 'swap-top-' + width);
+  // a thumbnail opens the preview; its "Zamijeni ovom vježbom" is the player green with dark text, not app blue
+  await swap(p).locator('.workout-swap-row .workout-swap-photo').first().click();
+  const replace = swap(p).locator('.workout-swap-footer .btn');
+  await replace.waitFor();
+  assert.deepEqual(await replace.evaluate(node => [getComputedStyle(node).backgroundColor, getComputedStyle(node).color]), [GREEN, ON_GREEN]);
+  await A(p, 'workoutSwapBack').click(); await replace.waitFor({ state: 'detached' });
   await swap(p).locator('.workout-swap-body').evaluate(node => { node.scrollTop = node.scrollHeight; });
   await p.waitForTimeout(200);
   const geometry = await swap(p).evaluate(sheet => {
@@ -392,17 +402,40 @@ async function plainWorkout(p, width) {
   assert.equal(await p.locator('.workout-cinema .cinema-phase-word').textContent(), 'Priprema');
   assert.equal(await p.locator('.workout-cinema .cinema-next').count(), 0, 'no next-set card during prep');
   assert.equal((await dashes(p)).n, 2);
-  // the guide from the ⋯ menu, any time
+  // the numerals (item 10): the system font in its compressed width, 900, no transform
+  for (const sel of ['.workout-cinema #ringN', '#cinema-percent'])
+    assert.deepEqual(await p.locator(sel).evaluate(node => { const cs = getComputedStyle(node); return [cs.fontStretch, cs.fontWeight, cs.transform]; }), ['40%', '900', 'none'], sel);
+  const prepShade = await p.locator('.workout-cinema-media').evaluate(node => getComputedStyle(node, '::after').backgroundImage);
+  // the guide from the ⋯ menu, any time; its NASTAVI takes the green focus ring
   await A(p, 'cinemaMenu').click();
   await A(p, 'cinemaGuide').click();
   const guide = p.locator('.sheet[data-kind="cinemaGuide"]');
   await guide.waitFor();
   assert.equal(await guide.locator('li').count(), 4);
+  const guideRing = await tabTo(p, '.cinema-guide-go');
+  assert.ok(guideRing.visible && guideRing.ring === GREEN, 'the guide\'s focus ring is green: ' + JSON.stringify(guideRing));
   await p.keyboard.press('Escape'); await guide.waitFor({ state: 'detached' });
   // "Upis rezerve: samo zadnja serija vježbe": nothing after set 1, the row in the pause before the next exercise
   await until(p, (s, st) => st.kind === 'manual', 'set 1');
   assert.equal(await p.locator('.workout-cinema .cinema-next').count(), 0, 'no next-set card during work');
   assert.doesNotMatch(await stage(p).innerText(), /Slijedi/);
+  // prep has the work screen's upper shade over the photo (the set label sits in it); the arc is 31 bars
+  assert.equal(await p.locator('.workout-cinema-media').evaluate(node => getComputedStyle(node, '::after').backgroundImage), prepShade);
+  assert.equal(await p.locator('.cinema-clock-arc path').first().evaluate(node => (node.getAttribute('d').match(/M/g) || []).length), 31, 'a half circle of 31 bars');
+  assert.deepEqual(await p.locator('.workout-cinema-clock #ringN').evaluate(node => { const cs = getComputedStyle(node); return [cs.fontStretch, cs.fontWeight, cs.transform]; }), ['40%', '900', 'none']);
+  // without a width axis (.no-font-width) the figures are narrowed again and stay inside the arc
+  const fallback = await p.evaluate(() => {
+    document.documentElement.classList.add('no-font-width');
+    const n = document.querySelector('.workout-cinema-clock #ringN'), arc = document.querySelector('.cinema-clock-arc').getBoundingClientRect(), box = n.getBoundingClientRect();
+    const out = { transform: getComputedStyle(n).transform, inside: box.left >= arc.left - .5 && box.right <= arc.right + .5, box: [box.left, box.right], arc: [arc.left, arc.right] };
+    document.documentElement.classList.remove('no-font-width');
+    return out;
+  });
+  assert.ok(fallback.transform !== 'none' && fallback.inside, 'fallback numerals: ' + JSON.stringify(fallback));
+  // the keyboard ring inside the player is green (not the old teal)
+  const stageRing = await ringOf(p, '.workout-cinema [data-a="cinemaMenu"]');
+  assert.ok(stageRing.visible && stageRing.ring === GREEN, 'player focus ring: ' + JSON.stringify(stageRing));
+  await p.evaluate(() => document.activeElement?.blur());
   await markDone(p);
   await revealRest(p);
   assert.equal(await reserve(p).count(), 0, 'not after set 1 of 2');
@@ -426,6 +459,33 @@ async function plainWorkout(p, width) {
   await journal(p).waitFor({ state: 'detached' });
   assert.equal(await stage(p).getAttribute('data-ex-id'), 'db-row');
   assert.equal(step(await player(p)).g, 1);
+  // db-row has no target: no "Cilj RIR" in the pill (nor a divider before the count) or in its journal card
+  await until(p, (s, st) => st.kind === 'manual' && st.g === 1, 'a db-row set');
+  assert.equal(await p.locator('.cinema-work-journal .cinema-effort').count(), 0, 'no target in the pill');
+  assert.doesNotMatch(await p.locator('.cinema-work-journal').getAttribute('aria-label'), /Cilj/);
+  assert.equal(await p.locator('.cinema-work-journal>span').evaluate(node => getComputedStyle(node).borderLeftWidth), '0px');
+  await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
+  assert.equal(await journal(p).locator('.cj-card[data-index="1"] .cj-effort').count(), 0, 'no target in the journal card');
+  // the journal sheet's drag handle takes the green ring too
+  const handleRing = await ringOf(p, '.sheet[data-kind="cinemaJournal"] .sheet-drag-handle', '::after');
+  assert.ok(handleRing.visible && handleRing.ring === GREEN, 'journal handle ring: ' + JSON.stringify(handleRing));
+  // Uredi (Doziranje): no text under 13 px, and the "Automatski" placeholder fits its field
+  await journal(p).locator('.cj-card[data-index="1"] [data-a="playDoseEdit"]').click();
+  const dose = p.locator('.sheet[data-kind="playDose"]');
+  await dose.waitFor();
+  assert.deepEqual(await smallText(p, '.sheet[data-kind="playDose"]'), [], 'Doziranje text at least 13 px');
+  const placeholder = await dose.locator('.play-dose-rep-timer input').evaluate(node => {
+    const cs = getComputedStyle(node), ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+    return { text: node.placeholder, width: ctx.measureText(node.placeholder).width, room: node.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) };
+  });
+  assert.ok(placeholder.width <= placeholder.room + .5, 'the placeholder fits: ' + JSON.stringify(placeholder));
+  await A(p, 'playDoseCancel').click(); await dose.waitFor({ state: 'detached' });
+  if (await journal(p).count()) { await A(p, 'cinemaJournalClose').first().click(); await journal(p).waitFor({ state: 'detached' }); }
+  // ⋯ → Postavke treninga: no text under 13 px ("Vrijeme za pripremu" was 12 px)
+  await openCinemaControls(p);
+  assert.deepEqual(await smallText(p, '.sheet[data-kind="cinemaPlayback"]'), [], 'Postavke treninga text at least 13 px');
+  for (let guard = 0; guard < 3 && await p.locator('.sheet').count(); guard++) { await p.keyboard.press('Escape'); await p.waitForTimeout(200); }
   await until(p, s => s.done, 'the end');
   assert.equal(await p.locator('.rirlast .rir').count(), 2);
   await A(p, 'finishPlay').click();

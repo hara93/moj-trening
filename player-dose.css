@@ -47,14 +47,14 @@ button.set-mark:focus-visible,.set-edit:focus-visible,.set-load-link:focus-visib
 .set-preview-toggle{width:100%;min-height:58px;border:0;background:transparent;color:var(--text);font:inherit;text-align:left}
 .set-preview-toggle>b,.set-preview-toggle b{font-size:16px}
 .set-preview-toggle>span:last-child{font-size:22px;color:var(--accent-text)}
-.play-dose-note{color:var(--text-2);font-size:12px!important}
+.play-dose-note{color:var(--text-2);font-size:13px!important}
 .play-dose-editor{display:grid;gap:10px}.play-dose-editor .play-dose-count{display:flex;align-items:center;gap:10px}
 .play-dose-editor input{box-sizing:border-box;min-width:0;width:100%;height:42px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);color:var(--text);padding:6px 9px;font:16px var(--font)}
 .play-dose-editor input:disabled{opacity:.55}
 .play-dose-count input{width:72px}.play-dose-count button{min-height:44px;font-size:13px}
 .play-dose-table{display:grid;gap:7px}.play-dose-table>div{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:center}
-.play-dose-table .play-dose-head{font-size:12px;color:var(--text-2)}
-.play-dose-table label{font-size:13px}.play-dose-table label small{display:block;font-size:10px;color:var(--text-2)}
+.play-dose-table .play-dose-head{font-size:13px;color:var(--text-2)}
+.play-dose-table label{font-size:13px}.play-dose-table label small{display:block;font-size:13px;color:var(--text-2)}
 .play-dose-error{color:var(--amber,#FFC861);font-size:13px;line-height:1.4}
 @media(max-height:700px){.play-card-content{height:148px}.play-card h3{padding-top:8px}.play-cards{margin-top:9px}}
 .set-ex-link{display:flex;align-items:center;gap:9px;min-width:0;min-height:48px;flex:1;padding:0;border:0;background:none;text-align:left;font:inherit;color:var(--text)}
@@ -73,5 +73,5 @@ button.set-mark:focus-visible,.set-edit:focus-visible,.set-load-link:focus-visib
 .set-legend [data-state=active]>span{color:var(--accent-text)}.set-legend [data-state=done]>span{color:#8cdec7}.set-legend [data-state=partial]>span{color:var(--amber,#ffd385)}
 
 .play-dose-rep-timer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
-.play-dose-rep-timer small{display:block;margin-top:3px;color:var(--text-2);font-size:11px;line-height:1.4}
-.play-dose-rep-timer input{width:90px;flex:none;text-align:center}
+.play-dose-rep-timer small{display:block;margin-top:3px;color:var(--text-2);font-size:13px;line-height:1.4}
+.play-dose-rep-timer input{width:112px;flex:none;text-align:center}

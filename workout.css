@@ -623,7 +623,7 @@ span.workout-exercise-open{cursor:default}
 .workout-panel-body:has(>h1){padding:20px}
 .workout-panel-body>h1{margin:4px 0 16px;font-size:25px;line-height:1.2;letter-spacing:-.025em}
 .workout-panel-body>p{font-size:14px;line-height:1.6;color:var(--text-2)}
-.workout-cinema.is-ready{--cinema-upper-tint:12%;--cinema-upper-clear:16%}
+/* 1.22.0: prep keeps the work screen's upper shade; the set label now sits deeper in the photo (taller top bar, dashes) */
 
 /* Preparation and pause sit over the same portrait as the running player. */
 .workout-cinema-heading.is-preparing :is(p,b){color:var(--cinema-accent);font-weight:700}
@@ -734,6 +734,8 @@ span.workout-exercise-open{cursor:default}
 .cinema-work-journal strong>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cinema-work-journal strong>.cinema-effort{flex:none}
 .cinema-work-journal>span{color:var(--cinema-accent);font-size:15px;font-weight:650}
+/* with a target the count gets its own divider, so "Cilj RIR 2" and "1 od 3" do not read as one run of numbers */
+.cinema-work-journal:has(.cinema-effort){gap:12px}.cinema-work-journal:has(.cinema-effort)>span{padding-left:12px;border-left:1px solid #FFFFFF3D}
 .workout-cinema .cinema-effort{color:var(--player-effort);font-style:normal;font-weight:650}
 .workout-cinema-journal>button{min-height:62px;border-color:#FFFFFF2B;border-radius:31px;background:#1A1E25D9;backdrop-filter:blur(14px)}
 .workout-cinema .cinema-journal-bar>strong{font-size:16px}
