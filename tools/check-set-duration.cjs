@@ -82,6 +82,9 @@ test('a sided set played as two steps saves the total over both sides, with its 
   // one side not timed live: the set's total is not known
   const r = player(); finish(r, 6, 31); finish(r, 8);
   assert.equal(D.setDuration(r, 1, 1, false), null);
+  // the guard's estimate is both sides': 80 + 80 = 160 s ≤ max(60, 3 × (30 + 30)), over 3 × one side's 30 s
+  const s = player(); finish(s, 6, 80); finish(s, 8, 80);
+  assert.deepEqual(D.logDose(s, 1, 'partial').fields.durList, [160]);
 });
 
 test('"Sve odrađeno" on the done screen credits untimed sets with null, and a skipped set saves nothing', () => {
@@ -141,6 +144,15 @@ test('history edits keep durList aligned with the performed sets', () => {
   // an edit of another set's reps keeps the list as it is
   const reps = History.edit(entry, {items:[{index:0,repsList:[8,8,6]}]});
   assert.deepEqual(reps.entry.items[0].durList, [40, null, 38]);
+  // a sided item: the edit rewrites every side count to both sides, so the time of a set with one side done (33 s for
+  // the left side) is no longer the set's time and becomes unknown; a set whose side count stays keeps its time
+  const sided = {kind:'protocol',name:'A',at:1,items:[{exId:'lunge',measure:'sets',sets:3,setsDone:2,done:true,reps:10,kg:0,sides:true,
+    sideCounts:[2,1],setNumbers:[1,2],durList:[60,33]}]};
+  const edited = History.edit(sided, {items:[{index:0,setsDone:3}]});
+  assert.equal(edited.ok, true);
+  assert.deepEqual(edited.entry.items[0].sideCounts, [2, 2, 2]);
+  assert.deepEqual(edited.entry.items[0].durList, [60, null, null]);
+  assert.deepEqual(History.edit(sided, {items:[{index:0,setsDone:1}]}).entry.items[0].durList, [60]);
 });
 
 test('backups and imports clean durList like the other per-set lists', () => {
@@ -152,4 +164,22 @@ test('backups and imports clean durList like the other per-set lists', () => {
   assert.deepEqual(clean('durList', 'broken'), []);
   const item = clean(null, {exId:'squat', measure:'sets', sets:2, durList:[42, 39]});
   assert.deepEqual(item.durList, [42, 39]);
+});
+
+test('screen readers hear the duration with its units written out', () => {
+  const ctx = {fmt:s => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s / 60), r = s % 60; return m + ':' + (r < 10 ? '0' : '') + r; },
+    plural:(n, one, few, many) => { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return one; if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few; return many; }};
+  vm.createContext(ctx);
+  vm.runInContext(between('function workoutSetDurationHtml(', 'function workoutTableHtml('), ctx);
+  const line = seconds => {
+    const html = ctx.workoutSetDurationHtml(seconds);
+    return html && [/aria-hidden="true">([^<]*)</.exec(html)[1], /class="workout-sr">([^<]*)</.exec(html)[1]];
+  };
+  assert.deepEqual(line(42), ['0:42', 'trajanje 42 sekunde']);
+  assert.deepEqual(line(35), ['0:35', 'trajanje 35 sekundi']);
+  assert.deepEqual(line(21), ['0:21', 'trajanje 21 sekunda']);
+  assert.deepEqual(line(60), ['1:00', 'trajanje 1 minuta']);
+  assert.deepEqual(line(65), ['1:05', 'trajanje 1 minuta 5 sekundi']);
+  assert.deepEqual(line(122), ['2:02', 'trajanje 2 minute 2 sekunde']);
+  for (const unknown of [null, 0, 12.5]) assert.equal(ctx.workoutSetDurationHtml(unknown), '', String(unknown));
 });

@@ -3,12 +3,12 @@
 // stays full past it; no countdown cues and no automatic end. His tap saves the real duration in the history entry's
 // durList (both sides of a sided set added up; null when over the forgotten-tap guard). A set with "Tajmer serije" and a
 // hold still count down and move on by themselves. The journal shows a done set's duration on its second line
-// ("0:42"; screen readers: "trajanje 42 s"), without horizontal overflow at 375 px. The estimate learns his own pace
+// ("0:42"; screen readers: "trajanje 42 sekunde"), without horizontal overflow at 375 px. The estimate learns his own pace
 // from earlier durations. The progress dot moves with the arc and never back; the percent counts finished sets only.
 // Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
+const { artifacts, engine, fixture: baseFixture, launch, serve, openCinemaControls } = require('./runtime.cjs');
 const id = 'rep-set-timer', again = 'rep-set-timer-learned';
 const A = (p, action) => p.locator('[data-a="' + action + '"]');
 const player = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -29,8 +29,8 @@ function fixture() {
       { exId: 'back-squat', measure: 'sets', sets: 3, reps: 8, kg: 100, rest: 30, sides: false },
       // 6 reps per side, played as two steps (18 s each)
       { exId: 'bugarski', measure: 'sets', sets: 1, reps: 6, kg: 14, rest: 0, sides: true },
-      // his own set timer: counts down and ends by itself
-      { exId: 'bench-press', measure: 'sets', sets: 1, reps: 8, kg: 60, rest: 0, sides: false, repSetSec: 20 },
+      // his own set timer: counts down and ends by itself (set 1); set 2 he ends early by his tap
+      { exId: 'bench-press', measure: 'sets', sets: 2, reps: 8, kg: 60, rest: 0, sides: false, repSetSec: 20 },
       // a hold: counts down and ends by itself
       { exId: 'side-plank', measure: 'time', sets: 1, reps: 1, sec: 6, kg: 0, rest: 0, sides: false }
     ] },
@@ -116,7 +116,10 @@ async function countUp(p, width) {
   await shot(p, 'start-' + width);
   const before = await buzzes(p), dot = [await progress(p)];
   assert.equal(dot[0].percent, '0%');
-  await advance(p, 6);
+  // the digits show the whole seconds that have passed: 0.6 s is still 0:00
+  await advance(p, 0.6);
+  assert.equal(await clock(p), '0:00');
+  await advance(p, 5.4);
   assert.equal(await clock(p), '0:06');
   assert.equal(await fill(p), 8, 'a quarter of the 24 s estimate: 8 of 31 bars');
   dot.push(await progress(p));
@@ -149,7 +152,8 @@ async function countUp(p, width) {
   await advance(p, 30);
   assert.equal(await clock(p), '0:32');
   await p.locator('.cinema-pause-layer [data-a="cinemaResume"]').click();
-  await advance(p, 3);
+  // he taps at 35.6 s, while the clock shows 0:35
+  await advance(p, 3.6);
   assert.equal(await clock(p), '0:35');
   dot.push(await progress(p));
   await markDone(p);
@@ -159,7 +163,7 @@ async function countUp(p, width) {
   assert.notEqual(dot.at(-1).percent, '0%', 'the finished set counts: ' + JSON.stringify(dot.at(-1)));
   state = await player(p);
   const first = state.liveSchedule.findIndex(x => x.kind === 'manual' && x.g === 0 && x.set === 1);
-  assert.equal(state.liveSchedule[first].actualDur, 35, 'the real time without the pause');
+  assert.equal(state.liveSchedule[first].actualDur, 35, 'the real time without the pause, as the clock showed it at the tap');
   assert.equal(state.liveSchedule[first].targetSec, 24);
   assert.equal(step(state).kind, 'rest');
   // set 2: a forgotten tap (100 s > max(60 s, 3 × 24 s))
@@ -169,8 +173,20 @@ async function countUp(p, width) {
   assert.equal(step(await player(p)).kind, 'manual');
   await markDone(p);
   assert.equal(step(await player(p)).kind, 'rest');
-  // set 3: marked in the journal, which holds the clock: not timed live, so no duration
+  // set 3: timed live (20 s), then "Ponovi seriju" opens it again and forgets that time
   await reach(p, 0, 'manual');
+  await advance(p, 20);
+  await markDone(p);
+  state = await player(p);
+  const third = state.liveSchedule.findIndex(x => x.kind === 'manual' && x.g === 0 && x.set === 3);
+  assert.equal(state.liveSchedule[third].actualDur, 20);
+  await openCinemaControls(p);
+  await p.locator('.sheet [data-a="workoutRedoSet"][data-j="0"][data-set="3"]').click();
+  state = await player(p);
+  assert.equal(state.i, third);
+  assert.equal(state.liveSchedule[third].actualDur, undefined, 'a set done again has no time yet');
+  assert.equal(await clock(p), '0:00');
+  // … and this time it is marked in the journal, which holds the clock: not timed live, so no duration
   await advance(p, 20);
   await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
   await journal(p).locator('.cj-card[data-index="0"] [data-a="workoutSetDone"]').click();
@@ -184,21 +200,21 @@ async function countUp(p, width) {
   await advance(p, 20); await markDone(p);
   await reach(p, 1, 'manual', 'Desna strana');
   await advance(p, 22); await markDone(p);
-  // the journal: the duration on the done rows' second line, read out as "trajanje … s"
+  // the journal: the duration on the done rows' second line, read out as "trajanje … sekundi"
   await A(p, 'cinemaJournal').first().click(); await journal(p).waitFor();
   await journal(p).locator('.cj-row[data-j="1"]').click();
   await journal(p).locator('.cj-card[data-index="1"]').waitFor();
   const sided = await detailRows(p, 1);
   assert.equal(sided.length, 1);
   assert.equal(sided[0].shown, '0:42');
-  assert.equal(sided[0].spoken, 'trajanje 42 s');
+  assert.equal(sided[0].spoken, 'trajanje 42 sekunde');
   assert.match(sided[0].text, /lijeva · .*desna · 0:42/);
   assert.equal(sided[0].fontSize, '13px');
   assert.ok(sided[0].fits && sided[0].spokenHidden, JSON.stringify(sided[0]));
   await journal(p).locator('.cj-row[data-j="0"]').click();
   await journal(p).locator('.cj-card[data-index="0"]').waitFor();
   const squat = await detailRows(p, 0);
-  assert.deepEqual(squat.map(row => [row.shown, row.spoken]), [['0:35', 'trajanje 35 s']], 'set 2 was over the guard, set 3 untimed: no line');
+  assert.deepEqual(squat.map(row => [row.shown, row.spoken]), [['0:35', 'trajanje 35 sekundi']], 'set 2 was over the guard, set 3 untimed: no line');
   assert.equal(await p.locator('.cj-card[data-index="0"] .workout-set-details').count(), 1, 'sets 2 and 3 have no line');
   await noOverflow(p, 'journal ' + width);
   await shot(p, 'journal-' + width);
@@ -215,7 +231,14 @@ async function countUp(p, width) {
   assert.ok(await p.evaluate(() => window.feedbackAudit.tones.length) > tones, 'with a tone too (sound is on)');
   await advance(p, 1.2);
   state = await player(p);
-  assert.ok(!(step(state).g === 2 && step(state).kind === 'manual'), 'the set timer ends the set by itself');
+  assert.ok(step(state).g === 2 && step(state).kind === 'manual' && step(state).set === 2, 'the set timer ends the set by itself: ' + JSON.stringify(step(state)));
+  // set 2: he ends it early by his tap at 0:12; a set timer's time is the prescription, so nothing is saved
+  assert.equal(await clock(p), '0:20');
+  await advance(p, 8);
+  assert.equal(await clock(p), '0:12');
+  await markDone(p);
+  state = await player(p);
+  assert.equal(state.liveSchedule.find(x => x.kind === 'manual' && x.g === 2 && x.set === 2).actualDur, undefined, 'an early tap on a set timer saves no time');
   // the hold counts down and ends by itself
   state = await reach(p, 3, 'work');
   assert.equal(await clock(p), '0:06');
@@ -228,7 +251,8 @@ async function countUp(p, width) {
   assert.deepEqual(logged[0].durList, [35, null, null], 'the real duration; null over the guard and when not timed live');
   assert.deepEqual(logged[1].durList, [42], 'both sides added up');
   assert.deepEqual(logged[1].sideCounts, [2]);
-  assert.equal(logged[2].durList, undefined, 'a set with its own timer saves no duration');
+  assert.equal(logged[2].durList, undefined, 'a set with its own timer saves no duration, also when he ended it early');
+  assert.equal(logged[2].setsDone, 2);
   assert.equal(logged[3].durList, undefined, 'a hold saves no duration');
   return { countsUp: true, arcFullPastEstimate: true, noAutoEnd: true, noCues: true, pauseExcluded: true, durList: logged[0].durList, sided: logged[1].durList, guard: true, journalLine: true, setTimerCountsDown: true, holdCountsDown: true };
 }

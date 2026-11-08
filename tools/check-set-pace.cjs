@@ -90,6 +90,12 @@ test('the learned pace replaces only the generic 3 s or 20 s per rep; his set ti
   // without his durations: the generic guess as before
   assert.equal(a.manualSetEstimate({it:{...squat, exId:'bench'}, e:{cat:'Snaga'}, set:1}), 24);
   assert.equal(a.manualSetEstimate({it:{exId:'sprint', measure:'sets', sets:4, reps:5}, e:a.S.ex.sprint, set:1}), 100);
+  // a drill at the pitch he has timed: his 8 s per rep instead of the generic 20 s
+  const k = app([session(3, [done('sprint', 5, [40, 40])])], {sprint:{id:'sprint', cat:'Kondicija'}});
+  assert.equal(k.manualSetEstimate({it:{exId:'sprint', measure:'sets', sets:4, reps:5}, e:k.S.ex.sprint, set:1}), 40);
+  // the estimate is whole seconds: 7 reps at his 2.9 s are 20.3 s → 20 s
+  const r = app([session(3, [done('squat', 7, [20, 20])])], {squat:{id:'squat', cat:'Snaga'}});
+  assert.equal(r.manualSetEstimate({it:{exId:'squat', measure:'sets', sets:3, reps:7}, e:r.S.ex.squat, set:1}), 20);
 });
 
 test('sides: one side of a split set, or both sides of a combined set', () => {
@@ -114,4 +120,22 @@ test('the learned pace feeds the step estimates (the arc) and the total time; a 
   a.S.log = [];
   assert.deepEqual(targets(), [24, 24, 24], 'no durations: 3 s per rep');
   assert.equal(a.protoMin({items}), 3);
+});
+
+test('the log is indexed once per log array, also while the done screen projects the week on another one', () => {
+  const a = app(learned.slice(), {squat:{id:'squat', cat:'Snaga'}});
+  let built = 0;
+  a.SetPace = {...Pace, index:log => { built++; return Pace.index(log); }};
+  const saved = a.S.log;
+  assert.equal(a.learnedRepSeconds('squat'), 4);
+  // weekAfter: S.log is a projected copy for a moment, then the saved log again
+  a.S.log = [session(9, [done('squat', 10, [50, 50])])].concat(saved);
+  assert.equal(a.learnedRepSeconds('squat'), 4.5);
+  a.S.log = saved;
+  assert.equal(a.learnedRepSeconds('squat'), 4);
+  assert.equal(built, 2, 'the saved log keeps its index');
+  // a log that grows is indexed again
+  saved.unshift(session(10, [done('squat', 10, [20, 20])]));
+  assert.equal(a.learnedRepSeconds('squat'), 3);
+  assert.equal(built, 3);
 });

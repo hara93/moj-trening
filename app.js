@@ -222,12 +222,14 @@ function manualSetEstimate({it, e, set, side}){
   return Math.max(1, Math.round(repsOf(it, set || 1) * repSeconds * (combined ? 2 : 1) + (combined ? 5 : 0)));
 }
 // His seconds per rep for an exercise, from the history (null = not enough of his own durations yet). The whole log is
-// read once and kept until the log changes (every history write replaces or resizes S.log).
-let setPaceCache = null;
+// read once and kept until the log changes (every history write replaces or resizes S.log). Kept per log array: the
+// done screen's week projection (weekAfter) swaps S.log for a moment, and the saved log keeps its index meanwhile.
+const setPaceCache = new WeakMap(), noLog = Object.freeze([]);
 function learnedRepSeconds(exId){
-  const log = Array.isArray(S.log) ? S.log : [];
-  if (!setPaceCache || setPaceCache.log !== log || setPaceCache.n !== log.length) setPaceCache = { log, n:log.length, pace:SetPace.index(log) };
-  return setPaceCache.pace.get(exId) ?? null;
+  const log = Array.isArray(S.log) ? S.log : noLog;
+  let hit = setPaceCache.get(log);
+  if (!hit || hit.n !== log.length) { hit = { n:log.length, pace:SetPace.index(log) }; setPaceCache.set(log, hit); }
+  return hit.pace.get(exId) ?? null;
 }
 function protoMin(p){
   const s = stepsFromItems(p.items || []).reduce((a, st) => a + (st.dur || st.targetSec || 0), 0);
@@ -2255,10 +2257,12 @@ function workoutRowsHtml(items,player,j,s=workoutState(j)) {
     return '<tr class="workout-set-row" data-set="'+row.set+'" data-state="'+row.state+'"'+(row.current?' aria-current="step"':'')+'><td>'+marker+'</td><td>'+workoutControl(s,row,timed?'sec':'reps',row.dose[timed?'sec':'reps'],locked && !(done && !timed),heading)+'</td><td>'+workoutControl(s,row,'kg',kg,locked||!weightKind,heading)+'</td><td>'+workoutControl(s,row,timed?'sir':'rir',row.reserve,!editableReserve,heading)+'</td></tr>'+(details||duration?'<tr class="workout-set-details" data-state="'+row.state+'"><td></td><td colspan="3">'+esc(details)+(details&&duration?' · ':'')+duration+redoPartial+'</td></tr>':'');
   }).join('');
 }
-// The real duration of a rep set: "0:42" on screen, "trajanje 42 s" for a screen reader. Nothing when it is not known.
+// The real duration of a rep set: "0:42" on screen, "trajanje 42 sekunde" for a screen reader (units written out, as
+// in the player's other spoken times). Nothing when it is not known.
 function workoutSetDurationHtml(seconds){
   if(!Number.isInteger(seconds)||seconds<1)return '';
-  const m=Math.floor(seconds/60),r=seconds%60,spoken='trajanje '+(m?m+' min'+(r?' '+r+' s':''):r+' s');
+  const m=Math.floor(seconds/60),r=seconds%60,sec=r+' '+plural(r,'sekunda','sekunde','sekundi');
+  const spoken='trajanje '+(m?m+' '+plural(m,'minuta','minute','minuta')+(r?' '+sec:''):sec);
   return '<span class="workout-set-duration"><span aria-hidden="true">'+fmt(seconds)+'</span><span class="workout-sr">'+spoken+'</span></span>';
 }
 function workoutTableHtml(c,j,s=workoutState(j)) {
@@ -7014,7 +7018,8 @@ const A = {
     const elapsed=step.kind==='work'&&Number.isFinite(step.dur)?Math.round(Math.max(0,step.dur-remaining())):undefined;
     // 1.22.1: how long a rep set that counted up really took (pauses excluded). Only a set timed live: a tap while a sheet
     // (the journal) holds the clock is not timed, and its duration stays unknown.
-    const timed=cinemaCountsUp(step)&&!d.automatic&&!P.paused&&!P.dosePause?Math.round(cinemaManualElapsed()):undefined;
+    // Whole seconds rounded down, as the clock showed them at the tap (cinemaClockText), so the journal says the same.
+    const timed=cinemaCountsUp(step)&&!d.automatic&&!P.paused&&!P.dosePause?Math.floor(cinemaManualElapsed()):undefined;
     advanceWorkout({nextIndex:P.i+1,automatic:!!d.automatic,actualSec:elapsed===step.dur?undefined:elapsed,
       actualDur:PlayerDose.validActualDur(timed)?timed:undefined});
   },

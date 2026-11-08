@@ -164,6 +164,10 @@
             if(count===null)delete x.sideCounts;
             else x.sideCounts=Array(count).fill(x.sides?2:1);
             if(!equal(x.sideCounts,before.sideCounts))actualChanged=true;
+            // 1.22.1: a duration is the time of the sides done in that set; where the edit rewrote the set's side
+            // count (one side done → both), the old time no longer matches the set, so it is not known any more
+            if(Array.isArray(x.sideCounts)&&Array.isArray(x.durList)&&Array.isArray(before.sideCounts))
+              x.durList=x.durList.map(function(v,i){return x.sideCounts[i]===before.sideCounts[i]?v:null;});
           }
           if(actualChanged && Array.isArray(x.setNumbers)) {
             if(count===null)delete x.setNumbers;
