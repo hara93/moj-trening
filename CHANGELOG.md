@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.20.21 — 8. 11. 2026.
+
+- Bijele brojke i zeleni segmenti prate odbrojavanje rada. Za serije na ponavljanja zadaj **Vrijeme serije (s)** ili koristi automatsku procjenu. Player prelazi na odmor ili sljedeću seriju kad vrijeme istekne.
+- Kartica vježbe otvara **Dnevnik**, a ručne kontrole su u izborniku playera.
+
 ## 1.20.20 — 8. 11. 2026.
 
 - Player prikazuje velika ponavljanja lijevo, štopericu sa segmentiranim lukom u sredini i okomiti odabir težine desno. Tijekom odmora demonstracija se zatamni, a veći bijeli brojač prikazuje preostalo vrijeme ispod tipki za prilagodbu odmora.

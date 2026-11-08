@@ -59,19 +59,21 @@ test('known skipped work is not called unknown and a different latest measure ne
   const changed=compact(item(),[latest,older]);
   assert.match(changed,/druga vrsta doze/i);assert.doesNotMatch(changed,/8 pon\./);
 });
-test('the actual protocol writer preserves saved zero and nonzero RIR/SIR targets during a title-only edit',async()=>{
+test('the actual protocol writer preserves RIR, SIR and countdown targets during a title-only edit',async()=>{
   const begin=source.indexOf('  savePr: async d => {'),end=source.indexOf('  delPr: async',begin);
   assert.ok(begin>=0&&end>begin);
-  const rows=[item({targetRir:0}),item({targetRir:2}),item({measure:'time',sec:30,targetSir:0}),item({measure:'time',sec:30,targetSir:2})];
+  const rows=[item({targetRir:0}),item({targetRir:2,repSetSec:40}),item({measure:'time',sec:30,targetSir:0}),item({measure:'time',sec:30,targetSir:2})];
   const clone=value=>JSON.parse(JSON.stringify(value)),original={id:'p',name:'Izvorni naziv',items:clone(rows)};
   const context={S:{pr:{p:clone(original)},draft:{...clone(original),name:'Novi naziv'},stack:[{v:'pr',id:'p'},{v:'build',id:'p'}]},
-    clone,normGroups:rows=>rows,doseSig:()=> 'same-recorded-dose',PROG_STATE:[],Date,
+    clone,PlayerDose:require('../player-dose.js'),normGroups:rows=>rows,doseSig:()=> 'same-recorded-dose',PROG_STATE:[],Date,
     save:async(coll,id,body)=>{context.written={coll,id,body:clone(body)};return true;},planSaved(){},render(){},toast(){}};
   context.top=()=>context.S.stack.at(-1);context.S.draft.items.forEach(row=>{row._d0='same-recorded-dose';});
   const commit=source.slice(source.indexOf('function builderCommitSection(){'),source.indexOf('// supersets stay well formed'));
-  vm.createContext(context);vm.runInContext(commit+'\nglobalThis.A={'+source.slice(begin,end)+'}',context);
+  const timer=source.slice(source.indexOf('function repSetSeconds('),source.indexOf('function manualSetEstimate('));
+  vm.createContext(context);vm.runInContext(timer+commit+'\nglobalThis.A={'+source.slice(begin,end)+'}',context);
   await context.A.savePr({});
   assert.equal(context.written.coll,'protocols');assert.equal(context.written.id,'p');assert.equal(context.written.body.name,'Novi naziv');
   assert.deepEqual(context.written.body.items.map(row=>[row.targetRir??null,row.targetSir??null]),[[0,null],[2,null],[null,0],[null,2]]);
   assert.deepEqual(context.S.pr.p.items.map(row=>[row.targetRir??null,row.targetSir??null]),[[0,null],[2,null],[null,0],[null,2]]);
+  assert.deepEqual(context.written.body.items.map(row=>row.repSetSec??null),[null,40,null,null]);
 });

@@ -1,5 +1,5 @@
 'use strict';
-const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
+const {openJournal,closeJournal,openQuit,openCinemaControls,pressCinemaMain}=require('./runtime.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -59,7 +59,7 @@ async function fillEdit(p,j,set,vals,live=false){
 async function solo(p){
   await home(p);await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await by(p,'openEx','bench-press').click();
   const c=p.locator('.workout-exercise-page').last();await c.waitFor();assert.equal(await c.locator('.workout-set-row').count(),2);assert.equal(await c.locator('.workout-set-row[data-state=planned]').count(),2);assert.equal(await p.locator('[role=tab]').count(),0);
-  await p.locator('.workout-plan-options summary').click();await A(p,'workoutEdit').click();const f=p.locator('#play-dose-form');await f.locator('[name=sets]').fill('3');await A(p,'playDoseResize').click();await f.locator('[data-dose-set="3"] [data-dose-value=reps]').fill('3');await f.locator('[data-dose-set="3"] [data-dose-value=kg]').fill('27,5');await A(p,'playDoseApply').click();
+  await p.locator('.workout-plan-options summary').click();await p.getByRole('button',{name:'Broj serija',exact:true}).click();const f=p.locator('#play-dose-form');await f.locator('[name=sets]').fill('3');await A(p,'playDoseResize').click();await f.locator('[data-dose-set="3"] [data-dose-value=reps]').fill('3');await f.locator('[data-dose-set="3"] [data-dose-value=kg]').fill('27,5');await A(p,'playDoseApply').click();
   assert.equal(await c.locator('.workout-set-row').count(),3);assert.equal(await row(p,0,3).locator('[data-field=kg]').inputValue(),'27,5');assert.equal((await store(p)).exercises['bench-press'].kg,20);
   await A(p,'workoutHistory').last().click();await p.locator('.workout-exercise-panel').waitFor();assert.match(await p.locator('.workout-panel-body').innerText(),/Još nema/);await A(p,'workoutPanelBack').click();assert.equal(await c.locator('.workout-set-row').count(),3);
   await A(p,'workoutTrends').last().click();assert.equal(await p.locator('.workout-chart').count(),1);assert.equal(await p.locator('.workout-chart svg').count(),0);await A(p,'workoutPanelBack').click();
@@ -92,7 +92,7 @@ async function superset(p){
   for(let guard=0;guard<18;guard++){
     const saved=await play(p),step=saved.liveSchedule[saved.i];
     if(step.kind==='work'&&step.g===1&&step.set===1)break;
-    if(step.kind==='ready')await p.locator('.cinema-primary').click();
+    if(step.kind==='ready')await pressCinemaMain(p);
     else if(step.dur)await advance(p,saved.left+.1);
     else assert.fail('Unexpected step before bilateral hold: '+JSON.stringify(step));
   }
@@ -100,18 +100,18 @@ async function superset(p){
   await openJournal(p,true);const firstHold=row(p,1,1,'.workout-journal');assert.equal(await firstHold.getAttribute('data-state'),'active');await closeJournal(p);await advance(p,3);
   const help=p.locator('.workout-cinema [data-a=workoutInfo][data-j="1"]');await help.click();await p.locator('.workout-instructions-body').waitFor();const paused=await play(p);assert.equal(paused.clock.paused,true);await advance(p,35);assert.equal((await play(p)).i,paused.i);
   await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});await p.locator('.workout-cinema').waitFor();
-  const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.equal(runningAgain.clock.paused,false);assert.match(await A(p,'cinemaPause').getAttribute('aria-label'),/^Pauziraj/);
-  await A(p,'cinemaPause').click();await help.click();await advance(p,28);await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});
-  assert.match(await A(p,'cinemaPause').getAttribute('aria-label'),/^Nastavi/);assert.equal((await play(p)).left,paused.left);assert.equal((await play(p)).clock.paused,true);
-  await A(p,'cinemaPause').click();record('instructionsPause',{elapsedWhileOpen:63,sameRemainingSeconds:paused.left,runningAndPausedRestored:true});
+  const runningAgain=await play(p);assert.equal(runningAgain.i,paused.i);assert.equal(runningAgain.left,paused.left);assert.equal(runningAgain.clock.paused,false);assert.match(await A(p,'cinemaTimer').getAttribute('aria-label'),/^Pauziraj/);
+  await A(p,'cinemaTimer').click();await help.click();await advance(p,28);await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});
+  assert.match(await A(p,'cinemaTimer').getAttribute('aria-label'),/^Nastavi/);assert.equal((await play(p)).left,paused.left);assert.equal((await play(p)).clock.paused,true);
+  await A(p,'cinemaTimer').click();record('instructionsPause',{elapsedWhileOpen:63,sameRemainingSeconds:paused.left,runningAndPausedRestored:true});
   await advance(p,16);await openJournal(p,true);
   assert.equal(await firstHold.getAttribute('data-state'),'partial');assert.match(await firstHold.locator('xpath=following-sibling::tr[1]').innerText(),/✓ lijeva · ○ desna/);
   const before=await play(p);await p.reload();await A(p,'resumeGo').click();const resumed=await play(p);assert.deepEqual(resumed.doneSteps,before.doneSteps);
   await openJournal(p,true);assert.equal(await firstHold.getAttribute('data-state'),'partial');
   await p.screenshot({path:path.join(artifacts,useWebKit?'checklist-live-webkit-375.png':'checklist-live-375.png')});await p.setViewportSize({width:320,height:812});await layout(p,'.workout-journal');await p.setViewportSize({width:375,height:812});
-  await closeJournal(p);await p.locator('[data-a="jump"][data-d="1"]').click();snapshot=await play(p);
+  await closeJournal(p);await openCinemaControls(p);await p.locator('[data-a="jump"][data-d="1"]').click();snapshot=await play(p);
   assert.equal(snapshot.liveSchedule[snapshot.i].kind,'manual');assert.equal(snapshot.liveSchedule[snapshot.i].g,0);assert.equal(snapshot.liveSchedule[snapshot.i].set,2);
-  await p.locator('.cinema-primary').click();
+  await pressCinemaMain(p);
   await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();const d=await store(p),entry=d.log[0];assert.deepEqual(entry.items[0].kgList,[20,30]);assert.deepEqual(entry.items[0].repsList,[5,4]);assert.deepEqual(entry.items[1].sideCounts,[1]);assert.equal(d.protocols[prId].items[0].kg,20);
   record('superset',{realCheckboxes:2,originalBenchKg:20,done:entry.items[0].kgList,partialTimed:entry.items[1].sideCounts,sourceRows:4});
 }

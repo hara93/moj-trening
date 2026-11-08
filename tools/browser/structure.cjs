@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const MuscleWork = require('../../muscle-work.js');
 const fs = require('node:fs');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
+const { artifacts, engine, fixture: baseFixture, launch, serve, openCinemaControls, pressCinemaMain } = require('./runtime.cjs');
 const protocolId = 'structure-two-exercises';
 const fixed = new Date('2026-11-06T10:00:00+01:00');
 const results = [];
@@ -74,9 +74,12 @@ async function manualSet(page,set) {
     if(st.kind==='manual'){
       assert.equal(st.g,0);assert.equal(st.set,set);
       assert.equal(await page.locator('#ring').getAttribute('data-a'),'cinemaTimer');
-      assert.equal(await page.locator('.cinema-primary[data-a="cinemaMain"]').innerText(),'Serija gotova');return;
+      await openCinemaControls(page);
+      assert.equal(await page.locator('.cinema-primary[data-a="cinemaMain"]').innerText(),'Serija gotova');
+      await A(page,'cinemaClose').click();
+      return;
     }
-    if(st.kind==='ready')await page.locator('.cinema-primary[data-a="cinemaMain"]').click();
+    if(st.kind==='ready')await pressCinemaMain(page);
     else if(st.dur)await advance(page,saved.left+.1);
     else assert.fail('Unexpected step before manual set '+set);
   }
@@ -151,12 +154,12 @@ async function liveWorkout(page,width) {
   assert.equal((await player(page)).clock.paused,true);assert.equal(workCount(await player(page)),0);
   await advance(page,7);assert.equal((await player(page)).clock.seconds,beforePause.clock.seconds);
   await page.locator('#ring').click();assert.equal((await player(page)).clock.paused,false);
-  const firstStep=(await player(page)).i;await page.locator('.cinema-primary[data-a="cinemaMain"]').click();
+  const firstStep=(await player(page)).i;await pressCinemaMain(page);
   assert.equal(workCount(await player(page)),1);assert.equal((await player(page)).doneSteps[firstStep],1);
   await openJournal(page);assert.equal(await row(page,0,1).getAttribute('data-state'),'done');
   assert.equal(await row(page,0,1).locator('[data-field="rir"]').isEnabled(),true);
   assert.equal(await row(page,0,2).locator('[data-field="rir"]').isEnabled(),false);
-  await closeJournal(page);await manualSet(page,2);await A(page,'cinemaPause').click();await openJournal(page);
+  await closeJournal(page);await manualSet(page,2);await A(page,'cinemaTimer').click();await openJournal(page);
   await noOverflow(page,'.sheet[data-kind="cinemaJournal"]','focused journal '+width);
   await page.screenshot({path:path.join(artifacts,'structure-'+engine+'-journal-'+width+'.png')});
   const secondStep=(await player(page)).i;
@@ -166,7 +169,7 @@ async function liveWorkout(page,width) {
   assert.equal((await player(page)).i,secondStep+1,'journal advances even if the previous manual pause is retained');
   const paused=await player(page);await advance(page,25);
   assert.equal((await player(page)).i,paused.i);assert.equal((await player(page)).clock.seconds,paused.clock.seconds);
-  await A(page,'cinemaPause').click();await noOverflow(page,'.workout-cinema','cinema '+width);
+  await A(page,'cinemaTimer').click();await noOverflow(page,'.workout-cinema','cinema '+width);
   await A(page,'cinemaMenu').click();await A(page,'cinemaExit').click();await A(page,'quitDiscard').click();
   assert.equal(await player(page),null);assert.equal(JSON.stringify((await store(page)).log),history);
   assert.equal(JSON.stringify((await store(page)).protocols[protocolId].items),source);

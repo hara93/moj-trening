@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const {readFileSync} = require('node:fs');
-const {createServer, engine, fixture, launch, repo, withOffline} = require('./runtime.cjs');
+const {createServer, engine, fixture, launch, repo, withOffline, openCinemaControls} = require('./runtime.cjs');
 const first = 'assets/slike/dead-bug.webp', next = 'assets/slike/goblet-squat.webp';
 const action = (page, name, suffix = '') => page.locator('[data-a="'+name+'"]'+suffix);
 const playerImage = page => page.locator('.cinema-single-media img');
@@ -112,13 +112,13 @@ async function run() {
     await probe.close();
 
     await withOffline(context,server,async()=>{
-      await action(page,'jump','[data-d="1"]').click(); // leave initial preparation
-      await action(page,'jump','[data-d="1"]').click(); // enter the warmed exercise
+      await openCinemaControls(page);await action(page,'jump','[data-d="1"]').click(); // leave initial preparation
+      await openCinemaControls(page);await action(page,'jump','[data-d="1"]').click(); // enter the warmed exercise
       assert.equal(await playerImage(page).getAttribute('src'),next);
       assert.equal(await playerImage(page).getAttribute('fetchpriority'),'high');
       assert.equal(await playerImage(page).evaluate(img=>img===window.warmed[0]&&img.complete&&img.naturalWidth>0),true);
       assert.equal(await page.evaluate(()=>window.warmed.length),1,'do not warm a private picture');
-      await action(page,'jump','[data-d="1"]').click();
+      await openCinemaControls(page);await action(page,'jump','[data-d="1"]').click();
       const privatePhoto=page.locator('.cinema-single-media img[src^="blob:"]');
       await privatePhoto.evaluate(img=>img.decode());
       assert.equal(await privatePhoto.evaluate(img=>img.naturalWidth),192);

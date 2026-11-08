@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
+const { artifacts, engine, fixture: baseFixture, launch, serve, openCinemaControls, pressCinemaMain } = require('./runtime.cjs');
 const fixed = new Date('2026-11-06T10:00:00+01:00');
 const id = 'cinema-audit';
 const redoId = 'cinema-redo-audit';
@@ -33,7 +33,7 @@ function fixture() {
   data.settings.sound = false; data.settings.planDates = {}; data.settings.matchDates = {};
   data.settings.matchDay = -1; data.settings.morningChecks = {};
   data.protocols = { [id]: { id, name: 'Filmski kontrolni trening', tag: 'Teretana', days: [], items: [
-    { exId: 'bench-press', measure: 'sets', sets: 5, reps: 8, kg: 50, rest: 60, sides: false, targetRir: 2 },
+    { exId: 'bench-press', measure: 'sets', sets: 5, reps: 8, repSetSec: 120, kg: 50, rest: 60, sides: false, targetRir: 2 },
     { exId: 'side-plank', measure: 'time', sets: 2, reps: 1, sec: 6, kg: 0, rest: 30, sides: true, targetSir: 3 }
   ] } };
   data.protocols[redoId] = { id: redoId, name: 'Provjera ponavljanja serije', tag: 'Teretana', days: [],
@@ -90,8 +90,7 @@ async function manual(p, set) {
   for (let guard = 0; guard < 15; guard++) {
     const saved = await player(p), current = step(saved);
     if (current.kind === 'manual') { assert.equal(current.g, 0); assert.equal(current.set, set); return; }
-    if (current.kind === 'ready' || current.kind === 'rest' && !current.trans) await A(p, 'cinemaMain').click();
-    else if (current.dur) await advance(p, saved.left + 0.1);
+    if (current.dur) await advance(p, saved.left + 0.1);
     else assert.fail('Unexpected step before set ' + set + ': ' + JSON.stringify(current));
   }
   assert.fail('Set ' + set + ' never became current');
@@ -124,16 +123,27 @@ async function portraitPresentation(p, width, height) {
   await A(p,'startPr').click();
   const firstCard=p.locator('.workout-cinema[data-phase="ready"] .workout-cinema-next:has(>.cinema-next)');
   await firstCard.waitFor();await assertOverlayBackground(firstCard);await hero(p);
+  const transport=p.locator('.workout-cinema .cinema-controls,.workout-cinema .cinema-secondary,.workout-cinema [data-a="cinemaMain"]');
+  assert.equal(await transport.count(),0,'the player has no bottom transport row during prep');
   const readyFade=await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node,'::after').backgroundImage);
   assert.match(readyFade,/rgba\(25, 29, 37, 0\) 16%/,'the upper fade clears before most of the first card');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-prep-'+width+'x'+height+'.png')});
+  await firstCard.locator('[data-a="playDoseEdit"]').tap();
+  const target=p.locator('#play-dose-form [name="repSetSec"]');
+  await target.fill('24');await A(p,'playDoseApply').tap();
+  assert.equal((await player(p)).items[0].repSetSec,24);
+  assert.equal((await store(p)).protocols[id].items[0].repSetSec,undefined,'the timer edit only affects this workout');
   await manual(p,1);await hero(p);
+  const firstStep=(await player(p)).i;
   assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'goblet-squat');
+  assert.equal(await transport.count(),0,'the player has no bottom transport row during work');
+  assert.equal(await p.locator('#ringN').innerText(),'0:24');
   const fill=p.locator('#cinema-clock-fill');
   assert.equal(await fill.getAttribute('data-count'),'0');
   await advance(p,6);
-  assert.equal(await p.locator('#ringN').innerText(),'0:06');
-  assert.equal(await fill.getAttribute('data-count'),'7','manual arc uses the estimate without ending the set');
+  assert.equal(await p.locator('#ringN').innerText(),'0:18');
+  assert.equal(await fill.getAttribute('data-count'),'9','the arc fills during the configured countdown');
+  assert.equal(await fill.evaluate(node=>getComputedStyle(node).stroke),'rgb(45, 216, 90)');
   const weight=A(p,'cinemaWeightOpen');
   await weight.tap();
   const exact=A(p,'cinemaWeightExact');
@@ -152,7 +162,7 @@ async function portraitPresentation(p, width, height) {
   await exact.press('Escape');
   assert.equal(await weight.locator('strong').innerText(),'21');
   assert.deepEqual((await store(p)).protocols[id].items[0].kg,20);
-  assert.equal(await p.locator('#ringN').innerText(),'0:06','choosing load does not restart the stopwatch');
+  assert.equal(await p.locator('#ringN').innerText(),'0:18','choosing load does not restart the countdown');
   const layout=await p.locator('.workout-cinema').evaluate(view=>{
     const box=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height};};
     const media=view.querySelector('.cinema-single-media'),image=media.querySelector('img');
@@ -175,12 +185,12 @@ async function portraitPresentation(p, width, height) {
   // media descendant. Pausing must leave the portrait anchored to the same header.
   const portrait=()=>p.locator('.workout-cinema .cinema-single-media').boundingBox();
   const runningRect=await portrait();
-  await A(p,'cinemaPause').click();assert.equal((await player(p)).clock.paused,true);
+  await A(p,'cinemaTimer').click();assert.equal((await player(p)).clock.paused,true);
   const pausedRect=await portrait();
   assert.deepEqual(pausedRect,runningRect,'pausing keeps the image below the same header without moving or resizing it');
   assert.equal(await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node).opacity),'0.55');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-paused-'+width+'x'+height+'.png')});
-  await A(p,'cinemaPause').click();assert.equal((await player(p)).clock.paused,false);
+  await A(p,'cinemaTimer').click();assert.equal((await player(p)).clock.paused,false);
   assert.deepEqual(await portrait(),runningRect,'resuming preserves the standing portrait geometry');
   await weight.tap();await exact.tap();
   const fields=p.locator('#play-dose-form [data-dose-value="kg"]');
@@ -188,11 +198,17 @@ async function portraitPresentation(p, width, height) {
   await A(p,'playDoseApply').tap();
   assert.equal(await weight.locator('strong').innerText(),'0','an explicit unloaded set displays 0 kg');
   assert.deepEqual((await player(p)).items[0].kgList,[0,0,0]);
-  await A(p,'cinemaMain').click();await closeCompletionPanel(p);
-  assert.equal(step(await player(p)).kind,'rest');
+  await advance(p,17);
+  assert.equal(await p.locator('#ringN').innerText(),'0:01');
+  assert.equal(doneCount(await player(p)),0);
+  await advance(p,1.1);
+  const automatic=await player(p);
+  assert.equal(step(automatic).kind,'rest','the rep-set countdown enters rest automatically');
+  assert.deepEqual(automatic.doneSteps,{[firstStep]:1});
+  assert.equal(await transport.count(),0,'the player has no bottom transport row during rest');
   const restColor=await p.locator('#ringN').evaluate(node=>getComputedStyle(node).color);
   assert.equal(restColor,'rgb(255, 255, 255)','the rest countdown is white');
-  assert.notEqual(restColor,layout.timerColor,'work and rest counters are visually distinct');
+  assert.equal(layout.timerColor,'rgb(255, 255, 255)','the work countdown is white');
   assert.equal(await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node).opacity),'0.28');
   assert.equal(await p.locator('.workout-cinema-rest-adjust span').textContent(),'Odmor');
   assert.equal(await p.locator('#ringN').innerText(),'1:00');
@@ -204,10 +220,26 @@ async function portraitPresentation(p, width, height) {
     cellBackground:getComputedStyle(node).backgroundColor,circleRadius:getComputedStyle(circle).borderRadius,width:r.width,height:r.height};});
   assert.match(mark.cellBackground,/rgba\(0, 0, 0, 0\)|transparent/,'completed mark does not color its whole table cell');
   assert.ok(mark.circleRadius==='50%'||parseFloat(mark.circleRadius)>=Math.min(mark.width,mark.height)/2,'completed mark remains circular');
+  const result=row(p,0,1);
+  assert.equal(await result.locator('[data-field="reps"]').inputValue(),'10','automatic completion starts from planned reps');
+  assert.equal(await result.locator('[data-field="rir"]').inputValue(),'','automatic completion leaves actual RIR blank');
+  for(const [field,value] of [['reps','12'],['rir','2']]){
+    const input=result.locator('[data-field="'+field+'"]');
+    await input.fill(value);await input.press('Tab');
+  }
+  assert.equal((await player(p)).liveSchedule[firstStep].actualReps,12);
+  assert.equal((await player(p)).rir[firstStep],2);
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-journal-'+width+'x'+height+'.png')});
-  await closeJournal(p);await A(p,'cinemaMenu').click();await A(p,'cinemaExit').click();await A(p,'quitDiscard').click();
+  await closeJournal(p);await manual(p,2);
+  assert.equal(await p.locator('#ringN').innerText(),'0:24','after rest, the next rep set starts automatically with its full time');
+  await advance(p,24.1);await manual(p,3);await advance(p,24.1);
+  await A(p,'finishPlay').waitFor();await A(p,'finishPlay').click();
+  const logged=(await store(p)).log.find(entry=>entry.refId===id).items[0];
+  assert.deepEqual(logged.repsList,[12,10,10]);
+  assert.deepEqual(logged.rirList,[2,null,null]);
   results.push({width,height,standingPortraitBelowHeader:true,fullWidthNaturalProportions:true,gradualEdgeFade:true,
-    distinctWorkRestColors:true,circularCompletedMark:true,pauseResumePreservesPortrait:true,layout});
+    whiteWorkAndRestFigures:true,greenCountdownArc:true,noTransportRow:true,configuredAutoRepSets:true,
+    autoResultsEditable:true,circularCompletedMark:true,pauseResumePreservesPortrait:true,layout});
 }
 
 async function checkHome(p, width) {
@@ -227,23 +259,25 @@ async function runPlayer(p, width, url) {
   await noOverflow(p, '.workout-cinema', 'cinema ' + width);
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-bench-'+width+'.png')});
 
-  // The large central counter measures real work time; tapping it pauses rather than credits a set.
-  await advance(p,12);assert.equal(await p.locator('#ringN').innerText(),'0:12');
+  // The large central counter counts down real work time and pauses without crediting a set.
+  await advance(p,12);assert.equal(await p.locator('#ringN').innerText(),'1:48');
   await p.locator('#ring').click();const manualPaused=await player(p);
   assert.equal(manualPaused.clock.paused,true);assert.equal(manualPaused.stepClock.seconds,12);
   assert.equal(doneCount(manualPaused),0);await advance(p,25);
-  assert.equal(await p.locator('#ringN').innerText(),'0:12');
+  assert.equal(await p.locator('#ringN').innerText(),'1:48');
   await p.locator('#ring').click();await advance(p,3);
-  assert.equal(await p.locator('#ringN').innerText(),'0:15');assert.equal(doneCount(await player(p)),0);
+  assert.equal(await p.locator('#ringN').innerText(),'1:45');assert.equal(doneCount(await player(p)),0);
   await p.locator('#ring').click();const manualCheckpoint=await player(p);
   await p.reload({waitUntil:'domcontentloaded'});await A(p,'resumeGo').click();
   const manualResumed=await player(p);
   assert.equal(manualResumed.clock.paused,true,'reload preserves an explicitly paused manual series');
   assert.equal(manualResumed.stepClock.seconds,manualCheckpoint.stepClock.seconds);
+  assert.equal(await p.locator('#ringN').innerText(),'1:45','reload restores the remaining rep-set time');
   assert.equal(doneCount(manualResumed),0);await p.locator('#ring').click();
 
   // Preparation changes waiting time, never the number of completed work sets.
   const beforePrep = await player(p);
+  await openCinemaControls(p);
   await A(p, 'cinemaPrep').click(); await p.locator('.sheet[data-kind="cinemaPrep"]').waitFor();
   assert.deepEqual(await A(p, 'cinemaPrepPick').evaluateAll(nodes => nodes.map(n => Number(n.dataset.v))), [0, 5, 10, 30, 60]);
   await p.locator('[data-a="cinemaPrepPick"][data-v="10"]').click(); await A(p, 'cinemaPrepApply').click();
@@ -268,7 +302,7 @@ async function runPlayer(p, width, url) {
   await closeJournal(p); assert.equal((await player(p)).clock.paused, false);
 
   const firstStep = (await player(p)).i;
-  await A(p, 'cinemaMain').click(); await closeCompletionPanel(p);
+  await p.locator('.cinema-work-set [data-a="workoutSetDone"]').click(); await closeCompletionPanel(p);
   const completed = await player(p); assert.equal(doneCount(completed), 1); assert.equal(completed.doneSteps[firstStep], 1);
   assert.equal(step(completed).kind, 'rest');
   for (const delta of [15, -15]) {
@@ -278,20 +312,20 @@ async function runPlayer(p, width, url) {
     assert.ok(Math.abs(after.left - before.left - delta) < .01); assert.equal(after.i, before.i);
     assert.deepEqual(after.doneSteps, before.doneSteps); assert.equal(after.clock.seconds, before.clock.seconds);
   }
-  const restBeforePrep=await player(p);await A(p,'cinemaPrep').click();
+  const restBeforePrep=await player(p);await openCinemaControls(p);await A(p,'cinemaPrep').click();
   await p.locator('[data-a="cinemaPrepPick"][data-v="10"]').click();await advance(p,20);await A(p,'cinemaPrepApply').click();
   const restAfterPrep=await player(p);
   assert.ok(Math.abs(restAfterPrep.left-restBeforePrep.left-10)<.01,'adding prep preserves rest frozen while its sheet is open');
   assert.deepEqual(restAfterPrep.doneSteps,restBeforePrep.doneSteps);assert.equal(restAfterPrep.clock.seconds,restBeforePrep.clock.seconds);
-  await A(p,'cinemaPrep').click();await advance(p,20);await A(p,'cinemaPrepApply').click();
+  await openCinemaControls(p);await A(p,'cinemaPrep').click();await advance(p,20);await A(p,'cinemaPrepApply').click();
   assert.equal((await player(p)).left,restAfterPrep.left,'zero additional prep also preserves time spent in its sheet');
   assert.equal((await player(p)).clock.seconds,restAfterPrep.clock.seconds);
-  await A(p, 'cinemaPause').click(); assert.match(await A(p, 'cinemaMain').innerText(), /Nastavi/);
+  await A(p,'cinemaTimer').click();assert.match(await A(p,'cinemaTimer').getAttribute('aria-label'),/Nastavi/);
   const paused = await player(p); await advance(p, 25);
   await openJournal(p); await closeJournal(p);
   assert.equal((await player(p)).clock.paused, true); assert.equal((await player(p)).left, paused.left);
   assert.equal((await player(p)).clock.seconds, paused.clock.seconds);
-  await A(p, 'cinemaPause').click();
+  await A(p,'cinemaTimer').click();
 
   await openJournal(p); await expandGroup(p,0);
   const reserve = row(p, 0, 1).locator('[data-field="rir"]');
@@ -315,7 +349,7 @@ async function runPlayer(p, width, url) {
   assert.equal(step(await player(p)).set,3,'the next set starts without a separate resume');
   for (let set = 3; set <= 5; set++) {
     await manual(p, set); const before = await player(p);
-    await A(p, 'cinemaMain').click(); await closeCompletionPanel(p);
+    await pressCinemaMain(p);await closeCompletionPanel(p);
     assert.equal(doneCount(await player(p)), doneCount(before) + 1);
   }
   const secondHero = await hero(p);
@@ -323,20 +357,20 @@ async function runPlayer(p, width, url) {
   assert.notEqual(secondHero.media.src, firstHero.media.src, 'media follows the displayed next exercise');
   const transit = await player(p); assert.equal(step(transit).g, 1); assert.equal(doneCount(transit), 5);
   await advance(p, transit.left + .1); assert.equal(step(await player(p)).kind, 'work');
-  await A(p, 'cinemaPause').click(); const checkpoint = await player(p);
+  await A(p,'cinemaTimer').click();const checkpoint=await player(p);
   await p.goto('about:blank'); const away = await p.evaluate(() => Date.now()); await p.clock.setFixedTime(new Date(away + 120000));
   await p.goto(url, { waitUntil: 'domcontentloaded' }); await A(p, 'resumeGo').click();
   const resumed = await player(p);
   assert.equal(resumed.i, checkpoint.i); assert.equal(resumed.left, checkpoint.left);
   assert.deepEqual(resumed.doneSteps, checkpoint.doneSteps); assert.deepEqual(resumed.rir, checkpoint.rir);
   assert.equal(resumed.stepClock.seconds,checkpoint.stepClock.seconds);
-  assert.equal(resumed.clock.seconds, checkpoint.clock.seconds); assert.match(await A(p, 'cinemaMain').innerText(), /Nastavi/);
+  assert.equal(resumed.clock.seconds, checkpoint.clock.seconds);assert.match(await A(p,'cinemaTimer').getAttribute('aria-label'),/Nastavi/);
   await hero(p);
   await noOverflow(p, '.workout-cinema', 'resumed cinema ' + width);
   await p.screenshot({ path: path.join(artifacts, 'cinema-' + engine + '-player-' + width + '.png') });
 
   // A bilateral timed set becomes complete and accepts SIR only after both sides actually finish.
-  await A(p,'cinemaPause').click();const left=await player(p);
+  await A(p,'cinemaTimer').click();const left=await player(p);
   assert.equal(step(left).side,'Lijeva strana');
   const timedFill=p.locator('#cinema-clock-fill');
   const initialTicks=Number(await timedFill.getAttribute('data-count'));
@@ -427,7 +461,7 @@ async function notesAndUndo(p,width) {
   assert.deepEqual(restored.swapUndo[0],before.items[0]);
   await openJournal(p);await sheet(p).locator('[data-a="cinemaNotes"][data-j="0"]').click();
   assert.equal(await p.locator('#cinema-note').inputValue(),note);await A(p,'cinemaClose').click();await sheet(p).waitFor();
-  await closeJournal(p);await p.locator('#ring').click();await A(p,'cinemaMain').click();
+  await closeJournal(p);await p.locator('#ring').click();await pressCinemaMain(p);
   assert.equal(doneCount(await player(p)),1);await openJournal(p);await A(p,'cinemaFinish').click();
   await A(p,'finishPlay').waitFor();await A(p,'finishPlay').click();assert.equal(await player(p),null);
   const saved=await store(p);assert.equal(saved.log.length,original.log.length+1);
@@ -475,18 +509,19 @@ async function setRecovery(p,width) {
   await manual(p,1);
   const first = (await player(p)).i;
   await advance(p,4);
-  await main.click();
+  await pressCinemaMain(p);
   const accidental = await player(p);
   assert.equal(step(accidental).kind,'rest');
   assert.deepEqual(accidental.doneSteps,{[first]:1});
   await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-next)'));
   assert.equal(await p.locator('.workout-cinema [data-a="cinemaReserve"]').count(),0);
-  await p.locator('.workout-cinema [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();
+  await openCinemaControls(p);
+  await p.locator('.sheet [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();
   const restarted = await player(p);
   assert.equal(restarted.i,first);
   assert.equal(restarted.stepClock.seconds,0,'the mistaken completion restarts the set clock');
   assert.deepEqual(restarted.doneSteps,{});
-  assert.equal(await main.innerText(),'Serija gotova');
+  assert.equal(await p.locator('.cinema-work-set [data-a="workoutSetDone"]').count(),1);
 
   // The real journal checkbox should complete the restarted set. Going back
   // from rest used to leave the player on a checked set with a dead button.
@@ -504,17 +539,20 @@ async function setRecovery(p,width) {
   assert.equal(await row(p,0,1).locator('[data-field="rir"]').inputValue(),'2');
   assert.equal(await row(p,0,2).locator('[data-field="reps"]').inputValue(),'10');
   await closeJournal(p);
+  await openCinemaControls(p);
   await p.getByRole('button',{name:'Prethodna vježba',exact:true}).click();
-  await A(p,'cinemaPause').click();
   const oldPosition = await player(p);
   assert.equal(oldPosition.i,first);
   assert.equal(oldPosition.doneSteps[first],1);
-  assert.equal(oldPosition.clock.paused,true);
+  assert.ok(await A(p,'cinemaTimer').isDisabled(),'an already recorded set has no running countdown');
+  await advance(p,121);
+  assert.equal((await player(p)).i,first,'rewinding to a recorded set keeps it visible beyond its original timer');
   await p.reload({waitUntil:'domcontentloaded'});
   await A(p,'resumeGo').click();
+  await openCinemaControls(p);
   assert.equal(await main.innerText(),'Nastavi dalje');
   assert.equal(await p.locator('.workout-cinema-next').count(),0,'no result card covers the completed exercise');
-  await main.click();
+  await pressCinemaMain(p);
   const advanced = await player(p);
   assert.equal(advanced.i,first+1);
   assert.deepEqual(advanced.doneSteps,oldPosition.doneSteps);
@@ -523,7 +561,7 @@ async function setRecovery(p,width) {
 
   await manual(p,2);
   const second = (await player(p)).i;
-  await main.click();
+  await pressCinemaMain(p);
   await openJournal(p,3);
   const secondReps = row(p,0,2).locator('[data-field="reps"]');
   assert.equal(await secondReps.isEnabled(),true);
@@ -541,11 +579,12 @@ async function setRecovery(p,width) {
   assert.deepEqual(selected.items,accidental.items);
   assert.deepEqual(await store(p),original,'no history or protocol changes before saving');
 
-  await main.click();
+  await pressCinemaMain(p);
   await editJournalResult(1,12,2);
   await manual(p,2);
+  await openCinemaControls(p);
   assert.equal(await main.innerText(),'Nastavi dalje');
-  await main.click();
+  await pressCinemaMain(p);
   await manual(p,3);
   const third = (await player(p)).i;
   await openJournal(p,3);
@@ -572,7 +611,7 @@ async function setRecovery(p,width) {
   assert.equal(reopened.liveSchedule[third].actualReps,undefined);
   assert.equal(reopened.liveSchedule[first].actualReps,12);
   assert.equal(reopened.liveSchedule[second].actualReps,11);
-  await main.click();
+  await pressCinemaMain(p);
   await A(p,'finishPlay').click();
   assert.equal(await player(p),null);
   const saved = await store(p);

@@ -1,5 +1,5 @@
 'use strict';
-const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
+const {openJournal,closeJournal,openQuit,openCinemaControls,pressCinemaMain}=require('./runtime.cjs');
 
 // Isolated synthetic workouts; never opens an existing browser profile.
 const assert = require('node:assert/strict');
@@ -135,7 +135,7 @@ async function advance(page, seconds) {
 async function resume(page, reload = true) {
   if (reload) await page.reload();
   await action(page, 'resumeGo').click();
-  const continueTimer = page.locator('.workout-cinema .cinema-primary').filter({ hasText: /^Nastavi$/ });
+  const continueTimer = page.locator('#ring[data-a="cinemaTimer"][aria-label="Nastavi brojač"]');
   if (await continueTimer.isVisible()) await continueTimer.click();
 }
 
@@ -143,7 +143,8 @@ async function completeManual(page) {
   await closeJournal(page);
   const current = await player(page);
   assert.equal(current.liveSchedule[current.i].kind, 'manual', 'Visible primary action completes the current manual set');
-  const primary = page.locator('.workout-cinema .cinema-primary[data-a="cinemaMain"]');
+  await openCinemaControls(page);
+  const primary = page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary[data-a="cinemaMain"]');
   assert.equal(await primary.innerText(), 'Serija gotova');
   await primary.click();
 }
@@ -295,7 +296,9 @@ async function activeDuration(page) {
   assert.equal(await page.locator('.workout-cinema.is-paused').count(), 1);
   assert.equal(await timer.getAttribute('aria-label'), 'Nastavi brojač');
   assert.match(await timer.locator('.workout-control-action').innerText(), /pauza/);
-  assert.equal(await page.locator('.workout-cinema .cinema-primary').innerText(), 'Nastavi');
+  await openCinemaControls(page);
+  assert.equal(await page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary').innerText(), 'Nastavi');
+  await action(page,'cinemaClose').click();
   await advance(page, 4);
   assert.equal((await player(page)).clock.seconds, 10);
   assert.equal((await player(page)).i, stepBeforePause, 'Timer pause does not complete a manual set');
@@ -310,8 +313,8 @@ async function activeDuration(page) {
   await advance(page, 5);
   await completeManual(page);
   assert.equal((await player(page)).clock.seconds, 15);
-  const beginSecond = page.getByRole('button', { name: 'Kreni', exact: true });
-  if (await beginSecond.isVisible()) await beginSecond.click();
+  const afterManual = await player(page);
+  if (afterManual.liveSchedule[afterManual.i].kind === 'ready') await pressCinemaMain(page);
   await openQuit(page);
   await advance(page, 60);
   await action(page, 'quitResume').click();
@@ -523,8 +526,7 @@ async function live(page, baseline) {
   for (let attempt = 0; attempt < 15; attempt++) {
     const current = await player(page), step = current.liveSchedule[current.i];
     if (step?.kind === 'work' && step.g === 1) break;
-    const start = page.getByRole('button', { name: 'Kreni', exact: true });
-    if (await start.isVisible()) await start.click(); else await advance(page, 2);
+    if (step.kind === 'ready') await pressCinemaMain(page); else await advance(page, 2);
   }
   const working = await player(page);
   assert.equal(working.liveSchedule[working.i].kind, 'work');

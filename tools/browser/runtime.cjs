@@ -87,6 +87,13 @@ async function openJournal(page,all=false){
   if(all&&await page.locator('.cinema-journal [data-a="workoutShowAll"]').getAttribute('aria-expanded')!=='true')await page.locator('.cinema-journal [data-a="workoutShowAll"]').click();
 }
 async function closeJournal(page){if(await page.locator('.sheet[data-kind="cinemaJournal"]').count())await page.locator('[data-a="cinemaJournalClose"]').click();}
+async function openCinemaControls(page){
+  if(!await page.locator('.sheet[data-kind="cinemaMenu"]').count())await page.locator('[data-a="cinemaMenu"]').click();
+}
+async function pressCinemaMain(page){
+  await openCinemaControls(page);
+  await page.locator('.sheet[data-kind="cinemaMenu"] .cinema-primary').click();
+}
 async function openQuit(page){
   await closeJournal(page);
   if(await page.locator('.workout-cinema').count()){
@@ -94,4 +101,4 @@ async function openQuit(page){
     await page.locator('[data-a="cinemaExit"]').click();
   }else await page.locator('[data-a="quitPlay"]').click();
 }
-module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture,openJournal,closeJournal,openQuit};
+module.exports={repo,artifacts,engine,appVersion,launch,createServer,serve,withOffline,fixture,openJournal,closeJournal,openCinemaControls,pressCinemaMain,openQuit};

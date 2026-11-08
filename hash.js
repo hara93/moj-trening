@@ -11,7 +11,7 @@
   // written into a protocol's exercises by training: counters, the dose before an increase, its date ('easy' in 1.1–1.2)
   var STATE = { ok:1, fail:1, snoozeOk:1, up:1, prev:1, easy:1 };
   // the dose of one exercise in a protocol, and the goal of the period the doses were set for
-  var DOSE = { measure:1, sets:1, reps:1, repsList:1, sec:1, secList:1, kg:1, kgList:1, startingKgKnown:1, rest:1, sides:1, r0:1, r1:1 };
+  var DOSE = { measure:1, sets:1, reps:1, repsList:1, repSetSec:1, sec:1, secList:1, kg:1, kgList:1, startingKgKnown:1, rest:1, sides:1, r0:1, r1:1 };
   var TOP_DOSE = { goal:1 };
   function canon(v){
     if (Array.isArray(v)) return v.map(canon);

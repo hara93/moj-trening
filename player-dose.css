@@ -71,3 +71,7 @@ button.set-mark:focus-visible,.set-edit:focus-visible,.set-load-link:focus-visib
 .set-legend li>span{width:28px;text-align:center;font-size:20px;color:var(--text-2)}
 .set-legend strong,.set-legend small{display:block}.set-legend small{color:var(--text-2);font-size:13px}
 .set-legend [data-state=active]>span{color:var(--accent-text)}.set-legend [data-state=done]>span{color:#8cdec7}.set-legend [data-state=partial]>span{color:var(--amber,#ffd385)}
+
+.play-dose-rep-timer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.play-dose-rep-timer small{display:block;margin-top:3px;color:var(--text-2);font-size:11px;line-height:1.4}
+.play-dose-rep-timer input{width:90px;flex:none;text-align:center}

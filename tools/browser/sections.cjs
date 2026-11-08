@@ -95,7 +95,7 @@ async function run(p,width){
   await p.locator('.cinema-block-heading [data-a="cinemaBlock"][data-j="2"]').click();
   assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Snaga ·/,'the second Copenhagen occurrence belongs to strength');
   assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'kopenhagen-kratka');
-  await a(p,'cinemaPause').click();
+  await a(p,'cinemaTimer').click();
   const snapshot=await player(p);
   assert.equal(snapshot.clock.paused,true);
   assert.deepEqual(snapshot.items.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);

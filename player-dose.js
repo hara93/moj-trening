@@ -25,6 +25,10 @@
   function validActualReps(reps) {
     return Number.isInteger(reps) && reps >= 1 && reps <= 60;
   }
+  function validRepSetSeconds(seconds) {
+    return Number.isInteger(seconds) && seconds >= 1 && seconds <= 3600;
+  }
+  const repSetSecondsError = 'Vrijeme serije mora biti cijeli broj od 1 do 3.600 sekundi.';
   function recordedAt(step, item) {
     const dose = at(step.it || item, step.set);
     if (step.kind === 'manual' && validActualReps(step.actualReps)) dose.reps = step.actualReps;
@@ -102,6 +106,15 @@
         ok: false,
         error: 'Već započete i odrađene serije ostaju u treningu.'
       };
+    }
+    if (Object.hasOwn(patch, 'repSetSec')) {
+      const seconds = patch.repSetSec;
+      if (seconds === null) delete out.repSetSec;
+      else {
+        if (!validRepSetSeconds(seconds)) return {ok:false,error:repSetSecondsError};
+        if (item.measure === 'time') return {ok:false,error:'Cilj vremena uređuje se za serije na ponavljanja.'};
+        out.repSetSec = seconds;
+      }
     }
     // Preview and pending replacements retain unknown loads across sparse edits.
     if (guard.allowMissingWeight && Array.isArray(item.kgList)) {
@@ -384,6 +397,7 @@
       var st = copy(row),
         g = st.g;
       if (st.kind !== 'manual' || !validActualReps(st.actualReps)) delete st.actualReps;
+      if (st.kind !== 'manual' || !finite(st.targetSec) || st.targetSec < 1 || st.targetSec > 3600) delete st.targetSec;
       if (!Number.isInteger(g) || g < 0 || g >= input.length) {
         return null;
       }
@@ -424,6 +438,14 @@
   function readForm(form) {
     var sets = number(form.querySelector('[name="sets"]').value),
       rs = [];
+    const patch = {sets:sets,rows:rs};
+    const timer = form.querySelector('[name="repSetSec"]');
+    if (timer) {
+      const raw = timer.value.trim();
+      const seconds = raw === '' ? null : number(raw);
+      if (raw !== '' && !validRepSetSeconds(seconds)) return {ok:false,error:repSetSecondsError};
+      patch.repSetSec = seconds;
+    }
     for (var el of form.querySelectorAll('[data-dose-set]')) {
       var row = {
         set: Number(el.dataset.doseSet)
@@ -446,10 +468,7 @@
     }
     return {
       ok: true,
-      patch: {
-        sets: sets,
-        rows: rs
-      }
+      patch: patch
     };
   }
   return {
@@ -457,6 +476,7 @@
     at: at,
     recordedAt: recordedAt,
     validActualReps: validActualReps,
+    validRepSetSeconds: validRepSetSeconds,
     items: items,
     key: key,
     locks: locks,

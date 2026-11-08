@@ -79,7 +79,10 @@ function checkpointHarness(P){
     audioMode(){},ensureAudio(){},stepsFromItems:manualSteps,clone,isPlainObj:value=>!!value&&typeof value==='object'&&!Array.isArray(value),uid:()=> 'hnew123',
     render(){},keepAwake(){},remaining:()=>ctx.P.left||0,PLAY_KEY:'mt.play',localStorage:{setItem:(key,value)=>writes.set(key,value)},
     clearInterval(){},setInterval:()=> 1,tick(){},ticker:null};
-  vm.createContext(ctx);vm.runInContext(section('function savePlay(){','function clearPlay(){')+section('function restorePlay(s){','// leaves the player'),ctx);
+  ctx.repsOf=(item,set)=>D.at(item,set).reps;
+  vm.createContext(ctx);vm.runInContext(section('function repSetSeconds(','function protoMin(')+
+    section('function cinemaManualTarget(','function cinemaFooter(')+section('function savePlay(){','function clearPlay(){')+
+    section('function restorePlay(s){','// leaves the player'),ctx);
   return {ctx,writes};
 }
 test('a checkpoint restores different replacement/original IDs and their matching muscle snapshots without borrowing today profiles',()=>{
@@ -111,6 +114,18 @@ test('planned reserve targets stay optional, bounded and separate from actual re
   const actual=[{...replacement,kg:10,targetRir:0}],h=checkpointHarness(null);
   const saved={mode:'ex',ref:{kind:'protocol',id:'p'},items:actual,originalItems:[oldA],sessionOnly:true,done:true,at:1000};
   assert.equal(h.ctx.restorePlay(saved),true);assert.equal(h.ctx.P.items[0].targetRir,0);assert.equal(h.ctx.P.rir,undefined);
+});
+test('a legacy stopwatch past the new target resumes with a fresh countdown and keeps recorded elapsed time',()=>{
+  const item={...oldB,reps:10};
+  const timeline=D.packSteps(manualSteps([item]));
+  const saved={mode:'ex',ref:{kind:'protocol',id:'p'},items:[item],at:1000,startedAt:1000,i:0,doneSteps:{},
+    clock:{seconds:100,at:1000,paused:true},stepClock:{seconds:100,at:1000,paused:true},liveSchedule:timeline};
+  const h=checkpointHarness(null);
+  assert.equal(h.ctx.restorePlay(saved),true);
+  assert.equal(h.ctx.P.steps[0].targetSec,30);
+  assert.equal(h.ctx.P.stepClock.seconds,0);
+  assert.equal(h.ctx.P.clock.seconds,100);
+  assert.equal(Object.keys(h.ctx.P.doneSteps).length,0);
 });
 test('actual startup refuses an unsaved first checkpoint without losing its form, then starts once on retry',()=>{
   const cfg={mode:'ex',title:'Replacement',ref:{kind:'protocol',id:'p'},items:[{...replacement,kg:10}],originalItems:[oldA],sessionOnly:true};

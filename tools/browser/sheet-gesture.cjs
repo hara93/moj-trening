@@ -5,7 +5,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {launch,serve,fixture,engine,artifacts}=require('./runtime.cjs');
+const {launch,serve,fixture,engine,artifacts,pressCinemaMain}=require('./runtime.cjs');
 const A=(p,a)=>p.locator('[data-a="'+a+'"]');
 const saved=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.data.v1')));
 const player=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
@@ -46,7 +46,7 @@ async function manual(p){
   for(let count=0;count<12;count++){
     const s=await player(p),step=s.liveSchedule[s.i];
     if(step.kind==='manual')return;
-    if(step.kind==='ready')await p.locator('.cinema-primary').click();
+    if(step.kind==='ready')await pressCinemaMain(p);
     else if(step.dur){await p.clock.setFixedTime(new Date(await p.evaluate(()=>Date.now())+(s.left+.1)*1000));await p.waitForTimeout(350);}
     else assert.fail('Unexpected player step '+step.kind);
   }
@@ -75,9 +75,9 @@ async function run(p,width){
   assert.equal(Object.keys((await player(p)).doneSteps||{}).length,0,'drag never completes a work set');
 
   // The exact same existing close path retains a pause that predated the sheet.
-  await A(p,'cinemaPause').click();await A(p,'cinemaMenu').click();await touchDrag(p,sheet(p),0,135);
+  await A(p,'cinemaTimer').click();await A(p,'cinemaMenu').click();await touchDrag(p,sheet(p),0,135);
   assert.equal(await sheet(p).count(),0);assert.equal((await player(p)).clock.paused,true);
-  await A(p,'cinemaPause').click();await A(p,'cinemaJournal').click();
+  await A(p,'cinemaTimer').click();await A(p,'cinemaJournal').click();
   const journal=sheet(p);assert.equal(await journal.getAttribute('data-kind'),'cinemaJournal');
   assert.equal((await player(p)).clock.paused,true);
   const scroll=journal.locator('.workout-journal-blocks');

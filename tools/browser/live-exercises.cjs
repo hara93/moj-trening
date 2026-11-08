@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const {engine, fixture, launch, serve, openJournal, closeJournal} = require('./runtime.cjs');
+const {engine, fixture, launch, serve, openJournal, closeJournal, pressCinemaMain} = require('./runtime.cjs');
 const id = 'live-exercises-audit';
 const action = (page, name, suffix = '') => page.locator('[data-a="'+name+'"]'+suffix);
 const snapshot = page => page.evaluate(() => JSON.parse(localStorage.getItem('mt.play')));
@@ -30,10 +30,9 @@ async function run(page, url) {
   await action(page, 'openPr', '[data-id="'+id+'"]').click();
   const original = await store(page);
   await action(page, 'startPr').click();
-  const main = () => page.locator('.cinema-primary[data-a="cinemaMain"]');
-  await main().click();
+  await pressCinemaMain(page);
   assert.equal(current(await snapshot(page)).kind,'manual');
-  await main().click();
+  await pressCinemaMain(page);
   await openJournal(page,true);
   const result = page.locator('.cinema-journal .workout-set-row[data-set="1"][data-state="done"]');
   const reps = result.locator('[data-j="0"][data-field="reps"]');
@@ -127,8 +126,8 @@ async function run(page, url) {
   assert.deepEqual(activeRemoved.doneSteps,middle.doneSteps);
   assert.deepEqual(activeRemoved.rir,middle.rir);
   await closeJournal(page);
-  if (current(await snapshot(page)).kind==='rest') await main().click();
-  await main().click();
+  if (current(await snapshot(page)).kind==='rest') await pressCinemaMain(page);
+  await pressCinemaMain(page);
   if (await result.isVisible()) await page.keyboard.press('Escape');
 
   await openJournal(page,true);

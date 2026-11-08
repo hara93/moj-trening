@@ -3,7 +3,7 @@
 // Direct set editing in disposable browser data. Preview edits remain local to
 // the next session; adding a row must never create completed work or known kg.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {artifacts,engine,fixture:baseFixture,launch,serve,openJournal,closeJournal,openQuit}=require('./runtime.cjs');
+const {artifacts,engine,fixture:baseFixture,launch,serve,openJournal,closeJournal,openQuit,pressCinemaMain}=require('./runtime.cjs');
 const id='prestart-inline-audit',unknownId='prestart-unknown-audit',maxId='prestart-max-audit';
 const frozenId='prestart-frozen-audit',programId='prestart-program-audit';
 const a=(p,name)=>p.locator('[data-a="'+name+'"]');
@@ -50,7 +50,7 @@ async function edit(p,set,key,value){await row(p,set,key).fill(String(value));aw
 async function shot(p,name,width){await p.screenshot({path:path.join(artifacts,'prestart-edit-'+engine+'-'+name+'-'+width+'.png')});}
 async function noOldButtons(p){
   assert.equal(await detail(p).locator('.workout-edit-actions,[data-a="workoutEditPlan"]').count(),0);
-  const optional=detail(p).locator('[data-a="workoutEdit"]');if(await optional.count())assert.equal(await optional.isVisible(),false,'legacy optional count editor stays inside closed details');
+  const optional=detail(p).locator('.workout-plan-options [data-a="workoutEdit"]');if(await optional.count())assert.equal(await optional.isVisible(),false,'legacy optional count editor stays inside closed details');
 }
 async function untouched(p,before){const d=await store(p);assert.deepEqual(d.protocols,before.protocols);assert.deepEqual(d.exercises,before.exercises);assert.deepEqual(d.log,before.log);}
 async function run(p,width){
@@ -96,9 +96,9 @@ async function run(p,width){
   // Complete one hip-thrust set and correct its result. Adding a future row
   // retains its actual reps and load while extending only the prescription.
   await openJournal(p,true);await p.locator('.cinema-journal [data-a="cinemaGoSet"][data-j="1"]').click();
-  if((await player(p)).liveSchedule[(await player(p)).i].kind==='ready')await p.locator('.cinema-primary').click();
+  if((await player(p)).liveSchedule[(await player(p)).i].kind==='ready')await pressCinemaMain(p);
   const current=await player(p);assert.equal(current.liveSchedule[current.i].kind,'manual');assert.equal(current.liveSchedule[current.i].g,1);
-  await p.locator('.cinema-primary').click();assert.equal(Object.keys((await player(p)).doneSteps).length,1);
+  await pressCinemaMain(p);assert.equal(Object.keys((await player(p)).doneSteps).length,1);
   await exercise(p,1);await noOldButtons(p);assert.equal(await row(p,1,'reps').isDisabled(),false);assert.equal(await row(p,1,'kg').isDisabled(),true);
   await edit(p,1,'reps',11);await add(p).click();
   assert.equal(await detail(p).locator('.workout-set-row').count(),5);assert.equal(await row(p,5,'reps').inputValue(),'7');assert.equal(await row(p,5,'kg').inputValue(),'65');
@@ -131,10 +131,32 @@ async function run(p,width){
   await p.locator('[data-a="openEx"][data-id="hip-thrust"]').first().click();await detail(p).waitFor();await noOldButtons(p);
   assert.equal(await detail(p).locator('.workout-set-row').count(),3);await add(p).click();assert.equal(await detail(p).locator('.workout-set-row').count(),4);
   await untouched(p,before);assert.equal(await player(p),null);
+
+  // Setting a timer in the protocol builder is an explicit persistent edit.
+  await openProtocol(p);
+  await a(p,'workoutProtocolOptions').click();
+  await p.locator('[data-a="editPr"][data-id="'+id+'"]').click();
+  const first=p.locator('[data-a="itOpen"][data-i="0"]');
+  if(await first.getAttribute('aria-expanded')!=='true')await first.click();
+  const timer=p.locator('[data-rep-set-sec="0"]'),save=p.locator('.topbar [data-a="savePr"]');
+  assert.equal(await timer.inputValue(),'');
+  await timer.fill('3601');await save.click();
+  assert.equal(await timer.inputValue(),'3601');
+  assert.equal((await store(p)).protocols[id].items[0].repSetSec,undefined);
+  await timer.fill('42');await save.click();
+  await p.locator('.workout-overview').waitFor();
+  assert.equal((await store(p)).protocols[id].items[0].repSetSec,42);
+  await openProtocol(p);await exercise(p,0);
+  assert.match(await detail(p).getByRole('button',{name:'Uredi tajmer serije'}).innerText(),/42 s \/ seriji/);
+  await closeExercise(p);
+  await a(p,'startPr').click();
+  assert.deepEqual((await player(p)).liveSchedule.filter(step=>step.kind==='manual'&&step.g===0).map(step=>step.targetSec),[42,42]);
+  await openQuit(p);await a(p,'quitDiscard').click();
   results.push({width,directInlineOnly:true,noNewEditingButtons:true,hipThrustThreeToFour:true,lastPrescriptionCopied:true,
     focusedFieldFirstTap:true,invalidRawBlocksAdd:true,invalidInputCanGoBack:true,previewSourceAndHistoryUnchanged:true,backRetainsPreview:true,
     reloadPreservesSavedPlan:true,playerUsesPreviewDose:true,liveAddedRowCreatesNoWork:true,completedLoadStaysLocked:true,actualRepsSurviveAdd:true,
-    unknownKgRemainsUnknown:true,maxTwenty:true,programPreviewProtected:true,librarySessionOnly:true});
+    unknownKgRemainsUnknown:true,maxTwenty:true,programPreviewProtected:true,librarySessionOnly:true,
+    builderTimerPersistsAndSetsBothCountdowns:true});
 }
 (async()=>{
   const host=await serve(),browser=await launch();

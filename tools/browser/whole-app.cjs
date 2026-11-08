@@ -1,5 +1,5 @@
 'use strict';
-const {openJournal,closeJournal,openQuit}=require('./runtime.cjs');
+const {openJournal,closeJournal,openQuit,openCinemaControls,pressCinemaMain}=require('./runtime.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -97,7 +97,7 @@ async function exerciseTrial(p){
   await by(p,'openEx','bench-press').click();await by(p,'playEx','bench-press').click();
   if(await p.locator('#starting-load-form').isVisible()){await p.locator('#starting-load-form input').first().fill('20');await p.locator('#starting-load-form button[type="submit"]').click();}
   await advance(p,6);
-  await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
+  await pressCinemaMain(p);
   const before=(await play(p)).doneSteps;await p.reload();await A(p,'resumeGo').click();assert.deepEqual((await play(p)).doneSteps,before);
   await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const trial=(await store(p)).log.find(l=>l.kind==='exercise'&&l.refId==='bench-press');assert.ok(trial);assert.equal(trial.items[0].setsDone,1);
@@ -219,7 +219,6 @@ async function swipePlayer(p){
 }
 async function liveFlow(p,pr){
   await toProtocol(p,pr);await advance(p,6);
-  const ring=p.getByRole('button',{name:'Serija gotova',exact:true});
   const previous=(await store(p)).log.length;
   await swipePlayer(p);
   await editDose(p,0);
@@ -230,7 +229,7 @@ async function liveFlow(p,pr){
   const row=(num,key)=>p.locator('#play-dose-form [data-dose-set="'+num+'"] [data-dose-value="'+key+'"]');
   await row(1,'kg').fill('99');await cancelDose(p);
   assert.equal((await play(p)).items[0].kgList[0],20);
-  await ring.click();
+  await pressCinemaMain(p);
   const first=await play(p);assert.ok(Object.keys(first.doneSteps).length===1);
   await editDose(p,0);await noOverflow(p,'live editor');
   const locked=row(1,'kg');assert.ok(await locked.isDisabled()||await locked.getAttribute('readonly')!==null);
@@ -255,12 +254,12 @@ async function liveFlow(p,pr){
   const beforeReload=structuredClone(changed);await p.reload();await A(p,'resumeGo').click();
   const resumed=await play(p);assert.deepEqual(resumed.doneSteps,beforeReload.doneSteps);assert.deepEqual(resumed.items[0],beforeReload.items[0]);assert.equal(resumed.i,beforeReload.i);assert.deepEqual(resumed.liveSchedule,beforeReload.liveSchedule);
   await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
-  await advance(p,pr.items[1].sec+1);await p.locator('[data-a="jump"][data-d="1"]').click();
-  await reach(p,()=>ring.isVisible(),20);
+  await advance(p,pr.items[1].sec+1);await openCinemaControls(p);await p.locator('[data-a="jump"][data-d="1"]').click();
+  await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='manual'),20);
   const shown=await p.locator('.workout-cinema-heading').innerText();await openJournal(p,true);
   assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="kg"]').inputValue(),'30');
   assert.equal(await p.locator('.workout-journal-exercise').first().locator('[data-set="2"][data-field="reps"]').inputValue(),'3');
-  await closeJournal(p);await ring.click();
+  await closeJournal(p);await pressCinemaMain(p);
   await openQuit(p);await A(p,'quitSave').click();if(await A(p,'finishPlay').isVisible())await A(p,'finishPlay').click();
   const data=await store(p),log=data.log.find(l=>l.refId===pr.id&&l.items[0].liveDoseChanged===true);
   assert.equal(data.log.length,previous+1);assert.ok(log);const bench=log.items[0];
@@ -276,7 +275,7 @@ async function programNegative(p){
  await backupRows(p,d);await home(p);await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await p.locator('.tile[data-a="tab"][data-tab="protocols"]').click();await by(p,'openProg',id).click();
  const cells=p.locator('.pgrid .pcell'),completed=await p.locator('.pgrid .pcell.done').count();
  assert.equal(completed,1);assert.match(await cells.nth(0).getAttribute('class'),/done/);assert.match(await cells.nth(1).getAttribute('class'),/next/);assert.doesNotMatch(await cells.nth(2).getAttribute('class'),/done|next/);assert.match(await p.locator('.progtop').innerText(),/Sljedeće: 1. tj. · B/);
- await cells.nth(2).click();await A(p,'startPr').click();await advance(p,6);await p.getByRole('button',{name:'Serija gotova',exact:true}).click();await A(p,'finishPlay').click();
+ await cells.nth(2).click();await A(p,'startPr').click();await advance(p,6);await pressCinemaMain(p);await A(p,'finishPlay').click();
  await home(p);await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();await p.locator('.tile[data-a="tab"][data-tab="protocols"]').click();await by(p,'openProg',id).click();
  assert.equal(await p.locator('.pgrid .pcell.done').count(),2);assert.match(await cells.nth(1).getAttribute('class'),/next/);assert.match(await cells.nth(2).getAttribute('class'),/done/);assert.match(await p.locator('.progtop').innerText(),/2 od 3/);
  assert.equal((await store(p)).log.filter(l=>l.kind==='protocol'&&l.refId==='snaga-a').length,2);
@@ -289,13 +288,13 @@ async function programNegative(p){
  record('rejected-program-and-skip',{programRetry:true,priorLogRetained:!!(await store(p)).log.find(l=>l.historyId==='audit-pra'),skipRetry:true});
 }
 async function bodyRound(p,pr){
-  await toProtocol(p,pr);await advance(p,6);await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
+  await toProtocol(p,pr);await advance(p,6);await pressCinemaMain(p);
   await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
   await advance(p,pr.items[1].sec+1);
   const first=await play(p);assert.ok(Object.keys(first.doneSteps).length>=2);
-  await p.locator('[data-a="jump"][data-d="1"]').click();
-  await reach(p,()=>p.getByRole('button',{name:'Serija gotova',exact:true}).isVisible(),20);
-  await p.getByRole('button',{name:'Serija gotova',exact:true}).click();
+  await openCinemaControls(p);await p.locator('[data-a="jump"][data-d="1"]').click();
+  await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='manual'),20);
+  await pressCinemaMain(p);
   await reach(p,()=>play(p).then(v=>v.liveSchedule[v.i].kind==='work'),20);
   await advance(p,pr.items[1].sec+1);
   const second=await play(p);
@@ -311,8 +310,9 @@ async function bodyRound(p,pr){
 async function reach(p,condition,max){
   for(let i=0;i<max;i++){
     if(await condition())return;
-    const ring=p.locator('.cinema-primary,[data-a=ring]'),label=await ring.getAttribute('aria-label')||((await ring.innerText()).trim());
-    if(label==='Kreni'||label==='Preskoči odmor'||label==='Nastavi')await ring.click();
+    const saved=await play(p),step=saved.liveSchedule[saved.i];
+    if(saved.clock.paused)await A(p,'cinemaTimer').click();
+    else if(step.kind==='ready'||step.kind==='rest'&&!step.trans)await pressCinemaMain(p);
     else await advance(p,2);
   }
   throw Error('Step not reached; '+await p.locator('.view:not([inert])').innerText());
