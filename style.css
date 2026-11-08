@@ -961,3 +961,9 @@ table.kg td.on{color:var(--accent-text);font-weight:700}
 .home-guide>div{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--surface-2)}
 .home-guide svg{width:23px;height:23px;color:var(--accent-text)}
 .home-guide p{font-size:14px;line-height:1.45;margin:4px 0 0;color:var(--text-2)}
+/* 1.21: disclosure rows share the Danas accordion row (no bare ▶ marker) */
+:is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:8px 0;box-sizing:border-box;cursor:pointer;list-style:none;font-size:14px;font-weight:650;color:var(--text)}
+:is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)>summary::-webkit-details-marker{display:none}
+:is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)>summary::after{content:"";width:7px;height:7px;flex:none;margin-right:3px;border:solid var(--text-2);border-width:0 1.5px 1.5px 0;transform:rotate(45deg) translateY(-2px)}
+:is(.workout-expectation,.workout-protocol-options,.tl-analysis-details,.dy-previous)[open]>summary::after{transform:rotate(225deg)}
+.sheet :is(.workout-expectation,.workout-protocol-options){border-bottom:1px solid var(--border)}

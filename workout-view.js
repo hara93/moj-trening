@@ -15,6 +15,7 @@
   function html(value) { return typeof value === 'string' ? value : ''; }
   // Lucide glyphs and companion line controls share the same stroke language.
   var ICONS = {
+    x: "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>",
     ellipsis: "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/>",
     "chevron-left": "<path d=\"m15 18-6-6 6-6\"/>",
     "chevrons-up-down": "<path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/>",
