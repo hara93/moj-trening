@@ -7,7 +7,9 @@ const action=(page,name)=>page.locator('[data-a="'+name+'"]');
 const snapshot=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
 const step=state=>state.liveSchedule[state.i];
 const setRow=(page,n)=>page.locator('.cinema-journal .workout-set-row[data-set="'+n+'"]');
-const phase=(page,side)=>page.locator('.workout-cinema-heading').getByText(new RegExp(side));
+// 1.22.0: during a side change the set header already names the next side; the word over the big clock says
+// "Promjena strane"
+const phase=(page,side)=>page.locator('.workout-cinema-heading,.cinema-phase-word').getByText(new RegExp(side));
 async function startProtocol(page,id){
   await page.reload({waitUntil:'domcontentloaded'});
   await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
