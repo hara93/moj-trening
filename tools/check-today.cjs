@@ -465,7 +465,12 @@ test('pain 1-2 trains normally and holds progression only for the painful area',
   assert.equal(Today.painHolds(known, hipExercises.press, 'press'), false, 'the bench press may still progress');
   assert.equal(Today.painHolds({ date, pain: 1 }, hipExercises.press, 'press'), true, 'an unknown area holds everything');
   assert.equal(Today.painHolds({ date, pain: 0 }, hipExercises.squat, 'squat'), false);
-  assert.equal(Today.painHolds({ date, pain: 6 }, hipExercises.squat, 'squat'), false, 'stop days are not progression days');
+  for (const strong of [{ date, pain: 7, painArea: 'hamstring' }, { date, pain: 2, painArea: 'knee', newPain: true }]) {
+    assert.equal(Today.painHolds(strong, hipExercises.press, 'press'), true, 'trained on a stop day anyway: nothing progresses');
+  }
+  assert.equal(result.painNote, 'Bol 2/10 (kuk i prepone): bez povećanja kilograma za kuk i prepone.', 'visible on the card');
+  const ham = Today.suggest(painInput({ pain: 1, painArea: 'hamstring' }));
+  assert.match(ham.reasons.find(r => r.code === 'painMild').text, /bez povećanja težine za stražnju ložu\.$/, 'accusative after "za"');
   assert.equal(Today.suggest(painInput({ pain: 1 })).missing.some(text => /Označi gdje boli/.test(text)), true);
 });
 
@@ -482,10 +487,12 @@ test('pain 3-5 at the hip gives a lighter version in the same slots: short-lever
   assert.match(result.summary, /Lakša verzija za kuk i prepone/);
   const hamstring = Today.suggest(painInput({ pain: 3, painArea: 'hamstring' }));
   assert.equal(hamstring.items[2].exId, 'most', 'no Nordic with hamstring pain');
+  assert.match(hamstring.summary, /^Lakša verzija za stražnju ložu\./);
   assert.equal(hamstring.items[3].exId, 'kopenhagen-duga');
   const upper = Today.suggest({ ...painInput({ pain: 4, painArea: 'hip' }), planned: [plan()] });
   assert.equal(upper.kind, 'planned', 'an upper-body session is not called lighter when nothing loads the hip');
-  assert.match(upper.reasons.find(r => r.code === 'painOtherArea').text, /ne opterećuje to područje/);
+  assert.match(upper.reasons.find(r => r.code === 'painOtherArea').text, /ne opterećuje to područje, pa ga odradi normalno\. Kilogrami se ne povećavaju samo za vježbe za kuk i prepone\.$/);
+  assert.equal(upper.painNote, 'Bol 4/10 (kuk i prepone): bez povećanja kilograma za kuk i prepone.');
   assert.equal(upper.painHold, 'hip');
   const knee = Today.suggest(painInput({ pain: 5, painArea: 'knee' }));
   assert.deepEqual(knee.items[1].kgList, [60, 60, 60]);
@@ -522,4 +529,43 @@ test('free-day choice: sessions with rehab items qualify, the longest untrained 
   assert.equal(Today.suggest(input({ planned: [], exercises: clone(rehabExercises), candidates: sessions, logs: upperOldest })).action.id, 'b');
   assert.equal(Today.suggest(input({ planned: [], settings: legsDay, exercises: clone(rehabExercises), candidates: sessions, logs: upperOldest })).action.id, 'a',
     'heavy legs win 4 days before the match');
+});
+
+test('the pain swap keeps the slot: superset key, round rest and section stay for the player', () => {
+  const superset = plan({ items: [dose('squat', { ss: 'a', rest: 0, sides: true }), dose('nordic-curl', { kg: 0, sets: 2, reps: 5, rest: 90, ss: 'a', targetRir: 2, repsList: [5, 4] }),
+    dose('press', { ss: 'b', rest: 0 }), dose('kopenhagen-duga', { measure: 'time', sets: 3, sec: 30, kg: 0, sides: true, rest: 60, ss: 'b', section: 'Prevencija' })] });
+  const result = Today.suggest({ ...painInput({ pain: 4, painArea: 'hip' }), planned: [superset] });
+  assert.equal(result.kind, 'reduce');
+  const [, bridge, , copenhagen] = result.items;
+  assert.equal(bridge.exId, 'most');
+  assert.equal(bridge.ss, 'a', 'the Bulgarian squat keeps its partner and its round rest');
+  assert.equal(bridge.rest, 90);
+  assert.equal(bridge.repsList, undefined, 'the old exercise\'s per-set reps do not carry over');
+  assert.equal(bridge.targetRir, 2);
+  assert.equal(copenhagen.ss, 'b');
+  assert.equal(copenhagen.section, 'Prevencija');
+  assert.equal(copenhagen.sides, true);
+});
+
+test('a lighter day on an already shortened session explains both cuts', () => {
+  const result = Today.suggest(painInput({ pain: 4, painArea: 'hip', energy: 2 }));
+  assert.equal(result.kind, 'reduce');
+  const order = codes(result);
+  assert.ok(order.includes('reducedDose') && order.indexOf('reducedDose') < order.indexOf('painLighter'), JSON.stringify(order));
+  assert.equal(result.items[0].sets, 2, 'the press lost one set to low energy, the reason says so');
+});
+
+test('strong pain names its cause: strong or new', () => {
+  assert.match(Today.suggest(painInput({ pain: 7, painArea: 'hip' })).summary, /^Bol je jaka,/);
+  assert.match(Today.suggest(painInput({ pain: 2, painArea: 'knee', newPain: true })).summary, /^Bol je nova,/);
+});
+
+test('a partial session today keeps the day open instead of calling it done', () => {
+  const part = log({ at: now - 3600000, historyId: 'part', partial: true });
+  const result = Today.suggest(input({ logs: [part] }));
+  assert.equal(result.title, 'Danas djelomično odrađeno');
+  assert.match(result.summary, /^Dan plana se još ne računa\./);
+  assert.deepEqual(result.action, { type: 'history', id: 'part' });
+  const whole = Today.suggest(input({ logs: [part, log({ at: now - 1800000, historyId: 'whole' })] }));
+  assert.equal(whole.title, 'Današnji trening je zabilježen');
 });
