@@ -739,7 +739,6 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .cinema-big-clock{display:block;margin:0 auto;min-height:44px;padding:0;border:0;border-radius:14px;background:transparent;color:#fff}
 .cinema-big-clock .n{display:block;font-size:clamp(96px,31vw,128px);line-height:.92;white-space:nowrap;pointer-events:none}
 .workout-cinema .cinema-big-clock.is-left{margin:0}
-.cinema-big-clock.is-left .n{transform-origin:left center;font-size:clamp(76px,25vw,104px)}
 .cinema-phase-word{margin:0 0 4px;color:#fff;font-size:30px;font-weight:850;line-height:1;letter-spacing:-.02em;text-transform:uppercase;text-align:center}
 /* Rest phase 1: the word and the time alone, centred; a tap on the stage reveals phase 2. */
 .workout-cinema-center{position:absolute;left:0;right:0;top:44%;z-index:3;transform:translateY(-50%);text-align:center;pointer-events:none}
