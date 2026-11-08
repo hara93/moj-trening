@@ -110,7 +110,8 @@
     var valid = Number.isInteger(vm.index) && vm.index >= 0;
     var content = '<span class="workout-compact-thumb">' + (html(vm.thumbHtml) || '<span aria-hidden="true">' + (valid ? vm.index + 1 : '•') + '</span>') +
       '</span><span class="workout-compact-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' +
-      (vm.summary ? '<small>' + esc(vm.summary) + '</small>' : '') + '</span><span class="workout-compact-arrow" aria-hidden="true">›</span>';
+      (vm.summary ? '<small>' + esc(vm.summary) + '</small>' : '') +
+      (vm.previous ? '<small class="workout-compact-previous">' + esc(vm.previous) + '</small>' : '') + '</span><span class="workout-compact-arrow" aria-hidden="true">›</span>';
     return valid ? '<button type="button" class="workout-compact-row" data-a="workoutExercise" data-j="' + vm.index +
       '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba')) + '">' + content + '</button>' : '<div class="workout-compact-row">' + content + '</div>';
   }

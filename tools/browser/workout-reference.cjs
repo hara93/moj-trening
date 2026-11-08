@@ -75,6 +75,9 @@ async function seriesFooterOrder(detail, expectedRows, label) {
       footerAfterAdd: !!(add.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING) };
   });
   assert.deepEqual(order, { addOutsideTable: true, addAfterTable: true, footerAfterAdd: true }, label + ': table → AddSet → footer DOM order');
+  // 1.21: Start is a sticky bottom bar; at the end of the page it sits in flow right after AddSet
+  assert.equal(await footer.evaluate(node => getComputedStyle(node).position), 'sticky', label + ': sticky Start bar');
+  await detail.evaluate(node => { node.scrollTop = node.scrollHeight; });
   const bounds = await metrics(table), addSet = await metrics(add), footerBounds = await metrics(footer);
   const last = await metrics(table.locator('.workout-set-row').last());
   assert.ok(last.y >= bounds.y && last.y + last.height <= bounds.y + bounds.height + 1, label + ': complete last row stays inside the table');
@@ -129,7 +132,10 @@ async function phaseImage(hero, width) {
   const image = await wholeImage(hero.locator('img'));
   const window = await metrics(hero);
   contained(image, 'Single-phase overview');
-  near(window.width, width, 'Single-phase overview uses full width');
+  // 1.21: the cover is at most ~28 % of the screen (clamp 180–260 px), centred, so Pokreni trening stays in reach
+  const screen = await hero.evaluate(() => innerHeight);
+  near(window.height, Math.min(260, Math.max(180, screen * .28)), 'Cover height stays within ~28 % of the screen', 1);
+  near(window.x + window.width / 2, width / 2, 'Single-phase window is centred', 1);
   near(window.width / window.height, .75, 'Single-phase window preserves the 600×800 half', .001);
   near(image.width, window.width * 2, 'Single phase is exactly half the original pair');
   near(image.height, window.height, 'Single phase has no vertical crop');
@@ -169,7 +175,7 @@ async function run() {
     await overview.waitFor();
     await overview.locator('.hero img').evaluate(image => image.decode());
     const hero = await metrics(overview.locator('.hero'));
-    near(hero.width, 375, 'Overview content width');
+    near((await metrics(overview.locator('.workout-overview-cover'))).width, 375, 'Overview content width');
     await phaseImage(overview.locator('.hero'), 375);
     assert.match(await overview.locator('.hero img').getAttribute('src'), /assets\/slike\/bench-press\.webp$/);
     assert.equal(await overview.locator('.hero').evaluate(node => getComputedStyle(node, '::before').display), 'none');
@@ -185,7 +191,9 @@ async function run() {
     assert.match(await overview.locator('.workout-meta').innerText(), /3 vježbe\s+9 serija/);
     const rows = overview.locator('.workout-compact-row');
     assert.equal(await rows.count(), 3);
-    near((await metrics(rows.first())).height, 71, 'Compact row height');
+    near((await metrics(rows.first())).height, 76.3, 'Compact row height with the Prethodno line', 1);
+    assert.match(await rows.first().locator('.workout-compact-previous').innerText(), /^Prethodno 50 kg · 8\/8\/8$/);
+    assert.match(await rows.nth(1).locator('.workout-compact-previous').innerText(), /^Prethodno 40 kg · 10\/10\/8$/);
     near((await metrics(rows.first().locator('.workout-compact-thumb'))).width, 52, 'Thumbnail width');
     assert.match(await rows.first().innerText(), /3 × 8 pon\. · 50 kg/);
     assert.match(await rows.nth(1).innerText(), /10 \/ 10 \/ 8 pon\. · 40 kg/);

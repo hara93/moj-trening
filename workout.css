@@ -678,3 +678,8 @@ span.workout-exercise-open{cursor:default}
 
 .workout-add-set{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:44px;margin-top:10px;padding:7px 12px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text-2);font-size:12px;font-weight:500}
 .workout-add-set svg{width:16px;height:16px;flex:none}.workout-add-set:disabled{opacity:.45;cursor:default}
+/* 1.21: the cover takes at most ~28 % of the screen and Pokreni trening is a sticky bottom bar, like the editors */
+.workout-overview-cover .hero.single{height:clamp(180px,28svh,260px)}
+.workout-overview-cover .hero.single.two{width:auto;height:clamp(180px,28svh,260px);aspect-ratio:3/4;margin:0 auto}
+.workout-premium-overview>.workout-footer,.workout-exercise-page>.workout-footer{position:sticky;bottom:0;z-index:6}
+.workout-compact-text .workout-compact-previous{margin-top:2px;color:#9fb0b6}

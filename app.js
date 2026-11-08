@@ -2248,7 +2248,7 @@ function workoutCompactHtml(items) {
   return '<div class="workout-compact-list" aria-label="Vježbe u treningu">'+items.map((item,j)=>{
     const e=S.ex[item.exId],group=rounds[j];
     const previous=j?sections[j-1]:null,section=sections[j];
-    return (section&&section!==previous?'<h2 class="workout-list-section">'+esc(section)+'</h2>':'')+WorkoutView.compactExercise({index:j,name:(group?group.L+group.k+' · ':'')+(e?.name||'Obrisana vježba'),thumbHtml:e?thumbHtml(e):'',summary:summary(item)});
+    return (section&&section!==previous?'<h2 class="workout-list-section">'+esc(section)+'</h2>':'')+WorkoutView.compactExercise({index:j,name:(group?group.L+group.k+' · ':'')+(e?.name||'Obrisana vježba'),thumbHtml:e?thumbHtml(e):'',summary:summary(item),previous:workoutPreviousShort(item)});
   }).join('')+'</div>';
 }
 function workoutCandidates(item) {
@@ -2319,6 +2319,16 @@ function workoutPanelHtml(s) {
   }
   const footer='<button class="btn" data-a="'+(c.live?'workoutClose':top().v==='pr'?'workoutStart':'playEx')+'"'+(top().v==='ex'?' data-id="'+esc(top().id)+'"':'')+'>'+WorkoutView.icon('play')+ (c.live?'Natrag u trening':'Pokreni '+(top().v==='ex'?'vježbu':'trening'))+'</button>';
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:c.live?'Trening je pauziran':'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(s,c),targetHtml:workoutPrescriptionHtml(s,c),rowsHtml:workoutTableHtml(c,s.j,s)+workoutAddSetHtml(s,c),note:s.error||'',footerHtml:'<div class="footer gut">'+(s.pendingReplacement?'<button class="txtbtn" data-a="workoutCancelPending">Vrati prethodnu vježbu</button>':'')+footer+'</div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="'+(c.live?'live':top().v==='ex'?'library':'preview')+'"');
+}
+// one line for the protocol list: "Prethodno 95 kg · 5/5/5/5" from the last recorded dose ('' when unknown or mixed)
+function workoutPreviousShort(item) {
+  const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});
+  const rows=previous?previous.rows.filter(row=>row.measure===item.measure):[];
+  if(!rows.length||rows.some(row=>row.failed||row.sides==null||row.perSide==null||row.perSide!==!!item.sides))return '';
+  const format=value=>value==null?'—':value.toLocaleString('hr-HR'),timed=item.measure==='time',kind=startLoadDescription(item.exId)?.kind;
+  const weights=rows.map(row=>row.kg),loaded=kind||weights.some(value=>value>0);
+  const weight=!loaded?'':(weights.every(value=>value===weights[0])?format(weights[0]):weights.map(format).join('/'))+' kg · ';
+  return 'Prethodno '+weight+rows.map(row=>format(row[timed?'sec':'reps'])).join('/')+(timed?' s':'');
 }
 function workoutPreviousCompact(item) {
   const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});

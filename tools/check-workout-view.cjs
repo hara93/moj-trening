@@ -180,8 +180,8 @@ test('app compact rows preserve varying doses, unknown weight and intentional ze
   const body=app.slice(app.indexOf('function workoutCompactHtml(items) {'),app.indexOf('\nfunction workoutCandidates('));
   const StartingLoad=require('../starting-load.js');
   const CinemaModel=require('../cinema-model.js');
-  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc','CinemaModel',body+';return workoutCompactHtml;')(
-    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x),CinemaModel);
+  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc','CinemaModel','workoutPreviousShort',body+';return workoutCompactHtml;')(
+    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x),CinemaModel,()=>'');
   let html=render([{exId:'bench',sets:2,measure:'sets',reps:5,repsList:[5,3],kg:20,kgList:[20,30]}]);
   assert.match(html,/5 \/ 3 pon\. · 20 \/ 30 kg/);
   html=render([{exId:'hold',sets:2,measure:'time',sec:12,secList:[12,8],kg:0,sides:true}]);
@@ -303,4 +303,24 @@ test('premium plain titles, contexts and units stay escaped while supplied marku
   const outputs=[View.compactExercise({index:0,name:unsafe,summary:unsafe}),View.exercisePage({name:unsafe,note:unsafe,toolsHtml:trusted}),View.journal({title:unsafe,noticeHtml:trusted}),View.instructions({name:unsafe,why:unsafe,primary:[unsafe],steps:[unsafe]}),View.chart({id:'x" onclick="bad()',title:unsafe,subtitle:unsafe,unit:unsafe,points:[{...points[0],context:unsafe}]}),View.trends({name:unsafe,subtitle:unsafe,note:unsafe,currentHtml:trusted})];
   outputs.forEach(html=>{assert.doesNotMatch(html,/<img src=x/);assert.match(html,/&lt;img src=x onerror=bad\(\)&gt;/);});
   assert.ok(outputs[1].includes(trusted)&&outputs[2].includes(trusted)&&outputs[5].includes(trusted));
+});
+
+test('each protocol row shows the last recorded dose on one line: "Prethodno 95 kg · 5/5/5/5"',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
+  const body=app.slice(app.indexOf('function workoutPreviousShort(item) {'),app.indexOf('function workoutPreviousCompact(item) {'));
+  const at=new Date('2026-11-03T18:00:00').getTime(),press={exId:'deadlift',measure:'sets',sets:4,reps:5,kg:95,sides:false};
+  const log=[{historyId:'h',kind:'protocol',refId:'a',at,items:[{...press,done:true,setsDone:4,repsList:[5,5,5,4],kgList:[95,95,95,95],sideCounts:[1,1,1,1],setNumbers:[1,2,3,4]}]}];
+  const short=new Function('WorkoutModel','S','Date','startLoadDescription',body+';return workoutPreviousShort;')(require('../workout-model.js'),{log},Date,()=>({kind:'bar'}));
+  assert.equal(short(press),'Prethodno 95 kg · 5/5/5/4');
+  log.length=0;assert.equal(short(press),'','nothing before the first session');
+  const row=View.compactExercise({index:0,name:'Mrtvo dizanje',summary:'4 × 5 pon. · 100 kg',previous:'Prethodno 95 kg · 5/5/5/4'});
+  assert.match(row,/<small>4 × 5 pon\. · 100 kg<\/small><small class="workout-compact-previous">Prethodno 95 kg · 5\/5\/5\/4<\/small>/);
+  assert.doesNotMatch(View.compactExercise({index:0,name:'X',summary:'1'}),/workout-compact-previous/);
+  assert.match(app,/summary:summary\(item\),previous:workoutPreviousShort\(item\)\}/);
+});
+test('the protocol cover stays within ~28 % of the screen and Start is a sticky bottom bar',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../workout.css'),'utf8');
+  assert.match(css,/\.workout-overview-cover \.hero\.single\{height:clamp\(180px,28svh,260px\)\}/);
+  assert.match(css,/\.workout-overview-cover \.hero\.single\.two\{width:auto;height:clamp\(180px,28svh,260px\);aspect-ratio:3\/4;margin:0 auto\}/);
+  assert.match(css,/\.workout-premium-overview>\.workout-footer,\.workout-exercise-page>\.workout-footer\{position:sticky;bottom:0;/);
 });
