@@ -683,3 +683,7 @@ span.workout-exercise-open{cursor:default}
 .workout-overview-cover .hero.single.two{width:auto;height:clamp(180px,28svh,260px);aspect-ratio:3/4;margin:0 auto}
 .workout-premium-overview>.workout-footer,.workout-exercise-page>.workout-footer{position:sticky;bottom:0;z-index:6}
 .workout-compact-text .workout-compact-previous{margin-top:2px;color:#9fb0b6}
+/* 1.21: small text on the player screen (read from 1–2 m) is at least 13 px; the layout is unchanged */
+.workout-cinema-heading p,.workout-cinema-notice,.workout-cinema-next,.workout-cinema-next small,.workout-cinema .cinema-next,.workout-cinema .cinema-next small,
+.cinema-weight-value small,.workout-cinema-clock .workout-control-action,.workout-cinema-journal>button>span:last-child,.workout-cinema .cinema-journal-bar>span,
+.cinema-pause-jump strong,.cinema-pause-actions button small{font-size:13px}

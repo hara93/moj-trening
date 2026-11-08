@@ -35,3 +35,11 @@ test('the journal collapse arrow is not positioned over the thumbnail',()=>{
   const css=read('app-layout.css');
   assert.match(css,/\.cinema-journal \.workout-journal-info\{position:static;[^}]*margin-left:auto/);
 });
+test('small text on the player screen is at least 13 px, the last rule for each selector',()=>{
+  const css=read('workout.css'),block=css.slice(css.lastIndexOf('/* 1.21: small text on the player screen'));
+  const selectors=['.workout-cinema-heading p','.workout-cinema-notice','.workout-cinema-next small','.workout-cinema .cinema-next small','.cinema-weight-value small',
+    '.workout-cinema-clock .workout-control-action','.workout-cinema-journal>button>span:last-child','.cinema-pause-actions button small'];
+  assert.match(block,/\{font-size:13px\}/);
+  for(const selector of selectors)assert.ok(block.includes(selector),selector);
+  assert.equal(css.indexOf('font-size',css.indexOf('{font-size:13px}',css.lastIndexOf('/* 1.21: small text'))+16),-1,'nothing after the block lowers it again');
+});
