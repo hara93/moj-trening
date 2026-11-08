@@ -411,6 +411,19 @@ async function firstStartWithParts(p, width) {
   return { guideFirstStart: true, overview: true, restPhases: true, dots: path.length, journal: true, swap: true, offered };
 }
 
+// The figures' rule (item 10). Where the system font has no width axis (Linux in CI, for one), the app adds
+// .no-font-width and narrows the figures with scaleX instead; the test accepts whichever the font allows.
+async function assertNumerals(p, sel) {
+  const got = await p.locator(sel).evaluate(node => {
+    const cs = getComputedStyle(node);
+    return { axis: !document.documentElement.classList.contains('no-font-width'), stretch: cs.fontStretch, weight: cs.fontWeight, transform: cs.transform,
+      narrowed: getComputedStyle(node.closest('.cinema-session') || node).transform };
+  });
+  if (got.axis) assert.deepEqual([got.stretch, got.weight, got.transform], ['40%', '900', 'none'], sel + ': ' + JSON.stringify(got));
+  else assert.ok(got.stretch === '100%' && got.weight === '900' && got.narrowed !== 'none', sel + ' (no width axis): ' + JSON.stringify(got));
+  return got.axis;
+}
+
 async function plainWorkout(p, width) {
   // no parts: no overview; the start is the prep clock; the guide does not open again
   await start(p, plain, fixture({ entry: 1 }));
@@ -422,8 +435,7 @@ async function plainWorkout(p, width) {
   assert.equal(await p.locator('.workout-cinema .cinema-next').count(), 0, 'no next-set card during prep');
   assert.equal((await dashes(p)).n, 2);
   // the numerals (item 10): the system font in its compressed width, 900, no transform
-  for (const sel of ['.workout-cinema #ringN', '#cinema-percent'])
-    assert.deepEqual(await p.locator(sel).evaluate(node => { const cs = getComputedStyle(node); return [cs.fontStretch, cs.fontWeight, cs.transform]; }), ['40%', '900', 'none'], sel);
+  for (const sel of ['.workout-cinema #ringN', '#cinema-percent']) await assertNumerals(p, sel);
   const prepShade = await p.locator('.workout-cinema-media').evaluate(node => getComputedStyle(node, '::after').backgroundImage);
   // the guide from the ⋯ menu, any time; its NASTAVI takes the green focus ring
   await A(p, 'cinemaMenu').click();
@@ -441,13 +453,14 @@ async function plainWorkout(p, width) {
   // prep has the work screen's upper shade over the photo (the set label sits in it); the arc is 31 bars
   assert.equal(await p.locator('.workout-cinema-media').evaluate(node => getComputedStyle(node, '::after').backgroundImage), prepShade);
   assert.equal(await p.locator('.cinema-clock-arc path').first().evaluate(node => (node.getAttribute('d').match(/M/g) || []).length), 31, 'a half circle of 31 bars');
-  assert.deepEqual(await p.locator('.workout-cinema-clock #ringN').evaluate(node => { const cs = getComputedStyle(node); return [cs.fontStretch, cs.fontWeight, cs.transform]; }), ['40%', '900', 'none']);
+  await assertNumerals(p, '.workout-cinema-clock #ringN');
   // without a width axis (.no-font-width) the figures are narrowed again and stay inside the arc
   const fallback = await p.evaluate(() => {
+    const had = document.documentElement.classList.contains('no-font-width');
     document.documentElement.classList.add('no-font-width');
     const n = document.querySelector('.workout-cinema-clock #ringN'), arc = document.querySelector('.cinema-clock-arc').getBoundingClientRect(), box = n.getBoundingClientRect();
     const out = { transform: getComputedStyle(n).transform, inside: box.left >= arc.left - .5 && box.right <= arc.right + .5, box: [box.left, box.right], arc: [arc.left, arc.right] };
-    document.documentElement.classList.remove('no-font-width');
+    if (!had) document.documentElement.classList.remove('no-font-width');
     return out;
   });
   assert.ok(fallback.transform !== 'none' && fallback.inside, 'fallback numerals: ' + JSON.stringify(fallback));
