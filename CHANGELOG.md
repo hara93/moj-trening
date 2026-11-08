@@ -1,5 +1,36 @@
 # Promjene
 
+## 1.22.0 — 8. 11. 2026.
+
+- **Novi izgled playera**:
+  - Jedna boja naglaska, zelena, u playeru, Dnevniku i Zamjeni. Plavo ostaje samo za rezervu (RIR). Ostatak aplikacije je i dalje plav.
+  - Brojke (vrijeme, postotak, sat, ponavljanja i kg) su u uskom, debelom sistemskom fontu iPhonea. Tekst ostaje kakav je bio.
+  - Sat serije ima puni polukrug od 31 crtice.
+- **Gornja traka:**
+  - Vrijeme treninga i postotak odrađenih serija. Isti broj piše i u Dnevniku.
+  - Ispod je po jedna crtica za svaku vježbu, a točka pokazuje gdje si.
+  - Donja traka pokazuje vježbu, ciljani RIR i seriju (npr. "Deadlift · RIR 2 · 2 od 4").
+- **Odmor:**
+  - Prve 3 sekunde vidi se samo veliki sat ODMOR. Dodir prikazuje ostalo, a ne pauzira.
+  - Zatim se vidi pitanje **Koliko si još mogao?** iznad −ODMOR+ i sljedeća serija.
+- **Priprema** ima veliki sat s riječju PRIPREMA.
+- **Pregled dijela:**
+  - Na početku treninga koji ima dijelove (npr. Glavni dio, Stražnji lanac) i na prijelazu u novi dio vidiš opremu i vježbe tog dijela, s doziranjem.
+  - **+ Dodaj vrijeme za pripremu** je odmah ispod sata.
+- **Dnevnik:**
+  - Trenutna vježba je otvorena kartica s prethodnom izvedbom, procjenom 1RM i ciljanim RIR-om. Ostale su sažeti redovi s kružićima serija.
+  - Opremu mijenjaš izravno na kartici. Nudi se samo oprema koju imaju stvarne zamjene.
+  - Na dnu pišu odrađeni postotak i zbroj, npr. "25 pon. · 2 500 kg".
+  - Zamjena i vraćanje zamjene vraćaju te u Dnevnik.
+- **Zamjena vježbe:**
+  - Tražilica više ne prekriva zadnji red.
+  - Dodir na sličicu otvara pregled vježbe.
+  - ▶ se vidi samo kad vježba ima video.
+- **Kako koristiti player:** kratki vodič kroz pokrete otvara se jednom na prvom pokretanju, a uvijek je dostupan iz izbornika ⋯.
+- Dodir koji promijeni zaslon više ne pritisne gumb koji se pojavi ispod prsta.
+- Čitač zaslona čuje cilj, zamjenu i napredak treninga.
+- Sitni tekst u postavkama playera i u Doziranju je najmanje 13 px.
+
 ## 1.21.0 — 8. 11. 2026.
 
 - **Bol** više ne zatvara Danas:

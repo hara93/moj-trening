@@ -36,7 +36,7 @@ U otvorenoj vježbi ponavljanja i kilograme uređuješ izravno u redovima. **+ D
 
 **Dnevnik** se otvara preko playera i pauzira timer dok uređuješ. Otvorena vježba pokazuje sve serije, a ostale se mogu proširiti. Oprema, zamjena i vraćanje vježbe, povijest, trendovi, bilješke i uređivanje serija nalaze se uz vježbu. **Prijeđi na vježbu** i naslovi dijelova omogućuju navigaciju bez izmišljanja dovršenih serija. Bilješke se spremaju uz izvedbu u povijesti. Odmor mijenjaj tipkama **− / +** po 15 sekundi; pripremu dodaj za 5, 10, 30 ili 60 sekundi. Izbornik **…** otvara postavke, tempo, zvuk, dijelove, dijeljenje plana, vodič i završetak. Rezultati se pregledavaju prije spremanja.
 
-Trenutna verzija je 1.21.0. **Danas** pri boli više ne zatvara trening, nego ga prilagođava jačini i mjestu boli. Player nakon serije pita koliko si još mogao (RIR), a progresija to uzima u obzir. **Pokreni trening** je uvijek na dnu protokola, uz zadnju izvedbu svake vježbe. Djelomično odrađen trening računa se za dan plana tek od pola radnih serija.
+Trenutna verzija je 1.22.0. **Player** ima novi izgled: jedna zelena boja, brojke u uskom sistemskom fontu iPhonea i sat u punom polukrugu. Odmor najprije pokazuje samo veliki sat, a zatim pitanje o rezervi (RIR). Treninzi s dijelovima prikazuju pregled dijela. **Dnevnik** ima otvorenu karticu trenutne vježbe i zbroj na dnu. Kratki vodič objašnjava pokrete u playeru.
 
 U **Moj pregled → Moji protokoli → Uvezi trening** možeš otvoriti gotovi trening **Gornji dio nakon utakmice · 60 min** ili odabrati vlastitu datoteku treninga. Pregledaj ispunjeni protokol i dodirni **Spremi** da ga dodaš na popis.
 
