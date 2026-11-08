@@ -263,7 +263,7 @@ async function main() {
     const nextCard = page.locator('.workout-cinema-next:has(>.cinema-next)');
     await nextCard.waitFor();
     const nextOpacity = await nextCard.evaluate(node=>Number(/,\s*([\d.]+)\)$/.exec(getComputedStyle(node).backgroundColor)?.[1]));
-    assert.equal(nextOpacity,.2,'next exercise card has an 80% transparent background');
+    assert.equal(nextOpacity,.3,'next exercise card has a 70% transparent background');
     assert.equal(await nextCard.evaluate(node=>getComputedStyle(node).backdropFilter),'none','the first card keeps the exercise image sharp');
     report.checks.nextCardOpacity=nextOpacity;
     await page.locator('.workout-cinema .cinema-single-media img').evaluate(img=>img.decode());

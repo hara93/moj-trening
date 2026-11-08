@@ -472,7 +472,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-info button{position:relative;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:#fff}
 .workout-cinema-info button::before{content:none}
 .workout-cinema-info svg{position:relative;z-index:1;width:24px!important;height:24px!important}
-.workout-cinema-next{position:relative;z-index:3;max-height:calc(100% - 16px);overflow:auto;margin:8px 14px;padding:12px;border:1px solid #8AA2AC55;border-radius:15px;background:#252C3733;font-size:12px;line-height:1.4;color:#DCE9E6}
+.workout-cinema-next{position:relative;z-index:3;max-height:calc(100% - 16px);overflow:auto;margin:8px 14px;padding:12px;border:1px solid #8AA2AC55;border-radius:15px;background:rgba(37,44,55,.3);font-size:12px;line-height:1.4;color:#DCE9E6}
 .workout-cinema-next:empty{display:none}
 .workout-cinema-next :is(button,a){min-height:44px;min-width:44px}
 .workout-cinema-next :is(img,video){display:block;flex:none;width:48px;height:56px;object-fit:contain;border-radius:8px;background:var(--surface-2)}

@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.19 — 8. 11. 2026.
+
+- Kartica **Slijedi** u playeru ima 70 % prozirnu pozadinu. **Uredi rezultat** maknut je s glavnog zaslona. Stvarnu izvedbu možeš urediti u **Dnevniku**.
+
 ## 1.20.18 — 8. 11. 2026.
 
 - Na početku prve vježbe slika se jasnije vidi iza kartice **Slijedi**. Skraćeno je gornje zatamnjenje, a obje kartice u playeru imaju 80 % prozirnu pozadinu bez zamućenja slike.

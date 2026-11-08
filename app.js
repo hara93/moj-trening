@@ -274,7 +274,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.18';
+const APP_VERSION = '1.20.19';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -2304,7 +2304,18 @@ function workoutInlineChange(input) {
       if(!StartingLoad.requests([edited.item],startLoadDescription).length){const error=workoutCommitItems(s,items);if(error){fail(error);return;}delete s.pendingReplacement;}
     }else{const error=workoutCommitItems(s,items);if(error){fail(error);return;}}
   }
-  delete S.workoutRaw[key];if(S.sheet?.kind==='workoutExercise')delete S.sheet.error;render();return true;
+  delete S.workoutRaw[key];
+  if (S.sheet?.kind === 'cinemaJournal' && (recorded >= 0 || field === 'rir' || field === 'sir')) {
+    // Keep the input and tap target in place as focus moves to the next field.
+    const value = workoutNumber(input.value);
+    input.value = value == null ? '' : String(value).replace('.',',');
+    input.removeAttribute('aria-invalid');
+    const totals = app.querySelector('.cinema-journal-footer small');
+    if (totals) totals.textContent = cinemaJournalTotals(CinemaModel.summary(P,PlayerDose));
+    return true;
+  }
+  if(S.sheet?.kind==='workoutExercise')delete S.sheet.error;
+  render();return true;
 }
 function workoutQuickReplace(s,id,equipmentOnly=false) {
   const c=workoutContext(s),e=S.ex[id],candidate=(equipmentOnly?workoutEquipmentVariants(c?.items[s.j]):workoutCandidates(c?.items[s.j])).find(x=>x.id===id);
@@ -2359,17 +2370,14 @@ function cinemaRedoButton(label){
   const exercise = S.ex[step.it?.exId]?.name || step.e?.name || 'Vježba';
   return '<button type="button" class="txtbtn" data-a="workoutRedoSet" data-j="'+step.g+'" data-set="'+step.set+'" title="'+esc(exercise+' · '+step.set+'. serija')+'">'+esc(label)+'</button>';
 }
-function cinemaResultButton(index, className = 'cinema-reserve'){
+function cinemaReviewResultButton(index){
   const step = P.steps[index];
-  if (!step || failedReserveStep(index)) return '';
+  if (step?.kind !== 'manual' || failedReserveStep(index)) return '';
   const reserve = P.rir?.[index];
-  const summary = step.kind === 'manual'
-    ? PlayerDose.recordedAt(step).reps+' pon.'+(step.it.sides ? ' po strani' : '')+(reserve == null ? '' : ' · RIR '+reserve)
-    : reserve == null ? 'Unesi rezervu' : 'SIR '+reserve;
+  const summary = PlayerDose.recordedAt(step).reps+' pon.'+(step.it.sides ? ' po strani' : '')+(reserve == null ? '' : ' · RIR '+reserve);
   const target = step.e.name+' · '+step.set+'. serija';
-  const label = P.done ? 'Uredi rezultat zadnje serije' : (step.kind === 'manual' ? 'Uredi rezultat · ' : '')+target;
-  return '<button type="button" class="'+className+'" data-a="cinemaReserve" data-k="'+index+'" title="'+esc(target)+'">'+
-    esc(label)+' <b>'+esc(summary)+'</b></button>';
+  return '<button type="button" class="txtbtn" data-a="cinemaReserve" data-k="'+index+'" title="'+esc(target)+'">'+
+    'Uredi rezultat zadnje serije <b>'+esc(summary)+'</b></button>';
 }
 function cinemaClockText(step){
   if (cinemaRecordedStep()) return '✓';
@@ -2393,11 +2401,12 @@ function workoutCinemaHtml() {
   const edit=' data-a="playDoseEdit" data-j="'+active+'"';
   const metrics='<button type="button" class="workout-cinema-metric"'+edit+' aria-label="Uredi '+(timed?'sekunde':'ponavljanja')+'"><strong>'+esc(timed?dose.sec:dose.reps)+'</strong><span>'+(timed?'sekundi':'ponavljanja')+WorkoutView.icon('chevrons-up-down')+'</span></button><button type="button" class="workout-cinema-clock ring" id="ring" data-a="cinemaTimer" aria-label="'+(recorded?'Odrađena serija':P.paused?'Nastavi brojač':'Pauziraj brojač')+'"'+(recorded?' disabled':'')+'>'+ringSvg(v.ringFrac,v.ringColor)+'<strong class="n" id="ringN">'+cinemaClockText(v.st)+'</strong><span class="workout-control-action">'+(recorded?'odrađena':P.paused?'pauza':v.st.kind==='manual'?'trajanje serije':v.st.kind==='rest'?'odmor':v.st.kind==='work'?'preostalo':'priprema')+'</span></button><button type="button" class="workout-cinema-metric"'+edit+' aria-label="Uredi kilograme"'+(!startLoadDescription(item.exId)?.kind?' disabled':'')+'><strong>'+esc(startLoadDescription(item.exId)?.kind?String(dose.kg).replace('.',','):'—')+'</strong><span>'+(startLoadDescription(item.exId)?.kind==='db'?'kg / kom':'kilogrami')+WorkoutView.icon('chevrons-up-down')+'</span></button>';
   const controls='<div class="cinema-controls"><button type="button" class="ib" data-a="jump" data-d="-1" aria-label="Prethodna vježba">'+I.prev+'</button><button type="button" class="btn cinema-primary" data-a="cinemaMain">'+(recorded?I.next:P.paused?I.play:v.st.kind==='manual'?I.checkS:v.st.kind==='rest'?I.next:I.play)+'<span>'+label+'</span></button><button type="button" class="ib" data-a="jump" data-d="1" aria-label="Sljedeća vježba">'+I.next+'</button></div><div class="cinema-secondary"><button type="button" class="txtbtn" data-a="cinemaPause" aria-label="'+(P.paused?'Nastavi trening':'Pauziraj trening')+'">'+(P.paused?I.play:WorkoutView.icon('pause'))+'<span>'+(P.paused?'Nastavi':'Pauziraj')+'</span></button>'+(!recorded&&v.st.kind!=='work'?'<button type="button" class="txtbtn" data-a="cinemaPrep">'+WorkoutView.icon('timer')+'Vrijeme za pripremu</button>':'')+cinemaRedoButton('Ponovi seriju')+'</div>';
-  const lastRecorded = cinemaLastRecordedIndex();
-  const reserve = cinemaResultButton(P.steps[lastRecorded]?.kind === 'manual' ? lastRecorded : rirStep());
-  const next='<div class="cinema-next"><span class="workout-thumb">'+(e?thumbHtml(e):'')+'</span><span><small>'+(v.st.kind==='rest'||v.st.kind==='prep'||v.st.kind==='ready'?'Slijedi':'Sada')+' · '+esc(parts[active])+'</small><strong>'+esc(e?.name||P.title)+'</strong><small>'+esc((step.set||1)+' / '+item.sets+' serija · '+(timed?dose.sec+' s':dose.reps+' pon.')+(dose.kg?' · '+fmtKg(dose.kg):''))+'</small></span><button type="button" class="ib"'+edit+' aria-label="Uredi sljedeću seriju">'+I.plus+'</button></div>'+reserve;
+  const next='<div class="cinema-next"><span class="workout-thumb">'+(e?thumbHtml(e):'')+'</span><span><small>'+(v.st.kind==='rest'||v.st.kind==='prep'||v.st.kind==='ready'?'Slijedi':'Sada')+' · '+esc(parts[active])+'</small><strong>'+esc(e?.name||P.title)+'</strong><small>'+esc((step.set||1)+' / '+item.sets+' serija · '+(timed?dose.sec+' s':dose.reps+' pon.')+(dose.kg?' · '+fmtKg(dose.kg):''))+'</small></span><button type="button" class="ib"'+edit+' aria-label="Uredi sljedeću seriju">'+I.plus+'</button></div>';
   const journal='<button type="button" class="cinema-journal-bar" data-a="cinemaJournal" aria-haspopup="dialog">'+WorkoutView.icon('notebook-text')+'<strong>Dnevnik</strong><span>Upiši rezultate '+WorkoutView.icon('chevrons-up')+'</span></button>';
-  return WorkoutView.cinema({phase:v.st.kind==='rest'?'rest':['prep','ready','switch'].includes(v.st.kind)?'ready':'work',paused:P.paused,exerciseId:item.exId,name:e?.name||P.title,subtitle:parts[active]+' · Serija '+(step.set||1)+' od '+item.sets,mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml,infoHtml:'<button type="button" class="ib" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',metricsHtml:metrics,controlsHtml:controls,restAdjustHtml:v.st.kind==='rest'?'<button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button>':'',nextHtml:['rest','prep','ready','switch'].includes(v.st.kind)?next:reserve,journalHtml:journal});
+  return WorkoutView.cinema({phase:v.st.kind==='rest'?'rest':['prep','ready','switch'].includes(v.st.kind)?'ready':'work',paused:P.paused,exerciseId:item.exId,name:e?.name||P.title,subtitle:parts[active]+' · Serija '+(step.set||1)+' od '+item.sets,mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml,infoHtml:'<button type="button" class="ib" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',metricsHtml:metrics,controlsHtml:controls,restAdjustHtml:v.st.kind==='rest'?'<button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button>':'',nextHtml:['rest','prep','ready','switch'].includes(v.st.kind)?next:'',journalHtml:journal});
+}
+function cinemaJournalTotals({reps, volume, seconds}) {
+  return reps+' pon. · '+Math.round(volume)+' kg × pon.'+(seconds?' · '+fmt(seconds)+' rada':'');
 }
 function workoutJournalHtml() {
   const c=workoutContext({live:true}),v=curView(),state=cinemaState(v),sections=CinemaModel.sections(c.items,S.ex),stats=CinemaModel.summary(P,PlayerDose);
@@ -2410,7 +2419,7 @@ function workoutJournalHtml() {
     return section+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+WorkoutView.journalExercise({index:j,name:e?.name||'Obrisana vježba',thumbHtml:e?thumbHtml(e):'',infoHtml:'<button type="button" class="ib" data-a="cinemaJournalGroup" data-j="'+j+'" aria-expanded="'+open+'" aria-label="'+(open?'Sažmi':'Prikaži serije')+' · '+esc(e?.name||'vježba')+'">'+WorkoutView.icon(open?'chevron-up':'chevron-down')+'</button>',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(s,c)+'<div class="cinema-extra-tools"><button type="button" data-a="playDoseEdit" data-j="'+j+'">'+WorkoutView.icon('pencil')+'Uredi serije</button><button type="button" data-a="cinemaNotes" data-j="'+j+'">'+WorkoutView.icon('notebook-pen')+'Bilješke</button><button type="button" data-a="cinemaGoSet" data-j="'+j+'">'+I.next+'Prijeđi na vježbu</button></div>',targetHtml:workoutTargetHtml(item)+(item.rest?' · odmor '+item.rest+' s':''),rowsHtml:workoutTableHtml(c,j,s)+remove})+'<button type="button" class="cinema-collapsed-sets" data-a="cinemaJournalGroup" data-j="'+j+'" aria-label="Prikaži sve serije">'+chips+'</button></div>';
   }).join('');
   const add=P.ref?.kind==='protocol'?'<button type="button" class="txtbtn cinema-add-exercise" data-a="cinemaAddExercise">'+I.plus+'Dodaj vježbu</button>':'';
-  return '<div class="view workout-journal workout-player-focus cinema-journal'+(state.all?' show-all':'')+'"><div class="cinema-journal-heading"><h1>Dnevnik</h1><div class="cinema-journal-actions">'+add+'<button type="button" class="txtbtn" data-a="workoutShowAll" aria-expanded="'+state.all+'">'+(state.all?'Sažmi vježbe':'Prikaži sve serije')+'</button></div></div><div class="workout-journal-blocks">'+blocks+'<section class="cinema-finish"><div><h2>Završi trening</h2><p>Pregledaj rezultate prije spremanja.</p></div><button type="button" class="btn sec" data-a="cinemaFinish">Pregled '+I.next+'</button></section></div><footer class="cinema-journal-footer"><span><strong>'+stats.percent+'% odrađenih serija</strong><small>'+stats.reps+' pon. · '+Math.round(stats.volume)+' kg × pon.'+(stats.seconds?' · '+fmt(stats.seconds)+' rada':'')+'</small></span><button type="button" class="ib" data-a="cinemaJournalClose" aria-label="Natrag u player">'+I.close+'</button></footer></div>';
+  return '<div class="view workout-journal workout-player-focus cinema-journal'+(state.all?' show-all':'')+'"><div class="cinema-journal-heading"><h1>Dnevnik</h1><div class="cinema-journal-actions">'+add+'<button type="button" class="txtbtn" data-a="workoutShowAll" aria-expanded="'+state.all+'">'+(state.all?'Sažmi vježbe':'Prikaži sve serije')+'</button></div></div><div class="workout-journal-blocks">'+blocks+'<section class="cinema-finish"><div><h2>Završi trening</h2><p>Pregledaj rezultate prije spremanja.</p></div><button type="button" class="btn sec" data-a="cinemaFinish">Pregled '+I.next+'</button></section></div><footer class="cinema-journal-footer"><span><strong>'+stats.percent+'% odrađenih serija</strong><small>'+cinemaJournalTotals(stats)+'</small></span><button type="button" class="ib" data-a="cinemaJournalClose" aria-label="Natrag u player">'+I.close+'</button></footer></div>';
 }
 function cinemaExerciseChoices(query) {
   const words=libSearchText(query).split(/\s+/).filter(Boolean);
@@ -5232,8 +5241,7 @@ VIEWS.play = function(){
     // the load of what was done (recomputed with every answer on this screen); the last set's reserve can still be tapped here
     const entry = any ? sessionEntry() : null;
     const lm = entry ? computeSession(entry) : null, rk = any ? rirStep() : -1; P._lm = lm;
-    const lastRecorded = cinemaLastRecordedIndex();
-    const editLast = P.steps[lastRecorded]?.kind === 'manual' ? cinemaResultButton(lastRecorded, 'txtbtn') : '';
+    const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex());
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +

@@ -22,7 +22,7 @@ async function assertOverlayBackground(card) {
     const style=getComputedStyle(node);
     return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity,backdrop:style.backdropFilter};
   });
-  assert.equal(alpha,.2,'player overlay has an 80% transparent background');
+  assert.equal(alpha,.3,'player overlay has a 70% transparent background');
   assert.equal(opacity,'1','the overlay content remains fully opaque');
   assert.equal(backdrop,'none','the card shows the image details without blur');
 }
@@ -410,7 +410,7 @@ async function setRecovery(p,width) {
   const original = await store(p);
   await A(p,'startPr').click();
   const main = A(p,'cinemaMain');
-  const saveResult = async (index, reps, rir) => {
+  const editReviewResult = async (index, reps, rir) => {
     await p.locator('[data-a="cinemaReserve"][data-k="'+index+'"]').click();
     const dialog = p.getByRole('dialog',{name:'Rezultat serije',exact:true});
     const form = dialog.locator('#workout-result-form');
@@ -421,6 +421,16 @@ async function setRecovery(p,width) {
     await form.getByRole('button',{name:'Spremi rezultat',exact:true}).click();
     await dialog.waitFor({state:'hidden'});
   };
+  const editJournalResult = async (set, reps, rir) => {
+    await openJournal(p,3);
+    const fields = row(p,0,set);
+    for (const [field, value] of [['reps',reps],['rir',rir]]) {
+      const input = fields.locator('[data-field="'+field+'"]');
+      await input.fill(String(value));
+      await input.press('Tab');
+    }
+    await closeJournal(p);
+  };
   await manual(p,1);
   const first = (await player(p)).i;
   await advance(p,4);
@@ -429,6 +439,7 @@ async function setRecovery(p,width) {
   assert.equal(step(accidental).kind,'rest');
   assert.deepEqual(accidental.doneSteps,{[first]:1});
   await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-next)'));
+  assert.equal(await p.locator('.workout-cinema [data-a="cinemaReserve"]').count(),0);
   await p.locator('.workout-cinema [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();
   const restarted = await player(p);
   assert.equal(restarted.i,first);
@@ -442,7 +453,7 @@ async function setRecovery(p,width) {
   await row(p,0,1).locator('[data-a="workoutSetDone"]').click();
   assert.equal((await player(p)).doneSteps[first],1);
   await sheet(p).waitFor({state:'hidden'});
-  await saveResult(first,12,2);
+  await editJournalResult(1,12,2);
   const firstResult = await player(p);
   assert.equal(firstResult.liveSchedule[first].actualReps,12);
   assert.equal(firstResult.rir[first],2);
@@ -461,7 +472,7 @@ async function setRecovery(p,width) {
   await p.reload({waitUntil:'domcontentloaded'});
   await A(p,'resumeGo').click();
   assert.equal(await main.innerText(),'Nastavi dalje');
-  await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-reserve):not(:has(>.cinema-next))'));
+  assert.equal(await p.locator('.workout-cinema-next').count(),0,'no result card covers the completed exercise');
   await main.click();
   const advanced = await player(p);
   assert.equal(advanced.i,first+1);
@@ -490,7 +501,7 @@ async function setRecovery(p,width) {
   assert.deepEqual(await store(p),original,'no history or protocol changes before saving');
 
   await main.click();
-  await saveResult(first,12,2);
+  await editJournalResult(1,12,2);
   await manual(p,2);
   assert.equal(await main.innerText(),'Nastavi dalje');
   await main.click();
@@ -507,7 +518,7 @@ async function setRecovery(p,width) {
   await finalCheckbox.click();
   await sheet(p).waitFor({state:'hidden'});
   await A(p,'finishPlay').waitFor();
-  await saveResult(third,13,3);
+  await editReviewResult(third,13,3);
   const finished = await player(p);
   assert.equal(finished.liveSchedule[third].actualReps,13);
   assert.equal(finished.rir[third],3);
