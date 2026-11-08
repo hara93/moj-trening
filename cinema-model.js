@@ -31,6 +31,29 @@
       return label;
     });
   }
+  // One part per exercise group: a superset takes the part of its first exercise, as the builder and the journal do.
+  function groupSections(items){
+    const list=items||[],parts=sections(list);
+    for(let j=1;j<list.length;j++)if(list[j]&&list[j].ss&&list[j-1]&&list[j-1].ss===list[j].ss)parts[j]=parts[j-1];
+    return parts;
+  }
+  // A workout really has parts when its names give more than one part, or one part that is not the default.
+  function hasParts(parts){
+    const names=new Set(parts||[]);
+    return names.size>1||names.size===1&&!names.has(DEFAULT_PART);
+  }
+  // The part overview opens the workout (the start countdown) and every pause before an exercise of another part.
+  // parts: one name per item (groupSections). Returns the item that opens the part, or -1.
+  function partOpening(steps,index,parts){
+    const list=Array.isArray(steps)?steps:[],step=list[index];
+    if(!step||!hasParts(parts)||!(step.kind==='prep'||step.kind==='rest'&&step.trans))return -1;
+    let before=null,after=null;
+    for(let k=index-1;k>=0&&!before;k--)if(list[k]&&isWork(list[k]))before=list[k];
+    for(let k=index+1;k<list.length&&!after;k++)if(list[k]&&isWork(list[k]))after=list[k];
+    if(!after||!Number.isInteger(after.g)||after.g<0||after.g>=parts.length)return -1;
+    if(step.kind==='prep')return before?-1:after.g;
+    return !before||parts[before.g]!==parts[after.g]?after.g:-1;
+  }
   // Rest phase 1 is the time alone: the first 3 s of a rest between sets, unless a tap, a pause or a sheet revealed
   // the rest (phase 2). The pause before the next exercise has no phases (0).
   const REST_ALONE_S=3;
@@ -96,5 +119,5 @@
     });
     return {total,complete,reps,seconds,volume,percent:total?Math.round(complete/total*100):0};
   }
-  return Object.freeze({prepare,rest,summary,sections,restPhase,upcoming,progress});
+  return Object.freeze({prepare,rest,summary,sections,groupSections,hasParts,partOpening,restPhase,upcoming,progress});
 });

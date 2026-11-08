@@ -780,19 +780,24 @@ span.workout-exercise-open{cursor:default}
 .cinema-prep-label{font-size:20px}
 .cinema-prep-picks button{font-size:14px}
 /* Part overview: a big title, equipment, the part's items, a countdown. */
-.workout-cinema-overview{position:relative;z-index:2;flex:none;padding:14px 12px 0 20px}
+.workout-cinema-overview{position:relative;z-index:2;display:flex;flex-direction:column;flex:0 1 auto;min-height:0;padding:14px 12px 0 20px}
+.cinema-section{display:flex;flex-direction:column;min-height:0}
 .cinema-section header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .cinema-section h1{margin:0;font-size:clamp(26px,8vw,31px);font-weight:800;line-height:1.05;letter-spacing:-.035em;text-transform:uppercase;overflow-wrap:anywhere}
 .cinema-section .cinema-glass svg{width:18px!important;height:18px!important}
 .cinema-section-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
 .cinema-section-chips span{padding:5px 10px;border-radius:8px;background:#FFFFFF24;color:#F1F4F5;font-size:13px;font-weight:600}
-.cinema-section-items{margin:0 -12px 0 -20px;padding:0;list-style:none}
+.cinema-section-items{min-height:0;margin:0 -12px 0 -20px;padding:0;list-style:none;overflow-y:auto;overscroll-behavior:contain}
 .cinema-section-items li{display:grid;gap:2px;padding:9px 20px 9px 16px;border-left:4px solid transparent}
 .cinema-section-items li.is-current{border-left-color:var(--cinema-accent);background:color-mix(in srgb,var(--cinema-accent) 22%,#191D25D9)}
 .cinema-section-items strong{font-size:17px;font-weight:650;line-height:1.25}
 .cinema-section-items strong b{color:var(--cinema-accent);font-weight:800}
 .cinema-section-items small{color:#C2CACE;font-size:14px;line-height:1.3}
 .cinema-section-clock{margin:0 0 6px}
+/* "+ Dodaj vrijeme za pripremu" as a small text button under the overview's clock (the slider replaces both). */
+.workout-cinema .cinema-section-prep{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:0 0 0 -4px;padding:0 6px;border:0;border-radius:10px;background:transparent;color:var(--cinema-accent);font-size:15px;font-weight:650}
+.workout-cinema .cinema-section-prep svg{width:16px;height:16px}
+.workout-cinema.has-pause-overlay .cinema-section-clock{opacity:.35}
 .workout-cinema.is-section .workout-cinema-media::after{background:linear-gradient(to bottom,var(--cinema-bg) 0%,#191D25F5 20%,#191D25D1 38%,#191D2566 52%,#191D2500 63%,#191D2500 66%,#191D253D 79%,#191D25B8 92%,var(--cinema-bg) 100%)}
 .workout-cinema.has-pause-overlay .workout-cinema-overview{visibility:hidden}
 @media(max-height:740px),(max-width:350px){

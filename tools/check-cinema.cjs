@@ -117,3 +117,26 @@ test('rest phase 1 is the time alone for 3 s; a reveal (tap, pause, sheet) shows
  assert.equal(Cinema.restPhase(rest,NaN,false),2,'an unknown elapsed time never hides the rest controls');
  assert.equal(Cinema.restPhase(null,0,false),0);
 });
+test('the part overview: only for workouts with real parts, at the start and at the pause before an exercise of another part',()=>{
+ assert.equal(Cinema.hasParts(['Glavni dio','Glavni dio']),false,'one default part is not a part');
+ assert.equal(Cinema.hasParts(['Snaga','Snaga']),true,'one authored part is');
+ assert.equal(Cinema.hasParts(['Glavni dio','Trup']),true);
+ assert.equal(Cinema.hasParts([]),false);
+ // a superset takes the part of its first exercise (the builder only lets A1 choose; older data may disagree)
+ const items=[{exId:'a',section:'Priprema'},{exId:'b',ss:'x'},{exId:'c',ss:'x',section:'Snaga'},{exId:'d'},{exId:'e',section:'Trup',ss:'y'},{exId:'f',ss:'y'}];
+ assert.deepEqual(Cinema.groupSections(items),['Priprema','Priprema','Priprema','Snaga','Trup','Trup']);
+ assert.deepEqual(Cinema.sections(items),['Priprema','Priprema','Snaga','Snaga','Trup','Trup'],'sections() itself is unchanged');
+ // prep, a(2 sets), transition, b1 c1 rest b2 c2, transition, d, transition, e1 f1
+ const steps=[{kind:'prep',g:0},{kind:'manual',g:0},{kind:'rest',g:0},{kind:'manual',g:0},{kind:'rest',g:1,trans:true},
+  {kind:'manual',g:1},{kind:'manual',g:2},{kind:'rest',g:2},{kind:'manual',g:1},{kind:'manual',g:2},{kind:'rest',g:3,trans:true},
+  {kind:'manual',g:3},{kind:'rest',g:4,trans:true},{kind:'work',g:4},{kind:'work',g:5}];
+ const parts=Cinema.groupSections(items),opens=steps.map((_,i)=>Cinema.partOpening(steps,i,parts));
+ assert.deepEqual(opens,[0,-1,-1,-1,-1,-1,-1,-1,-1,-1,3,-1,4,-1,-1],'start, Snaga (d) and Trup (e); the pair stays in Priprema');
+ assert.deepEqual(steps.map((_,i)=>Cinema.partOpening(steps,i,Cinema.sections(items.map(({section,...x})=>x)))),steps.map(()=>-1),'no parts, no overview');
+ // extra prep added before a later set is not a start; a workout of one authored part opens with it
+ const later=[{kind:'prep',g:0},{kind:'manual',g:0},{kind:'prep',g:0},{kind:'manual',g:0}];
+ assert.deepEqual(later.map((_,i)=>Cinema.partOpening(later,i,['Snaga'])),[0,-1,-1,-1]);
+ assert.equal(Cinema.partOpening(later,0,['Glavni dio']),-1);
+ assert.equal(Cinema.partOpening([],0,['Snaga']),-1);
+ assert.equal(Cinema.partOpening([{kind:'prep',g:0}],0,['Snaga']),-1,'nothing to open');
+});

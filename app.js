@@ -2802,26 +2802,25 @@ function cinemaProgressPaint(){
   }
   const text=document.getElementById('cinema-percent');if(text&&text.textContent!==percent+'%')text.textContent=percent+'%';
 }
-function cinemaSectionStart(st,parts){
-  if(st.kind==='prep')return P.i===0||P.steps.slice(0,P.i).every(step=>!isWork(step));
-  return st.kind==='rest'&&!!st.trans&&(st.g===0||parts[st.g]!==parts[st.g-1]);
-}
 function cinemaEquipmentLabel(e){
   if(!e)return '';
   return {bar:'Šipka',db:'Bučice',lm:'Landmine',kb:'Girja'}[kgKind(e)]||exEquip(e).find(x=>x&&x!=='Bez opreme')||'';
 }
+// the plan's first set, from the workout itself: "5 pon. · 100 kg"; no weight where the player shows none (bodyweight,
+// a starting load still unknown, zero)
 function cinemaDoseLine(item){
-  const dose=PlayerDose.at(item,1),timed=item.measure==='time';
-  return (timed?dose.sec+' s':dose.reps+' pon.')+(item.sides?' po strani':'')+(dose.kg?' · '+fmtKg(dose.kg):'');
+  const dose=PlayerDose.at(item,1),timed=item.measure==='time',kind=startLoadDescription(item.exId)?.kind;
+  const weight=kind&&dose.kg>0&&!StartingLoad.missingSet(item,0,kind)?' · '+fmtKg(dose.kg):'';
+  return (timed?dose.sec+' s':dose.reps+' pon.')+(item.sides?' po strani':'')+weight;
 }
 // still: rest phase 1, where a tap anywhere on the stage (the time too) reveals phase 2 and never pauses
 function cinemaBigClock(step,cls,still){
   if(still)return '<p class="cinema-big-clock'+(cls?' '+cls:'')+'" role="timer"><span class="n" id="ringN">'+cinemaClockText(step)+'</span></p>';
   return '<button type="button" class="cinema-big-clock'+(cls?' '+cls:'')+'" id="ring" data-a="cinemaTimer" aria-label="'+(P.paused?'Nastavi brojač':'Pauziraj brojač')+'"><span class="n" id="ringN">'+cinemaClockText(step)+'</span></button>';
 }
-// Shown during the countdown before the first exercise of each part.
-function cinemaSectionHtml(st,parts){
-  const j=st.kind==='prep'?0:st.g,name=parts[j];
+// The part overview (CinemaModel.partOpening): the countdown before the first exercise of each part. j opens the part.
+function cinemaSectionHtml(j,parts){
+  const name=parts[j];
   let end=j;while(end+1<P.items.length&&parts[end+1]===name)end++;
   const items=P.items.slice(j,end+1),next=end+1<P.items.length?end+1:-1;
   const chips=[...new Set(items.map(item=>cinemaEquipmentLabel(S.ex[item.exId])).filter(Boolean))];
@@ -2830,7 +2829,7 @@ function cinemaSectionHtml(st,parts){
     (chips.length?'<div class="cinema-section-chips" aria-label="Oprema">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>':'')+
     '<ol class="cinema-section-items">'+items.map((item,k)=>{
       const e=S.ex[item.exId];
-      return '<li'+(j+k===j?' class="is-current" aria-current="step"':'')+'><strong><b>'+(item.sets||1)+'×</b> '+esc(e?.name||'Vježba')+'</strong><small>'+esc(cinemaDoseLine(item))+'</small></li>';
+      return '<li'+(k===0?' class="is-current" aria-current="step"':'')+'><strong><b>'+(item.sets||1)+'×</b> '+esc(e?.name||'Vježba')+'</strong><small>'+esc(cinemaDoseLine(item))+'</small></li>';
     }).join('')+'</ol></section>';
 }
 // Rest: phase 1 is the time alone for 3 s; a tap on the stage, a pause or an opened sheet reveals phase 2 for this rest.
@@ -2844,10 +2843,11 @@ function workoutCinemaHtml() {
   const step=cinemaDisplayStep(st);
   const item=step.it||P.items[active],dose=step===st&&cinemaRecordedStep()?PlayerDose.recordedAt(step,item):PlayerDose.at(item,step.set||1),e=S.ex[item?.exId]||v.e;
   const frac=cinemaStepFrac(),percent=cinemaPercent(frac);
-  const parts=CinemaModel.sections(P.items,S.ex),timed=item.measure==='time',recorded=cinemaRecordedStep();
+  const parts=CinemaModel.groupSections(P.items),timed=item.measure==='time',recorded=cinemaRecordedStep();
   const elapsed=SessionClock.update(P.clock,Date.now(),!!P.paused)?.seconds||0;
   const topbar='<div class="cinema-session"><strong id="cinema-elapsed">'+fmt(elapsed)+'</strong><span aria-hidden="true">·</span><b id="cinema-percent">'+percent+'%</b></div><button type="button" class="ib" data-a="cinemaMenu" aria-label="Mogućnosti treninga">'+WorkoutView.icon('ellipsis')+'</button>';
-  const editingPrep=S.sheet?.kind==='cinemaPrep',section=!editingPrep&&cinemaSectionStart(st,parts);
+  // the part overview stays while its prep time is edited; the slider takes the place of the clock
+  const editingPrep=S.sheet?.kind==='cinemaPrep',opening=CinemaModel.partOpening(P.steps,P.i,parts),section=opening>=0;
   const restPhase=cinemaRestPhase(st),rest=restPhase>0;
   const preparing=!section&&!rest&&(editingPrep||['prep','ready','switch'].includes(st.kind)||st.kind==='rest');
   const phase=section?'section':rest?'rest':preparing?'ready':'work';
@@ -2860,14 +2860,15 @@ function workoutCinemaHtml() {
   const reserveAt=!editingPrep&&!pause&&st.kind==='rest'&&restPhase!==1?cinemaReserveSteps():[];
   return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
     subtitle:section||rest?'':'Serija '+(step.set||1)+' od '+item.sets+(side?' · '+side:''),prepQuantity:section||rest?'':cinemaQuantity(item,dose),
-    overviewHtml:section?cinemaSectionHtml(st,parts):'',
+    overviewHtml:section?cinemaSectionHtml(opening,parts):'',
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(percent,frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:phase==='work'?metrics:'',
     reserveHtml:cinemaReserveHtml(reserveAt,active),
     restAdjustHtml:restPhase===2?'<div class="cinema-rest-buttons"><button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button></div>':'',
     nextHtml:restPhase===2?cinemaUpcomingHtml(CinemaModel.upcoming(P)):'',
-    prepHtml:(section?'<div class="cinema-section-clock">'+cinemaBigClock(st,'is-left')+'</div>':preparing&&(editingPrep||!S.sheet)?cinemaPrepHtml(st,editingPrep):'')+(restPhase===2?cinemaBigClock(st,'is-rest'):''),
+    prepHtml:(section?(editingPrep?cinemaPrepHtml(st,true):'<div class="cinema-section-clock">'+cinemaBigClock(st,'is-left')+
+      '<button type="button" class="cinema-prep-trigger cinema-section-prep" data-a="cinemaPrep" aria-expanded="false">'+I.plus+'Dodaj vrijeme za pripremu</button></div>'):preparing&&(editingPrep||!S.sheet)?cinemaPrepHtml(st,editingPrep):'')+(restPhase===2?cinemaBigClock(st,'is-rest'):''),
     centerHtml:restPhase===1?restClock:'',
     pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:footer});
 }
