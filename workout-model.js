@@ -59,7 +59,7 @@
       if((sourcePattern||nextPattern)&&sourcePattern!==nextPattern)return;
       var equipment=tags(exercise);
       if(filtering&&(!equipment||equipment.some(function(tag){return normalized(tag)!=='bez opreme'&&!available.has(normalized(tag));})))return;
-      out.push({id:id,name:exercise.name.trim(),equipment:equipment?equipment.slice():[],
+      out.push({id:id,name:exercise.name.trim(),equipment:equipment?equipment.slice():[],primary:nextPrimary.slice(),pattern:nextPattern,
         reason:'Ista kategorija i glavna mišićna skupina'+(sourcePattern?'; isti zabilježeni obrazac pokreta':'')+'. Provjeri izvedbu i novu dozu; opterećenje nije nužno jednako.'});
     });
     return freeze(out.sort(function(a,b){return a.name.localeCompare(b.name,'hr',{sensitivity:'base'})||a.id.localeCompare(b.id);}));

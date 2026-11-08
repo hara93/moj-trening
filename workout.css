@@ -73,6 +73,57 @@ span.workout-exercise-open{cursor:default}
 .workout-alternatives .tx{gap:5px}
 .workout-alternatives .tx b{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
 .workout-alternatives .tx small{font-size:11px;line-height:1.45;color:#BDCADB;overflow-wrap:anywhere}
+.workout-swap-bg{backdrop-filter:blur(5px)}
+.sheet.workout-swap-sheet{--accent:#77B9EB;--accent-text:#77B9EB;position:relative;display:flex;flex-direction:column;overflow:hidden;height:calc(100% - max(18px, env(safe-area-inset-top, 0px)));max-height:none;padding:7px 0 0;border:1px solid var(--border);border-bottom:0;border-radius:27px 27px 0 0}
+.workout-swap-sheet.is-opening{animation:cinema-sheet-in .23s cubic-bezier(.2,.8,.2,1)}
+.workout-swap-sheet>.grab{flex:none;margin-bottom:9px;background:var(--text-2);opacity:.6}
+.workout-swap-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;min-height:48px;padding:0 18px 7px}
+.workout-swap-heading h3{display:flex;align-items:center;gap:10px;margin:0;font-size:22px;font-weight:720;line-height:1.25}
+.workout-swap-heading h3 svg{flex:none;width:24px;height:24px}
+.workout-swap-heading .ib{flex:none}
+.workout-swap-filters{display:flex;gap:8px;flex:none;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:6px 18px 12px}
+.workout-swap-filter{position:relative;display:inline-flex;align-items:center;gap:6px;flex:none;max-width:calc(100% - 20px);min-height:42px;padding:0 13px;border:1px solid var(--border);border-radius:999px;background:var(--bg);font-size:13px;font-weight:550}
+.workout-swap-filter span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workout-swap-filter svg{width:16px;height:16px;flex:none}
+.workout-swap-filter select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.workout-swap-filter[data-active="true"]{color:var(--accent-text);border-color:var(--accent);background:var(--tag-bg)}
+.workout-swap-filter:has(select:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.workout-swap-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 17px 16px}
+.workout-swap-hero{display:grid;justify-items:center;text-align:center;padding:19px 0 26px}
+.workout-swap-hero[hidden]{display:none}.workout-swap-hero[hidden]~#workout-swap-results{padding-top:9px}
+.workout-swap-photo{position:relative;display:grid;place-items:center;flex:none;overflow:hidden;width:63px;height:63px;padding:0;border:0;border-radius:11px;background:var(--thumb);color:var(--text)}
+.workout-swap-photo img,.workout-swap-photo video{display:block;width:100%;height:100%;object-fit:cover}
+.workout-swap-photo.is-current{width:min(48vw,182px);height:auto;aspect-ratio:1/1.12;border-radius:17px}
+.workout-swap-current{position:absolute;top:8px;left:8px;padding:5px 8px;border-radius:7px;background:var(--scrim);font-size:11px;font-weight:600}
+.workout-swap-preview-icon{position:absolute;display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:var(--scrim)}
+.workout-swap-preview-icon svg{width:16px;height:16px}
+.is-current>.workout-swap-preview-icon{right:8px;bottom:8px}
+.workout-swap-hero h4,.workout-swap-preview h4{margin:12px 0 0;font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+.workout-swap-hero p,.workout-swap-preview p,.workout-swap-section>p{margin:5px 0 0;color:var(--text-2);font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.workout-swap-section+.workout-swap-section{margin-top:22px}
+.workout-swap-section h4,.workout-swap-empty h4{margin:0;font-size:18px;line-height:1.25}
+.workout-swap-section ul{display:grid;gap:10px;list-style:none;margin:9px 0 0;padding:0}
+.workout-swap-section .workout-swap-recommended{padding:9px;border:1px solid var(--accent);border-radius:16px;background:var(--tag-bg)}
+.workout-swap-row{display:grid;grid-template-columns:63px minmax(0,1fr) 44px;align-items:center;gap:9px;min-height:68px}
+.workout-swap-description{display:grid;justify-items:start;gap:4px;min-width:0;overflow-wrap:anywhere}
+.workout-swap-description span{padding:3px 6px;border-radius:6px;background:var(--bg);color:var(--accent-text);font-size:10px;font-weight:650}
+.workout-swap-description strong{font-size:15px;line-height:1.3}
+.workout-swap-description small{color:var(--text-2);font-size:13px;line-height:1.3}
+.workout-swap-action{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--surface-2);color:var(--accent-text)}
+.workout-swap-action svg{width:21px;height:21px}
+.workout-swap-empty{padding:13px 0;color:var(--text-2)}
+.workout-swap-empty h4{color:var(--text)}
+.workout-swap-empty p{margin:6px 0 0;font-size:13px;line-height:1.5}
+.workout-swap-footer{flex:none;padding:9px max(18px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));background:var(--surface)}
+.workout-swap-search{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg)}
+.workout-swap-search:focus-within{border-color:var(--accent)}
+.workout-swap-search svg{flex:none;width:21px;height:21px;color:var(--text-2)}
+.workout-swap-search input{width:100%;min-width:0;min-height:44px;padding:0;border:0;outline:none;background:transparent;font-size:16px}
+.workout-swap-preview h4{margin-top:8px}
+.workout-swap-demo{display:grid;place-items:center;overflow:hidden;margin:14px 0;border:1px solid var(--border);border-radius:16px;background:var(--bg)}
+.workout-swap-demo :is(img,video){display:block;width:100%;max-height:48vh;object-fit:contain}
+.workout-swap-preview ol{padding-inline-start:23px;color:var(--text-body);font-size:14px;line-height:1.6}
+.workout-swap-preview li+li{margin-top:5px}
 .cinema-journal-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px}
 .cinema-journal-actions .cinema-add-exercise,.cinema-journal .cinema-remove-exercise{display:inline-flex;align-items:center;gap:5px}
 .cinema-journal-actions .cinema-add-exercise svg,.cinema-journal .cinema-remove-exercise svg{width:14px;height:14px;flex:none}

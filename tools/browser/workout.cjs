@@ -10,7 +10,7 @@ const History = require('../../history-model.js');
 const { artifacts, engine, fixture: baseFixture, launch, serve } = require('./runtime.cjs');
 
 const ids = {
-  protocol: 'workout-audit', replacement: 'workout-db-press', hold: 'workout-side-hold',
+  protocol: 'workout-audit', replacement: 'workout-db-press', similar: 'workout-band-press', hold: 'workout-side-hold',
   program: 'workout-frozen', frozen: 'workout-program', clock: 'workout-clock', missing: 'workout-missing'
 };
 const fixed = new Date('2026-11-04T10:00:00+01:00');
@@ -34,6 +34,10 @@ function fixture() {
     equip: ['Bučice'], equipment: 'Dvije bučice', movementPattern: 'U1', sets: 3, reps: 9, kg: 0,
     muscles: { prime: ['front_chest'], sec: ['back_triceps'] },
     muscleWorkEligible: true, media: null, mediaType: null
+  };
+  data.exercises[ids.similar] = {
+    ...data.exercises[ids.replacement], id: ids.similar, name: 'Sličan potisak s užetom', equip: ['Elastično uže'],
+    muscles: { prime: ['front_chest', 'back_triceps'], sec: [] }
   };
   data.exercises[ids.hold] = {
     ...data.exercises['side-plank'], id: ids.hold, name: 'Kontrolni bočni upor',
@@ -194,6 +198,56 @@ async function replacement(page, index, id, equipment) {
   await byId(page, 'workoutCandidate', id).click();
   await page.locator('.workout-exercise-page').waitFor();
   assert.equal(await page.locator('#play-dose-form').count(), 0, 'replacement is immediate, without a second confirmation form');
+}
+
+async function swapPresentation(page) {
+  await openProtocol(page);
+  await exercise(page, 0);
+  await detailAction(page, 'workoutSwap').click();
+  const sheet = page.getByRole('dialog', { name: 'Zamijeni vježbu' });
+  const body = sheet.locator('.workout-swap-body');
+  const search = sheet.getByRole('searchbox', { name: 'Pretraži zamjene' });
+  const candidate = byId(page, 'workoutCandidate', ids.similar);
+  const original = await store(page);
+  assert.equal(await sheet.locator('.workout-swap-hero button').getAttribute('data-id'), 'bench-press');
+  assert.ok(await sheet.locator('.workout-swap-hero img').isVisible());
+  assert.ok(await sheet.getByRole('heading', { name: 'Preporuke' }).isVisible());
+  assert.ok(await sheet.getByRole('heading', { name: 'Slični pokreti' }).isVisible());
+  assert.equal(await sheet.locator('.workout-swap-recommended [data-id="' + ids.similar + '"]').count(), 0);
+  const fixedSearch = await search.boundingBox();
+  await candidate.scrollIntoViewIfNeeded();
+  assert.equal((await search.boundingBox()).y, fixedSearch.y, 'search stays fixed while results scroll');
+  assert.ok(await body.evaluate(node => node.scrollTop > 0));
+  await page.locator('#workout-muscle').selectOption({ label: 'Triceps' });
+  await page.locator('#workout-equipment').selectOption({ label: 'Elastično uže' });
+  await page.locator('#workout-pattern').selectOption('U1');
+  await search.fill('slican uzetom');
+  assert.equal(await sheet.locator('[data-a="workoutCandidate"]').count(), 1);
+  assert.equal(await candidate.count(), 1);
+  await search.fill('nema rezultata');
+  assert.ok(await sheet.getByRole('heading', { name: 'Nema odgovarajuće zamjene' }).isVisible());
+  await search.fill('slican');
+  const preview = byId(page, 'workoutSwapPreview', ids.similar);
+  await preview.click();
+  assert.ok(await page.getByRole('dialog', { name: 'Pregled vježbe' }).getByRole('heading', { name: 'Sličan potisak s užetom' }).isVisible());
+  await page.getByRole('button', { name: 'Natrag na zamjene' }).click();
+  assert.equal(await search.inputValue(), 'slican');
+  assert.equal(await page.locator('#workout-pattern').inputValue(), 'U1');
+  assert.ok(await preview.evaluate(node => node === document.activeElement));
+  await body.evaluate(node => {
+    node.scrollTop = 0;
+    const send = (type, touches) => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'touches', { value: touches });
+      node.dispatchEvent(event);
+    };
+    send('touchstart', [{ identifier: 1, clientX: 120, clientY: 200 }]);
+    send('touchmove', [{ identifier: 1, clientX: 120, clientY: 350 }]);
+    send('touchend', []);
+  });
+  await sheet.waitFor({ state: 'hidden' });
+  assert.deepEqual(await store(page), original, 'preview and swipe dismissal leave the plan and history intact');
+  results.push({ label: 'swap-presentation', actualRecommendations: true, filtersAndSearch: true, previewBackRestores: true, touchDismisses: true });
 }
 
 async function savePartial(page) {
@@ -611,6 +665,7 @@ async function main() {
 }
 
 async function runScenarios(page) {
+  await swapPresentation(page);
   const baseline = (await store(page)).protocols[ids.protocol];
   await draftIsolation(page);
   await library(page);

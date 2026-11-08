@@ -1088,6 +1088,7 @@ function focusKey(el){
   if(el.classList?.contains('workout-set-input'))return {workout:dsKey(el)};
   if (el.id === 'cinema-prep-range') return { id: el.id };
   if (el.id === 'sheet-h') return { sheet: 1 };
+  if (el.id==='workout-swap-search'||el.dataset?.swapFilter) return { id:el.id };
   if (el.dataset && el.dataset.a && el.dataset.a !== 'sheetClose') return { a: el.dataset.a, ds: dsKey(el) };
   if (el.id && el.type === 'file') return { id: el.id };   // the hidden file field behind "Uvezi kopiju" and similar
   return null;
@@ -1129,7 +1130,7 @@ function render(){
   }
   // 1.8: a sheet rebuilt by a tap inside it (the filter's tiles and figure) stays where it was scrolled
   const oldSheet = app.querySelector('.sheet');
-  const oldSheetScroller = oldSheet?.querySelector(':scope > .fbody') || oldSheet;
+  const oldSheetScroller = oldSheet?.querySelector(':scope > .fbody, :scope > .workout-swap-body') || oldSheet;
   const sheetTop = oldSheet && S.sheet && oldSheet.dataset.kind === S.sheet.kind ? oldSheetScroller.scrollTop : 0;
   if(oldSheet?.dataset.kind==='cinemaJournal'&&S.playerJournal)S.playerJournal.scroll=oldSheet.querySelector('.workout-journal-blocks')?.scrollTop||0;
   if(oldSheet?.dataset.workoutKey){S.workoutScroll=S.workoutScroll||{};S.workoutScroll[oldSheet.dataset.workoutKey]=oldSheet.querySelector('.view')?.scrollTop||0;}
@@ -1150,7 +1151,7 @@ function render(){
   if (v && enteredView && (t.v === 'muscleWeek' || v.matches('.pg-cinema'))) v.classList.add('charts-entering');
   if (v && scrollMem[key] != null) v.scrollTop = scrollMem[key];
   if (sheetTop) {
-    const sheet = app.querySelector('.sheet'), scroller = sheet?.querySelector(':scope > .fbody') || sheet;
+    const sheet = app.querySelector('.sheet'), scroller = sheet?.querySelector(':scope > .fbody, :scope > .workout-swap-body') || sheet;
     if (scroller) scroller.scrollTop = sheetTop;
   }
   const ws=app.querySelector('.workout-fullscreen');if(ws){const wv=ws.querySelector('.view');if(wv)wv.scrollTop=S.workoutScroll?.[ws.dataset.workoutKey]||0;}
@@ -2197,14 +2198,14 @@ function workoutCandidates(item) {
   const profiles=Object.fromEntries(Object.values(S.ex).map(e=>[e.id,loadFx(e)]));
   return WorkoutModel.candidates({item,exercises,profiles});
 }
-function workoutEquipmentVariants(item) {
+function workoutEquipmentVariants(item,candidates=workoutCandidates(item)) {
   // Only explicitly related variants are direct equipment choices. Broad
   // muscle/pattern alternatives still belong to the reviewed Swap list.
   const families=[['bench-press','db-bench-press']];
   const family=families.find(ids=>ids.includes(item.exId));
   const own=S.ex[item.exId]?.equipmentFamily;
   const ids=family||(!own?[]:Object.values(S.ex).filter(e=>e.equipmentFamily===own).map(e=>e.id));
-  return workoutCandidates(item).filter(candidate=>ids.includes(candidate.id)&&!!S.ex[candidate.id].sides===!!item.sides);
+  return candidates.filter(candidate=>ids.includes(candidate.id)&&!!S.ex[candidate.id].sides===!!item.sides);
 }
 function workoutToolbarHtml(s,c) {
   const item=c.items[s.j],e=S.ex[item.exId],kind=kgKind(e),equipment={bar:'Šipka',db:'Bučice',lm:'Landmine',kb:'Girja'}[kind]||exEquip(e)[0]||'Oprema';
@@ -2344,7 +2345,7 @@ function workoutQuickReplace(s,id,equipmentOnly=false) {
   item.kg=known?.length?known.at(-1).kg:0;
   item.kgList=Array.from({length:item.sets},(_,i)=>known?.length?known[Math.min(i,known.length-1)].kg:null);
   if(known?.length)item.startingKgKnown=true;else delete item.startingKgKnown;
-  const items=c.items.slice();items[s.j]=item;S.workoutRaw={};s.kind='workoutExercise';delete s.panel;delete s.equipmentMenu;delete s.equipment;
+  const items=c.items.slice();items[s.j]=item;S.workoutRaw={};s.kind='workoutExercise';delete s.panel;delete s.equipmentMenu;delete s.swap;
   if(c.live&&StartingLoad.requests([item],startLoadDescription).length){s.pendingReplacement=item;s.error='Unesi težinu nove varijante prije nastavka treninga. Težina prethodne vježbe nije prenesena.';S.sheet=s;render();return;}
   const error=workoutCommitItems(s,items);if(error){s.error=error;S.sheet=s;render();return;}
   delete s.pendingReplacement;delete s.error;S.sheet=s;render();
@@ -2767,16 +2768,105 @@ function cinemaReplay(){
   render();
 }
 
+const WORKOUT_SWAP_FILTERS = [
+  { key:'muscle', label:'Ciljani mišić', all:'Svi ciljani mišići', values:c=>c.primary },
+  { key:'equipment', label:'Oprema', all:'Sva oprema', values:c=>c.equipment },
+  { key:'pattern', label:'Obrazac pokreta', all:'Svi obrasci pokreta', values:c=>c.pattern?[c.pattern]:[] }
+];
+const WORKOUT_SWAP_PATTERNS = {
+  L1:'Donji dio · obje noge', L2:'Donji dio · jedna noga', HJ:'Pregib u kuku', U1:'Gornji dio · višezglobno',
+  S:'Gornji dio · izolacija', C:'Trup i stabilnost', B:'Balistički pokret', P:'Skokovi', R:'Trčanje', A:'Aktivacija', K:'Nošenje'
+};
+function workoutSwapLabel(key,value) {
+  if(key==='muscle')return MuscleWork.groups.find(group=>group.id===value)?.label||value;
+  if(key==='pattern'&&Object.hasOwn(WORKOUT_SWAP_PATTERNS,value))return WORKOUT_SWAP_PATTERNS[value];
+  return value;
+}
+function workoutSwapState(item) {
+  const primary=MuscleWork.profile(S.ex[item.exId]).primary, candidates=workoutCandidates(item);
+  const direct=workoutEquipmentVariants(item,candidates);
+  const exact=candidates.filter(candidate=>candidate.primary.length===primary.length&&candidate.primary.every(group=>primary.includes(group))&&
+    !!S.ex[candidate.id].sides===!!item.sides);
+  const recommended=new Set([...new Set(direct.concat(exact).map(candidate=>candidate.id))].slice(0,3));
+  return {primary,candidates,recommended,filters:{},query:''};
+}
+function workoutSwapMatches(swap) {
+  const words=norm(swap.query).trim().split(/\s+/).filter(Boolean);
+  return swap.candidates.filter(candidate=>{
+    if(!S.ex[candidate.id])return false;
+    if(WORKOUT_SWAP_FILTERS.some(filter=>swap.filters[filter.key]&&!filter.values(candidate).includes(swap.filters[filter.key])))return false;
+    if(!words.length)return true;
+    const terms=[candidate.name,exAlt(S.ex[candidate.id]),...candidate.equipment,
+      ...candidate.primary.map(group=>workoutSwapLabel('muscle',group)),workoutSwapLabel('pattern',candidate.pattern)];
+    const haystack=norm(terms.join(' '));
+    return words.every(word=>haystack.includes(word));
+  });
+}
+function workoutSwapFilter(swap,filter) {
+  const value=swap.filters[filter.key]||'';
+  const options=[...new Set(swap.candidates.flatMap(filter.values))].map(key=>({key,label:workoutSwapLabel(filter.key,key)}))
+    .sort((a,b)=>a.label.localeCompare(b.label,'hr'));
+  return '<label class="workout-swap-filter" data-active="'+!!value+'"><span>'+esc(value?workoutSwapLabel(filter.key,value):filter.label)+'</span>'+
+    WorkoutView.icon('chevron-down')+'<select id="workout-'+filter.key+'" data-swap-filter="'+filter.key+'" aria-label="'+filter.label+'">'+
+    '<option value="">'+filter.all+'</option>'+options.map(option=>'<option value="'+esc(option.key)+'"'+(value===option.key?' selected':'')+'>'+esc(option.label)+'</option>').join('')+'</select></label>';
+}
+function workoutSwapAction(candidate) {
+  return '<button type="button" class="workout-swap-action" data-a="workoutCandidate" data-id="'+esc(candidate.id)+'" aria-label="'+esc('Zamijeni za '+candidate.name)+'">'+WorkoutView.icon('shuffle')+'</button>';
+}
+function workoutSwapPreviewButton(e,hero=false) {
+  const video=mediaList(e).some(media=>media.type==='video');
+  return '<button type="button" class="workout-swap-photo'+(hero?' is-current':'')+'" data-a="workoutSwapPreview" data-id="'+esc(e.id)+'" aria-label="'+esc('Pregled: '+e.name)+'">'+
+    thumbHtml(e)+(hero?'<span class="workout-swap-current">Trenutna</span>':'')+
+    '<span class="workout-swap-preview-icon">'+WorkoutView.icon(video?'play':'info')+'</span></button>';
+}
+function workoutSwapResults(swap) {
+  const matches=workoutSwapMatches(swap),recommended=matches.filter(candidate=>swap.recommended.has(candidate.id));
+  const similar=matches.filter(candidate=>!swap.recommended.has(candidate.id));
+  const row=(candidate,preferred)=>'<li class="workout-swap-row">'+workoutSwapPreviewButton(S.ex[candidate.id])+
+    '<div class="workout-swap-description">'+(preferred?'<span>Preporuka</span>':'')+'<strong>'+esc(candidate.name)+'</strong><small>'+
+    esc(candidate.equipment.join(' · ')||'Oprema nije navedena')+'</small></div>'+workoutSwapAction(candidate)+'</li>';
+  if(!matches.length)return '<div class="workout-swap-empty"><h4>Nema odgovarajuće zamjene</h4><p>'+
+    (swap.candidates.length?'Pokušaj s drugim pojmom ili promijeni filtre.':'Za ovu vježbu nema zamjene s odgovarajućim pokretom i ciljanim mišićima.')+'</p></div>';
+  return (recommended.length?'<section class="workout-swap-section"><h4>Preporuke</h4><ul class="workout-swap-recommended">'+
+    recommended.map(candidate=>row(candidate,true)).join('')+'</ul></section>':'')+
+    (similar.length?'<section class="workout-swap-section"><h4>Slični pokreti</h4><p>'+esc(swap.primary.map(group=>workoutSwapLabel('muscle',group)).join(' · '))+
+    '</p><ul>'+similar.map(candidate=>row(candidate,false)).join('')+'</ul></section>':'');
+}
+function workoutSwapRefresh(s) {
+  const results=document.getElementById('workout-swap-results');
+  if(!results||s?.kind!=='workoutSwap'||!s.swap)return;
+  const hero=results.parentElement.querySelector('.workout-swap-hero');
+  if(hero)hero.hidden=!!s.swap.query.trim();
+  results.innerHTML=workoutSwapResults(s.swap);
+  if(s.swap.query.trim())results.parentElement.scrollTop=0;
+}
+function workoutSwapPreviewHtml(swap,e) {
+  const media=mediaList(e),m=media.find(value=>value.type==='video')||media[0];
+  const candidate=swap.candidates.find(value=>value.id===e.id);
+  const picture=!m?'':m.type==='video'?'<video src="'+esc(m.src)+'"'+(m.poster?' poster="'+esc(m.poster)+'"':'')+
+    ' controls muted playsinline preload="metadata" tabindex="0"></video>':'<img alt="'+esc(e.name+(m.two?': početni i završni položaj':''))+'" src="'+esc(m.src)+'">';
+  const steps=Array.isArray(e.steps)?e.steps:[];
+  return '<div class="workout-swap-body workout-swap-preview"><h4>'+esc(e.name)+'</h4><p>'+esc(exEquip(e).join(' · '))+'</p>'+
+    (picture?'<div class="workout-swap-demo">'+picture+'</div>':'<p>Nema fotografije ili snimke za ovu vježbu.</p>')+
+    (m?.credit?'<p>'+esc(m.credit)+'</p>':'')+
+    (steps.length?'<ol>'+steps.map(step=>'<li>'+esc(step)+'</li>').join('')+'</ol>':'')+'</div>'+
+    (candidate?'<footer class="workout-swap-footer"><button type="button" class="btn" data-a="workoutCandidate" data-id="'+esc(e.id)+'">'+
+      WorkoutView.icon('shuffle')+'Zamijeni ovom vježbom</button></footer>':'');
+}
 function workoutSwapHtml(s) {
-  const c=workoutContext(s), item=c?.items[s.j];
-  if (!item) return '<h3>Vježba nije dostupna</h3><button class="btn" data-a="workoutClose">Zatvori</button>';
-  const exercises=Object.fromEntries(Object.values(S.ex).map(e=>[e.id,{...e,equip:exEquip(e)}]));
-  const profiles=Object.fromEntries(Object.values(S.ex).map(e=>[e.id,loadFx(e)]));
-  const candidates=WorkoutModel.candidates({item,exercises,profiles}).filter(candidate=>!s.equipment || candidate.equipment.includes(s.equipment));
-  return '<h3>Zamijeni vježbu</h3><p class="play-dose-note">Odaberi alternativu i potvrdi njezine serije i težine. Zamjena vrijedi za ovaj trening.</p>'+
-    '<label class="workout-equipment">Oprema<select id="workout-equipment"><option value="">Sva oprema</option>'+EQUIP.map(name=>'<option'+(s.equipment===name?' selected':'')+'>'+esc(name)+'</option>').join('')+'</select></label>'+
-    '<div class="workout-alternatives">'+(candidates.length?candidates.map(candidate=>'<button type="button" class="row" data-a="workoutCandidate" data-id="'+esc(candidate.id)+'"><span class="thumb">'+thumbHtml(S.ex[candidate.id])+'</span><span class="tx"><b>'+esc(candidate.name)+'</b><small>'+esc(candidate.equipment.join(' · '))+'</small><small>'+esc(candidate.reason)+'</small></span>'+I.chev+'</button>').join(''):'<p class="none">Nema odgovarajuće alternative za taj odabir opreme.</p>')+'</div>'+
-    (s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<button class="btn sec" data-a="workoutClose">Odustani</button>';
+  const item=workoutContext(s)?.items[s.j],e=item&&S.ex[item.exId],swap=s.swap;
+  const preview=swap?.preview&&S.ex[swap.preview];
+  const header='<header class="workout-swap-heading"><h3 id="sheet-h" tabindex="-1">'+WorkoutView.icon(preview?'info':'shuffle')+
+    (preview?'Pregled vježbe':'Zamijeni vježbu')+'</h3>'+
+    (preview?'<button type="button" class="ib" data-a="workoutSwapBack" aria-label="Natrag na zamjene">'+WorkoutView.icon('chevron-left')+'</button>':'')+'</header>';
+  if(!e||!swap)return header+'<div class="workout-swap-body"><p>Vježba nije dostupna.</p></div>';
+  if(preview)return header+workoutSwapPreviewHtml(swap,preview);
+  const meta=swap.primary.map(group=>workoutSwapLabel('muscle',group)).concat(exEquip(e)).join(' · ');
+  return header+'<div class="workout-swap-filters" role="group" aria-label="Filtri zamjena">'+
+    WORKOUT_SWAP_FILTERS.map(filter=>workoutSwapFilter(swap,filter)).join('')+'</div>'+
+    '<div class="workout-swap-body"><div class="workout-swap-hero"'+(swap.query.trim()?' hidden':'')+'>'+workoutSwapPreviewButton(e,true)+'<h4>'+esc(e.name)+'</h4><p>'+esc(meta)+'</p></div>'+
+    (s.error?'<p class="play-dose-error" role="alert">'+esc(s.error)+'</p>':'')+'<div id="workout-swap-results" aria-live="polite">'+workoutSwapResults(swap)+'</div></div>'+
+    '<footer class="workout-swap-footer"><label class="workout-swap-search">'+I.search+'<input id="workout-swap-search" type="search" autocomplete="off" placeholder="Traži vježbu" aria-label="Pretraži zamjene" value="'+esc(swap.query)+'"></label></footer>';
 }
 function workoutOpenPanel(panel,d={}) {
   const s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c)return;
@@ -2785,6 +2875,7 @@ function workoutOpenPanel(panel,d={}) {
 }
 function workoutClose() {
   const s=S.sheet;
+  if(s?.kind==='workoutSwap'&&s.swap?.preview){A.workoutSwapBack();return;}
   if(s?.pendingReplacement){s.error='Unesi težinu nove varijante ili vrati prethodnu vježbu.';render();return;}
   if(s?.returnCinema){S.sheet={kind:'cinemaJournal'};render();return;}
   if(s?.returnCinemaPlayer){playDoseResumeEditing();return;}
@@ -5695,13 +5786,13 @@ function attachSheetGestures(){
     handle.addEventListener('pointercancel',ev=>end(ev,true));
     handle.addEventListener('lostpointercapture',ev=>end(ev,true));
 
-    if(!native&&node.dataset.kind!=='eq')return;
+    if(!native&&!['eq','workoutSwap'].includes(node.dataset.kind))return;
     let pull=null;
     node.addEventListener('touchstart',ev=>{
       if(pull?.claimed)reset();
       pull=null;
       if(!current()||ev.touches.length!==1||ev.target.closest?.('.sheet-drag-handle,input,textarea,select,[contenteditable]'))return;
-      const scroller=ev.target.closest?.('.fbody,#progress-info-body,#training-load-info-body');
+      const scroller=ev.target.closest?.('.fbody,.workout-swap-body,#progress-info-body,#training-load-info-body');
       if(scroller?.scrollTop>1)return;
       const touch=ev.touches[0];
       if(native&&ev.target===node){
@@ -5800,12 +5891,12 @@ function sheetHtml(){
   const s = S.sheet;
   if(s.kind==='cinemaMenu')return '<div class="sheet-bg cinema-popover-bg" data-a="sheetClose"><section class="sheet cinema-option-sheet cinema-popover" data-kind="cinemaMenu" role="dialog" aria-modal="true" aria-labelledby="sheet-h">'+cinemaMenuPopoverHtml()+'</section></div>';
   if(s.kind==='cinemaJournal')return '<div class="sheet-bg cinema-journal-bg" data-a="sheetClose"><section class="sheet cinema-journal-sheet'+(sheetKindWas==='cinemaJournal'?'':' is-opening')+'" data-kind="cinemaJournal" role="dialog" aria-modal="true" aria-label="Dnevnik treninga">'+workoutJournalHtml()+'</section></div>';
+  if(s.kind==='workoutSwap')return '<div class="sheet-bg workout-swap-bg" data-a="sheetClose"><section class="sheet workout-swap-sheet'+(sheetKindWas==='workoutSwap'?'':' is-opening')+'" data-kind="workoutSwap" data-stop="1" role="dialog" aria-modal="true" aria-labelledby="sheet-h"><div class="grab"></div>'+workoutSwapHtml(s)+'</section></div>';
   if(s.kind==='workoutExercise')return '<div class="sheet-bg workout-sheet-bg"><section class="sheet workout-fullscreen" data-kind="workoutExercise" data-workout-key="'+(s.live?'live':top().v+':'+top().id)+':'+s.j+':'+(s.panel||'main')+'" role="dialog" aria-modal="true" aria-label="Vježba u treningu">'+workoutPanelHtml(s)+'</section></div>';
   let body = s.kind === 'credit' ? creditSheet(s) : '';
   if(s.kind.startsWith('cinema'))body=cinemaSheetHtml(s);
   if (s.kind === 'workoutExercise') body=workoutPanelHtml(s);
   else if(s.kind==='workoutProtocolOptions'){const p=S.pr[s.id];body=p?workoutProtocolOptionsHtml(p,viewDoseItems(top(),p.items||[])):'<h3>Trening nije dostupan</h3>';}
-  else if (s.kind === 'workoutSwap') body=workoutSwapHtml(s);
   else if (s.kind === 'workoutReplace') body='<p class="play-dose-note">Potvrdi novu vježbu. Težina prethodne vježbe nije prenesena.</p>'+playDoseEditorHtml({...s,kind:'previewDose'},{apply:'workoutReplaceApply',resize:'workoutReplaceResize',cancel:'workoutClose',applyLabel:'Potvrdi zamjenu'});
   else if (s.kind === 'startingLoad') body=startingLoadHtml(s);
   else if (s.kind === 'bodyRegion') body='<h3>'+esc(muscleLabel(s.region))+'</h3><p class="sub">Zglobno područje. Oznaka pomaže pronaći i opisati vježbe za to područje; ne dodaje zasebne bodove mišićnog opterećenja.</p>'+bodyFig({prime:[s.region],sec:[]},{size:300})+'<button class="btn sec" data-a="sheetDone">Zatvori</button>';
@@ -6181,8 +6272,27 @@ const A = {
   },
   workoutSwap: d => {
     const s=workoutState(Number(d?.j)||0),c=workoutContext(s);if(!workoutCanSwap(c,s?.j))return;
-    s.kind='workoutSwap';delete s.panel;
+    const item=c.items[s.j];if(!item||!S.ex[item.exId])return;
+    s.kind='workoutSwap';s.swap=workoutSwapState(item);delete s.panel;
     if(c.live)cinemaOpenSheet(s);else{S.sheet=s;render();}
+  },
+  workoutSwapPreview:d=>{
+    const s=S.sheet,c=workoutContext(s),swap=s?.swap;
+    if(s?.kind!=='workoutSwap'||!swap||!S.ex[d.id]||
+        (d.id!==c?.items[s.j]?.exId&&!workoutSwapMatches(swap).some(candidate=>candidate.id===d.id)))return;
+    swap.listTop=app.querySelector('.workout-swap-body')?.scrollTop||0;
+    swap.filterLeft=app.querySelector('.workout-swap-filters')?.scrollLeft||0;
+    swap.preview=d.id;render();
+    app.querySelector('.workout-swap-body')?.scrollTo(0,0);
+    document.getElementById('sheet-h')?.focus({preventScroll:true});
+  },
+  workoutSwapBack:()=>{
+    const s=S.sheet,swap=s?.swap;
+    if(s?.kind!=='workoutSwap'||!swap?.preview)return;
+    const id=swap.preview;delete swap.preview;render();
+    app.querySelector('.workout-swap-body')?.scrollTo(0,swap.listTop);
+    app.querySelector('.workout-swap-filters')?.scrollTo(swap.filterLeft,0);
+    [...app.querySelectorAll('[data-a="workoutSwapPreview"]')].find(button=>button.dataset.id===id)?.focus({preventScroll:true});
   },
   workoutUndoSwap:d=>{
     const s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c||!workoutCanSwap(c,s.j)||s.pendingReplacement)return;
@@ -6191,7 +6301,6 @@ const A = {
     if(error){toast(error,true);return;}delete s.panel;delete s.equipmentMenu;S.sheet=s;render();
   },
   workoutEquipment: d => {
-    if(S.sheet?.kind==='workoutSwap'&&d.v!==undefined){S.sheet.equipment=EQUIP.includes(d.v)?d.v:'';render();return;}
     const s=workoutState(Number(d.j)||0),c=workoutContext(s);if(!c)return;
     s.equipmentMenu=!s.equipmentMenu;
     if(c.live)cinemaOpenSheet(s);else{S.sheet=s;render();}
@@ -6199,8 +6308,7 @@ const A = {
   workoutEquipmentClose: () => {if(S.sheet?.kind==='workoutExercise'){delete S.sheet.equipmentMenu;render();}},
   workoutQuickCandidate: d => {if(S.sheet?.kind==='workoutExercise')workoutQuickReplace(S.sheet,d.id,true);},
   workoutCandidate: d => {
-    const s=S.sheet,c=workoutContext(s);if(s?.kind!=='workoutSwap'||!c)return;
-    if(s.equipment&&!workoutCandidates(c.items[s.j]).some(x=>x.id===d.id&&x.equipment.includes(s.equipment)))return;
+    const s=S.sheet;if(s?.kind!=='workoutSwap'||!s.swap||!workoutSwapMatches(s.swap).some(candidate=>candidate.id===d.id))return;
     workoutQuickReplace(s,d.id);
   },
   workoutCancelPending: () => {if(S.sheet?.kind==='workoutExercise'){delete S.sheet.pendingReplacement;delete S.sheet.error;S.workoutRaw={};render();}},
@@ -7050,6 +7158,9 @@ app.addEventListener('submit', ev => {
 app.addEventListener('input', ev => {
   const t = ev.target;
   if(t.id==='cinema-prep-range'){cinemaPrepSelect(CINEMA_PREP_TIMES[Number(t.value)]);return;}
+  if(t.id==='workout-swap-search'&&S.sheet?.kind==='workoutSwap'&&S.sheet.swap){
+    S.sheet.swap.query=t.value;workoutSwapRefresh(S.sheet);return;
+  }
   if(t.id==='cinema-exercise-search'&&S.sheet?.kind==='cinemaAddExercise'){
     S.sheet.query=t.value;
     document.getElementById('cinema-exercise-choices').innerHTML=cinemaExerciseChoices(t.value);
@@ -7119,7 +7230,14 @@ app.addEventListener('change', async ev => {
     else if(builderSetSection(index,t.value))render();
     return;
   }
-  if(t.id==='workout-equipment'){A.workoutEquipment({v:t.value});return;}
+  if(t.dataset.swapFilter&&S.sheet?.kind==='workoutSwap'&&S.sheet.swap){
+    const filter=WORKOUT_SWAP_FILTERS.find(item=>item.key===t.dataset.swapFilter);
+    if(!filter)return;
+    S.sheet.swap.filters[filter.key]=t.value;
+    const chip=t.closest('.workout-swap-filter');
+    if(chip){chip.dataset.active=String(!!t.value);chip.querySelector('span').textContent=t.value?workoutSwapLabel(filter.key,t.value):filter.label;}
+    workoutSwapRefresh(S.sheet);return;
+  }
   if(t.id==='workout-target'){A.workoutTarget({v:t.value,j:t.dataset.j});return;}
   if (t.id === 'importWorkoutFile' && t.files?.[0]) {
     const file = t.files[0];
