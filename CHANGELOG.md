@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.20 — 8. 11. 2026.
+
+- Player prikazuje velika ponavljanja lijevo, štopericu sa segmentiranim lukom u sredini i okomiti odabir težine desno. Tijekom odmora demonstracija se zatamni, a veći bijeli brojač prikazuje preostalo vrijeme ispod tipki za prilagodbu odmora.
+
 ## 1.20.19 — 8. 11. 2026.
 
 - Kartica **Slijedi** u playeru ima 70 % prozirnu pozadinu. **Uredi rezultat** maknut je s glavnog zaslona. Stvarnu izvedbu možeš urediti u **Dnevniku**.

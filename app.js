@@ -208,9 +208,12 @@ const top = () => S.stack[S.stack.length - 1];
 // estimated from the same step list the player runs, so supersets and circuits are timed the way they are trained.
 // A set with reps: 3 s per rep for lifting; a drill at the pitch (category Kondicija) about 20 s per rep (a run plus the
 // walk back), or the item's own repSec (e.g. 100 for a box-to-box length run)
+function manualSetEstimate({it, e, set}){
+  const repSeconds = +it.repSec > 0 ? +it.repSec : e?.cat === 'Kondicija' ? 20 : 3;
+  return repsOf(it, set || 1) * repSeconds * (it.sides ? 2 : 1) + (it.sides ? 5 : 0);
+}
 function protoMin(p){
-  const repS = st => +st.it.repSec > 0 ? +st.it.repSec : st.e && st.e.cat === 'Kondicija' ? 20 : 3;
-  const s = stepsFromItems(p.items || []).reduce((a, st) => a + (st.dur || (st.kind === 'manual' ? repsOf(st.it, st.set || 1) * repS(st) * (st.it.sides ? 2 : 1) + (st.it.sides ? 5 : 0) : 0)), 0);
+  const s = stepsFromItems(p.items || []).reduce((a, st) => a + (st.dur || (st.kind === 'manual' ? manualSetEstimate(st) : 0)), 0);
   return Math.max(1, Math.round(s / 60));
 }
 function fieldMin(f){
@@ -274,7 +277,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.20.19';
+const APP_VERSION = '1.20.20';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -2379,10 +2382,82 @@ function cinemaReviewResultButton(index){
   return '<button type="button" class="txtbtn" data-a="cinemaReserve" data-k="'+index+'" title="'+esc(target)+'">'+
     'Uredi rezultat zadnje serije <b>'+esc(summary)+'</b></button>';
 }
+const CINEMA_CLOCK_TICKS = 34;
+const cinemaClockSegments = Array.from({length:CINEMA_CLOCK_TICKS}, (_, index) => {
+  const angle = Math.PI * (index + .5) / CINEMA_CLOCK_TICKS;
+  const point = radius => (88 - radius*Math.cos(angle)).toFixed(2)+' '+(88 - radius*Math.sin(angle)).toFixed(2);
+  return 'M'+point(72)+'L'+point(85);
+});
+function cinemaClockProgress(step){
+  if (cinemaRecordedStep()) return 1;
+  if (step.kind === 'manual') return cinemaStageSeconds() / manualSetEstimate(step);
+  return step.dur ? 1 - remaining() / step.dur : 0;
+}
+function cinemaClockCount(step){
+  return Math.max(0, Math.min(cinemaClockSegments.length, Math.round(cinemaClockProgress(step)*cinemaClockSegments.length)));
+}
+function cinemaClockHtml(step, recorded){
+  const count = cinemaClockCount(step);
+  const label = recorded ? 'Odrađena serija' : P.paused ? 'Nastavi brojač' : 'Pauziraj brojač';
+  const status = recorded ? 'odrađena' : step.kind === 'rest' ? '' : P.paused ? 'pauza' : isWork(step) ? '' : 'priprema';
+  const arc = step.kind === 'rest' ? '' : '<svg class="cinema-clock-arc" viewBox="0 0 176 88" aria-hidden="true">'+
+    '<path d="'+cinemaClockSegments.join('')+'"/><path id="cinema-clock-fill" data-count="'+count+'" d="'+cinemaClockSegments.slice(0,count).join('')+'"/></svg>';
+  return '<button type="button" class="workout-cinema-clock" id="ring" data-a="cinemaTimer" aria-label="'+label+'"'+(recorded?' disabled':'')+'>'+
+    arc+'<strong class="n" id="ringN">'+cinemaClockText(step)+'</strong>'+
+    (status?'<span class="workout-control-action">'+status+'</span>':'')+'</button>';
+}
 function cinemaClockText(step){
   if (cinemaRecordedStep()) return '✓';
   if (step.kind === 'manual') return fmt(cinemaStageSeconds());
   return step.kind === 'ready' ? 'Kreni' : fmt(remaining());
+}
+function cinemaDisplayStep(st){
+  return ((['prep','rest','ready'].includes(st.kind)||st.nextEx)?P.steps.slice(P.i+1).find(isWork):st)||st;
+}
+let cinemaWeightPhase = null;
+const cinemaWeightOffset = (kg, delta) => kgRound(Math.max(0,Math.min(5000,kg+delta)));
+function cinemaWeightHtml(step, item, dose){
+  const kind = startLoadDescription(item.exId)?.kind;
+  const caption = kind === 'db' ? 'Težina / kom' : 'Težina';
+  if (!kind) return '<div class="workout-cinema-metric cinema-weight-unavailable"><strong>—</strong><span class="cinema-metric-label">Težina</span></div>';
+  const guard = PlayerDose.locks(P,step.g);
+  const locked = guard.closed || guard.locked.includes(step.set);
+  const missing = StartingLoad.missingSet(P.items[step.g] || item,step.set-1,kind);
+  const number = value => String(value).replace('.',',');
+  const kg = dose.kg, weightText = number(kg);
+  const wide = weightText.length > 4 ? ' is-wide' : '';
+  const value = missing?'<span class="cinema-weight-add" aria-hidden="true">'+I.plus+'</span>':
+    '<span class="cinema-weight-value'+wide+'"><strong>'+esc(weightText)+'</strong><small>kg</small></span>';
+  if (locked || cinemaWeightPhase !== P.steps[P.i] || S.sheet) {
+    return '<button type="button" class="workout-cinema-metric" data-a="cinemaWeightOpen" aria-expanded="false" aria-label="'+
+      (missing?'Dodaj težinu':caption+' '+fmtKg(kg)+'. Uredi kilograme')+'"'+(locked?' disabled':'')+'>'+
+      value+'<span class="cinema-metric-label">'+caption+(!locked?WorkoutView.icon('chevrons-up-down'):'')+'</span></button>';
+  }
+  const option = dir => {
+    const next = cinemaWeightOffset(kg,dir);
+    if (next === kg) return '<span></span>';
+    return '<button type="button" class="cinema-weight-neighbor" data-a="cinemaWeightStep" data-d="'+dir+'" aria-label="Odaberi '+fmtKg(next)+'">'+
+      esc(number(next))+'</button>';
+  };
+  return '<div class="cinema-weight-wheel" role="group" aria-label="'+caption+'">'+option(-1)+
+    '<button type="button" class="cinema-weight-current'+wide+'" data-a="cinemaWeightExact" aria-label="'+
+    fmtKg(kg)+'. Unesi točnu težinu">'+esc(weightText)+'</button>'+option(1)+'</div>';
+}
+function cinemaChangeWeight(delta){
+  if (S.sheet || !P || P.done || cinemaWeightPhase !== P.steps[P.i] || !Number.isInteger(delta)) return;
+  const step = cinemaDisplayStep(P.steps[P.i]), item = P.items[step.g];
+  if (!item || !startLoadDescription(item.exId)?.kind) return;
+  const current = PlayerDose.at(item,step.set).kg;
+  const kg = cinemaWeightOffset(current,delta);
+  if (kg === current) return;
+  const edited = PlayerDose.editItem(item,{rows:[{set:step.set,kg}]},PlayerDose.locks(P,step.g));
+  if (!edited.ok) {toast(edited.error,true);return;}
+  const state = workoutState(step.g), context = workoutContext(state);
+  context.items[step.g] = edited.item;
+  const error = workoutCommitItems(state,context.items);
+  if (error) {toast(error,true);return;}
+  cinemaWeightPhase = P.steps[P.i];
+  render();
 }
 function cinemaLabel(v) {
   if (cinemaRecordedStep()) return 'Nastavi dalje';
@@ -2391,7 +2466,7 @@ function cinemaLabel(v) {
 function cinemaStageSeconds(){return SessionClock.update(P.stepClock,Date.now(),!!P.paused)?.seconds||0;}
 function workoutCinemaHtml() {
   const v=curView(),state=cinemaState(v),active=state.active;
-  const step=((['prep','rest','ready'].includes(v.st.kind)||v.st.nextEx)?P.steps.slice(P.i+1).find(isWork):v.st)||v.st;
+  const step=cinemaDisplayStep(v.st);
   const item=step.it||P.items[active],dose=step===v.st&&cinemaRecordedStep()?PlayerDose.recordedAt(step,item):PlayerDose.at(item,step.set||1),e=S.ex[item?.exId]||v.e;
   const progress=Math.max(0,Math.min(1,(P.i+(v.st.dur?1-remaining()/v.st.dur:0))/P.steps.length));
   const parts=CinemaModel.sections(P.items,S.ex),label=cinemaLabel(v),timed=item.measure==='time',recorded=cinemaRecordedStep();
@@ -2399,7 +2474,10 @@ function workoutCinemaHtml() {
   const topbar='<div class="cinema-session"><strong id="cinema-elapsed">'+fmt(elapsed)+'</strong><span> · <b id="cinema-percent">'+Math.round(progress*100)+'%</b></span></div><button type="button" class="ib" data-a="cinemaMenu" aria-label="Mogućnosti treninga">'+WorkoutView.icon('ellipsis')+'</button>';
   const progressHtml='<div class="prog cinema-segments" style="--cinema-segments:'+Math.max(1,P.items.length)+'" role="progressbar" aria-label="Tijek plana treninga" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(progress*100)+'"><i id="progbar" style="width:'+progress*100+'%"></i></div>';
   const edit=' data-a="playDoseEdit" data-j="'+active+'"';
-  const metrics='<button type="button" class="workout-cinema-metric"'+edit+' aria-label="Uredi '+(timed?'sekunde':'ponavljanja')+'"><strong>'+esc(timed?dose.sec:dose.reps)+'</strong><span>'+(timed?'sekundi':'ponavljanja')+WorkoutView.icon('chevrons-up-down')+'</span></button><button type="button" class="workout-cinema-clock ring" id="ring" data-a="cinemaTimer" aria-label="'+(recorded?'Odrađena serija':P.paused?'Nastavi brojač':'Pauziraj brojač')+'"'+(recorded?' disabled':'')+'>'+ringSvg(v.ringFrac,v.ringColor)+'<strong class="n" id="ringN">'+cinemaClockText(v.st)+'</strong><span class="workout-control-action">'+(recorded?'odrađena':P.paused?'pauza':v.st.kind==='manual'?'trajanje serije':v.st.kind==='rest'?'odmor':v.st.kind==='work'?'preostalo':'priprema')+'</span></button><button type="button" class="workout-cinema-metric"'+edit+' aria-label="Uredi kilograme"'+(!startLoadDescription(item.exId)?.kind?' disabled':'')+'><strong>'+esc(startLoadDescription(item.exId)?.kind?String(dose.kg).replace('.',','):'—')+'</strong><span>'+(startLoadDescription(item.exId)?.kind==='db'?'kg / kom':'kilogrami')+WorkoutView.icon('chevrons-up-down')+'</span></button>';
+  const quantityLabel=timed?'sekundi':'ponavljanja';
+  const metrics='<button type="button" class="workout-cinema-metric"'+edit+' aria-label="Uredi '+(timed?'sekunde':quantityLabel)+'">'+
+    '<strong>'+esc(timed?dose.sec:dose.reps)+'</strong><span class="cinema-metric-label">'+quantityLabel+
+    WorkoutView.icon('chevrons-up-down')+'</span></button>'+cinemaClockHtml(v.st,recorded)+cinemaWeightHtml(step,item,dose);
   const controls='<div class="cinema-controls"><button type="button" class="ib" data-a="jump" data-d="-1" aria-label="Prethodna vježba">'+I.prev+'</button><button type="button" class="btn cinema-primary" data-a="cinemaMain">'+(recorded?I.next:P.paused?I.play:v.st.kind==='manual'?I.checkS:v.st.kind==='rest'?I.next:I.play)+'<span>'+label+'</span></button><button type="button" class="ib" data-a="jump" data-d="1" aria-label="Sljedeća vježba">'+I.next+'</button></div><div class="cinema-secondary"><button type="button" class="txtbtn" data-a="cinemaPause" aria-label="'+(P.paused?'Nastavi trening':'Pauziraj trening')+'">'+(P.paused?I.play:WorkoutView.icon('pause'))+'<span>'+(P.paused?'Nastavi':'Pauziraj')+'</span></button>'+(!recorded&&v.st.kind!=='work'?'<button type="button" class="txtbtn" data-a="cinemaPrep">'+WorkoutView.icon('timer')+'Vrijeme za pripremu</button>':'')+cinemaRedoButton('Ponovi seriju')+'</div>';
   const next='<div class="cinema-next"><span class="workout-thumb">'+(e?thumbHtml(e):'')+'</span><span><small>'+(v.st.kind==='rest'||v.st.kind==='prep'||v.st.kind==='ready'?'Slijedi':'Sada')+' · '+esc(parts[active])+'</small><strong>'+esc(e?.name||P.title)+'</strong><small>'+esc((step.set||1)+' / '+item.sets+' serija · '+(timed?dose.sec+' s':dose.reps+' pon.')+(dose.kg?' · '+fmtKg(dose.kg):''))+'</small></span><button type="button" class="ib"'+edit+' aria-label="Uredi sljedeću seriju">'+I.plus+'</button></div>';
   const journal='<button type="button" class="cinema-journal-bar" data-a="cinemaJournal" aria-haspopup="dialog">'+WorkoutView.icon('notebook-text')+'<strong>Dnevnik</strong><span>Upiši rezultate '+WorkoutView.icon('chevrons-up')+'</span></button>';
@@ -3606,6 +3684,7 @@ function startPlayer(cfg, repeating=false){
 function positionStep(i, t0){
   const now = Date.now(), start = t0 || now, step = P.steps[i];
   P.i = i;
+  cinemaWeightPhase = null;
   P.lastBeep = null;
   P.stepClock = SessionClock.start(start);
   P.endAt = step?.dur ? start + step.dur * 1000 : 0;
@@ -5304,6 +5383,14 @@ function paintPlayer(full){
   const n = document.getElementById('ringN');
   if(P.mode==='ex'&&!P.done){
     const text=cinemaClockText(v.st);if(n&&n.textContent!==text)n.textContent=text;
+    const fill=document.getElementById('cinema-clock-fill');
+    if(fill){
+      const count=cinemaClockCount(v.st);
+      if(Number(fill.dataset.count)!==count){
+        fill.dataset.count=String(count);
+        fill.setAttribute('d',cinemaClockSegments.slice(0,count).join(''));
+      }
+    }
     const elapsed=document.getElementById('cinema-elapsed'),textElapsed=fmt(SessionClock.update(P.clock,Date.now(),!!P.paused)?.seconds||0);if(elapsed&&elapsed.textContent!==textElapsed)elapsed.textContent=textElapsed;
   }else if(n&&!P.paused&&v.st.kind!=='ready'&&n.textContent!==v.big)n.textContent=v.big;
   const fb = document.getElementById('fbig'); if (fb&&fb.textContent!==v.big) fb.textContent = v.big;
@@ -5729,6 +5816,17 @@ const A = {
   },
   cinemaPause,
   cinemaTimer:cinemaPause,
+  cinemaWeightOpen: (_, __, event) => {
+    cinemaWeightPhase=P.steps[P.i];render();
+    if(event.detail===0)app.querySelector('[data-a="cinemaWeightExact"]')?.focus({preventScroll:true});
+  },
+  cinemaWeightStep: d => cinemaChangeWeight(Number(d.d)),
+  cinemaWeightExact: () => {
+    if (S.sheet || !P || P.done || cinemaWeightPhase !== P.steps[P.i]) return;
+    const step=cinemaDisplayStep(P.steps[P.i]);
+    cinemaWeightPhase=null;
+    A.playDoseEdit({j:step.g});
+  },
   cinemaClose:()=>cinemaCloseSheet(),
   cinemaJournal:()=>cinemaOpenSheet({kind:'cinemaJournal'}),
   cinemaJournalClose:()=>cinemaCloseSheet(),
@@ -6611,11 +6709,35 @@ app.addEventListener('pointerdown',ev=>{
   const input=document.activeElement,button=ev.target.closest('.workout-exercise-page [data-a]');
   if(input?.classList?.contains('workout-set-input')&&button&&!button.disabled)ev.preventDefault();
 });
+let cinemaWeightDrag = null, cinemaWeightSwiped = false;
+app.addEventListener('pointerdown', ev => {
+  const button = ev.target.closest('.cinema-weight-wheel button');
+  if (!button || !ev.isPrimary || ev.button !== 0) return;
+  cinemaWeightSwiped=false;
+  cinemaWeightDrag={id:ev.pointerId,x:ev.clientX,y:ev.clientY,button};
+  button.setPointerCapture(ev.pointerId);
+});
+app.addEventListener('pointercancel', ev => {
+  if (cinemaWeightDrag?.id===ev.pointerId) cinemaWeightDrag=null;
+});
+app.addEventListener('pointerup', ev => {
+  const drag=cinemaWeightDrag;
+  if (drag?.id!==ev.pointerId) return;
+  cinemaWeightDrag=null;
+  const dy=drag.y-ev.clientY;
+  if (!drag.button.isConnected || Math.abs(dy)<20 || Math.abs(dy)<Math.abs(drag.x-ev.clientX)) return;
+  cinemaWeightSwiped=true;
+  cinemaChangeWeight(Math.sign(dy)*Math.max(1,Math.round(Math.abs(dy)/38)));
+});
 app.addEventListener('click', ev => {
   actionSeq++;
+  const wheel=ev.target.closest('.cinema-weight-wheel');
+  if (wheel && ev.detail>0 && cinemaWeightSwiped) {cinemaWeightSwiped=false;return;}
+  const closeWeight=!wheel&&!!app.querySelector('.cinema-weight-wheel');
+  if(closeWeight)cinemaWeightPhase=null;
   if (ev.target && ev.target.id === 'srpe') { rpeTap(ev.target, ev); return; }   // a tap on the slider rates where it was tapped
   const el = ev.target.closest('[data-a]');
-  if (!el || !app.contains(el)) return;
+  if (!el || !app.contains(el)) {if(closeWeight)render();return;}
   if (el.dataset.a === 'sheetClose') { if (ev.target === el) dismissSheet(); return; }
   if (el.disabled) return;
   const fn = A[el.dataset.a];
@@ -6629,6 +6751,7 @@ app.addEventListener('click', ev => {
     }
     fn(Object.assign({}, el.dataset), el, ev);
   }
+  if(closeWeight&&app.querySelector('.cinema-weight-wheel'))render();
 });
 app.addEventListener('submit', ev => {
   if (ev.target.matches('form[data-load-rating]')) {ev.preventDefault();saveLoadRating(ev.target);return;}
@@ -6682,6 +6805,15 @@ app.addEventListener('input', ev => {
 app.addEventListener('keydown', ev => {
   app.classList.remove('pointer-input');
   const t=ev.target, list=t.closest('[role="tablist"]');
+  if(t.closest('.cinema-weight-wheel')){
+    if(ev.key==='ArrowUp'||ev.key==='ArrowDown'){
+      ev.preventDefault();cinemaChangeWeight(ev.key==='ArrowUp'?1:-1);return;
+    }
+    if(ev.key==='Escape'){
+      ev.preventDefault();cinemaWeightPhase=null;render();
+      app.querySelector('[data-a="cinemaWeightOpen"]')?.focus({preventScroll:true});return;
+    }
+  }
   if(ev.key==='Enter'&&t.id==='builder-section-name'){ev.preventDefault();A.builderSectionApply({i:S.draft?._sectionCustom});return;}
   if(ev.key==='Enter'&&t.classList?.contains('workout-set-input')){ev.preventDefault();workoutInlineChange(t);return;}
   if (t.getAttribute('role')==='tab' && list && ['ArrowLeft','ArrowRight','Home','End'].includes(ev.key)) {

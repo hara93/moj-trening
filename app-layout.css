@@ -41,8 +41,6 @@
 .workout-cinema .cinema-session{font-variant-numeric:tabular-nums;color:#f3f7f7;font-weight:600;letter-spacing:-.03em;font-size:19px}
 .workout-cinema .cinema-session strong,.workout-cinema .cinema-session b{font-size:19px;font-weight:650}
 .workout-cinema .cinema-session span{color:#b9c9cc}
-.workout-cinema .workout-cinema-clock .workout-control-action{display:block;position:static;font-size:10px;line-height:1.3;margin-top:5px;color:#b2c6c8;transform:none;pointer-events:none}
-.workout-cinema .workout-cinema-clock{flex-direction:column;gap:2px}
 .workout-cinema #ring>*,.ctrl .ring>*{pointer-events:none}
 .workout-cinema .cinema-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:9px;align-items:center}
 .workout-cinema .workout-cinema-controls{display:block}
