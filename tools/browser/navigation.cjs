@@ -132,7 +132,7 @@ async function run(){
   await p.keyboard.press('Escape');await p.locator('.workout-instructions-body').waitFor({state:'hidden'});await cinema.waitFor();
   assert.equal(await info.evaluate(node=>node===document.activeElement),true,'top instructions return focus directly to player info');
   assert.equal((await player()).clock.paused,false);
-  // 1.22.0: the dashes are the progress bar; its value is the dot's place along them (the top-bar percent counts steps)
+  // 1.22.0: the dashes are the progress bar; its value is the dot's place along them (the top-bar percent counts finished sets)
   const before=Number(await cinema.locator('.cinema-dashes').getAttribute('aria-valuenow'));await advance(p,20);const after=await cinema.locator('.cinema-dashes').evaluate(e=>({aria:Number(e.getAttribute('aria-valuenow')),visual:(Number(e.dataset.current)+Number(e.querySelector('i.is-current')?.style.getPropertyValue('--at')||0))/e.children.length*100}));assert.ok(after.aria>before,JSON.stringify({before,after}));assert.ok(Math.abs(after.aria-after.visual)<=.51,JSON.stringify(after));
   const journalButton=cinema.locator('[data-a=cinemaJournal]');await journalButton.focus();await p.keyboard.press('Enter');
   const journal=p.locator('.cinema-journal-sheet');await journal.waitFor();assert.equal(await journal.locator('.workout-set-row').count(),2);

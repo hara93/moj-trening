@@ -191,13 +191,13 @@ async function firstStartWithParts(p, width) {
   await A(p, 'cinemaPrepApply').click();
   await p.locator('.workout-cinema .cinema-prep-editor').waitFor({ state: 'detached' });
 
-  // work: no "Slijedi" card, "Cilj RIR 2" in the pill, one dash per exercise and the dot inside the first one
+  // work: no "Slijedi" card, "RIR 2" in the pill (1.22.0: "Cilj RIR 2" only in its name and the journal), one dash per exercise and the dot inside the first one
   await until(p, (s, st) => st.kind === 'manual', 'the first set');
   assert.equal(await stage(p).getAttribute('data-phase'), 'work');
   assert.equal(await p.locator('.workout-cinema .cinema-next, .workout-cinema .workout-cinema-next').count(), 0, 'no next-set card during work');
   assert.doesNotMatch(await stage(p).innerText(), /Slijedi/);
   assert.equal(await p.locator('.workout-cinema-heading p').innerText(), 'Serija 1 od 2');
-  assert.equal(await p.locator('.cinema-work-journal .cinema-effort').innerText(), '· Cilj RIR 2');
+  assert.equal(await p.locator('.cinema-work-journal .cinema-effort').innerText(), '· RIR 2');   // 1.22.0: short in the pill, as in the mockup, so names fit
   assert.match(await p.locator('.cinema-work-journal').getAttribute('aria-label'), /^Dnevnik treninga · \S.* · Cilj RIR 2 · 1 od 2$/, 'the pill\'s name includes the target and the set');
   // with a target the set count gets its own divider
   assert.equal(await p.locator('.cinema-work-journal>span').evaluate(node => getComputedStyle(node).borderLeftWidth), '1px');
@@ -280,6 +280,10 @@ async function firstStartWithParts(p, width) {
   const totals = await journal(p).locator('.cinema-journal-footer small').textContent();
   assert.equal(totals, '8 pon. · 1 040 kg');
   assert.doesNotMatch(await journal(p).locator('.cinema-journal-footer').innerText(), /×/);
+  // 1.22.0: one percent on screen: the top bar and the footer both count finished sets
+  const footerPercent = (await journal(p).locator('.cinema-journal-footer strong').textContent()).match(/^(\d+)\s% odrađeno$/)?.[1];
+  assert.ok(footerPercent && footerPercent !== '0', 'the footer shows the finished share');
+  assert.equal(await p.locator('#cinema-percent').textContent(), footerPercent + '%', 'the top bar shows the same percent as the journal footer');
   assert.equal(await journal(p).locator('.cj-plan').getAttribute('aria-label'), 'Dijelovi treninga');
   await noOverflow(p, 'journal ' + width);
   await shot(p, 'journal-' + width);

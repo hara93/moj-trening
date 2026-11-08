@@ -2426,8 +2426,10 @@ function workoutInlineChange(input) {
     const value = workoutNumber(input.value);
     input.value = value == null ? '' : String(value).replace('.',',');
     input.removeAttribute('aria-invalid');
-    const totals = app.querySelector('.cinema-journal-footer small');
-    if (totals) totals.textContent = cinemaJournalTotals(CinemaModel.summary(P,PlayerDose));
+    const stats = CinemaModel.summary(P,PlayerDose), totals = app.querySelector('.cinema-journal-footer small'), done = app.querySelector('.cinema-journal-footer strong'), top = document.getElementById('cinema-percent');
+    if (totals) totals.textContent = cinemaJournalTotals(stats);
+    if (done) done.textContent = stats.percent+' % odrađeno';
+    if (top) top.textContent = stats.percent+'%';
     return true;
   }
   if(S.sheet?.kind==='workoutExercise')delete S.sheet.error;
@@ -2712,7 +2714,7 @@ function cinemaFooter(v, step, item, name, preparing){
       '<span class="cinema-work-mark" aria-hidden="true"><span>'+I.checkS+'</span></span>';
     return '<div class="cinema-work-set'+(recorded?' is-recorded':'')+'">'+mark+
       '<button type="button" class="cinema-work-journal" data-a="cinemaJournal" aria-label="'+esc(['Dnevnik treninga',name,target&&'Cilj '+target,count].filter(Boolean).join(' · '))+'" aria-haspopup="dialog"><strong><span>'+esc(name)+'</span>'+
-      (target?'<em class="cinema-effort">· Cilj '+esc(target)+'</em>':'')+'</strong><span>'+count+'</span></button></div>';
+      (target?'<em class="cinema-effort">· '+esc(target)+'</em>':'')+'</strong><span>'+count+'</span></button></div>';
   }
   return '<button type="button" class="cinema-journal-bar" data-a="cinemaJournal" aria-haspopup="dialog">'+WorkoutView.icon('notebook-text')+'<strong>Dnevnik</strong><span>Upiši rezultate '+WorkoutView.icon('chevrons-up')+'</span></button>';
 }
@@ -2781,27 +2783,28 @@ function cinemaStepFrac(){
   if(cinemaFracMark?.key!==key)cinemaFracMark={key,value:frac};else cinemaFracMark.value=Math.max(cinemaFracMark.value,frac);
   return cinemaFracMark.value;
 }
-function cinemaPercent(frac){return Math.round(Math.max(0,Math.min(1,(P.i+frac)/Math.max(1,P.steps.length)))*100);}
+// The top-bar percent is the share of finished sets, the same number as "N % odrađeno" in the journal footer.
+function cinemaPercent(){return CinemaModel.summary(P,PlayerDose).percent;}
 // One dash per exercise; the dot marks the exact point inside the current one (CinemaModel.progress).
 function cinemaProgressParts(frac=cinemaStepFrac()){return CinemaModel.progress(P.steps,P.i,frac,P.items.length);}
-// The bar announces what it shows: the dot's place along the dashes (the top-bar percent counts steps).
+// The bar announces what it shows: the dot's place along the dashes (the top-bar percent counts finished sets).
 function cinemaDashValue({n,current,within}){return Math.round(Math.max(0,Math.min(1,(current+within)/Math.max(1,n)))*100);}
 function cinemaProgressHtml(frac){
   const parts=cinemaProgressParts(frac),{n,current,within}=parts;
   return '<div class="cinema-dashes" role="progressbar" aria-label="Tijek plana treninga" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+cinemaDashValue(parts)+'" data-current="'+current+'">'+
     Array.from({length:n},(_,k)=>k<current?'<i class="is-done"></i>':k>current?'<i></i>':'<i class="is-current" id="cinema-dash" style="--at:'+within.toFixed(4)+'"><b></b><em></em></i>').join('')+'</div>';
 }
-// Per tick only the dash, the dot and the percent change; a new current dash rewrites the dashes alone.
+// Per tick only the dash and the dot change (the percent changes only when a set is finished, which renders);
+// a new current dash rewrites the dashes alone.
 function cinemaProgressPaint(){
   const bar=app.querySelector('.workout-cinema .cinema-dashes');if(!bar)return;
-  const frac=cinemaStepFrac(),percent=cinemaPercent(frac),parts=cinemaProgressParts(frac);
+  const frac=cinemaStepFrac(),parts=cinemaProgressParts(frac);
   if(bar.dataset.current!==String(parts.current)||bar.children.length!==parts.n){bar.outerHTML=cinemaProgressHtml(frac);}
   else{
     const dash=document.getElementById('cinema-dash'),at=parts.within.toFixed(4),value=String(cinemaDashValue(parts));
     if(dash&&dash.style.getPropertyValue('--at')!==at)dash.style.setProperty('--at',at);
     if(bar.getAttribute('aria-valuenow')!==value)bar.setAttribute('aria-valuenow',value);
   }
-  const text=document.getElementById('cinema-percent');if(text&&text.textContent!==percent+'%')text.textContent=percent+'%';
 }
 function cinemaEquipmentLabel(e){
   if(!e)return '';
@@ -2843,7 +2846,7 @@ function workoutCinemaHtml() {
   const v=curView(),state=cinemaState(v),active=state.active,st=v.st;
   const step=cinemaDisplayStep(st);
   const item=step.it||P.items[active],dose=step===st&&cinemaRecordedStep()?PlayerDose.recordedAt(step,item):PlayerDose.at(item,step.set||1),e=S.ex[item?.exId]||v.e;
-  const frac=cinemaStepFrac(),percent=cinemaPercent(frac);
+  const frac=cinemaStepFrac(),percent=cinemaPercent();
   const parts=CinemaModel.groupSections(P.items),timed=item.measure==='time',recorded=cinemaRecordedStep();
   const elapsed=SessionClock.update(P.clock,Date.now(),!!P.paused)?.seconds||0;
   const topbar='<div class="cinema-session"><strong id="cinema-elapsed">'+fmt(elapsed)+'</strong><span aria-hidden="true">·</span><b id="cinema-percent">'+percent+'%</b></div><button type="button" class="ib" data-a="cinemaMenu" aria-label="Mogućnosti treninga">'+WorkoutView.icon('ellipsis')+'</button>';
