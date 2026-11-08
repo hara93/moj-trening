@@ -264,6 +264,7 @@ async function main() {
     await nextCard.waitFor();
     const nextOpacity = await nextCard.evaluate(node=>Number(/,\s*([\d.]+)\)$/.exec(getComputedStyle(node).backgroundColor)?.[1]));
     assert.equal(nextOpacity,.2,'next exercise card has an 80% transparent background');
+    assert.equal(await nextCard.evaluate(node=>getComputedStyle(node).backdropFilter),'none','the first card keeps the exercise image sharp');
     report.checks.nextCardOpacity=nextOpacity;
     await page.locator('.workout-cinema .cinema-single-media img').evaluate(img=>img.decode());
     await page.screenshot({path:path.join(artifacts,'published-cinema-player-375.png'),animations:'disabled'});

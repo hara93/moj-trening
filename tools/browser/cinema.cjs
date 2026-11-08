@@ -18,12 +18,13 @@ const doneCount = p => Object.keys(p.doneSteps || {}).length;
 const step = p => p.liveSchedule[p.i];
 
 async function assertOverlayBackground(card) {
-  const {alpha, opacity} = await card.evaluate(node => {
+  const {alpha, opacity, backdrop} = await card.evaluate(node => {
     const style=getComputedStyle(node);
-    return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity};
+    return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity,backdrop:style.backdropFilter};
   });
   assert.equal(alpha,.2,'player overlay has an 80% transparent background');
   assert.equal(opacity,'1','the overlay content remains fully opaque');
+  assert.equal(backdrop,'none','the card shows the image details without blur');
 }
 
 function fixture() {
@@ -120,7 +121,13 @@ async function portraitPresentation(p, width, height) {
   await importData(p,data);await checkHome(p,width);
   await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
   await A(p,'dashboardProtocols').click();await p.locator('[data-a="openPr"][data-id="'+id+'"]').click();
-  await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();await manual(p,1);await hero(p);
+  await A(p,'startPr').click();
+  const firstCard=p.locator('.workout-cinema[data-phase="ready"] .workout-cinema-next:has(>.cinema-next)');
+  await firstCard.waitFor();await assertOverlayBackground(firstCard);await hero(p);
+  const readyFade=await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node,'::after').backgroundImage);
+  assert.match(readyFade,/rgba\(25, 29, 37, 0\) 16%/,'the upper fade clears before most of the first card');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-prep-'+width+'x'+height+'.png')});
+  await manual(p,1);await hero(p);
   assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'goblet-squat');
   const layout=await p.locator('.workout-cinema').evaluate(view=>{
     const box=node=>{const r=node.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height};};
