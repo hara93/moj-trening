@@ -126,8 +126,11 @@ async function countUp(p, width) {
   dot.push(await progress(p));
   assert.ok(dot[1].at > dot[0].at && dot[2].at > dot[1].at, '1.22.1: the dot moves with the arc while the set counts up: ' + JSON.stringify(dot));
   await shot(p, 'mid-' + width);
+  // the last seconds before the estimate one by one: where a countdown would give its 3-2-1 cues
+  await advance(p, 8);
+  for (let k = 0; k < 4; k++) await advance(p, 1);
+  assert.equal(await clock(p), '0:24');
   // past the estimate: the arc stays full, the digits go on, nothing ends the set
-  await advance(p, 12);
   const full = await progress(p);
   await advance(p, 8);
   assert.equal(await clock(p), '0:32');
