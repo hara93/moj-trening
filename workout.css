@@ -624,7 +624,6 @@ span.workout-exercise-open{cursor:default}
 .workout-panel-body>h1{margin:4px 0 16px;font-size:25px;line-height:1.2;letter-spacing:-.025em}
 .workout-panel-body>p{font-size:14px;line-height:1.6;color:var(--text-2)}
 .workout-cinema.is-ready{--cinema-upper-tint:12%;--cinema-upper-clear:16%}
-@media(max-width:350px),(max-height:670px){.workout-cinema{--cinema-media-top:56px}}
 
 /* Preparation and pause sit over the same portrait as the running player. */
 .workout-cinema-heading.is-preparing :is(p,b){color:var(--cinema-accent);font-weight:700}
