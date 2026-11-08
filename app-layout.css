@@ -157,3 +157,5 @@
 :is(#progress-info-body,#training-load-info-body){min-height:0;overflow:auto;overscroll-behavior:contain}
 .is-sheet-dragging{animation:none!important;will-change:transform}
 .is-sheet-dragging>.sheet-drag-handle{cursor:grabbing}
+
+.sheet.workout-swap-sheet .workout-swap-footer{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}

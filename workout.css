@@ -114,7 +114,7 @@ span.workout-exercise-open{cursor:default}
 .workout-swap-empty{padding:13px 0;color:var(--text-2)}
 .workout-swap-empty h4{color:var(--text)}
 .workout-swap-empty p{margin:6px 0 0;font-size:13px;line-height:1.5}
-.workout-swap-footer{flex:none;padding:9px max(18px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));background:var(--surface)}
+.workout-swap-footer{flex:none;padding:9px max(18px, env(safe-area-inset-right, 0px)) 12px max(18px, env(safe-area-inset-left, 0px));background:var(--surface)}
 .workout-swap-search{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg)}
 .workout-swap-search:focus-within{border-color:var(--accent)}
 .workout-swap-search svg{flex:none;width:21px;height:21px;color:var(--text-2)}
