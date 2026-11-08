@@ -254,3 +254,10 @@
 .cinema-guide-icon svg{width:24px;height:24px}
 .cinema-guide-go{display:block;width:100%;min-height:56px;margin-top:auto;border:0;border-radius:28px;background:var(--player-accent);color:var(--player-on-accent);font-size:16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
 @media(max-height:700px){.cinema-guide-layer{padding-top:48px}.cinema-guide-layer ul{gap:16px;margin-top:28px}}
+/* 1.22: the player's floor, also on small screens: text at least 13 px, tap targets at least 44 px */
+.cinema-popover .cinema-menu-grid button,.cinema-option-sheet .opt small{font-size:13px}
+.cinema-journal .cinema-journal-heading .txtbtn{min-width:44px}
+@media(max-width:350px),(max-height:670px){.workout-cinema .cinema-primary{font-size:13px}.workout-cinema .cinema-secondary .txtbtn{font-size:13px;min-height:44px}}
+/* the journal is part of the player: its focus ring is the player green (the app's light blue elsewhere) */
+.cinema-journal :is(button,input,select,summary,a,[tabindex]):focus-visible{outline-color:var(--player-accent)}
+.cinema-journal .cj-card .workout-series-table tr td:has(>input:focus)::after{border-color:var(--player-accent)}

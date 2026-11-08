@@ -711,6 +711,9 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-progress .cinema-dashes>i.is-done{background:#fff}
 .cinema-dashes>i.is-current>b{position:absolute;inset:0 auto 0 0;width:calc(4.5px + (100% - 9px)*var(--at,0));border-radius:3px;background:#fff}
 .cinema-dashes>i.is-current>em{position:absolute;top:50%;left:calc(4.5px + (100% - 9px)*var(--at,0));width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--player-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--player-accent) 30%,transparent),0 0 12px var(--player-accent)}
+/* the dot and its bar glide between ticks; with reduced motion they step (style.css also stops every transition) */
+@media(prefers-reduced-motion:no-preference){.cinema-dashes>i.is-current>b{transition:width 1s linear}.cinema-dashes>i.is-current>em{transition:left 1s linear}}
+@media(prefers-reduced-motion:reduce){.cinema-dashes>i.is-current>:is(b,em){transition:none}}
 /* Set header */
 .workout-cinema-heading{padding:12px 66px 4px 20px}
 .workout-cinema-heading p,.workout-cinema-heading.is-preparing p{margin:0 0 5px;color:var(--cinema-accent);font-size:17px;font-weight:600;line-height:1.25;letter-spacing:-.01em}

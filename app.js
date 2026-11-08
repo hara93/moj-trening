@@ -2938,7 +2938,7 @@ function workoutJournalHtml() {
       chipsHtml:chips,menuHtml:state.equipment===j?cinemaEquipmentMenuHtml(j):'',rowsHtml:workoutTableHtml(c,j,s),footHtml:remove}));
   }).join('');
   const add=P.ref?.kind==='protocol'?'<button type="button" class="cj-add" data-a="cinemaAddExercise">'+WorkoutView.icon('plus')+'Dodaj vježbu</button>':'';
-  return '<div class="view workout-journal workout-player-focus cinema-journal'+(state.all?' show-all':'')+'"><div class="cinema-journal-heading"><h1>Dnevnik</h1>'+
+  return '<div class="view workout-journal workout-player-focus cinema-journal'+(state.all?' show-all':'')+'"><div class="cinema-journal-heading"><h1 id="sheet-h" tabindex="-1">Dnevnik</h1>'+
     '<button type="button" class="txtbtn" data-a="workoutShowAll" aria-expanded="'+state.all+'">'+(state.all?'Sažmi':'Prikaži sve')+'</button></div>'+
     '<div class="workout-journal-blocks">'+blocks+add+
     '<section class="cj-finish"><span class="cj-finish-icon" aria-hidden="true">'+WorkoutView.icon('circle-check')+'</span><div><h2>Završi trening</h2><p>Ocijeni i spremi rezultate</p></div>'+
@@ -6819,9 +6819,13 @@ const A = {
     if(error){toast(error,true);return;}delete s.panel;delete s.equipmentMenu;S.sheet=s;s.fromJournal=fromJournal;
     if(fromJournal){cinemaAfterSwap(s.j);return;}render();
   },
-  cinemaEquipment: d => {
+  // The chip opens the menu in the card; by keyboard focus moves to its first choice, and closing it returns to the chip.
+  cinemaEquipment: (d,_,event) => {
     if(!P||S.sheet?.kind!=='cinemaJournal')return;
-    const state=cinemaState(),j=Number(d.j);state.equipment=state.equipment===j?-1:j;render();
+    const state=cinemaState(),j=Number(d.j),open=state.equipment!==j;state.equipment=open?j:-1;render();
+    const sheet=app.querySelector('.cinema-journal-sheet');
+    if(open&&event?.detail===0)sheet?.querySelector('#cj-menu-'+j+' button')?.focus({preventScroll:true});
+    else if(!open)sheet?.querySelector('.cj-chips [data-a="cinemaEquipment"][data-j="'+j+'"]')?.focus({preventScroll:true});
   },
   cinemaEquipmentPick: d => {
     const j=Number(d.j),item=P?.items[j];if(!item||S.sheet?.kind!=='cinemaJournal')return;
@@ -7808,6 +7812,7 @@ app.addEventListener('change', async ev => {
   if (S.draft === dr) paintMedia(dr);
 });
 document.addEventListener('keydown', ev => {
+  if (ev.key==='Escape' && S.sheet?.kind==='cinemaJournal' && S.playerJournal?.equipment>=0 && app.querySelector('.cj-menu')) {ev.preventDefault();A.cinemaEquipment({j:String(S.playerJournal.equipment)});return;}
   if (ev.key==='Escape' && S.sheet) {ev.preventDefault();dismissSheet();return;}
   const sheet=app.querySelector('.sheet');
   if (ev.key!=='Tab' || !sheet) return;
