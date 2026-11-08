@@ -536,8 +536,8 @@ span.workout-exercise-open{cursor:default}
 .cinema-next-phase svg{width:22px;height:22px}
 .workout-cinema .cinema-next .cinema-next-duration{font-size:20px;font-variant-numeric:tabular-nums;color:#fff}
 .workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(#191D2500,#191D2599 25%,#191D25EB 50%,var(--cinema-bg) 78%)}
-.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(32px,10.4vw,44px);--cinema-clock-size:clamp(46px,15vw,60px)}
-.workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0;min-height:72px;padding:4px 1px 7px;border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center}
+.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(32px,10.4vw,44px);--cinema-clock-size:clamp(46px,15vw,60px);--cinema-arc-base:10px}
+.workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0;min-height:72px;padding:4px 1px calc(var(--cinema-arc-base,10px) - 3px);border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center}
 /* 1.22: every player number (top bar, arc clock, big clocks, reps/kg/s and the wheels) is the system font in its
    compressed width: SF Pro on iPhone, through its width axis. Nothing is downloaded. Text keeps the surface font.
    Without a width axis (the check in app.js) the root class .no-font-width brings back the narrowed figures. */
@@ -564,12 +564,16 @@ span.workout-exercise-open{cursor:default}
 .cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg)}
 .cinema-wheel-number.is-wide.is-selected{font-size:calc(var(--cinema-side-size)*.80)}
 .cinema-wheel-number.is-wide:not(.is-selected){font-size:calc(var(--cinema-side-size)*.58)}
-.workout-cinema-clock{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;align-self:stretch;gap:3px;width:100%;min-width:0;margin:0;padding:4px 0 7px;border:0;border-radius:14px;background:transparent;color:#fff}
-.cinema-clock-arc{position:absolute;inset:auto 0 4px;width:100%;height:auto;overflow:visible;pointer-events:none;fill:none;stroke:#A9B6BD55;stroke-width:4.4;stroke-linecap:butt}
+.workout-cinema-clock{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;align-self:stretch;gap:3px;width:100%;min-width:0;margin:0;padding:4px 0 var(--cinema-arc-base,10px);border:0;border-radius:14px;background:transparent;color:#fff}
+.cinema-clock-arc{position:absolute;inset:auto 0 var(--cinema-arc-base,10px);width:100%;height:auto;overflow:visible;pointer-events:none;fill:none;stroke:#A9B6BD55;stroke-width:4.4;stroke-linecap:butt}
 #cinema-clock-fill{stroke:var(--cinema-arc)}
-.workout-cinema-clock .n{position:relative;display:block;font-size:var(--cinema-clock-size);white-space:nowrap}
-.workout-cinema-clock .workout-control-action{font-size:10px;line-height:1.2;color:inherit}
-.workout-cinema:not(.is-rest) .workout-cinema-clock:has(.workout-control-action) .n{font-size:calc(var(--cinema-clock-size)*.82)}
+/* 1.22.1: the digits stand on the arc's diameter (the line of the two flat end bars). The arc's bottom edge is the
+   diameter; text-box trims the digits' box to cap height and baseline, so the baseline lands on it in any font.
+   The arc sits --cinema-arc-base above the row's bottom (the side columns' padding follows it, so their labels'
+   baseline stays on the same line), which leaves room under the diameter for a caption ("pauza", "odrađena"): it is
+   out of the flow, so the digits keep their size and place. */
+.workout-cinema-clock .n{position:relative;display:block;font-size:var(--cinema-clock-size);white-space:nowrap;text-box:trim-both cap alphabetic}
+.workout-cinema-clock .workout-control-action{position:absolute;top:calc(100% - var(--cinema-arc-base,10px) + 2px);left:50%;transform:translateX(-50%);font-size:10px;line-height:1.2;color:inherit;white-space:nowrap}
 .workout-cinema.is-ready .workout-cinema-clock .n{font-size:calc(var(--cinema-clock-size)*.66)}
 .workout-cinema-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin-top:5px}
 .workout-cinema-controls>button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:44px;padding:8px 10px;border:1px solid #5A717B66;border-radius:14px;background:var(--surface-2);color:#DCEBE6;font-size:12px;font-weight:550;line-height:1.3}
@@ -607,7 +611,7 @@ span.workout-exercise-open{cursor:default}
   .workout-cinema-notice{padding:3px 16px;font-size:10px}
   .workout-cinema-info{top:68px}
   .workout-cinema-bottom{padding:2px 13px 8px}
-  .workout-cinema-metrics{min-height:105px;margin-bottom:3px;--cinema-clock-size:clamp(37px,13.6vw,48px)}
+  .workout-cinema-metrics{min-height:105px;margin-bottom:3px;--cinema-clock-size:clamp(37px,13.6vw,48px);--cinema-arc-base:14px}
   .workout-cinema-metric{min-height:64px}
   .cinema-number-picker{--wheel-row:35px;margin-bottom:-7px}
   .workout-cinema-journal{margin-top:9px}

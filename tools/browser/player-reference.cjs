@@ -8,7 +8,8 @@
 // under the finger, the phase-1 digits reveal instead of pausing, the part overview takes the gestures on a short
 // screen, the dot holds after +15 s and added prep, the numerals and the arc, the player green on rings and fills,
 // focus in the guide/journal/menu, 13 px on every player sheet, screen-reader names, 390 px with a 34 px safe area.
-// 1.22.1: the pause screen's captions say where one tap lands, in every state (and the names say the same).
+// 1.22.1: the pause screen's captions say where one tap lands, in every state (and the names say the same); the
+// arc clock's digits stand on the arc's diameter, a caption under it, at 393, 375, 390 and 375 × 667, both font cases.
 // Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -430,6 +431,77 @@ async function assertNumerals(p, sel) {
   return got.axis;
 }
 
+// 1.22.1 (item 3): the work clock's digits stand on the arc's diameter (the svg's bottom edge: the line of its two flat
+// end bars) with room above them, a caption ("pauza", "odrađena") goes under the diameter and clear of the bottom
+// pill, and the side labels end on the same line. Measured on the INK (pixels) of the digits and the caption, in
+// the platform's font case and, where the system font has a width axis, again with .no-font-width forced.
+async function inkOf(p, sel) {
+  await p.evaluate(sel => {
+    const style = document.createElement('style'); style.id = 'ink-probe';
+    style.textContent = '.workout-cinema-bottom *,.workout-cinema-media,.cinema-pause-layer{visibility:hidden!important}' + sel + ',' + sel + ' *{visibility:visible!important}.workout-cinema-metrics{opacity:1!important}';
+    document.head.appendChild(style);
+  }, sel);
+  const box = await p.locator(sel).first().boundingBox(), view = p.viewportSize();
+  const clip = { x: Math.max(0, Math.floor(box.x - 24)), y: Math.max(0, Math.floor(box.y - 24)) };
+  Object.assign(clip, { width: Math.min(view.width - clip.x, Math.ceil(box.width + 48)), height: Math.min(view.height - clip.y, Math.ceil(box.height + 48)) });
+  const png = await p.screenshot({ clip });
+  await p.evaluate(() => document.getElementById('ink-probe').remove());
+  const ink = await p.evaluate(async b64 => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, img.width, img.height).data;
+    let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
+    for (let y = 0; y < img.height; y++) for (let x = 0; x < img.width; x++) {
+      const k = (y * img.width + x) * 4;
+      if (Math.max(d[k], d[k + 1], d[k + 2]) > 140) { x0 = Math.min(x0, x); x1 = Math.max(x1, x + 1); y0 = Math.min(y0, y); y1 = Math.max(y1, y + 1); }
+    }
+    return x1 < 0 ? null : { x0, y0, x1, y1, width: img.width };
+  }, png.toString('base64'));
+  assert.ok(ink, 'ink found for ' + sel);
+  const scale = ink.width / clip.width;
+  return { left: clip.x + ink.x0 / scale, right: clip.x + ink.x1 / scale, top: clip.y + ink.y0 / scale, bottom: clip.y + ink.y1 / scale };
+}
+async function arcFit(p, label, { digits = true } = {}) {
+  const cases = [];
+  const platformNarrowed = await p.evaluate(() => document.documentElement.classList.contains('no-font-width'));
+  for (const forced of platformNarrowed ? [false] : [false, true]) {
+    if (forced) await p.evaluate(() => document.documentElement.classList.add('no-font-width'));
+    const dom = await p.evaluate(() => {
+      const rect = node => node && node.getBoundingClientRect().toJSON();
+      const clock = document.querySelector('.workout-cinema-clock');
+      return { arc: rect(clock.querySelector('.cinema-clock-arc')), caption: rect(clock.querySelector('.workout-control-action')), pill: rect(document.querySelector('.workout-cinema-journal>*')),
+        labels: [...document.querySelectorAll('.workout-cinema-metrics .cinema-metric-label')].map(rect) };
+    });
+    const scale = dom.arc.width / 176, diameter = dom.arc.top + 88 * scale, rIn = 74.4 * scale, cx = dom.arc.left + dom.arc.width / 2;
+    const n = await inkOf(p, '.workout-cinema-clock .n');
+    const fit = { label: label + (forced || platformNarrowed ? ' (no width axis)' : ''), diameter, rIn,
+      bottom: diameter - n.bottom, top: n.top - (diameter - rIn), corner: rIn - Math.max(Math.hypot(n.left - cx, n.top - diameter), Math.hypot(n.right - cx, n.top - diameter)) };
+    if (digits) {
+      assert.ok(Math.abs(fit.bottom) <= 2, 'the digits stand on the diameter · ' + JSON.stringify(fit));
+      assert.ok(fit.top >= .35 * rIn, 'room between the digits and the arc above them · ' + JSON.stringify(fit));
+    }
+    assert.ok(fit.corner >= 8 && n.left >= cx - rIn && n.right <= cx + rIn, 'the digits keep clear of the arc · ' + JSON.stringify(fit));
+    if (dom.caption) {
+      const c = await inkOf(p, '.workout-cinema-clock .workout-control-action');
+      Object.assign(fit, { captionTop: c.top - diameter, captionToPill: dom.pill.top - c.bottom });
+      assert.ok(fit.captionTop >= 1 && fit.captionToPill >= 4, 'the caption sits under the diameter, clear of the pill · ' + JSON.stringify(fit));
+    }
+    for (const box of dom.labels) assert.ok(box.bottom >= diameter && box.bottom <= diameter + 6, 'the side labels end on the diameter\'s line · ' + JSON.stringify({ fit, box }));
+    if (forced) await p.evaluate(() => document.documentElement.classList.remove('no-font-width'));
+    cases.push(fit);
+  }
+  await noOverflow(p, label);
+  return cases;
+}
+async function arcFitPaused(p, label) {
+  await p.locator('.workout-cinema-clock').click(); await p.locator('.workout-cinema .cinema-pause-layer').waitFor();
+  assert.equal(await p.locator('.workout-cinema-clock .workout-control-action').textContent(), 'pauza');
+  const fit = await arcFit(p, label + ', paused');
+  await A(p, 'cinemaResume').click(); await p.locator('.workout-cinema .cinema-pause-layer').waitFor({ state: 'detached' });
+  return fit;
+}
+
 async function plainWorkout(p, width) {
   // no parts: no overview; the start is the prep clock; the guide does not open again
   await start(p, plain, fixture({ entry: 1 }));
@@ -470,6 +542,10 @@ async function plainWorkout(p, width) {
     return out;
   });
   assert.ok(fallback.transform !== 'none' && fallback.inside, 'fallback numerals: ' + JSON.stringify(fallback));
+  // 1.22.1: the digits on the diameter, the paused clock's caption under it (the digits keep their size and place)
+  const [running] = await arcFit(p, 'rep set ' + width);
+  const [paused] = await arcFitPaused(p, 'rep set ' + width);
+  assert.ok(Math.abs(paused.top - running.top) <= 1 && Math.abs(paused.bottom - running.bottom) <= 1, 'pausing does not move the digits: ' + JSON.stringify({ running, paused }));
   // the keyboard ring inside the player is green (not the old teal)
   const stageRing = await ringOf(p, '.workout-cinema [data-a="cinemaMenu"]');
   assert.ok(stageRing.visible && stageRing.ring === GREEN, 'player focus ring: ' + JSON.stringify(stageRing));
@@ -571,6 +647,8 @@ async function pauseCaptions(p) {
   let state = await tapJump(p, -1);
   assert.deepEqual([step(state).g, step(state).set, step(state).kind, state.clock.paused], [0, 1, 'manual', true], 'back lands on set 1, paused');
   assert.deepEqual(await pauseWords(p), words(['Početak', 'treninga'], ['Sljedeća', 'vježba'], null), 'a recorded set 1');
+  assert.equal(await p.locator('.workout-cinema-clock .workout-control-action').textContent(), 'odrađena');
+  await arcFit(p, 'a recorded set', { digits: false });   // the ✓ is a symbol, not a figure on the baseline
   state = await tapJump(p, 1);
   assert.deepEqual([step(state).g, step(state).set, step(state).side, state.clock.paused], [1, 1, 'Lijeva strana', true], 'next lands on the Bulgarian split squat');
   // a set played as two sides: Ponovi starts the side again; inside the set, back is the set's start
@@ -592,6 +670,8 @@ async function pauseCaptions(p) {
   await resume(p);
   // the last set of the workout: next is the end
   await until(p, (s, st) => st.kind === 'work' && st.g === 3 && st.set === 2, 'side plank set 2');
+  await arcFit(p, 'a timed hold');
+  await arcFitPaused(p, 'a timed hold');
   assert.deepEqual(await pauseWords(p), words(['Početak', 'vježbe'], ['Kraj', 'treninga'], 'seriju od početka'), 'the last set');
   state = await tapJump(p, 1);
   assert.equal(state.done, true, '"Kraj treninga" ends the workout');
@@ -618,6 +698,7 @@ async function narrow(p, width) {
   await until(p, (s, st) => st.kind === 'manual', 'set 1');
   await noOverflow(p, 'work ' + width);
   const d = await dashes(p); assert.ok(d.inside, JSON.stringify(d));
+  await arcFit(p, 'rep set ' + width); await arcFitPaused(p, 'rep set ' + width);
   await shot(p, 'work-' + width);
   await markDone(p); await revealRest(p); await reserve(p).waitFor();
   await noOverflow(p, 'rest phase 2 ' + width);
@@ -649,6 +730,7 @@ async function narrow(p, width) {
 async function touch(p, width) {
   await start(p, many, fixture());
   await until(p, (s, st) => st.kind === 'manual', 'set 1');
+  await arcFit(p, 'rep set, short screen ' + width); await arcFitPaused(p, 'rep set, short screen ' + width);
   let box = await p.locator('.workout-cinema-stage').boundingBox();
   for (const [label, x] of [['centre', .5], ['left', .2]]) {
     const before = await player(p);
