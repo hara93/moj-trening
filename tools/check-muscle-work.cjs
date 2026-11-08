@@ -249,3 +249,32 @@ test('an imported empty attribution array remains a missing breakdown, never a c
   assert.equal(result.coverage.sessions,1); assert.equal(result.coverage.missingSessions,1);
   assert.equal(result.coverage.coveredSessions,0); assert.equal(result.groups.chest.direct,0);
 });
+test('hip and groin rehab work counts through its own list; activation holds and the seed stay unchanged', () => {
+  global.window = global.window || {};
+  require('../data.js');
+  const seed = window.SEED.exercises;
+  const copenhagen = M.completedItem(seed['kopenhagen-kratka'],{exId:'kopenhagen-kratka',measure:'time',sets:3,sec:20,sides:true,done:true,sideCounts:[2,2,2]});
+  assert.equal(copenhagen.eligibility,'eligible'); assert.equal(copenhagen.eligibilitySource,'rehabWork');
+  assert.equal(copenhagen.credits.direct.adductors,3);
+  assert.deepEqual(M.sanitize(M.pack(copenhagen)),copenhagen,'the new source survives packing');
+  for (const id of ['adukcija-na-boku','most','hip-airplane','skoljka','bocno-podizanje'])
+    assert.equal(M.completedItem(seed[id],{exId:id,sets:2,reps:10,done:true}).eligibility,'eligible',id);
+  for (const id of ['iso-abdukcija','stezanje-straznjice','ravnoteza-dosezanje'])
+    assert.equal(M.completedItem(seed[id],{exId:id,sets:2,sec:30,measure:'time',done:true}).eligibility,'excluded',id);
+  assert.equal(M.completedItem({...seed['kopenhagen-kratka'],muscleWorkEligible:false},{exId:'kopenhagen-kratka',sets:3,done:true}).eligibility,'excluded','an explicit choice still wins');
+  for (const id of M.rehabWork) { assert.ok(seed[id],id+' exists'); assert.equal(seed[id].cat,'Rehab'); assert.equal('muscleWorkEligible' in seed[id],false); }
+  assert.equal(M.completedItem({cat:'Rehab',muscles:{prime:['front_adductors']}},{exId:'moja-rehab',sets:3,done:true}).eligibility,'excluded','own rehab exercises keep the category rule');
+  assert.deepEqual(M.footballGroups,['adductors','gluteMedius','hamstrings','calves','quadriceps']);
+  assert.ok(M.footballGroups.every(id=>M.groups.some(g=>g.id===id)));
+});
+test('the muscle week lists the football groups first, then the most worked other groups', () => {
+  const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
+  const ctx = {window:{}}; vm.createContext(ctx); vm.runInContext(fs.readFileSync(path.join(__dirname,'../dashboard.js'),'utf8'),ctx);
+  const value = n => ({direct:n,indirect:0,equivalent:n,days:n?1:0});
+  const groups = M.groups.map(g => ({id:g.id,label:g.label,regions:g.regions,actual:value({chest:9,lats:6,triceps:4,abs:3,adductors:2,hamstrings:1}[g.id]||0),planned:value(0),target:null}));
+  const html = ctx.window.TrainingDashboard.analytics({range:{label:'2. – 8. 11.'},today:'2026-11-04',forecast:false,groups,sessions:[],days:[],quality:{},
+    summary:{done:1,planned:1,todayDone:0,todayPlanned:0},coverage:{done:6,total:20,projected:6},pinnedGroups:M.footballGroups});
+  const comparison = html.slice(html.indexOf('db-comparison'),html.indexOf('db-groups'));
+  const names = [...comparison.matchAll(/class="db-comparison-name">([^<]+)</g)].map(m=>m[1]);
+  assert.deepEqual(names,['Aduktori','Gluteus medius','Stražnja loža','Listovi','Kvadriceps','Prsa','Široki leđni mišići','Triceps']);
+});

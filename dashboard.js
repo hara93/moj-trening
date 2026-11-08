@@ -134,15 +134,17 @@
       (forecast?fill('plan',val(planned.equivalent)):'')+'</span>';
   }
 
-  function groupPicker(groups, selected, forecast, max) {
+  function groupPicker(groups, selected, forecast, max, pinnedIds) {
     if (!groups.length) return '';
     const total = g => val((g.actual||{}).equivalent)+(forecast?val((g.planned||{}).equivalent):0);
-    const ordered = groups.slice().sort((a,b)=>total(b)-total(a));
+    // vm.pinnedGroups (the football groups) stay on top in their own order.
+    const pinned = list(pinnedIds).map(id=>groups.find(g=>g.id===id)).filter(Boolean);
+    const ordered = pinned.concat(groups.filter(g=>!pinned.includes(g)).sort((a,b)=>total(b)-total(a)));
     const hasWork = ordered.some(g=>total(g)>0);
-    const shown = hasWork ? ordered.filter(g=>total(g)>0).slice(0,5) : [];
+    const shown = hasWork ? pinned.concat(ordered.filter(g=>!pinned.includes(g) && total(g)>0).slice(0,pinned.length?3:5)) : [];
     const chosen = ordered.find(g=>g.id===selected);
     if (hasWork && chosen && !shown.includes(chosen)) {
-      if (shown.length<5) shown.push(chosen); else shown[shown.length-1]=chosen;
+      if (shown.length<(pinned.length?pinned.length+3:5)) shown.push(chosen); else shown[shown.length-1]=chosen;
     }
     const rest = ordered.filter(g=>!shown.includes(g));
     const row = g => {
@@ -220,7 +222,7 @@
       '<p class="db-map-hint">Dodirni figuru ili odaberi skupinu iz usporedbe.</p><div class="db-legend"><span><i class="db-swatch db-swatch-selected"></i>Odabrano</span><span><i class="db-swatch db-swatch-direct"></i>Izravni rad</span><span><i class="db-swatch db-swatch-indirect"></i>Neizravni rad</span>'+(vm.forecast?'<span><i class="db-swatch db-swatch-plan"></i>Samo u planu</span>':'')+'<span><i class="db-swatch db-swatch-empty"></i>Bez zapisa</span></div>'+
       '<button type="button" class="db-forecast" role="switch" aria-checked="'+!!vm.forecast+'" data-a="dashboardForecast"><span><b>Uključi preostali plan</b><small>Od danas do nedjelje · bez promjene dnevnika</small></span><i aria-hidden="true"></i></button>'+
       (!hasKnownWork?'<p class="db-empty-copy db-first-step">'+(val((vm.quality||{}).missingSessions)?'Za dio odrađenih treninga nema spremljene raspodjele po mišićima.':list(vm.sessions).some(s=>s.status==='done')?'Trening je zabilježen. Ovaj tjedan još nema zabilježenih serija snage po mišićima.':'Ovdje ćeš nakon prvog treninga snage vidjeti koje si mišiće radio.')+'</p>':'')+
-      groupDetail(vm,group,max)+groupPicker(groups,selected,!!vm.forecast,max)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';
+      groupDetail(vm,group,max)+groupPicker(groups,selected,!!vm.forecast,max,vm.pinnedGroups)+'</section>'+qualityNotes(vm.quality||{},!!vm.forecast)+weeklyActivity(vm)+schedule(vm)+'<p class="db-bottom-note">Plan je projekcija. U odrađeni tjedan ulaze samo spremljene izvedbe.</p></div>';
   }
 
   function upcoming(vm) {

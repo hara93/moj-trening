@@ -29,7 +29,14 @@
   var EXCLUDED = ['Rehab','Rehabilitacija','Mobilnost','Aktivacija','Eksplozivnost','Skokovi i bacanja','Kondicija'];
   var ELIGIBILITY = ['excluded','eligible','unknown'];
   // Packed snapshots store these positions. New reasons must be appended.
-  var ELIGIBILITY_SOURCE = ['explicit','category','unknown','warmup','joint'];
+  var ELIGIBILITY_SOURCE = ['explicit','category','unknown','warmup','joint','rehabWork'];
+  // Rehab exercises that load their muscles like strength work (hip and groin
+  // work for football). Kept here, not in the exercise records, so seed hashes
+  // stay unchanged. Activation holds and balance drills stay excluded.
+  var REHAB_WORK = ['kopenhagen-kratka','kopenhagen-duga','adukcija-na-boku','most','jednonozni-most','hip-airplane',
+    'bocno-podizanje','skoljka','abdukcija-stojeci','bocni-plank','jednonozni-rdl','spustanje-stepenica','split-cucanj','bocni-step-up'];
+  // Football groups shown first in the muscle week, in this order.
+  var FOOTBALL_GROUPS = ['adductors','gluteMedius','hamstrings','calves','quadriceps'];
   var COMPLETION = ['complete','partial','skipped','unknown','planned'];
   var SOURCE = ['completed','planned'];
   var has = function (o,k) { return Object.prototype.hasOwnProperty.call(o,k); };
@@ -46,10 +53,12 @@
   function categoryEligibility(category) {
     return ELIGIBLE.indexOf(category) !== -1 ? 'eligible' : EXCLUDED.indexOf(category) !== -1 ? 'excluded' : 'unknown';
   }
-  function profile(exercise) {
+  function profile(exercise, exerciseId) {
     var e = plain(exercise) ? exercise : {}, category = typeof e.cat === 'string' ? e.cat : '';
     var explicit = typeof e.muscleWorkEligible === 'boolean';
-    var eligibility = explicit ? (e.muscleWorkEligible ? 'eligible' : 'excluded') : categoryEligibility(category);
+    var id = idOK(exerciseId) ? exerciseId : idOK(e.id) ? e.id : '';
+    var rehabWork = !explicit && category === 'Rehab' && REHAB_WORK.indexOf(id) !== -1;
+    var eligibility = explicit ? (e.muscleWorkEligible ? 'eligible' : 'excluded') : rehabWork ? 'eligible' : categoryEligibility(category);
     var muscle = plain(e.muscles) ? e.muscles : {};
     var primes = Array.isArray(muscle.prime) ? muscle.prime.filter(function (r) { return typeof r === 'string'; }) : [];
     var seconds = Array.isArray(muscle.sec) ? muscle.sec.filter(function (r) { return typeof r === 'string'; }) : [];
@@ -62,7 +71,7 @@
     var secondary = unique(seconds.filter(function (r) { return has(regionToGroup,r); }).map(function (r) { return regionToGroup[r]; }))
       .filter(function (g) { return primary.indexOf(g) === -1; });
     return freeze({ category:category, eligibility:eligibility,
-      eligibilitySource:jointOnly ? 'joint' : explicit ? 'explicit' : eligibility === 'unknown' ? 'unknown' : 'category',
+      eligibilitySource:jointOnly ? 'joint' : explicit ? 'explicit' : rehabWork ? 'rehabWork' : eligibility === 'unknown' ? 'unknown' : 'category',
       primary:groupOrder(primary), secondary:groupOrder(secondary),
       unassignedRegions:regions.filter(function (r) { return !has(regionToGroup,r) && (r !== 'hip_joints' || jointOnly); }) });
   }
@@ -99,7 +108,7 @@
     return { plannedSets:planned,completedSets:completed,completion:completion };
   }
   function itemSnapshot(exercise, item, source) {
-    var e = plain(exercise) ? exercise : {}, x = plain(item) ? item : {}, p = profile(e);
+    var e = plain(exercise) ? exercise : {}, x = plain(item) ? item : {}, p = profile(e, x.exId);
     var id = idOK(x.exId) ? x.exId : idOK(e.id) ? e.id : null;
     if (!id) return null;
     var counts = workCounters(x,source);
@@ -251,6 +260,7 @@
     return freeze(out);
   }
   return freeze({ version:VERSION,secondaryFactor:0.5,groups:groups,regionToGroup:regionToGroup,
+    rehabWork:REHAB_WORK,footballGroups:FOOTBALL_GROUPS,
     profile:profile,completedItem:completedItem,plannedItem:plannedItem,completedFromPlan:completedFromPlan,plannedProtocol:plannedProtocol,
     sanitize:sanitize,pack:pack,sumSnapshots:sumSnapshots,week:week });
 });

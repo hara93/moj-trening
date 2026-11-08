@@ -1724,7 +1724,7 @@ function dashboardModel(t) {
   return {
     daily:dailyInput(now,status),
     range:{ start:dateKey(start), end:dateKey(calDay(start,6)), label:shortDate(start) + ' – ' + shortDate(calDay(start,6)), isCurrent:true },
-    today:dateKey(now), forecast:!!t.forecast, selectedGroup:t.selectedGroup, groups, sessions, days, quality,
+    today:dateKey(now), forecast:!!t.forecast, selectedGroup:t.selectedGroup, groups, sessions, days, quality, pinnedGroups:MuscleWork.footballGroups,
     summary:{ done:status.done, planned:status.planned, todayDone:todaysSlots.filter(s => s.done).length, todayPlanned:todaysSlots.length },
     coverage:{ done:groups.filter(g => g.actual.equivalent > 0).length, total:groups.length,
       projected:groups.filter(g => g.actual.equivalent + g.planned.equivalent > 0).length }
@@ -2859,7 +2859,7 @@ function workoutSwapLabel(key,value) {
   return value;
 }
 function workoutSwapState(item) {
-  const primary=MuscleWork.profile(S.ex[item.exId]).primary, candidates=workoutCandidates(item);
+  const primary=MuscleWork.profile(S.ex[item.exId],item.exId).primary, candidates=workoutCandidates(item);
   const direct=workoutEquipmentVariants(item,candidates);
   const exact=candidates.filter(candidate=>candidate.primary.length===primary.length&&candidate.primary.every(group=>primary.includes(group))&&
     !!S.ex[candidate.id].sides===!!item.sides);
