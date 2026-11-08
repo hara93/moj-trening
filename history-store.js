@@ -41,6 +41,15 @@
     }
     return live(result, deleted).sort((a,b) => b.at - a.at);
   }
+  // 1.21 reserve rule, shared by the done screen (reserveAnswer) and history edits (currentStreak): RIR 0 on two or more
+  // tapped sets = 'hold' (keep the weight, the streak restarts); one of the last two sets below target − 0.5 (holds: − 3 s)
+  // = 'hard' (does not count); otherwise 'ok'. list = the taps per done set in order, null = not tapped.
+  function reserveVerdict(list, goal, timed) {
+    list = Array.isArray(list) ? list : [];
+    if (list.filter(v => v === 0).length >= 2) return 'hold';
+    const target = typeof goal === 'number' && Number.isFinite(goal) ? goal : timed ? null : 2;
+    return target !== null && list.slice(-2).some(v => typeof v === 'number' && v < target - (timed ? 3 : 0.5)) ? 'hard' : 'ok';
+  }
   function currentStreak(log, protocol, item, index) {
     let ok = 0, fail = 0;
     for (const row of log) {
@@ -52,6 +61,9 @@
       if (x.measure !== item.measure || x.sets !== item.sets || (x.kg || 0) !== (item.kg || 0) ||
         !!x.sides !== !!item.sides || (x.measure === 'time' ? x.sec !== item.sec :
           x.reps !== item.reps || JSON.stringify(x.repsList || []) !== JSON.stringify(item.repsList || []))) break;
+      const timed = x.measure === 'time', verdict = x.done === true ? reserveVerdict(x[timed ? 'sirList' : 'rirList'], item[timed ? 'targetSir' : 'targetRir'], timed) : 'ok';
+      if (verdict === 'hold') break;
+      if (verdict === 'hard') continue;
       if (x.done === true && !fail) ok++;
       else if (x.done === false && !ok) fail++;
       else break;
@@ -76,5 +88,5 @@
     });
     return changed ? { ...protocol, items } : protocol;
   }
-  return { identify, live, merge, reconcile };
+  return { identify, live, merge, reconcile, reserveVerdict };
 });

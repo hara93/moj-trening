@@ -4671,7 +4671,7 @@ function applyProgress(){
     const it = n.items[c.j], a = answerOf(c.j);
     if (a === 'ok') { it.ok = (it.ok || 0) + 1; it.fail = 0; if (it.ok === progN() && c.next.item) news.push(c.e.name); }
     else if (a === 'fail') { it.ok = 0; it.fail = (it.fail || 0) + 1; it.snoozeOk = 0; }
-    else if (a === 'hold') it.ok = 0;
+    else if (a === 'hold') { it.ok = 0; it.snoozeOk = 0; }
   });
   n.updatedAt = Date.now();
   S.pr[P.ref.id] = Object.assign({ id: P.ref.id }, n);
@@ -4692,18 +4692,17 @@ function doneMsg(c){
 // the reserve tapped in this session (rirLists: per done set, null = not tapped); untapped sets keep the old rule
 function reserveAnswer(j){
   const it = P && P.items && P.items[j]; if (!it) return 'ok';
-  const timed = it.measure === 'time', list = rirLists(j, it) || [], known = list.filter(v => v != null);
-  if (known.filter(v => v === 0).length >= 2) return 'hold';
-  const goal = it[timed ? 'targetSir' : 'targetRir'], target = Number.isFinite(goal) ? goal : timed ? null : 2;
-  return target !== null && list.slice(-2).some(v => v != null && v < target - (timed ? 3 : 0.5)) ? 'hard' : 'ok';
+  const timed = it.measure === 'time';
+  return HistoryStore.reserveVerdict(rirLists(j, it), it[timed ? 'targetSir' : 'targetRir'], timed);   // the same rule as history edits
 }
-// MODEL 1.9: a set's e1RM with its tapped RIR, kg × (1 + (reps + RIR) / 30) when reps + RIR ≤ 12 and RIR ≤ 4; an untapped set
-// counts as reps to failure (up to 10); the session value is the median. null when no set has a tap.
+// MODEL 1.9: a set's e1RM with its tapped RIR, kg × (1 + (reps + RIR) / 30); a tap above the trusted range counts as RIR 4 and
+// reps + RIR at most 12, so more reserve never scores lower; an untapped set counts as reps to failure (up to 10); the session
+// value is the median. null when no set has a tap.
 function rirE1(x){
   const rows = x && typeof HistoryModel !== 'undefined' ? HistoryModel.recordedRows(x) : null;
   if (!rows || !rows.some(r => r.rir !== null && !r.failed)) return null;
-  const sets = rows.filter(r => r.kg > 0 && r.reps > 0).map(r => r.rir !== null && r.reps + r.rir <= 12 && r.rir <= 4
-    ? r.kg * (1 + (r.reps + r.rir) / 30) : e1rm(r.kg, Math.min(r.reps, 10))).sort((a, b) => a - b);
+  const sets = rows.filter(r => r.kg > 0 && r.reps > 0).map(r => r.rir !== null
+    ? r.kg * (1 + Math.min(r.reps + Math.min(r.rir, 4), 12) / 30) : e1rm(r.kg, Math.min(r.reps, 10))).sort((a, b) => a - b);
   if (!sets.length) return null;
   const m = sets.length >> 1;
   return sets.length % 2 ? sets[m] : (sets[m - 1] + sets[m]) / 2;

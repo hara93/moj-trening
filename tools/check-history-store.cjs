@@ -37,3 +37,19 @@ test('progression follows changed completed sessions, retaining manual dose rese
   const raised = {...p,items:[{...item,ok:0,kg:25,up:3}]};
   assert.equal(H.reconcile(raised,sessions,[],map),raised);
 });
+test('a history fix applies the 1.21 reserve rule: RIR 0 on two sets does not count as progress', () => {
+  const item = {exId:'press',measure:'sets',sets:4,reps:5,kg:100,targetRir:2,ok:1};
+  const p = { id:'p', items:[item] }, map = {press:{cat:'Snaga'}};
+  const partial = row(2,{items:[{...item,done:true,setsDone:3,rirList:[1,0,0]}]}), earlier = row(1,{items:[{...item,done:true}]});
+  const fixed = row(2,{items:[{...item,done:true,rirList:[1,0,0,0]}]});
+  const held = H.reconcile(p,[partial,earlier],[fixed,earlier],map).items[0];
+  assert.deepEqual([held.ok,held.fail],[0,0],'corrected to 4/4 with RIR 1,0,0,0: a hold restarts the streak, as on the done screen');
+  const hard = row(2,{items:[{...item,done:true,rirList:[2,2,1,1]}]});
+  assert.equal(H.reconcile(p,[partial,earlier],[hard,earlier],map),p,'reserve below target does not count');
+  const good = row(2,{items:[{...item,done:true,rirList:[2,2,2,2]}]});
+  assert.equal(H.reconcile(p,[partial,earlier],[good,earlier],map).items[0].ok,2);
+  assert.equal(H.reserveVerdict([1,0,0],2,false),'hold');
+  assert.equal(H.reserveVerdict([12,12,10,7],10,true),'ok');
+  assert.equal(H.reserveVerdict([12,12,10,6],10,true),'hard');
+  assert.equal(H.reserveVerdict(null,undefined,false),'ok');
+});

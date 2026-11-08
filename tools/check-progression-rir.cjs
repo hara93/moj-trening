@@ -5,7 +5,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,start);return source.slice(a,b);}
 function harness(rir={},items=[]){
-  const ctx={HistoryModel:require('../history-model.js'),TodayModel:require('../today-model.js'),P:{items,rir,steps:[],doneSteps:{},startedAt:new Date('2026-11-04T18:00:00').getTime()},
+  const ctx={HistoryModel:require('../history-model.js'),HistoryStore:require('../history-store.js'),TodayModel:require('../today-model.js'),P:{items,rir,steps:[],doneSteps:{},startedAt:new Date('2026-11-04T18:00:00').getTime()},
     S:{settings:{morningChecks:{}},ex:{},log:[]},Date,
     progKind:()=> 'bar',loadKind:()=> 'bar',nextLoad:(e,kg)=>kg+10,fmtKg:v=>String(v).replace('.',',')+' kg',plural:(n,a,b,c)=>n===1?a:n<5?b:c,
     ponTxt:n=>n+' ponavljanja',needsKg:()=>false,exEquip:()=>[],dateKey:t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}};
@@ -39,7 +39,7 @@ test('RIR 0 on two or more sets keeps the weight and resets the streak without c
   const doneMsg=section('function doneMsg(c){','\n}');
   assert.match(doneMsg,/a === 'hold'[^\n]*Dvije serije bez rezerve \(RIR 0\): ostaje/);
   const apply=section('function applyProgress(){','\n}');
-  assert.match(apply,/else if \(a === 'hold'\) it\.ok = 0;/);
+  assert.match(apply,/else if \(a === 'hold'\) \{ it\.ok = 0; it\.snoozeOk = 0; \}/,'a hidden proposal cannot stay hidden after the streak restarts');
   assert.doesNotMatch(apply,/'hold'\)[^\n]*fail/,'not a failure');
 });
 
@@ -61,7 +61,11 @@ test('the next kg comes from the RIR-adjusted e1RM: 9 reps at RIR 2 reach 110 kg
   const nearly=logged([2,2,2,2],{reps:8,repsList:[8,8,8,8]});
   assert.equal(h.api.nextDose({cat:'Snaga'},lift({reps:8}),nearly).item.kg,100,'8 reps at RIR 2 is not yet enough for +10 kg');
   assert.equal(h.api.rirE1(logged([null,null,null,null])),null,'no taps, no RIR estimate');
-  assert.ok(Math.abs(h.api.rirE1(logged([6,6,6,6]))-100*(1+5/30))<1e-9,'RIR above 4 falls back to reps to failure');
+  assert.ok(Math.abs(h.api.rirE1(logged([7,7,7,7]))-100*(1+9/30))<1e-9,'"6+" counts as RIR 4, not as reps to failure');
+  const at=list=>h.api.rirE1(logged(list));
+  assert.ok(at([4.5,4.5,4.5,4.5])>=at([3,3,3,3])&&at([7,7,7,7])>=at([3,3,3,3]),'more reserve never scores lower');
+  assert.ok(Math.abs(h.api.rirE1(logged([3,3,3,3],{reps:10,repsList:[10,10,10,10]}))-100*(1+12/30))<1e-9,'reps + RIR capped at 12');
+
 });
 
 test('morning pain 1-5 holds the painful area at the end of the session; proposals still wait for acceptance',()=>{
