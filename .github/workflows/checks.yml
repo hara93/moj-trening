@@ -147,6 +147,9 @@ jobs:
       - name: Referentni player
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/player-reference.cjs ${{ matrix.browser }}
+      - name: Serije koje broje unaprijed
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/rep-set-timer.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
