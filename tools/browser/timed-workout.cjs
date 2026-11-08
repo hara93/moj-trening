@@ -169,6 +169,7 @@ async function repSides(page,id){
     assert.equal(await setRow(page,1).getAttribute('data-state'),'done');
     assert.match(await setRow(page,1).locator('xpath=following-sibling::tr[1]').innerText(),/✓ lijeva \(4 s\) · ✓ desna \(7 s\)/);
     assert.match(await page.locator('.cinema-journal-footer').innerText(),/50\s%\sodrađeno.*0:11 rada/s);   // 1.22.0: "50 % odrađeno"; holds only, so no "0 pon. · 0 kg"
+    assert.doesNotMatch(await page.locator('.cinema-journal-footer').innerText(),/pon\.|kg/,'a holds-only footer has no repetitions or kilograms');   // 1.22.0
     await closeJournal(page);
     await action(page,'cinemaResume').tap();
     const secondLeft=await enterWork(page,'Lijeva strana');
@@ -186,6 +187,7 @@ async function repSides(page,id){
     await openJournal(page);
     assert.equal(await setRow(page,2).getAttribute('data-state'),'partial');
     assert.match(await page.locator('.cinema-journal-footer').innerText(),/50\s%\sodrađeno.*0:31 rada/s);   // 1.22.0: "50 % odrađeno"
+    assert.doesNotMatch(await page.locator('.cinema-journal-footer').innerText(),/pon\.|kg/,'still no repetitions or kilograms');   // 1.22.0
     await closeJournal(page);
     const secondRight=await enterWork(page,'Desna strana');
     await advance(page,20.1);

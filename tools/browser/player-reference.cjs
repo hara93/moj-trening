@@ -93,7 +93,8 @@ async function advance(p, seconds) {
   await p.clock.setFixedTime(new Date(await p.evaluate(() => Date.now()) + seconds * 1000));
   await p.waitForTimeout(350);
 }
-async function start(p, id, data) {
+// touch: started the way a phone does it, with nothing focused (a tap focuses no control)
+async function start(p, id, data, { touch } = {}) {
   await p.evaluate(() => localStorage.removeItem('mt.play'));
   await p.reload({ waitUntil: 'domcontentloaded' });
   await A(p, 'dataSheet').waitFor();
@@ -103,7 +104,8 @@ async function start(p, id, data) {
   await p.getByRole('button', { name: 'Moj pregled', exact: true }).click();
   await A(p, 'dashboardProtocols').click();
   await p.locator('[data-a="openPr"][data-id="' + id + '"]').click();
-  await A(p, 'startPr').click();
+  if (touch) await A(p, 'startPr').evaluate(node => { document.activeElement?.blur(); node.click(); });
+  else await A(p, 'startPr').click();
   await stage(p).waitFor();
 }
 async function quit(p) {
@@ -154,7 +156,7 @@ function forward(path, label) {
 }
 
 async function firstStartWithParts(p, width) {
-  await start(p, parts, fixture({ guideSeen: false }));
+  await start(p, parts, fixture({ guideSeen: false }), { touch: true });
   // the guide opens once on the first start; its flag lives in mt.settings (backups carry it)
   const guide = p.locator('.sheet[data-kind="cinemaGuide"]');
   await guide.waitFor();
@@ -164,6 +166,7 @@ async function firstStartWithParts(p, width) {
   assert.equal((await settings(p)).playerGuideSeen, true, 'the seen flag is stored in mt.settings');
   await shot(p, 'guide-first-' + width);
   await A(p, 'cinemaGuideDone').click(); await guide.waitFor({ state: 'detached' });
+  assert.equal(await p.evaluate(() => document.activeElement?.dataset.a), 'cinemaMenu', 'closing the first-start guide focuses ⋯ (it reopens from there)');
 
   // the part overview opens the workout: part name, equipment, the items with the current one marked, a dose line
   // from the workout itself, the big countdown and "+ Dodaj vrijeme za pripremu"
@@ -248,6 +251,15 @@ async function firstStartWithParts(p, width) {
   d = await dashes(p); assert.equal(d.current, 0); assert.ok(d.inside); path.push(d);
   await noOverflow(p, 'rest phase 2 ' + width);
   await shot(p, 'rest-2-' + width);
+  // +15 s and added prep time lengthen the rest; the dot holds its place, it never slides back
+  await advance(p, 20);
+  path.push(await dashes(p));
+  await p.locator('.workout-cinema [data-a="cinemaRest"][data-d="15"]').click();
+  d = await dashes(p); assert.ok(d.at >= path.at(-1).at - 1e-6, '+15 s: ' + JSON.stringify([path.at(-1), d])); path.push(d);
+  await openCinemaControls(p); await A(p, 'cinemaPrep').click();
+  await p.locator('[data-a="cinemaPrepPick"][data-v="10"]').click(); await A(p, 'cinemaPrepApply').click();
+  await p.locator('.workout-cinema .cinema-prep-editor').waitFor({ state: 'detached' });
+  d = await dashes(p); assert.ok(d.at >= path.at(-1).at - 1e-6, 'added prep: ' + JSON.stringify([path.at(-1), d])); path.push(d);
 
   // the journal: the current exercise is an open card, the others collapsed rows of set circles
   await A(p, 'cinemaJournal').first().click();
@@ -366,6 +378,9 @@ async function firstStartWithParts(p, width) {
   await p.locator('.workout-cinema[data-phase="section"]').waitFor();
   assert.equal(await p.locator('#cinema-section-title').textContent(), 'Noge');
   assert.equal(await p.locator('.cinema-section-items li').count(), 2, 'a superset shares its first exercise\'s part');
+  const doses = await p.locator('.cinema-section-items li small').allTextContents();
+  assert.equal(doses[1], '5 pon.', 'no weight for nordic curl (kg 0): ' + doses);
+  assert.ok(doses.every(text => !/(^|\s)0 kg/.test(text)), 'never "0 kg": ' + doses);
   d = await dashes(p); assert.equal(d.current, 1, 'the pause before an exercise belongs to its dash'); assert.ok(d.inside); path.push(d);
   // the superset: the dot moves step by step across the pair's two dashes, forward only
   await until(p, (s, st) => st.g === 3 && st.kind === 'work', 'the hold', async () => {

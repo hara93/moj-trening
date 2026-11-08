@@ -242,6 +242,7 @@ async function portraitPresentation(p, width, height) {
   assert.deepEqual(automatic.doneSteps,{[firstStep]:1});
   assert.equal(await transport.count(),0,'the player has no bottom transport row during rest');
   await revealRest(p);   // 1.22.0: rest phase 1 is the clock alone; a tap on the stage shows −ODMOR+ and the reserve row
+  assert.equal(await transport.count(),0,'no bottom transport row in rest phase 2 either');   // 1.22.0: phase 1 hides everything, so check again next to −ODMOR+
   const restColor=await p.locator('#ringN').evaluate(node=>getComputedStyle(node).color);
   assert.equal(restColor,'rgb(255, 255, 255)','the rest countdown is white');
   assert.equal(layout.timerColor,'rgb(255, 255, 255)','the work countdown is white');
