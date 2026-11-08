@@ -128,6 +128,16 @@ async function portraitPresentation(p, width, height) {
   const readyFade=await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node,'::after').backgroundImage);
   assert.match(readyFade,/rgba\(25, 29, 37, 0\) 16%/,'the upper fade clears before most of the first card');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-prep-'+width+'x'+height+'.png')});
+  await p.locator('.cinema-prep-trigger').tap();
+  const prep=p.locator('.cinema-prep-editor');
+  const slider=prep.locator('input[type="range"]');
+  await slider.press('ArrowRight');
+  assert.equal(await prep.locator('output').innerText(),'+5 s');
+  assert.equal(await slider.getAttribute('aria-valuetext'),'5 sekundi');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-prep-slider-'+width+'x'+height+'.png')});
+  await slider.press('Home');
+  await A(p,'cinemaPrepApply').tap();
+  assert.equal(await prep.count(),0);
   await firstCard.locator('[data-a="playDoseEdit"]').tap();
   const target=p.locator('#play-dose-form [name="repSetSec"]');
   await target.fill('24');await A(p,'playDoseApply').tap();
@@ -203,8 +213,11 @@ async function portraitPresentation(p, width, height) {
   const pausedRect=await portrait();
   assert.deepEqual(pausedRect,runningRect,'pausing keeps the image below the same header without moving or resizing it');
   assert.equal(await p.locator('.workout-cinema-media').evaluate(node=>getComputedStyle(node).opacity),'0.55');
+  const pause=p.locator('.cinema-pause-layer');
+  assert.equal(await pause.getByRole('heading',{name:'Pauzirano',exact:true}).count(),1);
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-standing-paused-'+width+'x'+height+'.png')});
-  await A(p,'cinemaTimer').click();assert.equal((await player(p)).clock.paused,false);
+  await A(p,'cinemaResume').tap();assert.equal((await player(p)).clock.paused,false);
+  assert.equal(await pause.count(),0);
   assert.deepEqual(await portrait(),runningRect,'resuming preserves the standing portrait geometry');
   await weight.tap();await selected.tap();
   const fields=p.locator('#play-dose-form [data-dose-value="kg"]');
@@ -292,7 +305,7 @@ async function runPlayer(p, width, url) {
   // Preparation changes waiting time, never the number of completed work sets.
   const beforePrep = await player(p);
   await openCinemaControls(p);
-  await A(p, 'cinemaPrep').click(); await p.locator('.sheet[data-kind="cinemaPrep"]').waitFor();
+  await A(p, 'cinemaPrep').click(); await p.locator('.cinema-prep-editor[data-kind="cinemaPrep"]').waitFor();
   assert.deepEqual(await A(p, 'cinemaPrepPick').evaluateAll(nodes => nodes.map(n => Number(n.dataset.v))), [0, 5, 10, 30, 60]);
   await p.locator('[data-a="cinemaPrepPick"][data-v="10"]').click(); await A(p, 'cinemaPrepApply').click();
   const prepared = await player(p);
