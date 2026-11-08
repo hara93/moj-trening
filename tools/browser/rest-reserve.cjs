@@ -12,12 +12,12 @@ const store = p => p.evaluate(() => JSON.parse(localStorage.getItem('mt.data.v1'
 const step = state => state.liveSchedule[state.i];
 const reserve = p => p.locator('.workout-cinema-reserve');
 
-function fixture(entry) {
+function fixture(entry, items) {
   const data = baseFixture();
   data.log = []; data.programs = {}; data.field = {};
   data.settings.sound = false; data.settings.planDates = {}; data.settings.matchDates = {}; data.settings.matchDay = -1; data.settings.morningChecks = {};
   if (entry !== undefined) data.settings.reserveEntry = entry;
-  data.protocols = { [id]: { id, name: 'Rezerva nakon serije', tag: 'Teretana', days: [], items: [
+  data.protocols = { [id]: { id, name: 'Rezerva nakon serije', tag: 'Teretana', days: [], items: items || [
     { exId: 'bench-press', measure: 'sets', sets: 3, reps: 8, kg: 50, rest: 60, sides: false, targetRir: 2 },
     { exId: 'side-plank', measure: 'time', sets: 2, reps: 1, sec: 6, kg: 0, rest: 30, sides: false, targetSir: 10 }
   ] } };
@@ -49,6 +49,15 @@ async function toSet(p, set) {
     else if (current.dur) await advance(p, state.left + 0.1); else assert.fail('unexpected ' + JSON.stringify(current));
   }
   assert.fail('set ' + set + ' never started');
+}
+
+async function finishAll(p) {
+  for (let guard = 0; guard < 40 && !(await player(p)).done; guard++) {
+    const now = await player(p);
+    if (step(now)?.kind === 'manual') { await pressCinemaMain(p); if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click(); }
+    else await advance(p, (now.left || 1) + 0.1);
+  }
+  await A(p, 'finishPlay').waitFor();
 }
 
 async function run() {
@@ -133,7 +142,7 @@ async function run() {
     await toSet(p, 3); await pressCinemaMain(p);
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
     await reserve(p).waitFor();
-    assert.match(await reserve(p).innerText(), /S3/);
+    assert.match(await reserve(p).innerText(), /Bench press · 3\. serija/, 'the pause before the next exercise names the set it asks about');
     await openQuit(p); await A(p, 'quitDiscard').click();
     await p.locator('.workout-cinema').waitFor({ state: 'detached' });
 
@@ -153,8 +162,33 @@ async function run() {
     if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click();
     assert.equal(step(await player(p)).kind, 'rest');
     assert.equal(await reserve(p).count(), 0, 'nothing asked during the session');
+    await finishAll(p);
+    const doneRows = p.locator('.rirlast .rir');
+    assert.equal(await doneRows.count(), 2, '"Na kraju": one row per exercise on the done screen');
+    assert.deepEqual(await doneRows.locator('.rirn').allInnerTexts(), ['Bench press · 3. serija', 'Bočni plank · 2. serija']);
+    await p.screenshot({ path: path.join(artifacts, 'rest-reserve-done-' + engine + '-393.png') });
+    await A(p, 'finishPlay').click();
+
+    // A superset round asks about both exercises, each named on its own line.
+    await start(p, fixture(0, [
+      { exId: 'bench-press', measure: 'sets', sets: 2, reps: 8, kg: 50, rest: 0, sides: false, ss: 'a' },
+      { exId: 'db-row', measure: 'sets', sets: 2, reps: 10, kg: 20, rest: 90, sides: false, ss: 'a' }
+    ]));
+    for (let guard = 0; guard < 8 && step(await player(p)).kind !== 'rest'; guard++) {
+      const now = await player(p);
+      if (step(now).kind === 'manual') { await pressCinemaMain(p); if (await p.locator('[data-a="cinemaClose"]').count()) await p.locator('[data-a="cinemaClose"]').first().click(); }
+      else await advance(p, (now.left || 1) + 0.1);
+    }
+    await reserve(p).locator('.rir').nth(1).waitFor();
+    assert.deepEqual(await reserve(p).locator('.rirn').allInnerTexts(), ['Bench press · 1. serija', 'Jednoručno veslanje bučicom uz oslonac · 1. serija']);
+    const names = await reserve(p).locator('.rirn').evaluateAll(nodes => nodes.map(node => ({ width: node.clientWidth, font: parseFloat(getComputedStyle(node).fontSize) })));
+    for (const name of names) assert.ok(name.width > 250 && name.font >= 13, 'the name has its own full-width line: ' + JSON.stringify(name));
+    await reserve(p).locator('.rir').nth(0).locator('.rirb button').nth(2).click();
+    const tapped = await player(p);
+    assert.equal(tapped.rir[tapped.liveSchedule.findIndex(x => x.kind === 'manual' && x.g === 0 && x.set === 1)], 2, 'A1 gets its own tap');
+    await p.screenshot({ path: path.join(artifacts, 'rest-reserve-superset-' + engine + '-393.png') });
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ engine, waitsForTap: true, oneTapRow: true, targetMarked: true, optional: true, lastSetMode: true, endMode: true, storedRirList: [0, null, 3] }));
+    console.log(JSON.stringify({ engine, waitsForTap: true, oneTapRow: true, targetMarked: true, optional: true, lastSetMode: true, endMode: true, doneRowsPerExercise: 2, supersetRows: 2, storedRirList: [0, null, 3] }));
   } finally {
     if (browser) await browser.close();
     await server.close();

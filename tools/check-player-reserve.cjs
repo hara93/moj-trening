@@ -98,18 +98,35 @@ test('field repeat retains explicit season/full dose and rebuilds the selected d
 });
 test('the rest screen asks for the finished set, following Upis rezerve; rep sets wait without a set timer',()=>{
   const cut=(a,b)=>{const i=source.indexOf(a),j=source.indexOf(b,i);assert.ok(i>=0&&j>i,a);return source.slice(i,j);};
-  const ctx={S:{settings:{}},P:{steps:[{g:0,set:1,it:{sets:3}},{g:0,set:3,it:{sets:3}},{g:1,set:2,ss:{L:'A'},rounds:2,it:{sets:2}}]},rirStep:()=>ctx.k};
-  require('node:vm').createContext(ctx);
-  require('node:vm').runInContext(cut('const RESERVE_ENTRY','function failedReserveStep(k){')+';globalThis.ask=cinemaReserveStep;globalThis.mode=reserveEntry;globalThis.labels=RESERVE_ENTRY;',ctx);
+  const ctx={};require('node:vm').createContext(ctx);
+  require('node:vm').runInContext(cut('const RESERVE_ENTRY','const reserveEntry')+';globalThis.labels=RESERVE_ENTRY;',ctx);
   assert.deepEqual([...ctx.labels],['Nakon svake serije','Samo zadnja serija vježbe','Na kraju']);
-  for(const [setting,k,expected] of [[undefined,0,0],[0,1,1],[1,0,-1],[1,1,1],[1,2,2],[2,1,-1],[7,0,0]]){
-    ctx.S.settings.reserveEntry=setting;ctx.k=k;assert.equal(ctx.ask(),expected,JSON.stringify([setting,k]));
-  }
-  ctx.k=-1;ctx.S.settings.reserveEntry=0;assert.equal(ctx.ask(),-1);
   assert.match(cut('function cleanSettings(s){','const SETTINGS_BASE'),/int\('reserveEntry', 0, 2\)/);
   const tick=cut('function tick(){','\n}');
   assert.match(tick,/timer=!manual\|\|repSetSeconds\(st\.it\|\|\{\}\)!==null/);
   assert.match(tick,/if \(whole <= 0 && timer\)/,'no automatic set end without Tajmer serije');
-  assert.match(cut('function workoutCinemaHtml() {','\n}'),/reserveHtml:reserveAt>=0\?rirRowHtml\(reserveAt,/);
+  assert.match(cut('function workoutCinemaHtml() {','\n}'),/reserveHtml:reserveAt\.map\(k=>rirRowHtml\(k,/);
   assert.match(cut('function rirRowHtml(k, other){','\n}'),/Number\.isFinite\(goal\) \? goal :/,'the item target is the marked chip');
+});
+test('a superset round asks about each exercise in it; the done screen asks about the last set of every exercise',()=>{
+  const a={exId:'a',measure:'sets',sets:3,reps:8,kg:20},b={exId:'a',measure:'sets',sets:2,reps:5,kg:0};
+  const set=(g,n,it)=>({kind:'manual',g,set:n,it,e:{name:g?'Nordic':'Bugarski'}});
+  const steps=[{kind:'prep'},set(0,1,a),set(1,1,b),{kind:'rest',dur:90},set(0,2,a),set(1,2,b),{kind:'rest',dur:90},set(0,3,a),{kind:'rest',dur:10,trans:true}];
+  const p={mode:'ex',items:[a,b],steps,i:3,doneSteps:{1:1,2:1}},h=harness(p);
+  assert.deepEqual([...h.ctx.reserveSteps()],[1,2],'A1 and A2 of the round, not only the set before the rest');
+  for(const [entry,expected] of [[undefined,[1,2]],[0,[1,2]],[1,[]],[2,[]],[7,[1,2]]]){
+    h.ctx.S.settings={reserveEntry:entry};assert.deepEqual([...h.ctx.cinemaReserveSteps()],expected,String(entry));
+  }
+  p.i=6;Object.assign(p.doneSteps,{4:1,5:1});h.ctx.S.settings={reserveEntry:1};
+  assert.deepEqual([...h.ctx.cinemaReserveSteps()],[5],'"Samo zadnja serija vježbe": Nordic ends at its own set 2');
+  p.i=8;p.doneSteps[7]=1;assert.deepEqual([...h.ctx.cinemaReserveSteps()],[7],'the last Bulgarian set, on the pause before the next exercise');
+  p.i=7;assert.deepEqual([...h.ctx.reserveSteps()],[],'never on a set screen');
+  p.done=true;h.ctx.S.settings={reserveEntry:2};
+  assert.deepEqual([...h.ctx.reserveSteps()],[5,7],'one row per exercise on the done screen, in every mode');
+  p.answers={1:'skip'};assert.deepEqual([...h.ctx.reserveSteps()],[7]);
+  const html=h.ctx.rirRowHtml(1,true);
+  assert.match(html,/<p class="rirn">Bugarski · 1\. serija<\/p>/,'the other exercise has its own line');
+  assert.match(html,/<em>nije uneseno<\/em>/);
+  assert.match(h.ctx.rirRowHtml(1,false),/<em>S1 · rezerva nije unesena<\/em>/);
+  assert.doesNotMatch(h.ctx.rirRowHtml(1,false),/rirn/);
 });

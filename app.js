@@ -2764,13 +2764,13 @@ function workoutCinemaHtml() {
   const pause=P.paused&&!S.sheet, setLabel='Serija '+(step.set||1)+' od '+item.sets, name=e?.name||P.title;
   const side=v.st.kind==='switch'||PlayerDose.splitSide(v.st)?v.st.side:'';
   const journal=cinemaFooter(v,step,item,name,preparing);
-  const reserveAt=!editingPrep&&!pause&&v.st.kind==='rest'?cinemaReserveStep():-1;
+  const reserveAt=!editingPrep&&!pause&&v.st.kind==='rest'?cinemaReserveSteps():[];
   return WorkoutView.cinema({phase:v.st.kind==='rest'?'rest':['prep','ready','switch'].includes(v.st.kind)?'ready':'work',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
     subtitle:preparing?setLabel:parts[active]+' · '+setLabel+(side?' · '+side:''),prepQuantity:preparing?(timed?dose.sec+' s':dose.reps+'×'):'',
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml,infoHtml:'<button type="button" class="ib" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:preparing?'':metrics,restAdjustHtml:!editingPrep&&v.st.kind==='rest'?'<button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button>':'',
     nextHtml:next,prepHtml:editingPrep||preStart&&!S.sheet?cinemaPrepHtml(v.st,editingPrep):'',pauseHtml:pause?cinemaPauseHtml(recorded):'',journalHtml:journal,
-    reserveHtml:reserveAt>=0?rirRowHtml(reserveAt,P.steps[reserveAt].g!==active):''});
+    reserveHtml:reserveAt.map(k=>rirRowHtml(k,reserveAt.length>1||P.steps[k].g!==active)).join('')});
 }
 function cinemaJournalTotals({reps, volume, seconds}) {
   return reps+' pon. · '+Math.round(volume)+' kg × pon.'+(seconds?' · '+fmt(seconds)+' rada':'');
@@ -5695,11 +5695,32 @@ function rirStep(){
 // 1.21: the set just finished asks for its reserve on the rest screen, following "Upis rezerve" (reserveEntry):
 // 0 after every work set (default), 1 only after the last set of an exercise, 2 only at the end (done screen)
 const RESERVE_ENTRY = ['Nakon svake serije', 'Samo zadnja serija vježbe', 'Na kraju'];
-const reserveEntry = () => [0, 1, 2].includes(S.settings.reserveEntry) ? S.settings.reserveEntry : 0;
-function cinemaReserveStep(){
-  const mode = reserveEntry(), k = mode === 2 ? -1 : rirStep(), st = k >= 0 && P.steps[k];
-  if (!st) return -1;
-  return mode === 1 && st.set !== (st.ss ? st.rounds : st.it.sets) ? -1 : k;
+const RESERVE_HELP = ['Nakon svake radne serije, na odmoru.',
+  'Bilježi se jedna serija po vježbi, pa pravilo „RIR 0 u dvije serije” ne može vrijediti.',
+  'Tijekom treninga ništa; na kraju upisuješ zadnju seriju svake vježbe.'];
+const reserveEntry = () => [0, 1, 2].includes((S.settings || {}).reserveEntry) ? S.settings.reserveEntry : 0;
+// the sets that ask, oldest first: on a rest every set closed since the previous rest (a superset round asks about each of
+// its exercises, A1 and A2); on the done screen the last done set of every exercise, so a set whose rest was only the short
+// pause before the next exercise (or "Na kraju") is still asked once
+function reserveSteps(){
+  if (!P || P.mode !== 'ex' || !Array.isArray(P.steps)) return [];
+  const asks = k => { const st = P.steps[k]; if (!isWork(st) || !P.doneSteps[k] || !setEnd(st) || (P.answers && P.answers[st.g] === 'skip')) return false;
+    const fx = stepFx(st); return !!(fx && LM.ASK[fx.pat]); };
+  const out = [];
+  if (P.done) {
+    const seen = {};
+    for (let k = P.steps.length - 1; k >= 0; k--) if (!seen[P.steps[k].g] && asks(k)) { seen[P.steps[k].g] = 1; out.unshift(k); }
+    return out;
+  }
+  if (!P.steps[P.i] || P.steps[P.i].kind !== 'rest') return [];
+  for (let k = P.i - 1; k >= 0 && P.steps[k].kind !== 'rest'; k--) if (asks(k)) out.unshift(k);
+  return out;
+}
+// the rows on this rest, following "Upis rezerve"; at most the last two, so the rest screen keeps its clock
+function cinemaReserveSteps(){
+  const mode = reserveEntry();
+  if (mode === 2) return [];
+  return reserveSteps().filter(k => mode === 0 || P.steps[k].set === (P.steps[k].it.sets || 1)).slice(-2);
 }
 function failedReserveStep(k){
   const st=P && P.steps[k];
@@ -5717,11 +5738,12 @@ function rirRowHtml(k, other){
   const st = P.steps[k], it = st.it, time = it.measure === 'time', fx = stepFx(st), taps = time ? LM.SIR_TAPS : LM.RIR_TAPS, txt = time ? LM.SIR_TXT : LM.RIR_TXT;
   const goal = it[time ? 'targetSir' : 'targetRir'], failed=failedReserveStep(k), def = Number.isFinite(goal) ? goal : time ? fx.rir * LM.HOLD_S : fx.rir, v = failed?0:P.rir && P.rir[k] != null ? P.rir[k] : null;
   let tg = 0; taps.forEach((t, x) => { if (Math.abs(t - def) < Math.abs(taps[tg] - def)) tg = x; });
-  const q = failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', what = 'S' + st.set + (v==null?' · rezerva nije unesena':time?' · SIR '+v+' s':' · RIR '+v);
-  // one header line: the question; on the right the set and its points, after another exercise's name (a rest before the next
-  // one, a superset, the done screen), which shortens first; the full text is in the aria-label
+  const q = failed?'Neuspjela serija · RIR 0':time ? 'Koliko si još mogao? (s)' : 'Koliko si još mogao?', tap = v==null?'':time?'SIR '+v+' s':'RIR '+v;
+  const what = other ? tap || 'nije uneseno' : 'S' + st.set + ' · ' + (tap || 'rezerva nije unesena');
+  // the question and, on the right, the tap; a set of another exercise than the one on screen (the rest before the next
+  // one, a superset round, the done screen) names it on its own line ("Deadlift · 4. serija"), so the name never shrinks
   return '<section class="rir" aria-label="' + esc((time ? 'Koliko si još mogao držati, u sekundama?' : q) + ' ' + (other ? st.e.name + ', ' : '') + 'Serija ' + st.set + ' · ≈ ' + lmPts(rirSetPts(k)) + ' bodova') + '"><div class="rirh"><b>' + q + '</b><span>' +
-    (other ? '<i>' + esc(st.e.name) + '</i><i class="sep"> · </i>' : '') + '<em>' + esc(what) + '</em></span></div>' +
+    '<em>' + esc(what) + '</em></span></div>' + (other ? '<p class="rirn">' + esc(st.e.name + ' · ' + st.set + '. serija') + '</p>' : '') +
     '<div class="rirb" role="group" aria-label="' + (time ? 'Sekundi u rezervi' : 'Ponavljanja u rezervi') + '">' + taps.map((t, x) =>
       '<button data-a="rir" data-k="' + k + '" data-v="' + x + '" aria-pressed="' + (v === t) + '"'+(failed?' disabled':'')+' class="' + [x === tg ? 'tg' : '', txt[x].length > 3 ? 'lg' : ''].filter(Boolean).join(' ') + '" aria-label="' + txt[x] + (time ? ' s' : '') + (x === tg ? (Number.isFinite(goal) ? ' (cilj)' : ' (uobičajeno)') : '') + '">' + txt[x] + '</button>').join('') +
     '</div></section>';
@@ -5888,7 +5910,7 @@ VIEWS.play = function(){
     const entry = any ? sessionEntry() : null;
     const wk = willCount ? weekAfter(entry) : { planned: 0 };
     const share = entry ? sessionShare(entry) : 1, partial = willCount && (share < 0.5 || P.countAsDone === true);
-    const lm = entry ? computeSession(entry) : null, rk = any ? rirStep() : -1; P._lm = lm;
+    const lm = entry ? computeSession(entry) : null, rks = any ? reserveSteps() : []; P._lm = lm;
     const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex());
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
@@ -5897,7 +5919,7 @@ VIEWS.play = function(){
           '<button type="button" class="txtbtn" data-a="countAsDone" aria-pressed="'+(P.countAsDone === true)+'">'+(P.countAsDone ? 'Ne računaj' : 'Računaj kao odrađeno')+'</button></div>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
       // the decisions first (fits a 375 × 812 iPhone): the session rating, the last set, "Kako je išlo?"; the load card after them
-      editLast + (lm ? rpeHtml() : '') + (rk >= 0 ? '<div class="rirlast">' + rirRowHtml(rk, true) + '</div>' : '') +
+      editLast + (lm ? rpeHtml() : '') + (rks.length ? '<div class="rirlast">' + rks.map(k => rirRowHtml(k, true)).join('') + '</div>' : '') +
       (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
         '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
           // pre-marked from what the player saw: all sets, some sets ('partial') or none ('skip'); the last two don't count
@@ -6281,9 +6303,11 @@ function sheetHtml(){
       playerSignalSettings() +
       (wakeOk ? '' : note('Ovaj uređaj ne može držati ekran upaljenim tijekom treninga. Na iPhoneu produlji automatsko zaključavanje: Postavke › Zaslon i svjetlina › Automatsko zaključavanje.')) +
       '<p class="label" style="padding:12px 0 0">Priprema pri promjeni strane</p>' + playerTimingChoices('switchSec',SIDE_PREP_CHOICES) +
-      '<p class="label" style="padding:0">Pauza između vježbi</p>' + playerTimingChoices('transSec',[5,10,15,20]) +
-      '<p class="label" style="padding:0">Upis rezerve (RIR)</p><div class="chips wrap" style="margin:8px 0 14px">' + RESERVE_ENTRY.map((label, value) => '<button class="chip" data-a="setSetting" data-k="reserveEntry" data-v="' + value + '" aria-pressed="' + (reserveEntry() === value) + '">' + label + '</button>').join('') + '</div>' +
-      '<p style="font-size:13px;color:var(--text-2);margin:0">Promjene trajanja prijelaza vrijede od sljedećeg pokretanja.</p>';
+      '<p class="label" style="padding:0">Pauza između vježbi</p>' + playerTimingChoices('transSec',[5,10,15,20]).replace('margin:8px 0 14px','margin:8px 0 6px') +
+      note('Trajanje priprema i pauza vrijedi od sljedećeg pokretanja.') +
+      '<p class="label" style="padding:4px 0 0">Upis rezerve (RIR)</p><div class="chips wrap" style="margin:8px 0 6px">' + RESERVE_ENTRY.map((label, value) => '<button class="chip" data-a="setSetting" data-k="reserveEntry" data-v="' + value + '" aria-pressed="' + (reserveEntry() === value) + '">' + label + '</button>').join('') + '</div>' +
+      note(RESERVE_HELP[reserveEntry()] + ' Vrijedi odmah.') +
+      '<button type="button" class="btn" data-a="cinemaClose" style="margin-top:4px">Gotovo</button>';
   } else if (s.kind === 'quit') {
     const any = P && anyDone();
     body = '<h3>Prekinuti trening?</h3>' +

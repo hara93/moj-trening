@@ -163,11 +163,12 @@
 .cinema-journal .workout-journal-open{flex:1;min-width:0}
 .cinema-journal .workout-journal-info{position:static;flex:none;margin-left:auto;pointer-events:auto}
 /* 1.21: one-tap reserve (RIR) for the set just finished, on the rest screen */
-.workout-cinema-reserve{position:relative;z-index:2;margin:0 8px 8px;min-width:0}
+.workout-cinema-reserve{position:relative;z-index:2;display:grid;gap:6px;margin:0 8px 8px;min-width:0}
 .workout-cinema-reserve .rir{margin:0;padding:8px;border-radius:16px;background:#14161ACC;color:#fff;min-width:0}
 .workout-cinema-reserve .rirh b{font-size:14px;color:#fff}
 .workout-cinema-reserve .rirh span{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:#C9D2D6}
 .workout-cinema-reserve .rirh i{color:#E6ECEE}
+.workout-cinema-reserve .rirn{color:#E6ECEE}
 .workout-cinema-reserve .rirb{margin-top:7px;gap:4px}
 .workout-cinema-reserve .rirb button{height:44px;border-color:#FFFFFF40;color:#fff;font-size:16px}
 .workout-cinema-reserve .rirb button.tg{border-style:dashed;border-color:#8FB0F2}
