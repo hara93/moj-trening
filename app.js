@@ -2607,8 +2607,8 @@ function cinemaPauseHtml(recorded){
   const transport = (dir,label,icon) => '<button type="button" class="cinema-pause-jump" data-a="cinemaPauseJump" data-d="'+dir+'" aria-label="'+label+'">'+icon+'<small>Povuci</small></button>';
   return '<div class="cinema-pause-layer"><section class="cinema-pause-actions" aria-labelledby="cinema-pause-title">'+
     '<h2 id="cinema-pause-title">Pauzirano</h2><div class="cinema-pause-row">'+transport(-1,'Prethodna vježba',I.prev)+
-    '<button type="button" class="cinema-pause-resume" data-a="cinemaResume"><span>'+WorkoutView.icon('play')+'</span>Nastavi</button>'+
-    transport(1,'Sljedeća vježba',I.next)+'</div>'+(recorded?'':'<button type="button" class="cinema-pause-replay" data-a="cinemaReplay"><span aria-hidden="true">↶</span>Ponovi<small>Dvostruki dodir</small></button>')+'</section></div>';
+    '<button type="button" class="cinema-pause-resume" data-a="cinemaResume"><span aria-hidden="true">'+I.play+'</span>Nastavi</button>'+
+    transport(1,'Sljedeća vježba',I.next)+'</div>'+(recorded?'':'<button type="button" class="cinema-pause-replay" data-a="cinemaReplay">'+WorkoutView.icon('rotate-ccw')+'Ponovi<small>Dvostruki dodir</small></button>')+'</section></div>';
 }
 function cinemaMenuControls(){
   const v=curView(), recorded=cinemaRecordedStep(), paused=P.dosePause?.wasPaused??P.paused;

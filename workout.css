@@ -605,7 +605,7 @@ span.workout-exercise-open{cursor:default}
 .cinema-pause-jump svg{width:34px;height:34px}
 .cinema-pause-actions button small{color:var(--cinema-accent);font-size:10px;font-weight:650}
 .cinema-pause-actions .cinema-pause-replay{margin:14px 0 0 5%;gap:2px}
-.cinema-pause-replay>span{font-size:27px;line-height:1}
+.cinema-pause-replay .workout-icon{width:23px!important;height:23px!important}
 @media(max-height:600px){.cinema-pause-actions h2{margin-bottom:8px}.cinema-pause-actions .cinema-pause-replay{margin-top:7px}.cinema-pause-resume>span{width:66px}}
 
 /* Parts belong to this occurrence in the workout, independent of the library. */

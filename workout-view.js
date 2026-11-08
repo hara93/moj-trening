@@ -27,6 +27,7 @@
     "info": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4\"/><path d=\"M12 8h.01\"/>",
     "timer": "<path d=\"M10 2h4\"/><path d=\"m12 14 3-3\"/><circle cx=\"12\" cy=\"14\" r=\"8\"/>",
     "pause": "<rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>",
+    "rotate-ccw": "<path d=\"M3 12a9 9 0 1 1 9 9 9 9 0 0 1-6.7-3M3 12V5m0 7h7\"/>",
     "chevron-up": "<path d=\"m18 15-6-6-6 6\"/>",
     "chevron-down": "<path d=\"m6 9 6 6 6-6\"/>",
     "chevrons-up": "<path d=\"m7 15 5-5 5 5\"/><path d=\"m7 9 5-5 5 5\"/>",
