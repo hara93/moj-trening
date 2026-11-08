@@ -174,7 +174,7 @@
       const date=dateKey(entry.at);
       if(group!==date){if(group!==null)rows+='</div></section>';group=date;rows+='<section class="hy-date-group"><h2>'+esc(dayLabel(entry.at))+'</h2><div class="hy-record-list">';}
       const id=entry.historyId,tag=typeof id==='string'?'button':'div';
-      rows+='<'+tag+' class="hy-row"'+(tag==='button'?' type="button" data-a="historyOpen" data-id="'+esc(id)+'"':'')+'><span class="hy-row-icon">'+icon(entry.kind==='field'?'clock':'check')+'</span><span class="hy-row-text"><b>'+esc(title(entry))+'</b><small>'+esc(timeLabel(entry.at))+(timeLabel(entry.at)?' · ':'')+esc(duration(entry.secs))+'</small><span>'+esc(kind(entry))+(entry.archived?' · Sažeti zapis':'')+'</span></span>'+icon('arrow')+'</'+tag+'>';
+      rows+='<'+tag+' class="hy-row"'+(tag==='button'?' type="button" data-a="historyOpen" data-id="'+esc(id)+'"':'')+'><span class="hy-row-icon">'+icon(entry.kind==='field'?'clock':'check')+'</span><span class="hy-row-text"><b>'+esc(title(entry))+'</b><small>'+esc(timeLabel(entry.at))+(timeLabel(entry.at)?' · ':'')+esc(duration(entry.secs))+'</small><span>'+esc(kind(entry))+(entry.partial?' · Djelomično':'')+(entry.archived?' · Sažeti zapis':'')+'</span></span>'+icon('arrow')+'</'+tag+'>';
     });
     if(group!==null)rows+='</div></section>';
     return header('Povijest treninga','Spremljeni treninzi i samostalne vježbe, od najnovijeg.')+'<button type="button" class="hy-team-new" data-a="teamNew">+ Zabilježi klub ili utakmicu</button><div class="hy-search">'+icon('search')+'<label class="hy-visually-hidden" for="history-query">Pretraži treninge</label><input type="search" id="history-query" placeholder="Pretraži po nazivu" value="'+esc(query)+'" autocomplete="off"></div>'+

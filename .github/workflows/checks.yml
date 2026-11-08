@@ -138,6 +138,9 @@ jobs:
       - name: Uređivanje prije starta
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/prestart-edit.cjs ${{ matrix.browser }}
+      - name: Djelomičan trening
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/partial-session.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

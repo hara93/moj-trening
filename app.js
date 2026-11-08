@@ -1244,6 +1244,21 @@ function weekStart(t){ const d = new Date(t); d.setHours(0,0,0,0); d.setDate(d.g
 // a training: a session of a protocol, a programme or a field plan. A single exercise tried from the library and a test
 // result are not trainings (the same rule as nTrainings); they still count in the exercise's own history and your kilograms.
 const isTraining = l => !!l && l.kind !== 'exercise' && l.kind !== 'test';
+// 1.21: the share of its planned work sets a protocol session did. A session fills a plan day from half of them, or when
+// you tap "Računaj kao odrađeno" on the done screen (countsAsDone); otherwise it is shown as "djelomično". Field and team
+// sessions and logs without set counts count whole.
+function sessionShare(l){
+  if (!l || (l.kind != null && l.kind !== 'protocol') || !Array.isArray(l.items)) return 1;
+  let planned = 0, done = 0;
+  l.items.forEach(x => {
+    if (!x || x.warmup === true) return;
+    const n = Number.isInteger(x.sets) && x.sets > 0 ? x.sets : 0; if (!n) return;
+    planned += n;
+    done += x.skipped ? 0 : Number.isInteger(x.setsDone) ? Math.min(n, Math.max(0, x.setsDone)) : x.done === true || x.done === false ? n : 0;
+  });
+  return planned ? done / planned : 1;
+}
+const planCounts = l => !!l && (l.countsAsDone === true || sessionShare(l) >= 0.5);
 function planSlots(){
   const out = [];
   Object.values(S.pr).forEach(p => { if (!p.program) (p.days||[]).forEach(day => out.push({ day, kind:'protocol', id:p.id, name:p.name, min: protoMin(p) })); });
@@ -1278,9 +1293,13 @@ function weekStatus(ws, plan){
   const upTo = ws === weekStart(Date.now()) ? dayIdx(Date.now()) : ws < Date.now() ? 7 : -1;   // the days before this one are past
   const used = {}, all = (plan || weekPlan(ws)).map(p => Object.assign({ done: false, f: 1 }, p, { skip: !!sk[slotKey(p)] }));
   const live = all.filter(s => !s.skip), fill = (list, sameDay) => list.forEach(s => { if (s.done) return;
-    const k = log.findIndex((l, i) => !used[i] && slotHit(s, l) && (!sameDay || dayIdx(l.at) === s.day));
+    const k = log.findIndex((l, i) => !used[i] && slotHit(s, l) && planCounts(l) && (!sameDay || dayIdx(l.at) === s.day));
     if (k !== -1) { used[k] = 1; s.done = true; s.l = log[k]; } });
   fill(live, true); fill(live.filter(s => s.day < upTo && s.f !== 0), false); fill(live.filter(s => s.day < upTo && s.f === 0), false); fill(live.filter(s => s.day >= upTo), false);
+  // a partial session leaves its slot open and marks it "djelomično" (the same day first)
+  [true, false].forEach(sameDay => live.forEach(s => { if (s.done || s.partial) return;
+    const k = log.findIndex((l, i) => !used[i] && slotHit(s, l) && !planCounts(l) && (!sameDay || dayIdx(l.at) === s.day));
+    if (k !== -1) { used[k] = 1; s.partial = log[k]; } }));
   const slots = all.filter(s => !(s.gone && !s.done));
   // this week's programme slots: the session you did, otherwise the programme's next sessions in order, today's slot first,
   // then the missed days (made up next), then the days to come: today never offers a later session than the programme page
@@ -1489,13 +1508,13 @@ function weekHtml(){
   if (S.dbState !== 'ready') return '';
   const now = Date.now(), ws = weekStart(now), today = dayIdx(now), wm = weekMatches(ws);
   const cur = planSlots(), st = weekStatus(ws, weekPlan(ws, cur)); notePlan(ws, st.slots);
-  const trainedDays = {}; st.log.forEach(l => trainedDays[dayIdx(l.at)] = 1);
+  const trainedDays = {}, partDays = {}; st.log.forEach(l => (planCounts(l) ? trainedDays : partDays)[dayIdx(l.at)] = 1);
   const strip = '<div class="week" role="group" aria-label="Ovaj tjedan">' + DAYS.map((L, i) => {
     const d = new Date(calDay(ws, i));
     const all = st.slots.filter(s => s.day === i), plan = all.filter(s => !s.skip);   // a skipped slot leaves its day neutral
     const missed = i < today && plan.some(s => !s.done), made = i < today && plan.length && !missed;   // (review) a past day made up on another day is done, not "planned"
-    const cls = trainedDays[i] || made ? 'done' : missed ? 'miss' : plan.length ? 'plan' : '';
-    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : made ? ', nadoknađeno' : missed ? ', propušteno' : plan.length ? ', planirano' : all.length ? ', preskočeno' : '') + (wm.indexOf(i) !== -1 ? ', utakmica' : '');
+    const cls = trainedDays[i] || made ? 'done' : partDays[i] ? 'part' : missed ? 'miss' : plan.length ? 'plan' : '';
+    const label = DAYNAMES[i] + ' ' + d.getDate() + '.' + (trainedDays[i] ? ', odrađeno' : made ? ', nadoknađeno' : partDays[i] ? ', djelomično' : missed ? ', propušteno' : plan.length ? ', planirano' : all.length ? ', preskočeno' : '') + (wm.indexOf(i) !== -1 ? ', utakmica' : '');
     // a match day (the standing one or a marked date) carries a small dot under its date (flex:none: the done screen's .done{flex:1} must not stretch the circles)
     return '<button class="wd" data-a="daySheet" data-i="'+i+'"' + (i === today ? ' aria-current="date"' : '') + ' aria-label="'+esc(label)+'"><span class="l">'+L+'</span><span class="c '+cls+'" style="flex:none">'+d.getDate()+'</span>' + (wm.indexOf(i) !== -1 ? '<i style="display:block;width:6px;height:6px;margin-top:-2px;border-radius:3px;background:#FFC861"></i>' : '') + '</button>';
   }).join('') + '</div>';
@@ -1778,7 +1797,7 @@ VIEWS.history = function(t) {
   const pageSize = 15, page = Math.min(Math.max(1,t.page || 1), Math.max(1, Math.ceil(matches.length/pageSize)));
   const entries = matches.slice((page-1)*pageSize, page*pageSize).map(l => ({
     id:l.historyId, historyId:l.historyId, title:l.name, name:l.name, at:l.at, kind:l.kind, secs:l.secs, srpe:l.srpe, teamType:l.teamType,
-    archived:l.kind !== 'field' && l.kind !== 'team' && !Array.isArray(l.items)
+    archived:l.kind !== 'field' && l.kind !== 'team' && !Array.isArray(l.items), partial:!planCounts(l)
   }));
   return TrainingHistory.render({ mode:'list', query:t.query || '', page, pageSize, total:all.length, filteredTotal:matches.length, entries });
 };
@@ -4333,7 +4352,7 @@ function savePlay(){
   P.stepClock=SessionClock.update(P.stepClock,Date.now(),!!P.paused||!!P.done);
   const snapshot = { v:1, mode:P.mode, title:P.title, ref:P.ref || null, dose: P.dose === 'season' ? 'season' : null, items: P.mode === 'ex' ? P.items : null, i:P.i, left: P.done ? 0 : remaining(),
     startedAt:P.startedAt, clock:P.clock, stepClock:P.stepClock, notes:P.notes, swapUndo:P.swapUndo, doneSteps:P.doneSteps || {}, done:!!P.done, quit:!!P.quit, secs:P.secs || 0, finishedAt:P.finishedAt || 0,
-    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe ?? null,
+    answers:P.answers || null, auto:P.auto || null, lastReps:P.lastReps || null, rir:P.rir || null, srpe:P.srpe ?? null, countAsDone:P.countAsDone === true,
     musclePlan:P.musclePlan, originalMusclePlan:P.originalMusclePlan, historyId:P.historyId, at: Date.now(),
     originalItems:P.originalItems, liveBaseItems:P.liveBaseItems, sessionOnly:!!P.sessionOnly, liveDoseVersion:P.liveDoseVersion, cardIndex:P.cardIndex,
     splitRepSides:P.splitRepSides, sidePrepSec:P.sidePrepSec, exercisePrepSec:P.exercisePrepSec,
@@ -4397,7 +4416,7 @@ function restorePlay(s){
         !timeline.some(step=>step.kind==='manual'&&step.it?.sides&&!PlayerDose.splitSide(step));
     } else P.steps = liveStepsFromItems(P.items); // older checkpoints use combined rep sides and original step positions
   }
-  if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps;
+  if (s.answers) P.answers = s.answers; if (s.auto) P.auto = s.auto; if (s.lastReps) P.lastReps = s.lastReps; if (s.countAsDone === true) P.countAsDone = true;
   if (P.done) P.historyId = typeof s.historyId === 'string' && /^h[a-z0-9]+$/.test(s.historyId) ? s.historyId : uid('h');
   // A finished player saved by an older version has no historical muscle profile.
   if (P.done && P.ref.kind === 'protocol') P.musclePlan = P.items.map((it,j) => {
@@ -4446,6 +4465,7 @@ function trimLog(){
 // the history entry of the session as it stands (the done screen shows its load before it is saved)
 function sessionEntry(){
   const entry = { name: P.title, kind: P.ref ? P.ref.kind : 'protocol', refId: P.ref ? P.ref.id : null, at: P.finishedAt || Date.now(), secs: P.secs || 0 };
+  if (P.countAsDone === true) entry.countsAsDone = true;
   if (P.mode === 'ex') entry.items = (P.items || []).map((it, j) => {
     const a = P.answers && P.answers[j] != null ? P.answers[j] : autoAnswer(j), n = it.sets || 1, did = setsDoneOf(j);
     const x = { exId: it.exId, measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides, done: a === true || a === 'partial' };   // partly done (even no whole set, e.g. one side of a hold) = done + setsDone; a failure is only 'Nisam uspio'
@@ -4508,8 +4528,8 @@ function repsDone(x){
   return HistoryModel.repetitionTotal(x);
 }
 // the done screen tells the week as it will be once this session is saved
-function weekAfter(){
-  const saved = S.log; S.log = [{ kind: P.ref.kind, refId: P.ref.id, at: P.finishedAt || Date.now() }].concat(saved);
+function weekAfter(entry){
+  const saved = S.log; S.log = [Object.assign({ kind: P.ref.kind, refId: P.ref.id, at: P.finishedAt || Date.now() }, entry && { items: entry.items, countsAsDone: entry.countsAsDone })].concat(saved);
   try { const ws = weekStart(Date.now()); return weekStatus(ws, weekPlan(ws)); } finally { S.log = saved; }
 }
 /* ---------- progression: a step after N sessions in a row with every set done; coarse weight jumps use double progression (one step is at most ~10 % of your estimated max) ---------- */
@@ -5808,14 +5828,17 @@ VIEWS.play = function(){
   if (P.done) {
     const cands = progCandidates(), any = anyCredit();
     const willCount = any && P.ref && weekPlan(weekStart(Date.now())).some(s => slotHit(s, { kind: P.ref.kind, refId: P.ref.id }));
-    const wk = willCount ? weekAfter() : { planned: 0 };
     // the load of what was done (recomputed with every answer on this screen); the last set's reserve can still be tapped here
     const entry = any ? sessionEntry() : null;
+    const wk = willCount ? weekAfter(entry) : { planned: 0 };
+    const share = entry ? sessionShare(entry) : 1, partial = willCount && (share < 0.5 || P.countAsDone === true);
     const lm = entry ? computeSession(entry) : null, rk = any ? rirStep() : -1; P._lm = lm;
     const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex());
     return '<div class="view gut stack">' + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
+        (partial ? '<div class="partial-count"><span>'+(P.countAsDone ? 'Računa se kao odrađen dan plana.' : 'Djelomično: '+Math.round(share * 100)+' % radnih serija. Dan plana računa se od pola.')+'</span>'+
+          '<button type="button" class="txtbtn" data-a="countAsDone" aria-pressed="'+(P.countAsDone === true)+'">'+(P.countAsDone ? 'Ne računaj' : 'Računaj kao odrađeno')+'</button></div>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
       // the decisions first (fits a 375 × 812 iPhone): the session rating, the last set, "Kako je išlo?"; the load card after them
       editLast + (lm ? rpeHtml() : '') + (rk >= 0 ? '<div class="rirlast">' + rirRowHtml(rk, true) + '</div>' : '') +
@@ -6143,11 +6166,11 @@ function sheetHtml(){
       '<div class="prow" style="min-height:56px;margin-bottom:8px;border-bottom:1px solid var(--border)"><span class="k">Utakmica' + (i === m ? '<small>Stalni dan utakmice iz Doziranja</small>' : '') + '</span><button class="switch" role="switch" data-a="toggleMatch" data-i="' + i + '" aria-checked="' + mt + '" aria-label="Utakmica"></button></div>' +
       // 1.8.2: a missed session can be skipped for this week (Preskoči), a skipped one taken back (Vrati)
       (plan.length ? '<p class="label" style="padding:0 0 6px">Plan</p>' + plan.map(x => {
-        const miss = !x.done && !x.skip && i < today, o = '<button class="opt" '+slotOpen(x)+'><span>'+esc(x.name)+'</span><span class="tag'+(x.skip ? ' sec' : '')+'">'+(x.done ? 'odrađeno' : x.skip ? 'preskočeno' : i < today ? 'propušteno' : 'čeka')+'</span></button>';
+        const miss = !x.done && !x.skip && i < today, o = '<button class="opt" '+slotOpen(x)+'><span>'+esc(x.name)+'</span><span class="tag'+(x.skip ? ' sec' : '')+'">'+(x.done ? 'odrađeno' : x.skip ? 'preskočeno' : x.partial ? 'djelomično' : i < today ? 'propušteno' : 'čeka')+'</span></button>';
         return miss || x.skip ? '<div class="dslot">' + o + '<button class="bt ghost" data-a="'+(x.skip ? 'unskipSlot' : 'skipSlot')+'" data-k="'+esc(slotKey(x))+'" aria-label="'+esc((x.skip ? 'Vrati u plan: ' : 'Preskoči ovaj tjedan: ') + x.name)+'">'+(x.skip ? 'Vrati' : 'Preskoči')+'</button></div>' : o;
       }).join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
       (i >= today ? matchBox(plan.filter(x => !x.done && !x.skip).map(x => matchNote(x, i)).find(Boolean), i, '12px 0 0') : '') +
-      (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+fmtDur(l.secs)+'</span></div>').join('') : '') +
+      (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+(planCounts(l) ? '' : 'djelomično · ')+fmtDur(l.secs)+'</span></div>').join('') : '') +
       '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu), a stalni dan utakmice u Napretku (Doziranje). Ovdje označiš i dodatnu utakmicu.</p>';
   } else if (s.kind === 'goal' || s.kind === 'kg') {
     const p = S.pr[s.id], G = GOALS[S.settings.goal], plan = p && (s.kind === 'kg' || G) ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
@@ -7184,6 +7207,7 @@ const A = {
   sugRetry: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; n.items[+d.j].fail = 0; S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); },
   // tapping the chosen answer again goes back to what the player recorded (partly done or skipped);
   // "Nisam uspio" keeps the shown last-set reps even if the stepper is never touched
+  countAsDone: () => { if (!P || !P.done) return; P.countAsDone = P.countAsDone !== true; savePlay(); render(); },
   answer: d => { const j = +d.j, val = d.v !== '0'; if (!P || !P.done || !P.items[j]) return;
     savePlayerChoice(['answers','lastReps'],()=>{
       P.answers = P.answers || {}; P.lastReps = P.lastReps || {};
