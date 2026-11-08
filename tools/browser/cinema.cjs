@@ -17,6 +17,15 @@ const row = (p, exercise, set) => sheet(p).locator('.workout-player-exercise').n
 const doneCount = p => Object.keys(p.doneSteps || {}).length;
 const step = p => p.liveSchedule[p.i];
 
+async function assertOverlayBackground(card) {
+  const {alpha, opacity} = await card.evaluate(node => {
+    const style=getComputedStyle(node);
+    return {alpha:Number(/,\s*([\d.]+)\)$/.exec(style.backgroundColor)?.[1]),opacity:style.opacity};
+  });
+  assert.equal(alpha,.2,'player overlay has an 80% transparent background');
+  assert.equal(opacity,'1','the overlay content remains fully opaque');
+}
+
 function fixture() {
   const data = baseFixture();
   data.log = []; data.programs = {}; data.field = {};
@@ -412,6 +421,7 @@ async function setRecovery(p,width) {
   const accidental = await player(p);
   assert.equal(step(accidental).kind,'rest');
   assert.deepEqual(accidental.doneSteps,{[first]:1});
+  await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-next)'));
   await p.locator('.workout-cinema [data-a="workoutRedoSet"][data-j="0"][data-set="1"]').click();
   const restarted = await player(p);
   assert.equal(restarted.i,first);
@@ -444,6 +454,7 @@ async function setRecovery(p,width) {
   await p.reload({waitUntil:'domcontentloaded'});
   await A(p,'resumeGo').click();
   assert.equal(await main.innerText(),'Nastavi dalje');
+  await assertOverlayBackground(p.locator('.workout-cinema-next:has(>.cinema-reserve):not(:has(>.cinema-next))'));
   await main.click();
   const advanced = await player(p);
   assert.equal(advanced.i,first+1);

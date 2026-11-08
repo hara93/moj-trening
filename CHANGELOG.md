@@ -1,5 +1,9 @@
 # Promjene
 
+## 1.20.17 — 8. 11. 2026.
+
+- Pozadine kartica **Slijedi** i **Uredi rezultat** u playeru su 80 % prozirne.
+
 ## 1.20.16 — 8. 11. 2026.
 
 - **Napredak** i **Opterećenje** su na jednom zaslonu s ciljem, krugom za kalendarski tjedan i sljedećim korakom. Trend i napor imaju zajednički odabir razdoblja.
