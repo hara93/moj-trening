@@ -3102,11 +3102,13 @@ function workoutSwapFilter(swap,filter) {
 function workoutSwapAction(candidate) {
   return '<button type="button" class="workout-swap-action" data-a="workoutCandidate" data-id="'+esc(candidate.id)+'" aria-label="'+esc('Zamijeni za '+candidate.name)+'">'+WorkoutView.icon('shuffle')+'</button>';
 }
+// A tap on any picture previews the exercise. Small thumbnails carry no (i): only ▶ when the exercise has a video.
+// The big "Trenutna" picture keeps its corner icon (▶ for a video, (i) for a photo).
 function workoutSwapPreviewButton(e,hero=false) {
-  const video=mediaList(e).some(media=>media.type==='video');
-  return '<button type="button" class="workout-swap-photo'+(hero?' is-current':'')+'" data-a="workoutSwapPreview" data-id="'+esc(e.id)+'" aria-label="'+esc('Pregled: '+e.name)+'">'+
+  const video=mediaList(e).some(media=>media.type==='video'),icon=hero?(video?'play':'info'):video?'play':'';
+  return '<button type="button" class="workout-swap-photo'+(hero?' is-current':'')+'" data-a="workoutSwapPreview" data-id="'+esc(e.id)+'" aria-label="'+esc((video?'Pregled sa snimkom: ':'Pregled: ')+e.name)+'">'+
     thumbHtml(e)+(hero?'<span class="workout-swap-current">Trenutna</span>':'')+
-    '<span class="workout-swap-preview-icon">'+WorkoutView.icon(video?'play':'info')+'</span></button>';
+    (icon?'<span class="workout-swap-preview-icon" aria-hidden="true">'+WorkoutView.icon(icon)+'</span>':'')+'</button>';
 }
 function workoutSwapResults(swap) {
   const matches=workoutSwapMatches(swap),recommended=matches.filter(candidate=>swap.recommended.has(candidate.id));

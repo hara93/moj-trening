@@ -212,7 +212,15 @@ async function swapPresentation(page) {
   assert.equal(await sheet.locator('.workout-swap-hero button').getAttribute('data-id'), 'bench-press');
   assert.ok(await sheet.locator('.workout-swap-hero img').isVisible());
   assert.ok(await sheet.getByRole('heading', { name: 'Preporuke' }).isVisible());
-  assert.ok(await sheet.getByRole('heading', { name: 'Slični pokreti' }).isVisible());
+  assert.ok(await sheet.getByRole('heading', { name: 'Slične vježbe' }).isVisible());   // 1.22.0: heading of the mockup
+  // 1.22.0: small thumbnails carry no (i); ▶ only for an exercise with a video (its label says so)
+  assert.deepEqual(await sheet.locator('.workout-swap-row .workout-swap-photo').evaluateAll(list => list.filter(b => !!b.querySelector('.workout-swap-preview-icon') !== /sa snimkom/.test(b.getAttribute('aria-label'))).map(b => b.dataset.id)), []);
+  // 1.22.0: the search pill is opaque and the last row scrolls fully above it
+  await body.evaluate(node => { node.scrollTop = node.scrollHeight; });
+  const lastRow = await sheet.locator('.workout-swap-row').last().boundingBox(), pill = await sheet.locator('.workout-swap-search').boundingBox();
+  assert.ok(lastRow.y + lastRow.height <= pill.y, 'the last row ends above the search: ' + JSON.stringify({ lastRow, pill }));
+  assert.match(await sheet.locator('.workout-swap-search').evaluate(node => getComputedStyle(node).backgroundColor), /^rgb\(/);
+  await body.evaluate(node => { node.scrollTop = 0; });
   assert.equal(await sheet.locator('.workout-swap-recommended [data-id="' + ids.similar + '"]').count(), 0);
   const fixedSearch = await search.boundingBox();
   await candidate.scrollIntoViewIfNeeded();

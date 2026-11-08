@@ -160,6 +160,7 @@
 .is-sheet-dragging>:is(.sheet-drag-handle,.sheet-drag-band){cursor:grabbing}
 
 .sheet.workout-swap-sheet .workout-swap-footer{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.sheet.workout-swap-sheet .workout-swap-body{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 /* 1.21: the collapse arrow sits at the end of the row, not over the thumbnail */
 .cinema-journal .workout-journal-open{flex:1;min-width:0}
 .cinema-journal .workout-journal-info{position:static;flex:none;margin-left:auto;pointer-events:auto}
