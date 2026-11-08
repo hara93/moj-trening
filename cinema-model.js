@@ -6,6 +6,20 @@
 })(typeof window!=='undefined'?window:null,function(){
   'use strict';
   const finite=n=>typeof n==='number'&&Number.isFinite(n);
+  const isWork=step=>step.kind==='work'||step.kind==='manual';
+  function upcoming(player){
+    const current=player.steps[player.i];
+    if(!current)return null;
+    const duringWork=isWork(current);
+    for(let i=player.i+1;i<player.steps.length;i++){
+      const step=player.steps[i];
+      if(isWork(step))return step;
+      // Setup before a different exercise still previews that exercise.
+      const sideChange=step.kind==='switch'&&!step.go&&!step.nextEx;
+      if(duringWork&&step.dur>0&&(step.kind==='rest'||sideChange))return step;
+    }
+    return null;
+  }
   // Parts belong to this occurrence in the authored workout. The exercise's
   // library category (and its warmup metadata) never chooses a part for it.
   // Older sparse plans retain the title until the next authored title.
@@ -52,5 +66,5 @@
     });
     return {total,complete,reps,seconds,volume,percent:total?Math.round(complete/total*100):0};
   }
-  return Object.freeze({prepare,rest,summary,sections});
+  return Object.freeze({prepare,rest,summary,sections,upcoming});
 });

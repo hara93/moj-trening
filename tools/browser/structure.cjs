@@ -77,6 +77,10 @@ async function manualSet(page,set) {
       await openCinemaControls(page);
       assert.equal(await page.locator('.cinema-primary[data-a="cinemaMain"]').innerText(),'Serija gotova');
       await A(page,'cinemaClose').click();
+      const menu=page.locator('.cinema-popover-bg');
+      await menu.waitFor();
+      await page.touchscreen.tap(8,page.viewportSize().height-30);
+      await menu.waitFor({state:'hidden'});
       return;
     }
     if(st.kind==='ready')await pressCinemaMain(page);

@@ -15,7 +15,7 @@ function harness(p){
   vm.createContext(ctx);
   vm.runInContext(section('function workOf(j){','function finish(){'),ctx);
   vm.runInContext(section('function savePlayerChoice(keys,change){','// on the next start:'),ctx);
-  vm.runInContext(section('const setEnd = st =>','// per logged item:'),ctx);
+  vm.runInContext(section('const setEnd = PlayerDose.setWorkEnd','// per logged item:'),ctx);
   vm.runInContext(section('function rpeSet(t){',"// the done screen's load card:"),ctx);
   vm.runInContext('globalThis.A={'+section('  rir: d =>','  progTab:')+section('  answer: d =>','  progInfo:')+'};',ctx);
   return{ctx,warnings,points};

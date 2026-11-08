@@ -4,6 +4,7 @@ const D=require('../player-dose.js'),M=require('../muscle-work.js'),StartingLoad
 const source=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
 const clone=value=>JSON.parse(JSON.stringify(value));
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,start);return source.slice(a,b);}
+const timingHelpers=section('function validSidePrep(','const SIDE_PREP_CHOICES')+section('function liveStepsFromItems(','function stepsFromItems(');
 const oldA={exId:'oldA',measure:'sets',sets:1,reps:5,sec:30,kg:80,sides:false,rest:60};
 const oldB={exId:'oldB',measure:'sets',sets:1,reps:5,sec:30,kg:0,sides:false,rest:60};
 const replacement={...oldA,exId:'newA',kg:0};
@@ -75,12 +76,12 @@ test('a live edited dose remains excluded even if current item scalars were late
   assert.equal(ctx.progCandidates().length,0);ctx.applyProgress();assert.equal(ctx.S.pr.p.items[0].ok,undefined);
 });
 function checkpointHarness(P){
-  const writes=new Map(),ctx={P,S:{field:{},ex:{newA:exercise('newA'),oldB:exercise('oldB')},stack:[],sheet:null},PlayerDose:D,MuscleWork:M,SessionClock:require('../session-clock.js'),
+  const writes=new Map(),ctx={P,S:{field:{},ex:{newA:exercise('newA'),oldB:exercise('oldB')},stack:[],sheet:null,settings:{}},PlayerDose:D,MuscleWork:M,SessionClock:require('../session-clock.js'),
     audioMode(){},ensureAudio(){},stepsFromItems:manualSteps,clone,isPlainObj:value=>!!value&&typeof value==='object'&&!Array.isArray(value),uid:()=> 'hnew123',
     render(){},keepAwake(){},remaining:()=>ctx.P.left||0,PLAY_KEY:'mt.play',localStorage:{setItem:(key,value)=>writes.set(key,value)},
     clearInterval(){},setInterval:()=> 1,tick(){},ticker:null};
   ctx.repsOf=(item,set)=>D.at(item,set).reps;
-  vm.createContext(ctx);vm.runInContext(section('function repSetSeconds(','function protoMin(')+
+  vm.createContext(ctx);vm.runInContext(timingHelpers+section('function repSetSeconds(','function protoMin(')+
     section('function cinemaManualTarget(','function cinemaFooter(')+section('function savePlay(){','function clearPlay(){')+
     section('function restorePlay(s){','// leaves the player'),ctx);
   return {ctx,writes};
@@ -130,13 +131,13 @@ test('a legacy stopwatch past the new target resumes with a fresh countdown and 
 });
 test('actual startup refuses an unsaved first checkpoint without losing its form, then starts once on retry',()=>{
   const cfg={mode:'ex',title:'Replacement',ref:{kind:'protocol',id:'p'},items:[{...replacement,kg:10}],originalItems:[oldA],sessionOnly:true};
-  const writes=new Map(),audio=[],ctx={P:null,S:{stack:[{v:'pr',id:'p'}],sheet:{kind:'startingLoad',values:{0:'10'},cfg}},PlayerDose:D,clone,SessionClock:require('../session-clock.js'),
+  const writes=new Map(),audio=[],ctx={P:null,S:{stack:[{v:'pr',id:'p'}],sheet:{kind:'startingLoad',values:{0:'10'},cfg},settings:{}},PlayerDose:D,clone,SessionClock:require('../session-clock.js'),
     PLAY_KEY:'mt.play',shouldCheckpoint:false,intervals:0,ticker:null,
     lsGet:()=>null,openStartingLoad:()=>false,audioMode:on=>audio.push(on),ensureAudio(){},stepsFromItems:manualSteps,
     beep(){},buzz(){},workoutSignal(){},render(){},keepAwake:()=>Promise.resolve(),wakeHint(){},clearInterval(){},setInterval:()=>++ctx.intervals,tick(){},toast(){},
     localStorage:{setItem:(key,value)=>{if(!ctx.shouldCheckpoint)throw Error('Synthetic checkpoint refusal');writes.set(key,value);}}};
   vm.createContext(ctx);
-  vm.runInContext(section('function startPlayer(cfg, repeating=false){','function tick(){')+section('function savePlay(){','function clearPlay(){'),ctx);
+  vm.runInContext(timingHelpers+section('function startPlayer(cfg, repeating=false){','function tick(){')+section('function savePlay(){','function clearPlay(){'),ctx);
   assert.equal(ctx.startPlayer(cfg),false);assert.equal(ctx.P,null);assert.equal(ctx.S.stack.length,1);assert.equal(ctx.intervals,0);assert.equal(writes.has('mt.play'),false);
   assert.equal(ctx.S.sheet.kind,'startingLoad');assert.equal(ctx.S.sheet.values[0],'10');assert.match(ctx.S.sheet.error,/nije spremljen/);assert.equal(audio.at(-1),false);
   ctx.shouldCheckpoint=true;assert.equal(ctx.startPlayer(cfg),true);assert.equal(ctx.S.sheet,null);assert.equal(ctx.S.stack.length,2);assert.equal(ctx.intervals,1);

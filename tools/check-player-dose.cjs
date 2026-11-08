@@ -293,3 +293,116 @@ test('sparse preview edits preserve unknown per-set weights and explicit zero ac
   const extended=D.editItem({...source,sets:2,kgList:[10,null]},{sets:3},{allowMissingWeight:true});
   assert.equal(extended.ok,true);assert.deepEqual(extended.item.kgList,[10,null,null]);
 });
+
+function bilateralRepSteps([it], split) {
+  const sets = Array.from({length:it.sets}, (_, index) => {
+    const base = {kind:'manual',g:0,set:index + 1,it};
+    if (it.repSetSec !== undefined) base.targetSec = split ? it.repSetSec / 2 : it.repSetSec;
+    if (!split) return [{...base,side:D.at(it,base.set).reps+' ponavljanja po strani'}];
+    return [
+      {...base,side:'Lijeva strana'},
+      {...base,kind:'switch',side:'Promjena strane',dur:5},
+      {...base,side:'Desna strana'}
+    ];
+  });
+  return [{kind:'prep',g:0,dur:5},...sets.flat()];
+}
+
+test('split manual sides keep separate completion on rebuild and count actual reps per performed side', () => {
+  const History = require('../history-model.js');
+  const Cinema = require('../cinema-model.js');
+  const items = D.items([{...item(),sides:true,sets:2}]);
+  const buildSplit = input => bilateralRepSteps(input,true);
+  const p = {items,originalItems:items,steps:buildSplit(items),i:3,doneSteps:{1:1},rir:{1:4}};
+  const [left, , right] = p.steps.slice(1,4);
+  assert.notEqual(D.key(left),D.key(right));
+  assert.equal(D.setWorkEnd(left),false);
+  assert.equal(D.setWorkEnd(right),true);
+  const [partial] = D.checklist(items[0],p,0);
+  assert.deepEqual([partial.state,partial.left,partial.right,partial.step,partial.reserve],['partial',true,false,3,null]);
+  assert.equal(D.completeSets(p,0),0);
+  assert.equal(D.editItem(items[0],{rows:[{set:1,reps:10}]},D.locks(p,0)).ok,false);
+  const partialLog = {...items[0],...D.logDose(p,0,'partial').fields};
+  assert.deepEqual(partialLog.sideCounts,[1]);
+  assert.equal(History.repetitionTotal(partialLog),8);
+  assert.equal(History.performedSets(partialLog),0);
+  assert.equal(Cinema.summary(p,D).reps,8);
+
+  const edited = D.editItem(items[0],{rows:[{set:2,reps:12}]},D.locks(p,0)).item;
+  const rebuilt = {...p,...D.rebuild(p,[edited],buildSplit)};
+  assert.equal(rebuilt.steps[1],left);
+  assert.equal(D.splitSide(rebuilt.steps[rebuilt.i]),'right');
+  assert.deepEqual(rebuilt.doneSteps,{1:1});
+  assert.equal(D.at(rebuilt.steps[4].it,2).reps,12);
+  rebuilt.steps[1] = {...rebuilt.steps[1],actualReps:11};
+  rebuilt.steps[3] = {...rebuilt.steps[3],actualReps:11};
+  rebuilt.doneSteps[3] = 1;
+  rebuilt.rir[3] = 2;
+  rebuilt.i = 4;
+  rebuilt.steps = D.restoreSteps(D.packSteps(rebuilt.steps),rebuilt.items,id=>({id}));
+  const [complete] = D.checklist(edited,rebuilt,0);
+  assert.deepEqual([complete.state,complete.left,complete.right,complete.dose.reps,complete.reserve],['done',true,true,11,2]);
+  const completeLog = {...edited,...D.logDose(rebuilt,0,'partial').fields};
+  assert.deepEqual(completeLog.sideCounts,[2]);
+  assert.deepEqual(completeLog.repsList,[11]);
+  assert.equal(History.repetitionTotal(completeLog),22);
+  assert.equal(History.performedSets(completeLog),1);
+  assert.equal(Cinema.summary(rebuilt,D).reps,22);
+});
+
+test('legacy combined bilateral checkpoint keeps two-side credit and one future step per set on rebuild', () => {
+  const items = D.items([{...item(),sides:true,sets:2}]);
+  const buildLegacy = input => bilateralRepSteps(input,false);
+  const steps = D.restoreSteps(D.packSteps(buildLegacy(items)),items,id=>({id}));
+  const p = {items,steps,i:2,doneSteps:{1:1},rir:{1:3}};
+  assert.equal(D.splitSide(steps[1]),null);
+  assert.equal(D.setWorkEnd(steps[1]),true);
+  const edited = D.editItem(items[0],{rows:[{set:2,reps:12}]},D.locks(p,0)).item;
+  const restored = {...p,...D.rebuild(p,[edited],buildLegacy)};
+  assert.deepEqual(restored.steps.map(step=>step.kind),['prep','manual','manual']);
+  assert.deepEqual(restored.doneSteps,{1:1});
+  assert.equal(restored.i,2);
+  assert.equal(D.at(restored.steps[2].it,2).reps,12);
+  const [first] = D.checklist(edited,restored,0);
+  assert.deepEqual([first.state,first.left,first.right,first.reserve],['done',true,true,3]);
+  assert.deepEqual(D.logDose(restored,0,'partial').fields.sideCounts,[2]);
+});
+
+test('changing the rep timer preserves a passed split set on its switch and right side', () => {
+  const items = D.items([{...item(),sides:true,sets:2,repSetSec:40}]);
+  const buildSplit = input => bilateralRepSteps(input,true);
+  const steps = buildSplit(items);
+  for (const i of [2,3]) {
+    const p = {items,steps,i,doneSteps:{1:1}};
+    const edited = D.editItem(items[0],{repSetSec:60},D.locks(p,0)).item;
+    const fresh = D.rebuild(p,[edited],buildSplit);
+    assert.equal(fresh.i,i);
+    assert.equal(fresh.steps[3],steps[3]);
+    assert.equal(fresh.steps[3].targetSec,20);
+    assert.equal(fresh.steps[4].targetSec,30);
+    assert.equal(fresh.steps[6].targetSec,30);
+    assert.deepEqual(fresh.doneSteps,{1:1});
+  }
+});
+
+test('a large builder workout restores its split-side schedule beyond the old fixed limit', () => {
+  const items = D.items(Array.from({length:76},(_, index) => ({...item('ex'+index),sets:10,sides:true,rest:30})));
+  const initial = {kind:'prep',g:0,dur:5};
+  const timeline = [initial,...items.flatMap((it,g) => {
+    const transition = g === 0 ? [] : [{kind:'rest',g,set:1,it,dur:10,trans:true}];
+    const setPhases = bilateralRepSteps([it],true).slice(1).flatMap(step => {
+      const phase = {...step,g};
+      return D.setWorkEnd(phase) && phase.set < it.sets
+        ? [phase,{kind:'rest',g,set:phase.set,it,dur:it.rest}]
+        : [phase];
+    });
+    return transition.concat(setPhases);
+  })];
+  assert.equal(timeline.length,3040);
+  assert.equal(D.maxScheduleSteps(1),3000);
+  const restored = D.restoreSteps(D.packSteps(timeline),items,id=>({id}));
+  assert.equal(restored.length,timeline.length);
+  assert.equal(D.key(restored.at(-1)),D.key(timeline.at(-1)));
+  assert.equal(restored.at(-1).e.id,items.at(-1).exId);
+  assert.equal(D.restoreSteps(new Array(D.maxScheduleSteps(items.length)+1),items,()=>({})),null);
+});

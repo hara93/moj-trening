@@ -695,6 +695,65 @@ async function setRecovery(p,width) {
     onlySelectedSetReset:true,lastSetRetriedBeforeSave:true,eachSetLoggedOnce:true,actualRepsAndRirSaved:true});
 }
 
+async function supersetPreview(p) {
+  const data=baseFixture(), plan=data.protocols['snaga-a'];
+  data.log=[];data.settings.sound=false;data.settings.switchSec=10;
+  plan.items.forEach(item=>{if(['deadlift','bugarski','hip-thrust'].includes(item.exId))item.kg=20;});
+  data.protocols={'snaga-a':plan};
+  await home(p);await importData(p,data);
+  await p.getByRole('button',{name:'Moj pregled',exact:true}).click();
+  await A(p,'dashboardProtocols').click();await p.locator('[data-a="openPr"][data-id="snaga-a"]').click();
+  await A(p,'startPr').click();
+  const stage=p.locator('.workout-cinema'),card=stage.locator('.cinema-next');
+  const mark=stage.locator('.cinema-work-mark[data-a="workoutSetDone"]');
+  const nextExercise=async ex=>{
+    await card.and(p.locator('[data-next-ex="'+ex+'"]')).waitFor();
+    assert.equal(await card.getAttribute('data-next-kind'),'exercise');
+  };
+  const nextBreak=async (kind,formatted)=>{
+    assert.equal(await card.getAttribute('data-next-kind'),kind);
+    assert.equal(await card.locator('.cinema-next-duration').innerText(),formatted);
+    assert.equal(await card.getByRole('button').count(),0);
+  };
+  const finishRest=async()=>advance(p,(await player(p)).left+.1);
+  await stage.waitFor();await nextExercise('deadlift');await finishRest();
+  for(let i=1;i<=4;i++){
+    assert.equal(await stage.getAttribute('data-ex-id'),'deadlift');
+    await nextBreak('rest',i===4?'0:10':'2:30');
+    await mark.tap();await nextExercise(i===4?'bugarski':'deadlift');await finishRest();
+  }
+  await stage.locator('.workout-cinema-heading').getByText(/Lijeva strana/).waitFor();
+  await nextBreak('switch','0:10');
+  await mark.tap();
+  await nextExercise('bugarski');assert.match(await card.innerText(),/Desna strana/);
+  await finishRest();
+  assert.equal(await stage.getAttribute('data-ex-id'),'bugarski');
+  await nextExercise('nordic-curl');
+  assert.equal(await card.getByRole('button').getAttribute('data-j'),'2','the card edits the next exercise, not the current one');
+  await mark.tap();
+  assert.equal(await stage.getAttribute('data-ex-id'),'nordic-curl');
+  await nextBreak('rest','1:30');
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-next-rest.png')});
+  await mark.tap();
+  assert.equal(await stage.getAttribute('data-phase'),'rest');
+  await nextExercise('bugarski');assert.match(await card.innerText(),/2 \/ 3 serija.*Lijeva strana/s);
+  await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-during-rest.png')});
+  await openCinemaControls(p);
+  await A(p,'cinemaPlan').click();
+  await p.locator('[data-a="cinemaBlock"][data-j="3"]').click();
+  assert.equal(await stage.getAttribute('data-ex-id'),'hip-thrust');
+  await nextExercise('kopenhagen-kratka');
+  await mark.tap();
+  await nextExercise('kopenhagen-kratka');
+  for(let i=0;i<3&&step(await player(p)).kind!=='work';i++)await finishRest();
+  await nextBreak('switch','0:10');
+  await mark.tap();await finishRest();
+  await nextBreak('rest','1:15');
+  await mark.tap();
+  await nextExercise('hip-thrust');
+  results.push({shippedStrengthA:true,supersetNextExercise:true,roundRestPreview:true,upcomingSide:true});
+}
+
 (async () => {
   const host = await serve(), browser = await launch();
   try {
@@ -708,6 +767,7 @@ async function setRecovery(p,width) {
         await importData(p); await checkHome(p, width);if(!process.argv.includes('just-notes'))await runPlayer(p, width, host.url);
         await notesAndUndo(p,width);
         if(!process.argv.includes('just-notes'))await setRecovery(p,width);
+        if(width===375&&!process.argv.includes('just-notes'))await supersetPreview(p);
         assert.deepEqual(errors, []);
       } catch (error) {
         await p.screenshot({ path: path.join(artifacts, 'cinema-' + engine + '-failure-' + width + '.png') }).catch(() => {});

@@ -13,6 +13,16 @@
   var finite = n => typeof n === 'number' && Number.isFinite(n),
     copy = x => JSON.parse(JSON.stringify(x));
   var work = s => s && (s.kind === 'manual' || s.kind === 'work');
+  // Older manual steps carry a prescription as their caption and cover both sides.
+  function splitSide(step) {
+    if (!work(step)) return null;
+    if (step.side === 'Lijeva strana') return 'left';
+    if (step.side === 'Desna strana') return 'right';
+    return null;
+  }
+  function setWorkEnd(step) {
+    return !!work(step) && splitSide(step) !== 'left';
+  }
   function at(it, set) {
     var k = Math.max(0, (set || 1) - 1),
       pick = (key, scalar, fallback) => Array.isArray(it[key]) && finite(it[key][k]) ? it[key][k] : finite(it[scalar]) ? it[scalar] : fallback;
@@ -60,7 +70,8 @@
     });
   }
   function key(st) {
-    return [st.g == null ? -1 : st.g, st.set || 0, st.kind, st.kind === 'manual' ? '' : st.side || '', st.trans ? 1 : 0, st.go ? 1 : 0, st.nextEx ? 1 : 0].join('|');
+    const side = st.kind === 'manual' ? splitSide(st) : st.side;
+    return [st.g == null ? -1 : st.g, st.set || 0, st.kind, side || '', st.trans ? 1 : 0, st.go ? 1 : 0, st.nextEx ? 1 : 0].join('|');
   }
   function locks(p, j) {
     var locked = new Set(),
@@ -162,7 +173,7 @@
         if ((guard.locked || []).includes(row.set) && v !== at(item, row.set)[k]) {
           return {
             ok: false,
-            error: 'Odrađena ili započeta vremenska serija je zaključana.'
+            error: 'Odrađena ili započeta serija je zaključana.'
           };
         }
         out[{
@@ -195,16 +206,22 @@
     const passedKeys = new Set(pastSteps.map(key));
     const currentKey = currentStep && key(currentStep);
     const originalByKey = new Map();
-    player.steps.forEach((step, index) => originalByKey.set(key(step), {
-      step,
-      index
-    }));
+    const startedSplitSets = new Set();
+    player.steps.forEach((step, index) => {
+      originalByKey.set(key(step), {step,index});
+      if (step.kind === 'manual' && splitSide(step) && (index < player.i || player.doneSteps[index])) {
+        startedSplitSets.add(step.g + ':' + step.set);
+      }
+    });
+    // A new exercise-wide timer applies to future sets. The other side of a
+    // started set still uses the same original prescription.
+    const frozenSplitSet = step => step?.kind === 'manual' && splitSide(step) && startedSplitSets.has(step.g + ':' + step.set);
 
     // Preserve the current timed step unless the player explicitly retimes it.
     // Completed steps always keep their original dose.
     const updatedCurrent = generated.find(step => key(step) === currentKey);
     const editableCurrent = currentStep?.kind === 'manual' || options.retimeCurrent && currentStep?.kind === 'work';
-    const current = !options.afterPassed && editableCurrent && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
+    const current = !options.afterPassed && editableCurrent && !frozenSplitSet(currentStep) && !player.doneSteps[player.i] && updatedCurrent ? updatedCurrent : currentStep;
     // Rebuilding again after a removal can generate a rest for an earlier
     // round that ended differently before the exercise was removed.
     const after = options.afterPassed || player.liveBaseItems
@@ -213,7 +230,7 @@
     const futureSteps = generated.slice(after).filter(step => !passedKeys.has(key(step)) && key(step) !== currentKey && step.kind !== 'prep');
     const steps = pastSteps.concat(current ? [current] : [], futureSteps.map(step => {
       const previous = originalByKey.get(key(step));
-      return previous && player.doneSteps[previous.index] ? previous.step : step;
+      return previous && (player.doneSteps[previous.index] || frozenSplitSet(step)) ? previous.step : step;
     }));
     const doneSteps = {},
       rir = {};
@@ -281,13 +298,13 @@
         };
         bySet.set(setNumber, row);
       }
-      const side = step.kind === 'manual' ? 'both' : step.side || 'single';
+      const side = splitSide(step) || (step.kind === 'manual' && item.sides ? 'both' : 'single');
       if (!row.seen.has(side)) {
         row.seen.add(side);
-        row.sides += step.kind === 'manual' ? expectedSides : 1;
+        row.sides += side === 'both' ? 2 : 1;
         if (step.kind === 'work') row.seconds += dose.sec;
       }
-      if (step.side !== 'Lijeva strana' && player.rir && player.rir[index] != null) {
+      if (setWorkEnd(step) && player.rir && player.rir[index] != null) {
         row.reserve = player.rir[index];
       }
     });
@@ -326,17 +343,19 @@
       }
       if (!done) return;
       summary.done = true;
+      const side = splitSide(step);
       if (step.kind === 'work') {
         const seconds = row.dose.sec;
         summary.seconds += seconds; summary.sides++;
-        if (step.side === 'Lijeva strana') summary.leftSec = seconds;
-        if (step.side === 'Desna strana') summary.rightSec = seconds;
+        if (side === 'left') summary.leftSec = seconds;
+        if (side === 'right') summary.rightSec = seconds;
       }
       if (item.sides) {
-        if (step.kind === 'manual' || step.side === 'Lijeva strana') row.left = true;
-        if (step.kind === 'manual' || step.side === 'Desna strana') row.right = true;
+        const combined = step.kind === 'manual' && !side;
+        if (combined || side === 'left') row.left = true;
+        if (combined || side === 'right') row.right = true;
       }
-      if (step.side !== 'Lijeva strana' && finite(player.rir?.[index])) row.reserve = player.rir[index];
+      if (setWorkEnd(step) && finite(player.rir?.[index])) row.reserve = player.rir[index];
     });
     for (const row of result) {
       const entry = seen.get(row.set);
@@ -413,8 +432,13 @@
       return out;
     });
   }
+  function maxScheduleSteps(itemCount) {
+    // Each occurrence can have 20 sets with work, side changes and rest,
+    // plus transitions and preparation inserted during the session.
+    return Math.max(3000, itemCount * 128);
+  }
   function restoreSteps(saved, input, resolve) {
-    if (!Array.isArray(saved) || saved.length > 3000) {
+    if (!Array.isArray(saved) || saved.length > maxScheduleSteps(input.length)) {
       return null;
     }
     var out = [];
@@ -506,6 +530,8 @@
     recordedAt: recordedAt,
     validActualReps: validActualReps,
     validRepSetSeconds: validRepSetSeconds,
+    splitSide: splitSide,
+    setWorkEnd: setWorkEnd,
     items: items,
     key: key,
     locks: locks,
@@ -517,6 +543,7 @@
     checklist: checklist,
     logDose: logDose,
     packSteps: packSteps,
+    maxScheduleSteps: maxScheduleSteps,
     restoreSteps: restoreSteps,
     readForm: readForm
   };

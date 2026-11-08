@@ -52,3 +52,21 @@ test('journal totals use completed work evidence, including both sides, rather t
  const h={mode:'ex',i:1,items:[hold],steps:[{kind:'work',g:0,set:1,side:'Lijeva strana',it:hold},{kind:'work',g:0,set:1,side:'Desna strana',it:hold}],doneSteps:{0:1}};
  assert.deepEqual(Cinema.summary(h,Dose),{total:1,complete:0,reps:0,seconds:20,volume:0,percent:0});
 });
+test('upcoming follows superset phases, using the next exercise through setup and the planned duration for rest',()=>{
+ const left={kind:'manual',g:0,set:1,side:'Lijeva strana'};
+ const sideChange={kind:'switch',g:0,set:1,side:'Promjena strane',dur:10};
+ const right={...left,side:'Desna strana'};
+ const next={kind:'work',g:1,set:1,dur:20};
+ const rest={kind:'rest',g:1,set:1,dur:60};
+ const nextRound={...left,set:2};
+ const steps=[left,sideChange,right,{kind:'ready'},{kind:'switch',dur:10,go:true},next,rest,nextRound];
+ assert.deepEqual(steps.map((_,i)=>Cinema.upcoming({steps,i})),[sideChange,right,next,next,next,rest,nextRound,null]);
+});
+test('zero-length transitions are skipped and the actual first rest takes priority over a later exercise',()=>{
+ const next=manual(2);
+ const rest={kind:'rest',dur:90,trans:true};
+ const steps=[manual(1),{kind:'rest',dur:0},rest,next];
+ assert.equal(Cinema.upcoming({steps,i:0}),rest);
+ assert.equal(Cinema.upcoming({steps,i:2}),next);
+ assert.equal(Cinema.upcoming({steps:[steps[0],steps[1],next],i:0}),next);
+});

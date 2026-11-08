@@ -144,9 +144,9 @@
 
 .cinema-journal .cinema-extra-tools button,.cinema-journal .workout-detail-tools>.workout-tools>:first-child::before{background:var(--surface)}
 
-/* The small grab bar has a real 56 × 44 target without enlarging the header.
-   Pointer handling stays on this control, leaving form fields and scrolling free. */
+/* Keep the centered keyboard control and extend touch across the top strip. */
 .sheet:has(>.sheet-drag-handle){position:relative}
+.sheet-drag-band{position:absolute;z-index:6;inset:0 0 auto;height:20px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
 .sheet-drag-handle{position:absolute;z-index:7;top:0;left:calc(50% - 28px);display:block;width:56px;height:44px;min-height:44px;padding:0;border:0;border-radius:14px;background:transparent;color:transparent;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .sheet-drag-handle:focus-visible{outline:none}
 .sheet-drag-handle:focus-visible::after{content:"";position:absolute;top:9px;left:8px;right:8px;height:7px;border-radius:8px;outline:2px solid var(--accent);outline-offset:2px}
@@ -156,6 +156,6 @@
 :is(#progress-info-title,#training-load-info-title){flex:none}
 :is(#progress-info-body,#training-load-info-body){min-height:0;overflow:auto;overscroll-behavior:contain}
 .is-sheet-dragging{animation:none!important;will-change:transform}
-.is-sheet-dragging>.sheet-drag-handle{cursor:grabbing}
+.is-sheet-dragging>:is(.sheet-drag-handle,.sheet-drag-band){cursor:grabbing}
 
 .sheet.workout-swap-sheet .workout-swap-footer{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}

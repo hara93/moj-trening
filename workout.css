@@ -530,6 +530,9 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-next :is(img,video){display:block;flex:none;width:48px;height:56px;object-fit:contain;border-radius:8px;background:var(--surface-2)}
 .workout-cinema-next strong{font-size:13px;font-weight:550;line-height:1.35}
 .workout-cinema-next small{display:block;font-size:10px;line-height:1.5;color:#AFC5CD}
+.workout-cinema-next .cinema-next-phase{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:11px;background:#252C3770;color:var(--cinema-blue)}
+.cinema-next-phase svg{width:22px;height:22px}
+.workout-cinema .cinema-next .cinema-next-duration{font-size:20px;font-variant-numeric:tabular-nums;color:#fff}
 .workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(#191D2500,#191D2599 25%,#191D25EB 50%,var(--cinema-bg) 78%)}
 .workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(29px,9.6vw,41px);--cinema-clock-size:clamp(41px,14vw,60px)}
 .workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0;min-height:72px;padding:4px 1px 7px;border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center}

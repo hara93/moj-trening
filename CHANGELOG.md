@@ -1,5 +1,11 @@
 # Promjene
 
+## 1.20.24 — 8. 11. 2026.
+
+- Kod vježbi po strani player odvaja lijevu i desnu stranu. Priprema između strana traje 10 s po zadanom ili koliko je postavljeno u tempu.
+- Kartica **Slijedi** prati stvarni raspored serija i krugova. Prikazuje iduću vježbu ili trajanje odmora. Tijekom odmora prikazuje vježbu koja dolazi nakon njega.
+- Prozor s gornjom crticom možeš zatvoriti povlačenjem cijelog gornjeg ruba ili dodirom izvan prozora.
+
 ## 1.20.23 — 8. 11. 2026.
 
 - Vremensku seriju možeš završiti prije isteka iz playera ili Dnevnika. Kod vježbi po stranama player prikazuje aktivnu stranu, a Dnevnik bilježi svaku zasebno.

@@ -1,7 +1,7 @@
 'use strict';
 
-// Isolated synthetic data. Pointer drags exercise the actual control in both
-// engines; a touch-typed pointer path also verifies the mobile event branch.
+// Isolated synthetic data. Both engines exercise the actual pointer targets.
+// Chromium edge swipes also exercise touch hit testing near header buttons.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -12,13 +12,28 @@ const player=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
 const sheet=p=>p.locator('.sheet');
 const report=[];
 
-async function drag(p,dialog,dx,dy){
+async function drag(p,dialog,dx,dy,edge){
   const handle=dialog.locator(':scope > .sheet-drag-handle');
   const b=await handle.boundingBox();assert.ok(b,'handle is visible');
   assert.ok(b.width>=44&&b.height>=44,'grab bar has an accessible target');
-  const x=b.x+b.width/2,y=b.y+14;
-  await p.mouse.move(x,y);await p.mouse.down();
-  await p.mouse.move(x+dx,y+dy,{steps:8});await p.mouse.up();await p.waitForTimeout(390);
+  const band=await dialog.locator(':scope > .sheet-drag-band').boundingBox();
+  assert.ok(band&&band.width>3*b.width,'the drag strip extends across the sheet');
+  const x=edge==='left'?band.x+14:edge==='right'?band.x+band.width-14:b.x+b.width/2,y=b.y+14;
+  if(edge&&engine==='chromium'){
+    const client=await p.context().newCDPSession(p);
+    try{
+      await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+      for(let i=1;i<=8;i++){
+        await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/8,y:y+dy*i/8}]});
+        await p.waitForTimeout(12);
+      }
+      await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }finally{await client.detach();}
+  }else{
+    await p.mouse.move(x,y);await p.mouse.down();
+    await p.mouse.move(x+dx,y+dy,{steps:8});await p.mouse.up();
+  }
+  await p.waitForTimeout(390);
 }
 async function touchDrag(p,dialog,dx,dy,cancel=false){
   await dialog.locator(':scope > .sheet-drag-handle').evaluate((handle,args)=>{
@@ -77,7 +92,14 @@ async function run(p,width){
   await drag(p,sheet(p),70,8);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback');
   await touchDrag(p,sheet(p),0,130,true);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback');
   assert.equal(await sheet(p).evaluate(n=>n.style.transform),'','cancelled gesture restores position');
-  await drag(p,sheet(p),0,135);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
+  await drag(p,sheet(p),0,135,'left');assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu');
+  await openCinemaControls(p);
+  const controls=await sheet(p).boundingBox();
+  await p.mouse.move(controls.x+20,controls.y+45);await p.mouse.down();
+  await p.mouse.move(20,12,{steps:8});await p.mouse.up();
+  assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaPlayback','a drag from the sheet onto its backdrop keeps the sheet open');
+  await p.touchscreen.tap(20,12);
+  assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaMenu','an outside tap returns to the parent menu');
   await p.keyboard.press('Escape');assert.equal(await sheet(p).count(),0);
   assert.equal((await player(p)).clock.paused,false);
   assert.equal(Object.keys((await player(p)).doneSteps||{}).length,0,'drag never completes a work set');
@@ -105,7 +127,7 @@ async function run(p,width){
   await drag(p,sheet(p),0,135);assert.equal(await sheet(p).getAttribute('data-kind'),'cinemaJournal','nested close returns to journal');
   assert.equal((await player(p)).clock.paused,true);
   await p.screenshot({path:path.join(artifacts,'sheet-gesture-'+engine+'-journal-'+width+'.png')});
-  await drag(p,sheet(p),0,135);assert.equal(await sheet(p).count(),0);assert.equal((await player(p)).clock.paused,false);
+  await drag(p,sheet(p),0,135,'right');assert.equal(await sheet(p).count(),0);assert.equal((await player(p)).clock.paused,false);
   await A(p,'cinemaMenu').click();await A(p,'cinemaExit').click();await A(p,'quitDiscard').click();
   await p.reload();await p.getByRole('heading',{name:'Bok, Tomislav',exact:true}).waitFor();
 
@@ -115,13 +137,20 @@ async function run(p,width){
   let dialog=p.locator('#progress-info');assert.equal(await dialog.evaluate(n=>n.open),true);
   assert.ok(await dialog.locator('#progress-info-title').evaluate(n=>document.activeElement===n));
   await drag(p,dialog,0,20);assert.equal(await dialog.evaluate(n=>n.open),true);
-  await drag(p,dialog,0,135);assert.equal(await dialog.evaluate(n=>n.open),false);
+  await drag(p,dialog,0,135,'right');assert.equal(await dialog.evaluate(n=>n.open),false);
   assert.equal(await info.evaluate(n=>document.activeElement===n),true,'native dialog restores opener focus');
   const activity=p.locator('.pg-focus .pg-ring-card');
   await activity.click();
   const grip=dialog.getByRole('button',{name:'Zatvori prozor',exact:true});
   assert.equal(await dialog.getByRole('button',{name:/^(×|Jasno)$/}).count(),0);
-  await p.mouse.click(1,1);assert.equal(await dialog.evaluate(n=>n.open),true,'tapping the backdrop does not dismiss the dialog');
+  const band=await dialog.locator('.sheet-drag-band').boundingBox();
+  await p.touchscreen.tap(band.x+14,band.y+10);
+  assert.equal(await dialog.evaluate(n=>n.open),true,'the sides of the grab strip respond to a pull');
+  await p.mouse.move(1,1);await p.mouse.down();await p.mouse.move(35,12,{steps:5});await p.mouse.up();
+  assert.equal(await dialog.evaluate(n=>n.open),true,'dragging on the backdrop does not dismiss the dialog');
+  await p.touchscreen.tap(1,1);assert.equal(await dialog.evaluate(n=>n.open),false,'tapping the backdrop dismisses the dialog');
+  assert.equal(await activity.evaluate(n=>n===document.activeElement),true,'outside dismissal restores opener focus');
+  await activity.click();
   const gripY=(await grip.boundingBox()).y;
   const detail=dialog.locator('#progress-info-body');
   assert.ok(await detail.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;}),'the activity body scrolls');
@@ -162,7 +191,7 @@ async function run(p,width){
   assert.equal(await equipment.getAttribute('aria-expanded'),'true');
   assert.ok(await filterBody.evaluate(n=>{n.scrollTop=100;return n.scrollTop>1;}));
   assert.equal(await bodyDrag(filterBody,0,135),false,'downward touches from scrolled filter content stay with scrolling');
-  await drag(p,filter,0,135);await filter.waitFor({state:'hidden'});
+  await drag(p,filter,0,135,'right');await filter.waitFor({state:'hidden'});
   await A(p,'eqSheet').click();
   assert.equal(await equipment.getAttribute('aria-expanded'),'false');
   assert.match(await equipment.innerText(),/1 odabrano/);
@@ -176,9 +205,12 @@ async function run(p,width){
   await p.locator('#p-name').fill('Nespremljen nacrt');await A(p,'back').first().click();
   await p.getByRole('dialog',{name:'Spremiti promjene?'}).waitFor();
   await drag(p,sheet(p),0,135);assert.equal(await sheet(p).count(),0);assert.equal(await p.locator('#p-name').inputValue(),'Nespremljen nacrt');
+  await A(p,'back').first().click();
+  await p.touchscreen.tap(10,12);
+  assert.equal(await sheet(p).count(),0);assert.equal(await p.locator('#p-name').inputValue(),'Nespremljen nacrt');
   assert.deepEqual((await saved(p)).protocols,original.protocols);assert.deepEqual((await saved(p)).log,original.log);
   await A(p,'back').first().click();await A(p,'leaveDiscard').click();
-  report.push({width,shortDragRetained:true,horizontalRetained:true,cancelledTouchRetained:true,downDragCloses:true,
+  report.push({width,shortDragRetained:true,horizontalRetained:true,cancelledTouchRetained:true,downDragCloses:true,fullWidthGrab:true,outsideTapCloses:true,backdropDragRetained:true,
     restoredOriginalPause:true,bodyScrollAndInputsRetained:true,nestedReturnsToJournal:true,nativeDialogsCloseAndRestoreFocus:true,
     filterEquipmentStartsCollapsed:true,filterBodyAndScrolledGrabDismiss:true,analyticsBodyDismiss:true,unsavedDraftGuardRetained:true,historyUnchanged:true});
 }
