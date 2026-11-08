@@ -4594,8 +4594,10 @@ function progKind(e, it){
   return 'reps';
 }
 const ponTxt = n => n + ' ' + plural(n, 'ponavljanje', 'ponavljanja', 'ponavljanja');
-// the next dose after N good sessions in a row; item null means "time for a harder variation"
-function nextDose(e, it){
+// the next dose after N good sessions in a row; item null means "time for a harder variation". recorded: the last
+// recorded item of this exercise (or a function returning it); with tapped reserve the next kg comes from its RIR-adjusted
+// e1RM (MODEL 1.9), otherwise from the reps-to-failure estimate as before
+function nextDose(e, it, recorded){
   const k = progKind(e, it), n = Object.assign({}, it);
   const r0 = it.r0 || it.reps || 10, r1 = it.r1 || Math.min(Math.max(r0 + 4, 6), 20), reps = it.reps || r0;
   // per-set reps (e.g. 6/5/5/4) move with the prescribed reps, so an accepted dose reaches the player (it reads the list first)
@@ -4609,7 +4611,10 @@ function nextDose(e, it){
   if (k === 'reps' && !(it.kg > 0) && needsKg(e)) return { item:null, text:'Upiši kilograme u uređivanju protokola pa ću ih povećavati' };
   if (k === 'bar' || k === 'db') {
     // double progression: the next load comes once its step is at most ~10 % of your estimated max; until then the reps go up
-    const nx = nextLoad(e, it.kg), fit = nx ? Math.floor(30 * (e1rm(it.kg, reps) * 1.1 / nx - 1) + 1e-6) : -1;
+    const nx = nextLoad(e, it.kg), rec = typeof recorded === 'function' ? recorded() : recorded, e1r = nx ? rirE1(rec) : null;
+    // with reserve: the reps the next load allows at the target RIR; without: up to ~10 % over the reps-to-failure max
+    const fit = !nx ? -1 : e1r ? Math.floor(30 * (e1r / nx - 1) + 1e-6) - Math.ceil(Number.isFinite(it.targetRir) ? it.targetRir : 2)
+      : Math.floor(30 * (e1rm(it.kg, reps) * 1.1 / nx - 1) + 1e-6);
     if (nx && (fit >= r0 || (reps >= r1 && fit >= Math.min(5, r0)))) { const nr = Math.min(r0, fit); n.kg = nx; const t = setReps(nr); n.r0 = r0; n.r1 = r1; return { item:n, text: fmtKg(it.kg) + ' → ' + fmtKg(nx) + (nr !== reps ? ', ' + was + ' → ' + t : '') }; }
     if (reps < r1 || (nx && reps < (r0 >= 8 ? 20 : r1 + 4))) return moreReps(nx ? ' (za ' + fmtKg(nx) + ' još je rano)' : '');
     return { item:null, text: nx ? 'Do ' + fmtKg(nx) + ' je prevelik skok: uspori spuštanje na 3 s ili dodaj seriju' : 'Najteže bučice su svladane: dodaj seriju ili težu varijantu' };
@@ -4636,13 +4641,15 @@ function progCandidates(){
     const answer = P.answers[j] != null ? P.answers[j] : autoAnswer(j);
     if (PlayerDose.logDose(P,j,answer).fields.liveDoseChanged) return;
     if (!PROG_CATS[e.cat] && !(it.kg > 0) && !(e.cat === 'Rehab' && it.measure === 'time' && +e.phase !== 1)) return;
-    out.push({ j, e, it, prog: !!p.program, next: nextDose(e, it) });
+    out.push({ j, e, it, prog: !!p.program, next: nextDose(e, it, () => liveRecorded(j)) });
   });
   return out;
 }
 const progN = () => S.settings.progN === 3 ? 3 : 2;
 // answers: true (or not touched) = every set done, false = failed; 'partial' and 'skip' leave the counters as they are
-const answerOf = j => { const a = P.answers ? P.answers[j] : undefined; return a === false ? 'fail' : a == null || a === true ? (painHoldsAt(j) ? 'pain' : 'ok') : 'none'; };
+// 1.21: a session with every set done counts 'ok' only when its tapped reserve agrees (reserveAnswer): 'hold' = RIR 0 on two or
+// more sets (keep the weight), 'hard' = one of the last two work sets below the target RIR − 0.5
+const answerOf = j => { const a = P.answers ? P.answers[j] : undefined; return a === false ? 'fail' : a == null || a === true ? (painHoldsAt(j) ? 'pain' : reserveAnswer(j)) : 'none'; };
 // counts sessions with every set done (ok) or not (fail); doses change only when you accept a suggestion
 function applyProgress(){
   const cands = progCandidates(); if (!cands.length) return [];
@@ -4652,6 +4659,7 @@ function applyProgress(){
     const it = n.items[c.j], a = answerOf(c.j);
     if (a === 'ok') { it.ok = (it.ok || 0) + 1; it.fail = 0; if (it.ok === progN() && c.next.item) news.push(c.e.name); }
     else if (a === 'fail') { it.ok = 0; it.fail = (it.fail || 0) + 1; it.snoozeOk = 0; }
+    else if (a === 'hold') it.ok = 0;
   });
   n.updatedAt = Date.now();
   S.pr[P.ref.id] = Object.assign({ id: P.ref.id }, n);
@@ -4661,12 +4669,36 @@ function doneMsg(c){
   const N = progN(), it = c.it, a = answerOf(c.j);
   if (a === 'none') return c.prog ? '' : 'Ne računa se za napredak';
   if (a === 'pain') return c.prog ? '' : 'Bol ujutro: ostaje ' + doseBase(it) + ', bez povećanja';
+  if (a === 'hold') return c.prog ? '' : 'Dvije serije bez rezerve (RIR 0): ostaje ' + doseBase(it);
+  if (a === 'hard') return c.prog ? '' : 'Rezerva ispod cilja: ostaje ' + doseBase(it) + ', ne računa se za povećanje';
   if (c.prog) return a === 'fail' ? 'Zabilježeno' : '';
   if (a === 'fail') return it.prev && (it.fail || 0) + 1 >= 2 ? 'Dvaput zaredom: na stranici Napredak možeš vratiti ' + doseBase(it.prev) : 'Zabilježeno: ostaje ' + doseBase(it) + ', probaj opet';
   const ok = (it.ok || 0) + 1;
   if (ok >= N) return c.next.item ? 'Spremno: prijedlog ' + c.next.text + ' čeka te na stranici Napredak' : c.next.text;
   return ok + '/' + N + ' · još ' + (N - ok) + ' ' + plural(N - ok, 'ovakav trening', 'ovakva treninga', 'ovakvih treninga');
 }
+// the reserve tapped in this session (rirLists: per done set, null = not tapped); untapped sets keep the old rule
+function reserveAnswer(j){
+  const it = P && P.items && P.items[j]; if (!it) return 'ok';
+  const timed = it.measure === 'time', list = rirLists(j, it) || [], known = list.filter(v => v != null);
+  if (known.filter(v => v === 0).length >= 2) return 'hold';
+  const goal = it[timed ? 'targetSir' : 'targetRir'], target = Number.isFinite(goal) ? goal : timed ? null : 2;
+  return target !== null && list.slice(-2).some(v => v != null && v < target - (timed ? 3 : 0.5)) ? 'hard' : 'ok';
+}
+// MODEL 1.9: a set's e1RM with its tapped RIR, kg × (1 + (reps + RIR) / 30) when reps + RIR ≤ 12 and RIR ≤ 4; an untapped set
+// counts as reps to failure (up to 10); the session value is the median. null when no set has a tap.
+function rirE1(x){
+  const rows = x && typeof HistoryModel !== 'undefined' ? HistoryModel.recordedRows(x) : null;
+  if (!rows || !rows.some(r => r.rir !== null && !r.failed)) return null;
+  const sets = rows.filter(r => r.kg > 0 && r.reps > 0).map(r => r.rir !== null && r.reps + r.rir <= 12 && r.rir <= 4
+    ? r.kg * (1 + (r.reps + r.rir) / 30) : e1rm(r.kg, Math.min(r.reps, 10))).sort((a, b) => a - b);
+  if (!sets.length) return null;
+  const m = sets.length >> 1;
+  return sets.length % 2 ? sets[m] : (sets[m - 1] + sets[m]) / 2;
+}
+// this session's recorded item j (as it will be saved), or the latest saved item of an exercise
+function liveRecorded(j){ try { return sessionEntry().items[j] || null; } catch(e) { return null; } }
+const lastRecorded = exId => { for (const l of S.log) { if (l.at > Date.now()) continue; const x = (l.items || []).find(i => i && i.exId === exId && !i.skipped); if (x) return x; } return null; };
 // morning pain 1–5 holds progression for the painful area on the day of the session (TodayModel.painHolds)
 function painHoldsAt(j){
   const checks = S.settings.morningChecks;
@@ -4690,7 +4722,7 @@ function progSuggestions(){
     if (!(it.kg > 0) && it.measure !== 'time' && needsKg(e)) { if ((it.ok || 0) + (it.fail || 0) > 0) out.push({ kind:'nokg', p, j, e, it }); return; }
     if (it.prev && (it.fail || 0) >= 2) out.push({ kind:'revert', p, j, e, it });
     else if ((it.ok || 0) >= N && (it.ok || 0) > (it.snoozeOk || 0)) {
-      const nd = nextDose(e, it);
+      const nd = nextDose(e, it, () => lastRecorded(it.exId));
       if (!nd.item && (it.snoozeOk || 0) > 0) return;   // a harder variation you already acknowledged stays quiet until the dose changes or a session fails
       out.push({ kind: nd.item ? 'up' : 'variant', p, j, e, it, nd });
     }
@@ -7209,7 +7241,7 @@ const A = {
     S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Kilogrami su upisani.'); },
   setProgN: d => { if (!writeSetting('progN',+d.v)) return; render(); },
   setPlate: d => { const v = +d.v; if (PLATES.indexOf(v) === -1) return; if (!writeSetting('plateKg',v)) return; render(); },
-  sugUp: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j], e = S.ex[it.exId], nd = nextDose(e, it); if (!nd.item) return;
+  sugUp: async d => { const p = S.pr[d.p]; if (!p) return; const n = clone(p); delete n.id; const it = n.items[+d.j], e = S.ex[it.exId], nd = nextDose(e, it, () => lastRecorded(it.exId)); if (!nd.item) return;
     const pv = { measure: it.measure, sets: it.sets, reps: it.reps, sec: it.sec, kg: it.kg || 0, sides: !!it.sides }; if (Array.isArray(it.repsList)) pv.repsList = it.repsList.slice();   // "Vrati" restores per-set reps too
     n.items[+d.j] = Object.assign(clone(nd.item), { prev: pv, ok: 0, fail: 0, snoozeOk: 0, up: Date.now() });
     S.pr[d.p] = Object.assign({ id: d.p }, n); render(); await save('protocols', d.p, n); toast(e.name + ': ' + nd.text); },

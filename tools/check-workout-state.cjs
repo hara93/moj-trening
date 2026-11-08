@@ -58,7 +58,7 @@ function progression(items,baseline,template){
   const steps=manualSteps(items),ctx={P:{mode:'ex',ref:{kind:'protocol',id:'p'},items:D.items(items),originalItems:clone(baseline),steps,
     doneSteps:Object.fromEntries(steps.map((_,i)=>[i,1])),answers:Object.fromEntries(items.map((_,i)=>[i,true]))},
     S:{pr:{p:{id:'p',items:clone(template)}},ex:{oldA:exercise('oldA'),oldB:exercise('oldB'),newA:exercise('newA')},settings:{}},
-    PlayerDose:D,PROG_CATS:{Snaga:1},clone,autoAnswer:()=>true,nextDose:()=>({item:null}),painHoldsAt:()=>false};
+    PlayerDose:D,PROG_CATS:{Snaga:1},clone,autoAnswer:()=>true,nextDose:()=>({item:null}),painHoldsAt:()=>false,reserveAnswer:()=>"ok"};
   vm.createContext(ctx);vm.runInContext(section('const doseSig =','const PROG_STATE =')+section('function progCandidates(){','function doneMsg('),ctx);return ctx;
 }
 test('a filled session-only B0→30 cannot advance the kg0 saved template even with a previously polluted baseline',()=>{
