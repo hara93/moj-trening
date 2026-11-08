@@ -63,6 +63,10 @@ test('a live-timed set saves its seconds in durList; untimed and over-guard sets
   // nothing timed: no list at all (old entries simply have none)
   const q = player(); finish(q, 1); finish(q, 3);
   assert.equal(Object.hasOwn(D.logDose(q, 0, 'partial').fields, 'durList'), false);
+  // a set left out in the middle: durList follows setNumbers, one value per performed set
+  const r = player(); finish(r, 1, 42); finish(r, 5, 40);
+  const gap = D.logDose(r, 0, 'partial').fields;
+  assert.deepEqual([gap.setNumbers, gap.durList], [[1, 3], [42, 40]]);
 });
 
 test('a sided set played as two steps saves the total over both sides, with its side count', () => {

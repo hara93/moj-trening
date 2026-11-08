@@ -9,7 +9,8 @@
 // screen, the dot holds after +15 s and added prep, the numerals and the arc, the player green on rings and fills,
 // focus in the guide/journal/menu, 13 px on every player sheet, screen-reader names, 390 px with a 34 px safe area.
 // 1.22.1: the pause screen's captions say where one tap lands, in every state (and the names say the same); the
-// arc clock's digits stand on the arc's diameter, a caption under it, at 393, 375, 390 and 375 × 667, both font cases.
+// arc clock's digits stand on the arc's diameter, a caption under it, at 393, 375, 390 and 375 × 667, and on his phone
+// (393 × 852 with a 34 px safe area) in a rep set and a timed hold, both font cases.
 // Synthetic data only.
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -795,13 +796,26 @@ async function touch(p, width) {
   return { width, ghostClicks: tested, overviewGestures: true };
 }
 
+// 1.22.1: his phone (393 × 852, 34 px safe area): the digits on the diameter and the caption clear of the pill, in a
+// rep set and in a timed hold, running and paused, both font cases
+async function phone(p, width) {
+  await start(p, parts, fixture({ entry: 0 }));
+  await until(p, (s, st) => st.kind === 'manual', 'set 1');
+  const cases = [...await arcFit(p, 'rep set ' + width + ', 34 px safe area'), ...await arcFitPaused(p, 'rep set ' + width + ', 34 px safe area')];
+  await until(p, (s, st) => st.kind === 'work' && st.g === 3, 'side plank set 1');
+  cases.push(...await arcFit(p, 'a timed hold ' + width + ', 34 px safe area'), ...await arcFitPaused(p, 'a timed hold ' + width + ', 34 px safe area'));
+  await shot(p, 'hold-' + width + '-safe-area');
+  await quit(p);
+  return { width, arc: cases.map(fit => ({ label: fit.label, bottom: +fit.bottom.toFixed(1), top: +fit.top.toFixed(1), captionToPill: fit.captionToPill && +fit.captionToPill.toFixed(1) })) };
+}
+
 async function run() {
   const server = await serve();
   let browser;
   const results = [];
   try {
     browser = await launch();
-    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout, pauseCaptions]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]]]) {
+    for (const [width, height, scenarios, safeArea] of [[393, 852, [firstStartWithParts, plainWorkout, pauseCaptions]], [375, 812, [narrow]], [390, 844, [narrow], 34], [375, 667, [touch]], [393, 852, [phone], 34]]) {
       const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
       // an iPhone's 34 px home-indicator area, which the test browser reports as 0
       if (safeArea) await context.route(/\.css(\?.*)?$/, async route => {
