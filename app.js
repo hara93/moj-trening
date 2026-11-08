@@ -751,7 +751,24 @@ async function keepUnreadable(raw){
   lsSet('mt.badStore', { at: Date.now(), key });
   S.badRaw = raw;
 }
+// The player's numbers use the system font's compressed width (SF Pro on iPhone, through its width axis). Where the
+// system font has no width axis, font-stretch changes nothing: measured once, the root class .no-font-width then brings
+// back the old narrowed figures (workout.css), so a number never overflows the clock's arc.
+function fontWidthCheck(){
+  try {
+    const probe=document.createElement('span');
+    probe.textContent='0:18';
+    probe.setAttribute('aria-hidden','true');
+    probe.style.cssText='position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;letter-spacing:0;font:900 100px system-ui,-apple-system,sans-serif';
+    document.body.appendChild(probe);
+    const width=stretch=>{probe.style.fontStretch=stretch;return probe.getBoundingClientRect().width;};
+    const narrow=width('40%'),normal=width('100%');
+    probe.remove();
+    document.documentElement.classList.toggle('no-font-width',!(normal-narrow>1));
+  } catch(e) {}
+}
 async function init(){
+  fontWidthCheck();
   OLD_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
   S.settings = Object.assign({}, SETTINGS_BASE, cleanSettings(S.settings));
   let raw = null, d = null;

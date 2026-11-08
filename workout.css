@@ -491,7 +491,6 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema-topbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;min-height:54px;padding:5px 15px;background:var(--cinema-bg)}
 .workout-cinema-topbar>div:only-child{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
 .workout-cinema-topbar .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:44px;margin:0}
-.workout-cinema-topbar :is(strong,time){font-size:14px;line-height:1.3;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 .workout-cinema-topbar button,.workout-cinema-menu button{display:flex;align-items:center;justify-content:center;flex:none;min-width:44px;min-height:44px;width:44px;height:44px;padding:0;border:1px solid #FFFFFF1A;border-radius:50%;background:#2E35419C;color:#F0F5F4}
 .workout-cinema-topbar svg,.workout-cinema-menu svg{width:19px!important;height:19px!important}
 .workout-cinema-menu{margin-left:auto}
@@ -534,10 +533,13 @@ span.workout-exercise-open{cursor:default}
 .cinema-next-phase svg{width:22px;height:22px}
 .workout-cinema .cinema-next .cinema-next-duration{font-size:20px;font-variant-numeric:tabular-nums;color:#fff}
 .workout-cinema-bottom{position:relative;z-index:3;flex:none;padding:4px 16px 12px;background:linear-gradient(#191D2500,#191D2599 25%,#191D25EB 50%,var(--cinema-bg) 78%)}
-.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(29px,9.6vw,41px);--cinema-clock-size:clamp(41px,14vw,60px)}
+.workout-cinema-metrics{display:grid;grid-template-columns:minmax(0,1fr) 45% minmax(0,1fr);column-gap:clamp(6px,2vw,10px);align-items:end;min-height:120px;margin:0 -10px 6px;font-variant-numeric:tabular-nums;--cinema-side-size:clamp(32px,10.4vw,44px);--cinema-clock-size:clamp(46px,15vw,60px)}
 .workout-cinema-metric{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0;min-height:72px;padding:4px 1px 7px;border:0;border-radius:12px;background:transparent;color:#F3F7F5;text-align:center}
-.workout-cinema-metric strong,.cinema-wheel-number,.workout-cinema-clock .n{font-weight:900;line-height:1;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
-.workout-cinema-metric strong,.cinema-wheel-number{font-size:var(--cinema-side-size);transform:scaleX(.82)}
+/* 1.22: every player number (top bar, arc clock, big clocks, reps/kg/s and the wheels) is the system font in its
+   compressed width: SF Pro on iPhone, through its width axis. Nothing is downloaded. Text keeps the surface font.
+   Without a width axis (the check in app.js) the root class .no-font-width brings back the narrowed figures. */
+.workout-cinema .cinema-session,.workout-cinema-metric strong,.workout-cinema .cinema-wheel-number,.workout-cinema-clock .n,.cinema-big-clock .n{font-family:system-ui,-apple-system,sans-serif;font-stretch:40%;font-weight:900;line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums}
+.workout-cinema-metric strong,.cinema-wheel-number{font-size:var(--cinema-side-size)}
 .cinema-metric-label{display:flex;align-items:center;justify-content:center;gap:2px;color:#C6CDD1;font-size:clamp(10px,3.25vw,13px);line-height:1.25;white-space:nowrap}
 .cinema-metric-label svg{flex:none;width:13px;height:13px}
 .cinema-weight-value{display:flex;align-items:baseline;justify-content:center;gap:1px;white-space:nowrap}
@@ -555,14 +557,14 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .cinema-wheel-number{display:block;width:100%;height:var(--wheel-row);padding:0 2px;border:0;border-radius:8px;background:transparent;text-align:center;scroll-snap-align:center;opacity:.48;touch-action:pan-y}
 .cinema-wheel-number.is-selected{opacity:1;font-size:calc(var(--cinema-side-size)*1.13)}
 .cinema-wheel-number:not(.is-selected){font-size:calc(var(--cinema-side-size)*.70)}
-.cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg) scaleX(.82)}
-.cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg) scaleX(.82)}
+.cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg)}
+.cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg)}
 .cinema-wheel-number.is-wide.is-selected{font-size:calc(var(--cinema-side-size)*.80)}
 .cinema-wheel-number.is-wide:not(.is-selected){font-size:calc(var(--cinema-side-size)*.58)}
 .workout-cinema-clock{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;align-self:stretch;gap:3px;width:100%;min-width:0;margin:0;padding:4px 0 7px;border:0;border-radius:14px;background:transparent;color:#fff}
-.cinema-clock-arc{position:absolute;inset:auto 0 4px;width:100%;height:auto;overflow:visible;pointer-events:none;fill:none;stroke:#A9B6BD55;stroke-width:3.5}
+.cinema-clock-arc{position:absolute;inset:auto 0 4px;width:100%;height:auto;overflow:visible;pointer-events:none;fill:none;stroke:#A9B6BD55;stroke-width:4.4;stroke-linecap:butt}
 #cinema-clock-fill{stroke:var(--cinema-arc)}
-.workout-cinema-clock .n{position:relative;display:block;font-size:var(--cinema-clock-size);transform:scaleX(.72);-webkit-text-stroke:.6px currentColor;white-space:nowrap}
+.workout-cinema-clock .n{position:relative;display:block;font-size:var(--cinema-clock-size);white-space:nowrap}
 .workout-cinema-clock .workout-control-action{font-size:10px;line-height:1.2;color:inherit}
 .workout-cinema:not(.is-rest) .workout-cinema-clock:has(.workout-control-action) .n{font-size:calc(var(--cinema-clock-size)*.82)}
 .workout-cinema.is-ready .workout-cinema-clock .n{font-size:calc(var(--cinema-clock-size)*.66)}
@@ -596,7 +598,6 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema.is-paused .workout-cinema-media{filter:saturate(.7)}
 .workout-cinema.is-paused:not(.is-rest) .workout-cinema-media{opacity:.55}
 @media(max-width:350px),(max-height:670px){
-  .workout-cinema-topbar{min-height:48px;padding:2px 12px}
   .workout-cinema-heading{padding:5px 58px 2px 16px}
   .workout-cinema-heading h1{font-size:22px}
   .workout-cinema-heading p{margin-bottom:3px;font-size:10px}
@@ -696,10 +697,11 @@ span.workout-exercise-open{cursor:default}
 .cinema-pause-jump strong,.cinema-pause-actions button small{font-size:13px}
 /* Player, closer to the reference layout (mockup). One accent for everything
    active; the effort colour only for RIR and reserve values. */
-/* Top bar: the session clock uses the same heavy, condensed figures as the big clocks. */
-.workout-cinema .cinema-session{display:flex;align-items:baseline;gap:8px;color:#fff;font-size:30px;font-weight:900;line-height:.9;letter-spacing:0;font-variant-numeric:tabular-nums;white-space:nowrap}
-.workout-cinema .cinema-session :is(strong,b,span){font-size:inherit;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:#fff}
+/* Top bar, in one place: "2:52 · 7%" in the player figures (see the numerals rule), 30 px; the glass ⋯ button. */
 .workout-cinema-topbar{min-height:58px;padding:6px 15px 2px 20px}
+.workout-cinema .cinema-session{display:flex;align-items:baseline;gap:9px;color:#fff;font-size:30px;line-height:.9;white-space:nowrap}
+.workout-cinema .cinema-session :is(strong,b){font:inherit;letter-spacing:inherit;color:#fff}
+.workout-cinema .cinema-session>span{align-self:center;color:#AEB7BC;font:700 17px/1 var(--font);letter-spacing:0}
 .workout-cinema-topbar>.ib,.workout-cinema-topbar>button{border-color:#FFFFFF26;background:#1A1E25B3;backdrop-filter:blur(10px)}
 /* Dash progress: one dash per exercise; the dot (--at, 0–1) always lies inside the current dash. */
 .workout-cinema-progress{padding:4px 20px 6px}
@@ -735,7 +737,7 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .cinema-journal-bar>strong{font-size:16px}
 /* Big clocks: rest, prep and the part overview share one figure. */
 .workout-cinema .cinema-big-clock{display:block;margin:0 auto;min-height:44px;padding:0;border:0;border-radius:14px;background:transparent;color:#fff}
-.cinema-big-clock .n{display:block;font-size:clamp(84px,28.5vw,116px);font-weight:900;line-height:.92;letter-spacing:-.055em;transform:scaleX(.72);-webkit-text-stroke:.6px currentColor;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+.cinema-big-clock .n{display:block;font-size:clamp(96px,31vw,128px);line-height:.92;white-space:nowrap;pointer-events:none}
 .workout-cinema .cinema-big-clock.is-left{margin:0}
 .cinema-big-clock.is-left .n{transform-origin:left center;font-size:clamp(76px,25vw,104px)}
 .cinema-phase-word{margin:0 0 4px;color:#fff;font-size:30px;font-weight:850;line-height:1;letter-spacing:-.02em;text-transform:uppercase;text-align:center}
@@ -810,11 +812,11 @@ span.workout-exercise-open{cursor:default}
 .sheet.workout-swap-sheet .workout-swap-footer{position:absolute;inset:auto 0 0;z-index:2;background:linear-gradient(#252C3700,#252C37E6 40%)}
 .workout-swap-search{background:#1E232BEB;border-color:#FFFFFF2E;box-shadow:0 10px 26px #0006;backdrop-filter:blur(12px)}
 
-/* Mockup v2 (Tomislav, 8 Nov): the reference's numerals = the iPhone system font (SF Pro) in its compressed
-   width, heavy. Only numbers change; all text keeps Figtree. No downloaded font. */
-.workout-cinema .cinema-session,.workout-cinema-metric strong,.cinema-wheel-number,.workout-cinema-clock .n,.cinema-big-clock .n{font-family:system-ui,-apple-system,sans-serif;font-stretch:40%;font-weight:900;letter-spacing:0;-webkit-text-stroke:0;transform:none}
-.cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg)}
-.cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg)}
-.workout-cinema{--cinema-clock-size:clamp(46px,15vw,60px);--cinema-side-size:clamp(32px,10.4vw,44px)}
-.cinema-big-clock .n{font-size:clamp(96px,31vw,128px)}
-.cinema-clock-arc{stroke-width:4.4;stroke-linecap:butt}
+/* No width axis on the system font (app.js measures "0:18" at 40 % and 100 %): the narrowed figures of 1.21, so the
+   numbers never overflow the arc. */
+.no-font-width :is(.workout-cinema .cinema-session,.workout-cinema-metric strong,.workout-cinema .cinema-wheel-number,.workout-cinema-clock .n,.cinema-big-clock .n){font-stretch:100%;letter-spacing:-.055em}
+.no-font-width :is(.workout-cinema .cinema-session,.workout-cinema-clock .n,.cinema-big-clock .n){transform:scaleX(.72)}
+.no-font-width :is(.workout-cinema .cinema-session,.cinema-big-clock.is-left .n){transform-origin:left center}
+.no-font-width :is(.workout-cinema-metric strong,.cinema-wheel-number){transform:scaleX(.82)}
+.no-font-width .cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg) scaleX(.82)}
+.no-font-width .cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg) scaleX(.82)}
