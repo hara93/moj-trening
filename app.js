@@ -2276,7 +2276,7 @@ function workoutTableHtml(c,j,s=workoutState(j)) {
   return WorkoutView.seriesTable({name:e?.name||'Vježba',measure:item.measure,short:!!s?.journal,weightLabel:kind==='db'?'kg / kom':'kg',rowsHtml:workoutRowsHtml(c.items,c.live?P:null,j,s)});
 }
 function workoutCompactHtml(items) {
-  const rounds=ssLetters(items),sections=CinemaModel.sections(items,S.ex);
+  const rounds=ssLetters(items);
   const compactValues=values=>{
     const format=value=>value==null?'—':String(Math.round(value*100)/100).replace('.',',');
     if(values.every(value=>value===values[0]))return format(values[0]);
@@ -6825,7 +6825,7 @@ function cinemaSheetHtml(s){
     '<p>Odabrano vrijeme vrijedi od sljedećeg treninga.</p><div class="prow"><span>Između vježbi</span><strong>'+S.settings.transSec+' s</strong></div><button type="button" class="btn" data-a="cinemaSettings">Postavke playera</button>'+close;
   if(s.kind==='cinemaPlan'){
     const parts=CinemaModel.groupSections(P.items),lab=ssLetters(P.items);   // 1.23.0: the tag and the rest as it works inside a group
-    const restOf=(it,j)=>{const l=lab[j];if(!l)return it.rest?' · odmor '+it.rest+' s':'';return l.k<l.size?(it.rest?' · '+it.rest+' s do '+l.L+(l.k+1):' · bez odmora do '+l.L+(l.k+1)):it.rest?' · odmor '+it.rest+' s nakon kruga':'';};
+    const restOf=(it,j)=>{const l=lab[j];if(!l)return it.rest?' · odmor '+it.rest+' s':'';return l.k<l.size?(it.rest?' · '+it.rest+' s do '+l.L+(l.k+1):' · bez odmora do '+l.L+(l.k+1)):it.rest?' · odmor '+it.rest+' s nakon kruga':' · bez odmora nakon kruga';};
     return '<h3>Dijelovi treninga</h3>'+P.items.map((it,j)=>(j===0||parts[j]!==parts[j-1]?'<h4>'+esc(parts[j])+'</h4>':'')+'<button type="button" class="opt" data-a="cinemaBlock" data-j="'+j+'"><span><strong>'+(lab[j]?esc(lab[j].L+lab[j].k)+' · ':'')+esc(S.ex[it.exId]?.name||'Vježba')+'</strong><small>'+esc(doseBase(it))+restOf(it,j)+'</small></span>'+I.next+'</button>').join('')+close;
   }
   return '<h3>Jednostavan player</h3><div class="cinema-guide"><p><strong>Tajmer</strong><br>Dodirni za pauzu ili nastavak. Na nuli player nastavlja sam.</p><p><strong>Kartica vježbe</strong><br>Dodirni za Dnevnik i unos stvarnih ponavljanja i rezerve.</p><p><strong>Vrijeme serije</strong><br>Uredi ga u postavkama serija.</p></div>'+close;

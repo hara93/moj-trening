@@ -888,8 +888,7 @@ span.workout-exercise-open{cursor:default}
 .cinema-section-items li.ss-m{position:relative;padding-left:26px}
 .cinema-section-items .ss-label{font-weight:800}
 .cinema-section-items.ss-a .ss-label{display:inline-block;padding:0 6px;border-radius:6px;background:var(--tag-bg);font-size:15px;line-height:20px;vertical-align:1px}
-.cinema-section-items li.ss-head{display:block;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:500;line-height:1.35;color:var(--text-body);border-left-color:transparent}
-.cinema-section-items li.ss-head{padding:4px 12px 0 20px}
+.cinema-section-items li.ss-head{display:block;min-width:0;padding:4px 12px 0 20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:500;line-height:1.35;color:var(--text-body);border-left-color:transparent}
 .cinema-section-items li.ss-head>span{display:inline-block;max-width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;padding:1px 8px;border-radius:8px;background:#1A1E25B3}
 .cinema-section-items.ss-a li.ss-m::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:7px;box-sizing:border-box;border-left:3px solid var(--ss-line)}
 .cinema-section-items.ss-a li.ss-first::before{top:12px;border-top:3px solid var(--ss-line);border-top-left-radius:7px}
