@@ -2924,6 +2924,31 @@ function cinemaSectionHtml(j,parts){
       return head+cinemaOverviewRow(item,j+k,k===0,gr,true);
     }).join('')+'</ol></section>';
 }
+// 1.23.0: the group overview (CinemaModel.overviewAt): the start countdown or the pause before a superset, triset or
+// circuit that does not open a part. The part overview's layout: the group's name, its equipment, one grey line with
+// the rounds and the round rest, its exercises with their chips; the skip button skips the group. Screen readers hear
+// "Superset A, 3 kruga, odmor 90 s nakon kruga", then each exercise.
+function cinemaGroupHtml(j){
+  const gr=ssGroup(P.items,j);if(!gr)return '';
+  const last=gr.idx[gr.idx.length-1],next=last+1<P.items.length?last+1:-1,items=gr.idx.map(i=>P.items[i]);
+  const chips=[...new Set(items.map(item=>cinemaEquipmentLabel(S.ex[item.exId])).filter(Boolean))];
+  const skip=gr.size===2?'Preskoči superset':gr.size===3?'Preskoči triset':'Preskoči kružni trening';
+  return '<section class="cinema-section cinema-group" aria-label="'+esc(gr.title+', '+gr.rounds+', '+gr.restText)+'"><header><h1 id="cinema-section-title">'+esc(gr.title)+'</h1>'+
+    (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaBlock" data-j="'+next+'" aria-label="'+skip+'">'+I.next+'</button>':'')+'</header>'+
+    (chips.length?'<div class="cinema-section-chips" role="group" aria-label="Oprema">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>':'')+
+    '<p class="cinema-group-meta" aria-hidden="true">'+esc(ssMeta(gr))+'</p>'+
+    '<ol class="cinema-section-items ss-a">'+gr.idx.map((i,k)=>cinemaOverviewRow(P.items[i],i,k===0,gr,false)).join('')+'</ol></section>';
+}
+// 1.23.0: the one line on the work screen inside a group (CinemaModel.nextLine): "Sljedeća: A2 · Nordic hamstring
+// curl", "Nakon odmora: A1 · …", "Sljedeći: Triset B", "Sljedeći dio: Trup"; '' when there is nothing to say
+function cinemaNextText(at){
+  const parts=CinemaModel.groupSections(P.items),n=CinemaModel.nextLine(P.steps,at,parts);
+  if(!n)return '';
+  if(n.kind==='part')return n.word+': '+parts[n.g];
+  if(n.kind==='group')return n.word+': '+(ssGroup(P.items,n.g)?.title||'');
+  const to=P.steps[n.at],item=to.it||P.items[to.g];
+  return n.word+': '+(to.ss?to.ss.L+to.ss.k+' · ':'')+(S.ex[item?.exId]?.name||'Vježba');
+}
 // One row of an overview: "3× name" and the first set's dose; in a group the chip ("A1") instead of "3×", and
 // "· 2 kruga" when the exercise has fewer sets than the group has rounds. bracket: draw the group's bracket (the part
 // overview, where a group is one block among other exercises); screen readers hear the group after the name.
@@ -2948,8 +2973,8 @@ function workoutCinemaHtml() {
   const parts=CinemaModel.groupSections(P.items),timed=item.measure==='time',recorded=cinemaRecordedStep();
   const elapsed=SessionClock.update(P.clock,Date.now(),!!P.paused)?.seconds||0;
   const topbar='<div class="cinema-session"><strong id="cinema-elapsed">'+fmt(elapsed)+'</strong><span aria-hidden="true">·</span><b id="cinema-percent">'+percent+'%</b></div><button type="button" class="ib" data-a="cinemaMenu" aria-label="Mogućnosti treninga">'+WorkoutView.icon('ellipsis')+'</button>';
-  // the part overview stays while its prep time is edited; the slider takes the place of the clock
-  const editingPrep=S.sheet?.kind==='cinemaPrep',opening=CinemaModel.partOpening(P.steps,P.i,parts),section=opening>=0;
+  // the part or group overview stays while its prep time is edited; the slider takes the place of the clock
+  const editingPrep=S.sheet?.kind==='cinemaPrep',overview=CinemaModel.overviewAt(P.steps,P.i,parts),section=!!overview;
   const restPhase=cinemaRestPhase(st),rest=restPhase>0;
   const preparing=!section&&!rest&&(editingPrep||['prep','ready','switch'].includes(st.kind)||st.kind==='rest');
   const phase=section?'section':rest?'rest':preparing?'ready':'work';
@@ -2958,14 +2983,15 @@ function workoutCinemaHtml() {
   const side=PlayerDose.splitSide(step)?step.side:'';
   const footer=cinemaFooter({st:rest||section?st:isWork(st)?st:{...st,kind:'prep'}},step,item,name,preparing&&!rest);
   const restClock=restPhase===1?'<div class="cinema-rest-stack"><p class="cinema-phase-word">Odmor</p>'+cinemaBigClock(st,'is-rest',true)+'</div>':'';
-  // 1.23.0: inside a group the heading says where the set stands in it ("A1 · krug 1 od 3")
-  const where=ssWhere(step);
+  // 1.23.0: inside a group the heading says where the set stands in it ("A1 · krug 1 od 3"), and the work screen one
+  // line with what follows
+  const where=ssWhere(step),nextText=phase==='work'&&where&&!pause?cinemaNextText(P.i):'';
   // the reserve (RIR) rows of the sets just closed: rest phase 2, and the pause before the next exercise or part
   const reserveAt=!editingPrep&&!pause&&st.kind==='rest'&&restPhase!==1?cinemaReserveSteps():[];
   return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
     subtitle:section||rest?'':(where?where.head:'Serija '+(step.set||1)+' od '+item.sets)+(side?' · '+side:''),subtitleSr:section||rest||!where?'':where.aria+(side?', '+side:''),
-    prepQuantity:section||rest?'':cinemaQuantity(item,dose),
-    overviewHtml:section?cinemaSectionHtml(opening,parts):'',
+    prepQuantity:section||rest?'':cinemaQuantity(item,dose),noticeHtml:nextText?'<p class="ss-next">'+esc(nextText)+'</p>':'',
+    overviewHtml:!overview?'':overview.kind==='part'?cinemaSectionHtml(overview.j,parts):cinemaGroupHtml(overview.j),
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
     metricsHtml:phase==='work'?metrics:'',
@@ -3156,7 +3182,8 @@ function cinemaJump(j){
     if(r<0)for(let x=P.steps.length-1;x>=0;x--)if(isWork(P.steps[x])&&P.steps[x].g===j){r=x;break;}
     if(r>=0)k=r;
   }
-  delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(landAt(k));savePlay();render();
+  // 1.23.0: into a group's first set from outside: its overview (CinemaModel.landing)
+  delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(CinemaModel.landing(P.steps,landAt(k),CinemaModel.groupSections(P.items),P.i));savePlay();render();
 }
 // After a touch the browser fires a click where the finger was. When the tap has already redrawn the player (rest
 // phase 2, the pause screen), that click would press the control now lying there, so it is dropped. A browser that
@@ -4618,7 +4645,8 @@ function jumpTarget(dir){
   if (dir > 0) {
     const sl = slotOf(P.steps[i]);
     const k = P.steps.findIndex((s, x) => x > i && isWork(s) && slotOf(s) !== sl);
-    return k === -1 ? -1 : landAt(k);
+    // 1.23.0: on into a group's first set from outside it: the group's overview (CinemaModel.landing)
+    return k === -1 ? -1 : CinemaModel.landing(P.steps, landAt(k), CinemaModel.groupSections(P.items), i);
   }
   const j = slotFirstWork(i);
   if (isWork(P.steps[j]) && j < i) return j;

@@ -28,7 +28,8 @@ function app(items) {
     esc:s => String(s), fmtKg:v => v + ' kg', workoutNumber:v => Number(v), repsOf:(it, set) => (it.repsList && it.repsList[set - 1]) || it.reps || 10};
   vm.createContext(ctx);
   vm.runInContext(section('function validSidePrep(', 'const SIDE_PREP_CHOICES') + section('function repSetSeconds(', 'function fieldMin(') +
-    section('function cinemaManualTarget(', 'function cinemaFooter(') + section('function groupsOf(items){', 'function stepsFromField(f){'), ctx);
+    section('function cinemaManualTarget(', 'function cinemaFooter(') + section('function groupsOf(items){', 'function stepsFromField(f){') +
+    section('function cinemaGroupHtml(', 'function cinemaOverviewRow('), ctx);
   const steps = JSON.parse(JSON.stringify(ctx.stepsFromItems(items)));   // plain data of this realm (deepEqual compares prototypes)
   return {ctx, steps, parts:Cinema.groupSections(items)};
 }
@@ -130,4 +131,27 @@ test('a jump into a group\'s first set from outside lands on the group overview;
   assert.equal(Cinema.landing(start.steps, c1, start.parts, solo), 0, 'back from the single exercise: the start countdown');
   assert.equal(Cinema.landing(start.steps, c1, start.parts, 0), c1);
   assert.equal(Cinema.landing([], 0, [], 0), 0);
+});
+
+test('the words of the next line and of the work heading, as the player shows them', () => {
+  const {ctx, steps} = app(A);
+  ctx.P = {steps, items:A};
+  const text = (g, set, side) => ctx.cinemaNextText(find(steps, g, set, side));
+  assert.equal(text(3, 1, R), 'Sljedeća: A2 · Nordijski pregib');
+  assert.equal(text(4, 1), 'Nakon odmora: A1 · Bugarski čučanj');
+  assert.equal(text(3, 3, R), 'Sljedeći: Superset B');
+  assert.equal(text(6, 3, R), 'Sljedeći dio: Trup');
+  assert.equal(text(3, 1, L), '');
+  assert.equal(text(8, 2), '');
+  assert.equal(ctx.ssWhere(steps[find(steps, 3, 2, L)]).head, 'A1 · krug 2 od 3');
+  assert.equal(ctx.ssWhere(steps[find(steps, 4, 2)]).aria, 'A2, Superset A, krug 2 od 3');
+  assert.equal(ctx.ssMeta(ctx.ssGroup(A, 3)), '3 kruga · odmor 90 s nakon kruga', 'the round rest is the last exercise\'s');
+  assert.equal(ctx.ssMeta(ctx.ssGroup([sets('c1', 2, {ss:'x'}), sets('c2', 2, {ss:'x'})], 0)), '2 kruga · bez odmora nakon kruga');
+  assert.equal(ctx.ssMeta(ctx.ssGroup(A, 5)), '3 kruga · odmor 75 s nakon kruga');
+  // a triset and a circuit say so ("Sljedeći: Triset B", "Kružni trening C")
+  const three = [sets('solo', 1), sets('c1', 2, {ss:'x'}), sets('c2', 2, {ss:'x', rest:60}), sets('c1', 2, {ss:'y'}), sets('c2', 2, {ss:'y'}), sets('c3', 2, {ss:'y', rest:60}),
+    sets('c1', 1, {ss:'z'}), sets('c2', 1, {ss:'z'}), sets('c3', 1, {ss:'z'}), sets('c4', 1, {ss:'z'})];
+  const t = app(three); t.ctx.P = {steps:t.steps, items:three};
+  assert.equal(t.ctx.cinemaNextText(find(t.steps, 2, 2)), 'Sljedeći: Triset B');
+  assert.equal(t.ctx.cinemaNextText(find(t.steps, 5, 2)), 'Sljedeći: Kružni trening C');
 });
