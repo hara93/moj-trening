@@ -1,0 +1,1013 @@
+{
+ "note": "Every shipped protocol exactly as 1.23.0 ships it (data.js of feat/123-dijelovi), for tools/check-seed-merge.cjs: a later release that changes one of them must also ship this version's fingerprints (node tools/seed-history.cjs v1.0 … v1.23.0), or his phone keeps the 1.23.0 copy as if he had edited it.",
+ "protocols": {
+  "aktivacija-uze": {
+   "name": "Aktivacija s užetom",
+   "desc": "Zagrijavanje kukova prije treninga: uže Ø6 ili Ø8 kroz kolotur, krajevi na oba stopala.",
+   "home": "aktivacija",
+   "tag": "Prije treninga",
+   "updatedAt": 2,
+   "items": [
+    {
+     "exId": "uze-fleksija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "uze-ekstenzija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "uze-abdukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "uze-addukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "uze-koljeno",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "uze-kruzenje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    }
+   ]
+  },
+  "rehab-kuk-f2": {
+   "name": "Rehab kuka · faza 2",
+   "desc": "Jačanje kuka. Radi ga 3 puta tjedno, kao zaseban trening ili prije treninga u teretani. Copenhagen plank radi najviše 3 puta tjedno ukupno u predsezoni i jednom tjedno u sezoni: ako ga taj tjedan radiš u Treningu A ili Prevenciji ozljeda, ovdje ga preskoči.",
+   "home": "rehab",
+   "tag": "Rehab",
+   "updatedAt": 3,
+   "items": [
+    {
+     "exId": "90-90",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 30,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "skoljka",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 15,
+     "rest": 45,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "bocni-plank",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 45,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "jednonozni-most",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 45,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 30,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "istezanje-pregibaca",
+     "measure": "time",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 10,
+     "sides": true,
+     "kg": 0
+    }
+   ]
+  },
+  "snaga-a": {
+   "name": "Trening A · noge i kukovi",
+   "desc": "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Prije prve serije mrtvog dizanja odradi 2–3 lakše serije. Cilj (snaga, hipertrofija, izdržljivost ili eksplozivnost) biraš u Napretku → Doziranje; kilograme upisuješ sam.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 1,
+   "items": [
+    {
+     "exId": "uze-fleksija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-ekstenzija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-abdukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-addukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-koljeno",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-kruzenje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "deadlift",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 150,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "bugarski",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "hip-thrust",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "b",
+     "section": "Završni dio"
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Završni dio"
+    }
+   ]
+  },
+  "snaga-b": {
+   "name": "Trening B · gornji dio i trup",
+   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Prije prve serije potiska s klupe odradi 1–2 lakše serije. Cilj biraš u Napretku → Doziranje.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 4,
+   "items": [
+    {
+     "exId": "lagano-trcanje",
+     "measure": "time",
+     "sec": 300,
+     "sets": 1,
+     "reps": 1,
+     "rest": 15,
+     "sides": false,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "band-pull-apart",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 15,
+     "rest": 30,
+     "sides": false,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "bench-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "pull-up",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 6,
+     "rest": 120,
+     "sides": false,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "half-kneeling-landmine-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "db-row",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "pallof-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "c",
+     "section": "Završni dio"
+    },
+    {
+     "exId": "farmers-walk",
+     "measure": "time",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 60,
+     "sides": false,
+     "kg": 0,
+     "ss": "c",
+     "section": "Završni dio"
+    }
+   ]
+  },
+  "snaga-c": {
+   "name": "Trening C · noge i stražnja loža",
+   "desc": "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Prije prve serije čučnja odradi 2–3 lakše serije. Cilj biraš u Napretku → Doziranje.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 5,
+   "items": [
+    {
+     "exId": "uze-fleksija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-ekstenzija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-abdukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-addukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-koljeno",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-kruzenje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "back-squat",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 150,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "rdl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "single-leg-calf-raise",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 90,
+     "sides": true,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "db-reverse-lunge",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "side-plank",
+     "measure": "time",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "ball-hamstring-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "c",
+     "section": "Završni dio"
+    },
+    {
+     "exId": "dead-bug",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 45,
+     "sides": true,
+     "kg": 0,
+     "ss": "c",
+     "section": "Završni dio"
+    }
+   ]
+  },
+  "trx-krug": {
+   "name": "TRX krug",
+   "desc": "Šest TRX vježbi u krugu, bez odmora između vježbi; odmor tek nakon kruga. Tri kruga. Prve tri vježbe radiš s ručkama (trake srednje duljine), a zadnje tri sa stopalima u omčama (na visini sredine potkoljenice), pa trake podešavaš samo dvaput po krugu.",
+   "home": null,
+   "tag": "TRX",
+   "updatedAt": 6,
+   "items": [
+    {
+     "exId": "trx-squat",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-fallout",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-row",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-hamstring-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-push-up",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "k"
+    },
+    {
+     "exId": "trx-side-plank",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 90,
+     "sides": true,
+     "kg": 0,
+     "ss": "k"
+    }
+   ]
+  },
+  "eksplozivnost": {
+   "name": "Skokovi i bacanja",
+   "desc": "Radi ga dok si svjež, prije ostalih vježbi u teretani. Svako ponavljanje maksimalno, s punim odmorom.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 7,
+   "items": [
+    {
+     "exId": "uze-fleksija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-ekstenzija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-abdukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-addukcija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-koljeno",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "uze-kruzenje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 20,
+     "sides": true,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "pogo-jumps",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 60,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "box-jump",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "lateral-bound",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "med-ball-rotational-throw",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 5,
+     "rest": 90,
+     "sides": true,
+     "kg": 0,
+     "section": "Završni dio"
+    },
+    {
+     "exId": "kb-swing",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 8,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "section": "Završni dio"
+    }
+   ]
+  },
+  "prevencija": {
+   "name": "Prevencija ozljeda",
+   "desc": "Stražnja loža, prepone, listovi i ravnoteža. U predsezoni 2 puta tjedno, u sezoni jednom, najkasnije 4 dana prije utakmice. Ako taj tjedan radiš i Trening A, Prevenciju radi jednom manje i ne isti dan, jer i on ima Nordic i Copenhagen. Ako dolaziš ravno s treninga s loptom, preskoči Pripremu. Stisak lopte na početku Glavnog dijela je i provjera prepona: ako boli, preskoči Copenhagen.",
+   "home": null,
+   "tag": "Prevencija",
+   "updatedAt": 8,
+   "items": [
+    {
+     "exId": "lagano-trcanje",
+     "measure": "time",
+     "sec": 300,
+     "sets": 1,
+     "reps": 1,
+     "rest": 15,
+     "sides": false,
+     "kg": 0,
+     "section": "Priprema"
+    },
+    {
+     "exId": "adductor-squeeze",
+     "measure": "time",
+     "sec": 10,
+     "sets": 3,
+     "reps": 10,
+     "rest": 20,
+     "sides": false,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 2,
+     "reps": 10,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "a",
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "jednonozni-most-kutija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 45,
+     "sides": true,
+     "kg": 0,
+     "section": "Glavni dio"
+    },
+    {
+     "exId": "jednonozni-rdl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Završni dio"
+    },
+    {
+     "exId": "single-leg-calf-raise",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "b",
+     "section": "Završni dio"
+    },
+    {
+     "exId": "ravnoteza-dosezanje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 6,
+     "rest": 30,
+     "sides": true,
+     "kg": 0,
+     "section": "Završni dio"
+    }
+   ]
+  },
+  "aktivacija-teren": {
+   "name": "Zagrijavanje za teren",
+   "desc": "Prije treninga s loptom ili trčanja: 3–5 minuta laganog trčanja, njihanje nogu, vježbe s mini gumom (oko gležnjeva ili stopala) i tehnika trčanja. Progresivna ubrzanja na kraju (3 × 30 m, oko 60, 75 i 90 % brzine) radi kad slijede sprint, brze dionice ili trening s loptom, a preskoči ih prije laganog trčanja.",
+   "home": null,
+   "tag": "Prije treninga",
+   "updatedAt": 9,
+   "items": [
+    {
+     "exId": "lagano-trcanje",
+     "measure": "time",
+     "sec": 240,
+     "sets": 1,
+     "reps": 1,
+     "rest": 15,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "leg-swings",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 1,
+     "reps": 10,
+     "rest": 10,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "monster-walk",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 20,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "banded-march",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 1,
+     "reps": 10,
+     "rest": 15,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "high-knees",
+     "measure": "time",
+     "sec": 15,
+     "sets": 2,
+     "reps": 10,
+     "rest": 30,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "a-skip",
+     "measure": "time",
+     "sec": 15,
+     "sets": 2,
+     "reps": 10,
+     "rest": 30,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "b-skip",
+     "measure": "time",
+     "sec": 15,
+     "sets": 2,
+     "reps": 10,
+     "rest": 45,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "progresivna-ubrzanja",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 45,
+     "sides": false,
+     "kg": 0,
+     "note": "30 m, do 60, 75 pa 90 % brzine"
+    }
+   ]
+  },
+  "mobilnost": {
+   "name": "Mobilnost i oporavak",
+   "desc": "Dan poslije utakmice ili navečer: kukovi, prepone, gležnjevi i prsna kralježnica.",
+   "home": null,
+   "tag": "Oporavak",
+   "updatedAt": 10,
+   "items": [
+    {
+     "exId": "worlds-greatest-stretch",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 1,
+     "reps": 6,
+     "rest": 10,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "90-90",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 20,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "knee-to-wall",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 15,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "open-book",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 15,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "njihanje-aduktora",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 15,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "istezanje-pregibaca",
+     "measure": "time",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 10,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "figure-4",
+     "measure": "time",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 10,
+     "sides": true,
+     "kg": 0
+    }
+   ]
+  }
+ }
+}

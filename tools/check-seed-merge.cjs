@@ -167,3 +167,24 @@ test('a workout he changed himself stays his, with its old description; a second
   assert.equal(merge(S), false);
   assert.equal(JSON.stringify(S.pr), once);
 });
+
+// 1.23.0 review: after this release his phone holds the 1.23.0 workouts. mergeSeed updates a protocol only when his
+// copy matches a shipped fingerprint (SEED_HISTORY, or SEED_STRUCT where he only set doses), so the release that next
+// changes a shipped workout must regenerate seed-history.js with v1.23.0 (node tools/seed-history.cjs v1.0 … v1.23.0).
+// tools/fixtures/protocols-1.23.0.json holds what 1.23.0 ships. This passes while data.js still ships it and fails as
+// soon as a protocol changes without its 1.23.0 fingerprints.
+test('a workout changed after 1.23.0 still reaches his phone: seed-history.js knows the 1.23.0 version', () => {
+  const NOW = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'protocols-1.23.0.json'), 'utf8')).protocols;
+  for (const id of CHANGED) assert.deepEqual(parts(NOW[id]), PARTS, id + ': the fixture is the 1.23.0 data');
+  for (const [id, shipped] of Object.entries(NOW)) {
+    if (!SEED.protocols[id] || W.mtContentHash({...shipped, id}) === W.mtContentHash({...SEED.protocols[id], id})) continue;
+    assert.ok((W.SEED_HISTORY.protocols[id] || []).includes(W.mtContentHash({...shipped, id})),
+      id + ' changed since 1.23.0: seed-history.js needs its 1.23.0 content fingerprint (regenerate it with v1.23.0)');
+    const doses = (W.SEED_STRUCT.protocols[id] || {})[W.mtStructHash(shipped)] || [];
+    assert.ok(doses.includes(shipped.items.map(W.mtDoseHash).join(' ')), id + ' changed since 1.23.0: SEED_STRUCT needs its 1.23.0 structure');
+    // his phone with the untouched 1.23.0 copy gets the new version
+    const S = phone(S => { S.pr[id] = {...clone(shipped), id}; });
+    merge(S);
+    assert.deepEqual(ids(S.pr[id]), ids(SEED.protocols[id]), id + ': the newer version arrives');
+  }
+});
