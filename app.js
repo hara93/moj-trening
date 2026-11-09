@@ -5033,19 +5033,24 @@ function nextDose(e, it, recorded){
 }
 // Exercises asked about at the end of a session. Programme sessions (e.g. TAE) are only recorded: their weeks set the doses.
 // Rehab holds from phase 2 on (e.g. the Copenhagen plank) progress up to 30 s too; phase-1 isometrics stay as prescribed.
+// j: the exercise in the protocol, k: the same exercise in this session: the same place when it holds the same
+// exercise, else the first other place left with it, so a session started before an update that added exercises at
+// the start still counts (1.23.0). A place whose exercise was swapped in the session stays unpaired.
 function progCandidates(){
   if (!P || P.mode !== 'ex' || !P.ref || P.ref.kind !== 'protocol' || P.liveBaseItems) return [];
   const p = S.pr[P.ref.id]; if (!p) return [];
   P.answers = P.answers || {}; P.lastReps = P.lastReps || {};
-  const out = [];
-  (p.items || []).forEach((it, j) => {
-    const e = S.ex[it.exId]; const was = P.items[j];
-    if (!e || !was || was.exId !== it.exId) return;
+  const out = [], items = p.items || [], used = {};
+  const pair = items.map((it, j) => P.items[j] && P.items[j].exId === it.exId ? (used[j] = 1, j) : -1);
+  items.forEach((it, j) => { if (pair[j] < 0) { const k = P.items.findIndex((o, i) => !used[i] && o && o.exId === it.exId); if (k >= 0) { used[k] = 1; pair[j] = k; } } });
+  items.forEach((it, j) => {
+    const e = S.ex[it.exId], k = pair[j], was = P.items[k];
+    if (!e || !was) return;
     if (doseSig(PlayerDose.items([was])[0])!==doseSig(PlayerDose.items([it])[0])) return;
-    const answer = P.answers[j] != null ? P.answers[j] : autoAnswer(j);
-    if (PlayerDose.logDose(P,j,answer).fields.liveDoseChanged) return;
+    const answer = P.answers[k] != null ? P.answers[k] : autoAnswer(k);
+    if (PlayerDose.logDose(P,k,answer).fields.liveDoseChanged) return;
     if (!PROG_CATS[e.cat] && !(it.kg > 0) && !(e.cat === 'Rehab' && it.measure === 'time' && +e.phase !== 1)) return;
-    out.push({ j, e, it, prog: !!p.program, next: nextDose(e, it, () => liveRecorded(j)) });
+    out.push({ j, k, e, it, prog: !!p.program, next: nextDose(e, it, () => liveRecorded(k)) });
   });
   return out;
 }
@@ -5060,7 +5065,7 @@ function applyProgress(){
   const p = S.pr[P.ref.id]; const n = clone(p); delete n.id; const news = [];
   cands.forEach(c => {
     if (c.prog) return;
-    const it = n.items[c.j], a = answerOf(c.j);
+    const it = n.items[c.j], a = answerOf(c.k);
     if (a === 'ok') { it.ok = (it.ok || 0) + 1; it.fail = 0; if (it.ok === progN() && c.next.item) news.push(c.e.name); }
     else if (a === 'fail') { it.ok = 0; it.fail = (it.fail || 0) + 1; it.snoozeOk = 0; }
     else if (a === 'hold') { it.ok = 0; it.snoozeOk = 0; }
@@ -5070,7 +5075,7 @@ function applyProgress(){
   return news;
 }
 function doneMsg(c){
-  const N = progN(), it = c.it, a = answerOf(c.j);
+  const N = progN(), it = c.it, a = answerOf(c.k);
   if (a === 'none') return c.prog ? '' : 'Ne računa se za napredak';
   if (a === 'pain') return c.prog ? '' : 'Bol ujutro: ostaje ' + doseBase(it) + ', bez povećanja';
   if (a === 'hold') return c.prog ? '' : 'Dvije serije bez rezerve (RIR 0): ostaje ' + doseBase(it);
@@ -6341,14 +6346,14 @@ VIEWS.play = function(){
       (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
         '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
           // pre-marked from what the player saw: all sets, some sets ('partial') or none ('skip'); the last two don't count
-          const a = P.answers[c.j], failed = a === false, ok = a === true, n = c.it.sets || 1, did = setsDoneOf(c.j);
+          const a = P.answers[c.k], failed = a === false, ok = a === true, n = c.it.sets || 1, did = setsDoneOf(c.k);
           const msg = a === 'skip' ? 'Preskočeno' + (c.prog ? '' : ': ne računa se u napredak')
             : a === 'partial' ? (did ? 'Odrađeno: ' + did + ' od ' + n + ' ' + plural(n, 'serije', 'serije', 'serija') : 'Djelomično odrađeno') + (c.prog ? '' : ' · ne računa se u napredak')
             : doneMsg(c);
-          const lr = lastRepsOf(c.j);
-          return '<div class="xrow"><div class="tx"><b>' + esc(c.e.name) + (entry?.items?.[c.j] ? ' · ' + nwNum(recordedDoseLabel(entry.items[c.j])) : '') + '</b>' +   // a number stays with its unit ('7,5 kg')
-            '<div class="seg2"><button data-a="answer" data-j="'+c.j+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.j+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
-            (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.j+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
+          const lr = lastRepsOf(c.k);
+          return '<div class="xrow"><div class="tx"><b>' + esc(c.e.name) + (entry?.items?.[c.k] ? ' · ' + nwNum(recordedDoseLabel(entry.items[c.k])) : '') + '</b>' +   // a number stays with its unit ('7,5 kg')
+            '<div class="seg2"><button data-a="answer" data-j="'+c.k+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.k+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
+            (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.k+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.k+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
         }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.originalMusclePlan || P.musclePlan) + (lm ? lmCardHtml(lm) : '') +
       masDoneHtml() + '<div style="height:12px"></div></div>' +
