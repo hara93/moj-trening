@@ -91,6 +91,8 @@
     const tags={};let letter=0;
     for (let i=0;i<items.length;) { let k=i+1; while (items[i].ss&&k<items.length&&items[k].ss===items[i].ss) k++;
       if (k-i>1) { const L=String.fromCharCode(65+letter++); for (let n=i;n<k;n++) tags[n]={L,k:n-i+1,size:k-i}; } i=k; }
+    // screen readers hear "Bulgarian split squat, Superset A" (the chip is aria-hidden, as on the protocol page)
+    const groupOf=t=>(t.size===2?'Superset ':t.size===3?'Triset ':'Kružni trening ')+t.L;
     // the rest wraps as one phrase ("odmor 75 s nakon kruga" never leaves "kruga" alone on a line)
     const nb=t=>t.replace(/ /g,'\u00a0');
     const restText=(item,j)=>{const t=tags[j];if(!t)return item.rest!=null?'odmor '+item.rest+' s':'';
@@ -107,7 +109,7 @@
       const qty=list(timed?'sec':'reps')+(timed?' s':' pon.');
       const kg=series.some(row=>row.kg>0)?list('kg')+' kg':'';
       // a group's row shows its tag where the list number stands ("A1", not "1. A1 · ")
-      return '<li'+(tags[j]?' class="dy-ss"':'')+'><strong>'+(tags[j]?'<b class="dy-ss-tag">'+esc(tags[j].L+tags[j].k)+'</b>':'')+esc(e.name)+'</strong><span>'+esc([sets+' × '+qty,kg,item.sides?'po strani':'',restText(item,j)].filter(Boolean).join(' · '))+'</span></li>';
+      return '<li'+(tags[j]?' class="dy-ss"':'')+'><strong>'+(tags[j]?'<b class="dy-ss-tag" aria-hidden="true">'+esc(tags[j].L+tags[j].k)+'</b>':'')+esc(e.name)+(tags[j]?'<span class="vsr">, '+esc(groupOf(tags[j]))+'</span>':'')+'</strong><span>'+esc([sets+' × '+qty,kg,item.sides?'po strani':'',restText(item,j)].filter(Boolean).join(' · '))+'</span></li>';
     }).filter(Boolean);
     return rows.length ? disclosure('Vježbe i doze ('+rows.length+')','<ol>'+rows.join('')+'</ol>','dose',expanded) : '';
   }

@@ -599,3 +599,23 @@ test('the shipped Priprema is warm-up: a low-energy or pain day keeps its 2 sets
   assert.equal(Today.warmupPart('Glavni dio'), false);
   assert.equal(Today.warmupPart('Završni dio'), false);
 });
+
+// 1.23.0 review: Danas's dose list marks a group as the protocol page does: the chip ("A1", hidden from screen
+// readers, which hear "name, Superset A") and the rest as it works in the group
+test('Danas dose rows: group chips, the group for screen readers and the rest inside a group', () => {
+  const View = require('../today-view.js');
+  const ex = { a: { name: 'Bench press' }, b: { name: 'Zgib' }, c: { name: 'Plank' } };
+  const items = [{ exId: 'a', measure: 'sets', sets: 3, reps: 8, kg: 60, rest: 0, ss: 'x' }, { exId: 'b', measure: 'sets', sets: 3, reps: 6, kg: 0, rest: 90, ss: 'x' },
+    { exId: 'c', measure: 'time', sets: 2, sec: 30, rest: 20, ss: 'y' }, { exId: 'a', measure: 'sets', sets: 2, reps: 8, kg: 20, rest: 0, ss: 'y' },
+    { exId: 'b', measure: 'sets', sets: 1, reps: 5, rest: 60 }];
+  const vm = { date, recommendation: { kind: 'planned', action: { type: 'protocol', id: 'p' }, title: 'Danas: X', summary: 'S', items, reasons: [], evidence: [] },
+    exercises: ex, checks: {}, team: [], checkin: null, nextMatch: null };
+  const rows = [...View.view(vm, ['dose']).matchAll(/<li[^>]*><strong>(.*?)<\/strong><span>(.*?)<\/span><\/li>/g)]
+    .map(m => [m[1].replace(/<b class="dy-ss-tag" aria-hidden="true">(\w+)<\/b>/, '[$1]').replace(/<span class="vsr">(.*?)<\/span>/, '{$1}'), m[2].replace(/ /g, ' ')]);
+  assert.deepEqual(rows, [
+    ['[A1]Bench press{, Superset A}', '3 × 8 pon. · 60 kg · bez odmora do A2'],
+    ['[A2]Zgib{, Superset A}', '3 × 6 pon. · odmor 90 s nakon kruga'],
+    ['[B1]Plank{, Superset B}', '2 × 30 s · 20 s do B2'],
+    ['[B2]Bench press{, Superset B}', '2 × 8 pon. · 20 kg · bez odmora nakon kruga'],
+    ['Zgib', '1 × 5 pon. · odmor 60 s']]);
+});
