@@ -133,6 +133,50 @@ test('a jump into a group\'s first set from outside lands on the group overview;
   assert.equal(Cinema.landing([], 0, [], 0), 0);
 });
 
+test('an overview\'s skip button lands on the pause before the next block: its overview and clock, never a running set', () => {
+  const {steps, parts} = app(A);
+  // Priprema's skip → the pause before the deadlift, which is Glavni dio's (here Snaga's) overview
+  const t = Cinema.skipLanding(steps, find(steps, 2, 1));
+  assert.equal(t, transTo(steps, 2)); assert.deepEqual(Cinema.overviewAt(steps, t, parts), {kind:'part', j:2});
+  assert.deepEqual(Cinema.overviewAt(steps, Cinema.skipLanding(steps, find(steps, 5, 1)), parts), {kind:'group', j:5}, 'Preskoči superset → the next group\'s overview');
+  assert.deepEqual(Cinema.overviewAt(steps, Cinema.skipLanding(steps, find(steps, 7, 1, L)), parts), {kind:'part', j:7}, 'Preskoči superset before a part change → the part\'s overview');
+  // a timed first set (Prevencija's Adductor squeeze after Priprema) gets its pause, with the 15 s setup
+  const hold1 = app([sets('uze1', 1, {section:'Priprema'}), hold('kop', 3, {rest:30, section:'Glavni dio'})]);
+  const h = Cinema.skipLanding(hold1.steps, find(hold1.steps, 1, 1));
+  assert.deepEqual([hold1.steps[h].kind, hold1.steps[h].trans, hold1.steps[h].dur], ['rest', true, 15]);
+  assert.deepEqual(Cinema.overviewAt(hold1.steps, h, hold1.parts), {kind:'part', j:1});
+  // a group followed by a single exercise of the same part: the pause before it (no overview there)
+  const mid = app([sets('c1', 2, {ss:'x'}), sets('c2', 2, {ss:'x', rest:60}), sets('solo', 2, {rest:60})]);
+  assert.equal(Cinema.skipLanding(mid.steps, find(mid.steps, 2, 1)), transTo(mid.steps, 2));
+  assert.equal(Cinema.skipLanding(mid.steps, 0), 0);
+  assert.equal(Cinema.skipLanding([], 3), 3);
+});
+
+test('a jump inside the group keeps the round; an exercise with fewer sets lands on the first side of its last set', () => {
+  const {steps} = app(A);
+  assert.equal(Cinema.roundLanding(steps, 4, 2), find(steps, 4, 2), 'A2 from A1 round 2: A2 round 2');
+  assert.equal(Cinema.roundLanding(steps, 3, 2), find(steps, 3, 2, L), 'A1 from A2 round 2: A1 round 2, its left side');
+  assert.equal(Cinema.roundLanding(steps, 4, 3), find(steps, 4, 2), 'A2 has 2 sets: from round 3 its last set');
+  // the shorter member is sided: the left side of its last set, never the right
+  const mixed = app([sets('c1', 4, {ss:'x'}), sets('c2', 2, {ss:'x', sides:true, rest:60})]);
+  assert.equal(Cinema.roundLanding(mixed.steps, 1, 3), find(mixed.steps, 1, 2, L));
+  assert.equal(Cinema.roundLanding(mixed.steps, 1, 4), find(mixed.steps, 1, 2, L));
+  assert.equal(Cinema.roundLanding(mixed.steps, 0, 3), find(mixed.steps, 0, 3));
+  assert.equal(Cinema.roundLanding(mixed.steps, 5, 1), -1, 'no such exercise');
+});
+
+test('preparation added on the first set is not the start countdown: no overview comes back', () => {
+  for (const items of [[sets('c1', 3, {ss:'x'}), sets('c2', 3, {ss:'x', rest:60})], A]) {
+    const {steps, parts} = app(items), first = steps.findIndex(s => s.kind === 'work' || s.kind === 'manual');
+    assert.ok(Cinema.overviewAt(steps, 0, parts), 'the start countdown is an overview');
+    const p = Cinema.prepare({steps, i:first, mode:'ex', left:0, endAt:0, doneSteps:{}, rir:{}}, 10, 1000);
+    assert.equal(p.steps[first].kind, 'prep'); assert.equal(p.steps[first + 1].kind, steps[first].kind);
+    assert.equal(Cinema.overviewAt(p.steps, first, parts), null, 'the added preparation shows the set, not the overview');
+    assert.equal(Cinema.partOpening(p.steps, first, parts), -1);
+    assert.ok(Cinema.overviewAt(p.steps, 0, parts), 'step 0 is still the start overview');
+  }
+});
+
 test('the words of the next line and of the work heading, as the player shows them', () => {
   const {ctx, steps} = app(A);
   ctx.P = {steps, items:A};

@@ -1212,7 +1212,7 @@ function render(){
     if (scroller) scroller.scrollTop = sheetTop;
   }
   const ws=app.querySelector('.workout-fullscreen');if(ws){const wv=ws.querySelector('.view');if(wv)wv.scrollTop=S.workoutScroll?.[ws.dataset.workoutKey]||0;}
-  const cj=app.querySelector('.cinema-journal .workout-journal-blocks');if(cj&&S.playerJournal?.scroll!=null)cj.scrollTop=S.playerJournal.scroll;
+  const cj=app.querySelector('.cinema-journal .workout-journal-blocks');if(cj&&S.playerJournal?.scroll!=null)cj.scrollTop=S.playerJournal.scroll;else if(cj)cinemaJournalToCurrent(cj);
   after(t);
   attachSheetGestures();
   refocus(fk, key);
@@ -2493,7 +2493,7 @@ function workoutQuickReplace(s,id,equipmentOnly=false) {
 function cinemaState(v=curView()) {
   const active=Number.isInteger(v.displayGroup)?v.displayGroup:Number.isInteger(v.st.g)?v.st.g:0;
   if(S.playerJournal?.startedAt!==P.startedAt)S.playerJournal={startedAt:P.startedAt,all:false,active,group:active};
-  if(S.playerJournal.active!==active){S.playerJournal.active=active;S.playerJournal.group=active;S.playerJournal.equipment=-1;}
+  if(S.playerJournal.active!==active){S.playerJournal.active=active;S.playerJournal.group=active;S.playerJournal.equipment=-1;S.playerJournal.scroll=null;}
   return S.playerJournal;
 }
 function cinemaMediaHtml(e) {
@@ -2919,7 +2919,7 @@ function cinemaSectionHtml(j,parts){
   const items=P.items.slice(j,end+1),next=end+1<P.items.length?end+1:-1;
   const chips=[...new Set(items.map(item=>cinemaEquipmentLabel(S.ex[item.exId])).filter(Boolean))];
   return '<section class="cinema-section" aria-labelledby="cinema-section-title"><header><h1 id="cinema-section-title">'+esc(name)+'</h1>'+
-    (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaBlock" data-j="'+next+'" aria-label="Preskoči dio · '+esc(name)+'">'+I.next+'</button>':'')+'</header>'+
+    (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaSkip" data-j="'+next+'" aria-label="Preskoči dio · '+esc(name)+'">'+I.next+'</button>':'')+'</header>'+
     (chips.length?'<div class="cinema-section-chips" role="group" aria-label="Oprema">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>':'')+
     // 1.23.0: a group's exercises carry their chip instead of "3×", under one short line with the group's name
     '<ol class="cinema-section-items ss-a">'+items.map((item,k)=>{
@@ -2938,7 +2938,7 @@ function cinemaGroupHtml(j){
   const chips=[...new Set(items.map(item=>cinemaEquipmentLabel(S.ex[item.exId])).filter(Boolean))];
   const skip=gr.size===2?'Preskoči superset':gr.size===3?'Preskoči triset':'Preskoči kružni trening';
   return '<section class="cinema-section cinema-group" aria-label="'+esc(gr.title+', '+gr.rounds+', '+gr.restText)+'"><header><h1 id="cinema-section-title">'+esc(gr.title)+'</h1>'+
-    (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaBlock" data-j="'+next+'" aria-label="'+skip+'">'+I.next+'</button>':'')+'</header>'+
+    (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaSkip" data-j="'+next+'" aria-label="'+skip+'">'+I.next+'</button>':'')+'</header>'+
     (chips.length?'<div class="cinema-section-chips" role="group" aria-label="Oprema">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>':'')+
     '<p class="cinema-group-meta" aria-hidden="true">'+esc(ssMeta(gr))+'</p>'+
     '<ol class="cinema-section-items ss-a">'+gr.idx.map((i,k)=>cinemaOverviewRow(P.items[i],i,k===0,gr,false)).join('')+'</ol></section>';
@@ -3046,6 +3046,16 @@ function cinemaJournalFocus(back){
   try{el.focus({preventScroll:true});}catch(e){}
   el.scrollIntoView?.({block:'nearest'});
 }
+// 1.23.0: the journal opens on the current exercise (its group's frame, and its part's heading when it opens the part),
+// not on the finished Priprema above it, unless it is already in view; later openings keep where he scrolled to
+function cinemaJournalToCurrent(list){
+  const cur=list.querySelector('.workout-player-exercise[data-current="true"]');if(!cur)return;
+  let box=cur.closest('.ss-block')||cur;const head=box.previousElementSibling;
+  if(head?.matches('.cinema-block-heading'))box=head;
+  const top=list.getBoundingClientRect(),r=cur.getBoundingClientRect();
+  if(r.top>=top.top&&r.bottom<=top.bottom)return;
+  list.scrollTop+=box.getBoundingClientRect().top-top.top;
+}
 function workoutJournalHtml() {
   // 1.23.0: part headings per group (groupSections) and each group in one frame (ssOpenHtml/ssCloseHtml)
   const c=workoutContext({live:true}),v=curView(),state=cinemaState(v),sections=CinemaModel.groupSections(c.items),stats=CinemaModel.summary(P,PlayerDose),lab=ssLetters(c.items);
@@ -3055,7 +3065,7 @@ function workoutJournalHtml() {
     const section=j===0||sections[j]!==sections[j-1]?'<header class="cinema-block-heading"><h2>'+esc(sections[j])+'</h2><button type="button" class="ib" data-a="cinemaBlock" data-j="'+j+'" aria-label="Prijeđi na dio '+esc(sections[j])+'">'+I.next+'</button></header>':'';
     const thumb=e?thumbHtml(e):'',swapped=cinemaJournalSwapped(j),badge=swapped?'<span class="cj-badge" aria-hidden="true">'+WorkoutView.icon('shuffle')+'</span>':'';
     const sets=PlayerDose.checklist(item,P,j).map(row=>'<span data-state="'+row.state+'">'+(row.state==='done'?WorkoutView.icon('check'):row.set)+'</span>').join('');
-    const wrap=body=>section+(gr&&lab[j].k===1?ssOpenHtml(gr,'ss-journal'):'')+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+body+'</div>'+(gr&&lab[j].k===gr.size?ssCloseHtml():'');
+    const wrap=body=>section+(gr&&lab[j].k===1?ssOpenHtml(gr):'')+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+body+'</div>'+(gr&&lab[j].k===gr.size?ssCloseHtml():'');
     if(!open)return wrap(WorkoutView.journalRow({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,setsHtml:sets,tagHtml:tag,group}));
     const undo=swapped,canSwap=workoutCanSwap(c,j),target=cinemaTargetText(item),e1=cinemaE1Html(item);
     // the previous dose keeps its last number and unit on one line; both lines describe the card's open button
@@ -3181,13 +3191,17 @@ function cinemaJump(j){
   let k=P.steps.findIndex(st=>isWork(st)&&st.g===j);if(k<0)return;
   // 1.23.0: inside the group on screen a jump keeps the round (A2 from A1 round 2 lands on A2 round 2)
   const here=P.steps[P.i],cur=isWork(here)?here:P.steps.slice(P.i).find(isWork),cw=ssWhere(cur),tg=ssLetters(P.items)[j];
-  if(cw&&tg&&tg.L===cw.L){
-    let r=P.steps.findIndex(st=>isWork(st)&&st.g===j&&st.set>=cw.round);
-    if(r<0)for(let x=P.steps.length-1;x>=0;x--)if(isWork(P.steps[x])&&P.steps[x].g===j){r=x;break;}
-    if(r>=0)k=r;
-  }
+  // (CinemaModel.roundLanding; an exercise with fewer sets: the first side of its last set)
+  if(cw&&tg&&tg.L===cw.L){const r=CinemaModel.roundLanding(P.steps,j,cw.round);if(r>=0)k=r;}
   // 1.23.0: into a group's first set from outside: its overview (CinemaModel.landing)
   delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(CinemaModel.landing(P.steps,landAt(k),CinemaModel.groupSections(P.items),P.i));savePlay();render();
+}
+// 1.23.0: an overview's skip button (Preskoči dio / superset / triset / kružni trening) lands on the pause before the
+// next block (CinemaModel.skipLanding): its overview with its clock, as when the workout reaches it
+function cinemaSkip(j){
+  if(!P||P.done)return;
+  const k=P.steps.findIndex(st=>isWork(st)&&st.g===j);if(k<0)return;
+  delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(CinemaModel.skipLanding(P.steps,landAt(k)));savePlay();render();
 }
 // After a touch the browser fires a click where the finger was. When the tap has already redrawn the player (rest
 // phase 2, the pause screen), that click would press the control now lying there, so it is dropped. A browser that
@@ -6938,6 +6952,7 @@ const A = {
   cinemaFinish:()=>{if(!P)return;delete P.dosePause;S.sheet=null;finish();},
   cinemaExit:()=>{if(P?.dosePause){const pause=P.dosePause;delete P.dosePause;P.paused=pause.wasPaused;P.left=pause.left;P.endAt=Date.now()+pause.left*1000;}S.sheet=null;A.quitPlay();},
   cinemaBlock:d=>cinemaJump(Number(d.j)),
+  cinemaSkip:d=>cinemaSkip(Number(d.j)),
   cinemaGoSet:d=>cinemaJump(Number(d.j)),
   cinemaReserve: d => {
     const k = Number(d.k);

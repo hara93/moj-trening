@@ -51,7 +51,8 @@
     for(let k=index-1;k>=0&&!before;k--)if(list[k]&&isWork(list[k]))before=list[k];
     for(let k=index+1;k<list.length&&!after;k++)if(list[k]&&isWork(list[k]))after=list[k];
     if(!after||!Number.isInteger(after.g)||after.g<0||after.g>=parts.length)return -1;
-    if(step.kind==='prep')return before?-1:after.g;
+    // only the start countdown (step 0): preparation added later before a set (prepare) never reopens the overview
+    if(step.kind==='prep')return before||index>0?-1:after.g;
     return !before||parts[before.g]!==parts[after.g]?after.g:-1;
   }
   // 1.23.0: the first set of a group (superset, triset, circuit): its first exercise in round 1.
@@ -68,8 +69,24 @@
     let before=null,after=null;
     for(let k=index-1;k>=0&&!before;k--)if(list[k]&&isWork(list[k]))before=list[k];
     for(let k=index+1;k<list.length&&!after;k++)if(list[k]&&isWork(list[k]))after=list[k];
-    if(step.kind==='prep'&&before)return null;
+    if(step.kind==='prep'&&(before||index>0))return null;
     return firstOfGroup(after)?{kind:'group',j:after.g}:null;
+  }
+  // 1.23.0: where an overview's skip button lands: the pause before item j's first set (k), as when the workout reaches
+  // it, so the next part's or group's overview shows with its clock and a timed first set never starts at once.
+  // Returns that step, or k when no pause lies before it.
+  function skipLanding(steps,k){
+    const list=Array.isArray(steps)?steps:[];
+    for(let x=k-1;x>=0&&list[x]&&!isWork(list[x]);x--)if(list[x].trans)return x;
+    return k;
+  }
+  // 1.23.0: a jump inside the group on screen keeps the round: item j's first step in round `round` (A2 from A1 round
+  // 2 lands on A2 round 2), or, when j has fewer sets, the first step of its last set (its left side). -1: no set.
+  function roundLanding(steps,j,round){
+    const list=Array.isArray(steps)?steps:[],own=list.filter(st=>st&&isWork(st)&&st.g===j);
+    if(!own.length)return -1;
+    const last=Math.max.apply(null,own.map(st=>st.set||1)),set=Math.min(Math.max(1,round||1),last);
+    return list.findIndex(st=>st&&isWork(st)&&st.g===j&&(st.set||1)>=set);
   }
   // 1.23.0: the one line on the work screen of an exercise inside a group, from what really follows in the step list.
   // null: not a group's set, the left side of a set whose right side follows, or the end of the workout. Otherwise
@@ -188,5 +205,5 @@
     if(seconds>0||timed&&!counted)parts.push(clock(seconds)+' rada');
     return parts.join(' · ');
   }
-  return Object.freeze({prepare,rest,summary,totals,sections,groupSections,hasParts,partOpening,overviewAt,nextLine,landing,restPhase,upcoming,progress});
+  return Object.freeze({prepare,rest,summary,totals,sections,groupSections,hasParts,partOpening,overviewAt,nextLine,landing,skipLanding,roundLanding,restPhase,upcoming,progress});
 });

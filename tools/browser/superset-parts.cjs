@@ -28,12 +28,12 @@ function fixture() {
   data.log = []; data.programs = {}; data.field = {};
   Object.assign(data.settings, { sound: false, planDates: {}, matchDates: {}, matchDay: -1, morningChecks: {} });
   const shipped = data.protocols;
-  data.protocols = { 'snaga-a': shipped['snaga-a'], 'trx-krug': shipped['trx-krug'],
+  data.protocols = { 'snaga-a': shipped['snaga-a'], 'trx-krug': shipped['trx-krug'], prevencija: shipped.prevencija,
     // a part name of his own that is not one of the three: the editor still offers it
     [OWN]: { id: OWN, name: 'Moj dio', tag: 'Teretana', days: [], items: [
       { exId: 'bench-press', measure: 'sets', sets: 2, reps: 8, kg: 40, rest: 60, sides: false, section: 'Snaga' }] } };
   // a starting weight on the loaded lifts, so the start goes straight to the player
-  data.protocols['snaga-a'].items.forEach(item => { if (['deadlift', 'bugarski', 'hip-thrust'].includes(item.exId)) item.kg = 20; });
+  for (const id of ['snaga-a', 'prevencija']) data.protocols[id].items.forEach(item => { if (['deadlift', 'bugarski', 'hip-thrust', 'jednonozni-rdl', 'single-leg-calf-raise'].includes(item.exId)) item.kg = 20; });
   return data;
 }
 async function importData(p) {
@@ -94,7 +94,17 @@ async function overview(p) {
       title: q('#cinema-section-title')?.textContent, group: !!q('.cinema-group'), aria: q('.cinema-section')?.getAttribute('aria-label') || null,
       meta: q('.cinema-group-meta')?.textContent || null, heads: [...document.querySelectorAll('.workout-cinema .cinema-section-items li.ss-head')].map(n => n.innerText),
       rows: rows.map(n => ({ label: n.querySelector('strong > b')?.textContent, name: n.querySelector('strong')?.innerText, dose: n.querySelector('small')?.textContent, current: n.classList.contains('is-current') })),
-      skip: (() => { const b = q('.cinema-section header [data-a="cinemaBlock"]'); return b ? { j: b.dataset.j, aria: b.getAttribute('aria-label') } : null; })(),
+      skip: (() => { const b = q('.cinema-section header [data-a="cinemaSkip"]'); return b ? { j: b.dataset.j, aria: b.getAttribute('aria-label') } : null; })(),
+      veil: (() => {   // the darkest and lightest the overlay gets behind the rows (alpha 0–1), from its gradient stops
+        const media = q('.workout-cinema-media'); if (!media) return null;
+        const css = getComputedStyle(media, '::after'), m = r(media), h = parseFloat(css.height) || m.width * 4 / 3;
+        const stops = [...css.backgroundImage.matchAll(/rgba?\(([^)]*)\)\s+(-?[\d.]+)%/g)].map(x => { const c = x[1].split(/[\s,/]+/).filter(Boolean); return [parseFloat(x[2]) / 100, c.length > 3 ? parseFloat(c[3]) : 1]; });
+        if (stops.length < 2) return { stops: stops.length, css: css.backgroundImage.slice(0, 120) };
+        const at = f => { for (let k = 1; k < stops.length; k++) if (f <= stops[k][0]) { const [f0, a0] = stops[k - 1], [f1, a1] = stops[k]; return f1 > f0 ? a0 + (a1 - a0) * (f - f0) / (f1 - f0) : a1; } return stops[stops.length - 1][1]; };
+        const from = (lb.top - m.top) / h, to = Math.min(1, (Math.min(lb.bottom, lb.top + list.scrollHeight) - m.top) / h);
+        let min = 1; for (let k = 0; k <= 40; k++) min = Math.min(min, at(from + (to - from) * k / 40));
+        return { stops: stops.length, min: Math.round(min * 100) / 100, band: [Math.round(from * 100), Math.round(to * 100)] };
+      })(),
       heading: !!q('.workout-cinema-heading'),
       fit: { viewport: innerHeight, listTop: Math.round(lb.top), listBottom: Math.round(lb.bottom), scrolls: list.scrollHeight > list.clientHeight + 1,
         overflowY: getComputedStyle(list).overflowY, rowsFully: rows.filter(n => r(n).bottom <= lb.bottom + .5).length, rowsTotal: rows.length,
@@ -226,10 +236,13 @@ async function jumps(p) {
   assert.ok(step(state).kind === 'rest' && step(state).trans && nextWork(state).g === 7, 'Dijelovi treninga → A1: the pause before the group');
   let o = await overview(p);
   assert.deepEqual([o.title, o.group], ['Superset A', true]);
-  // its skip button skips the group; the next part's first set is the landing, as in 1.22.1
-  await p.locator('.cinema-group [data-a="cinemaBlock"]').click(); await p.waitForTimeout(250);
+  // its skip button skips the group and lands on the pause before the next block: here Završni dio's overview
+  // (1.23.0 review: not on B1's first set, which skipped the overview of the part)
+  await p.locator('.cinema-group [data-a="cinemaSkip"]').click(); await p.waitForTimeout(250);
   state = await player(p);
-  assert.deepEqual([step(state).g, step(state).set, isWork(step(state))], [9, 1, true], 'Preskoči superset → B1 round 1 (Završni dio)');
+  assert.ok(step(state).kind === 'rest' && step(state).trans && nextWork(state).g === 9, 'Preskoči superset → the pause before Završni dio');
+  o = await overview(p);
+  assert.deepEqual([o.title, o.group], ['Završni dio', false], 'its overview, with its clock');
   // Dijelovi treninga → the deadlift (the first exercise of Glavni dio): its first set, as in 1.22.1
   state = await plan(6);
   assert.deepEqual([step(state).g, step(state).set, isWork(step(state))], [6, 1, true], 'into a part: its first set');
@@ -253,6 +266,79 @@ async function jumps(p) {
   await shot(p, 'jump-group');
   await quit(p);
   return { jumps: true };
+}
+
+// 1.23.0 review: "preskoči Pripremu" (Prevencija's description) lands on Glavni dio's overview with its clock, not
+// on a running first set (Prevencija's 10 s Adductor squeeze); the same in Trening A
+async function skipPriprema(p) {
+  await start(p, 'prevencija');
+  const prep = await overview(p);
+  assert.deepEqual([prep.title, prep.skip], ['Priprema', { j: '1', aria: 'Preskoči dio · Priprema' }]);
+  await p.locator('.cinema-section header [data-a="cinemaSkip"]').click(); await p.waitForTimeout(250);
+  let state = await player(p);
+  assert.deepEqual([step(state).kind, !!step(state).trans, nextWork(state).g, step(state).dur, state.clock.paused], ['rest', true, 1, 15, false], 'its 15 s setup, running');
+  const main = await overview(p);
+  assert.equal(main.title, 'Glavni dio');
+  assert.match(main.rows[0].name, /Adductor squeeze/);
+  assert.equal(await stage(p).getAttribute('data-phase'), 'section', 'the squeeze is not running');
+  onScreen(main, 'Prevencija Glavni dio'); await shot(p, 'prevencija-skip-priprema');
+  await quit(p);
+  await start(p, 'snaga-a');
+  await overview(p);
+  await p.locator('.cinema-section header [data-a="cinemaSkip"]').click(); await p.waitForTimeout(250);
+  state = await player(p);
+  assert.ok(step(state).trans && nextWork(state).g === 6, 'Trening A: the pause before the deadlift');
+  assert.deepEqual((await overview(p)).rows.map(r => r.label), ['4×', 'A1', 'A2'], 'the Glavni dio list');
+  await quit(p);
+  return { skipPriprema: true };
+}
+
+// 1.23.0 review: inside a group, the exercise page's rest words, the journal's group frame and current card, and a
+// journal jump that keeps the round (A1 round 2 → A2 round 2; A2 has 2 sets, so from round 3 its last set)
+async function groupPages(p) {
+  await importData(p); await openProtocol(p, 'snaga-a');
+  const words = {};
+  for (const j of [6, 7, 8, 9, 10]) {
+    await p.locator('.workout-compact-row[data-j="' + j + '"]').click(); await p.locator('.workout-prescription').waitFor();
+    words[j] = await p.locator('.workout-prescription > span').last().innerText();
+    await A(p, 'workoutClose').click(); await p.locator('.workout-overview').waitFor();
+  }
+  assert.deepEqual(words, { 6: 'Odmor 150 s', 7: 'Bez odmora do A2', 8: 'Odmor 90 s nakon kruga', 9: 'Bez odmora do B2', 10: 'Odmor 75 s nakon kruga' });
+  await A(p, 'startPr').click(); await stage(p).waitFor(); await overview(p);
+  const plan = async j => {
+    await openCinemaControls(p); await p.locator('.sheet [data-a="cinemaPlan"]').click();
+    await p.locator('.sheet[data-kind="cinemaPlan"] [data-a="cinemaBlock"][data-j="' + j + '"]').click(); await p.waitForTimeout(250);
+  };
+  await plan(7); await overview(p);
+  await advance(p, (await player(p)).left + .1); await work(p);
+  // the first opening of the journal shows the current card (A1), not the finished Priprema at the top
+  await openJournal(p); await p.waitForTimeout(250);
+  const j1 = await p.locator('.cinema-journal').evaluate(root => {
+    const list = root.querySelector('.workout-journal-blocks').getBoundingClientRect(), cur = root.querySelector('.workout-player-exercise[data-current="true"]').getBoundingClientRect();
+    return { list: [Math.round(list.top), Math.round(list.bottom)], cur: [Math.round(cur.top), Math.round(cur.bottom)],
+      blocks: [...root.querySelectorAll('.ss-block')].map(b => [b.getAttribute('role'), b.getAttribute('aria-label'), b.className]) };
+  });
+  assert.ok(j1.cur[0] >= j1.list[0] - 1 && j1.cur[0] < j1.list[1] - 40, 'the current card is in view: ' + JSON.stringify(j1));
+  assert.deepEqual(j1.blocks.map(b => b[0]), ['group', 'group']);
+  assert.equal(j1.blocks[0][1], 'Superset A, 2 vježbe naizmjence, 3 kruga, odmor 90 s nakon kruga, 3. krug samo A1');
+  assert.ok(j1.blocks.every(b => b[2] === 'ss-block ss-a'), JSON.stringify(j1.blocks));
+  const goTo = async j => {
+    await openJournal(p);
+    await p.locator('.cinema-journal .cj-row[data-j="' + j + '"]').first().click();
+    await p.locator('.cinema-journal [data-a="cinemaGoSet"][data-j="' + j + '"]').click(); await p.waitForTimeout(250);
+    return step(await player(p));
+  };
+  await A(p, 'cinemaJournalClose').click();
+  await until(p, (s, st) => isWork(st) && st.g === 7 && st.set === 2, 'A1 round 2');
+  let st = await goTo(8);
+  assert.deepEqual([st.g, st.set, isWork(st)], [8, 2, true], 'A1 round 2 → A2: A2 round 2');
+  st = await goTo(7);
+  assert.deepEqual([st.g, st.set, st.side], [7, 2, 'Lijeva strana'], 'A2 round 2 → A1: A1 round 2, its left side');
+  await until(p, (s, x) => isWork(x) && x.g === 7 && x.set === 3, 'A1 round 3');
+  st = await goTo(8);
+  assert.deepEqual([st.g, st.set], [8, 2], 'A1 round 3 → A2 (2 sets): its last set');
+  await quit(p);
+  return { restWords: true, journalGroups: true, journalOpensOnCurrent: true, keepRound: true };
 }
 
 // a workout without parts that starts with a group: its overview at the start (a 6-exercise circuit)
@@ -299,7 +385,7 @@ async function editor(p) {
 (async () => {
   const server = await serve(), browser = await launch(), results = [];
   try {
-    for (const [width, height, scenarios, safeArea] of [[375, 812, [protocolPage, shippedTreningA, jumps, circuitStart, editor], 34], [375, 667, [shippedStart, circuitStart]]]) {
+    for (const [width, height, scenarios, safeArea] of [[375, 812, [protocolPage, shippedTreningA, jumps, skipPriprema, groupPages, circuitStart, editor], 34], [375, 667, [shippedStart, circuitStart]]]) {
       const context = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true, locale: 'hr-HR', timezoneId: 'Europe/Zagreb', reducedMotion: 'reduce', serviceWorkers: 'block' });
       // an iPhone's 34 px home-indicator area, which the test browser reports as 0
       if (safeArea) await context.route(/\.css(\?.*)?$/, async route => {
