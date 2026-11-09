@@ -812,7 +812,9 @@ span.workout-exercise-open{cursor:default}
 .workout-cinema .cinema-section-prep{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:0 0 0 -4px;padding:0 6px;border:0;border-radius:10px;background:transparent;color:var(--cinema-accent);font-size:15px;font-weight:650}
 .workout-cinema .cinema-section-prep svg{width:16px;height:16px}
 .workout-cinema.has-pause-overlay .cinema-section-clock{opacity:.35}
-.workout-cinema.is-section .workout-cinema-media::after{background:linear-gradient(to bottom,var(--cinema-bg) 0%,#191D25F5 20%,#191D25D1 38%,#191D2566 52%,#191D2500 63%,#191D2500 66%,#191D253D 79%,#191D25B8 92%,var(--cinema-bg) 100%)}
+/* 1.23.0: the overview's rows lie on the photo from about 20 % to 80 % of its height: kept at least 78 % dark there, so
+   every row reads at 4.5:1 or more over a bright photo (superset-parts checks the stops) */
+.workout-cinema.is-section .workout-cinema-media::after{background:linear-gradient(to bottom,var(--cinema-bg) 0%,#191D25F5 20%,#191D25D1 38%,#191D25C7 52%,#191D25C7 79%,#191D25D9 92%,var(--cinema-bg) 100%)}
 .workout-cinema.has-pause-overlay .workout-cinema-overview{visibility:hidden}
 @media(max-height:740px),(max-width:350px){
   .workout-cinema-heading{padding:8px 60px 2px 16px}

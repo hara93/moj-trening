@@ -114,6 +114,8 @@ async function overview(p) {
 }
 function onScreen(o, label) {
   assert.ok(o.fit.clockBottom <= o.fit.viewport && o.fit.prepBottom <= o.fit.viewport, label + ': the clock and the prep button stay on screen ' + JSON.stringify(o.fit));
+  // 1.23.0 review: the rows lie on the photo; the overlay stays at least 75 % dark behind them (4.5:1 over a white photo)
+  assert.ok(o.veil && o.veil.stops >= 2 && o.veil.min >= 0.75, label + ': the overlay behind the rows ' + JSON.stringify(o.veil));
   assert.equal(o.fit.prepText, 'Dodaj vrijeme za pripremu');
   assert.ok(o.fit.rowsFully === o.fit.rowsTotal || o.fit.scrolls && o.fit.overflowY === 'auto', label + ': every row fits, or the list scrolls ' + JSON.stringify(o.fit));
 }
