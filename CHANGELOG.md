@@ -1,5 +1,23 @@
 # Promjene
 
+## 1.22.1 — 9. 11. 2026.
+
+- **Serija na ponavljanja broji unaprijed** od 0:00:
+  - Luk se puni do procijenjenog trajanja, a sat broji dalje dok ne dodirneš da je serija gotova.
+  - Na kraju nema zvuka ni vibracije.
+  - Izdržaji i vježbe s **Tajmerom serije** i dalje odbrojavaju i same idu dalje.
+- **Trajanje serije se sprema:**
+  - Dnevnik ga pokazuje ispod serije, npr. 0:29. Kod vježbi po strani piše "ukupno 0:42".
+  - Zaboravljen dodir (dulje od oko 3× procjene ili od 5 minuta) se ne sprema.
+- **Procjena trajanja uči tvoj tempo:**
+  - Nakon dvije izmjerene serije uzima tvoj srednji tempo iz zadnja 3 treninga u kojima si vježbu mjerio.
+  - Za snagu je najviše 15 s po ponavljanju, za kondiciju do 60 s.
+  - Tvoje vrijeme serije ili tempo uvijek imaju prednost.
+- **Pauza:** natpis ispod svake tipke kaže kamo vodi jedan dodir: Početak vježbe, Sljedeća vježba, Preskoči odmor, Ponovi seriju, odmor ili stranu od početka.
+- **Brojke u luku:**
+  - Stoje na dnu luka, u ravnini krajnjih crtica, a "pauza" je ispod njih.
+  - Vrlo dugo brojanje (10:00 i više) ima manje brojke, da stane u luk.
+
 ## 1.22.0 — 8. 11. 2026.
 
 - **Novi izgled playera**:
