@@ -9,7 +9,9 @@ const step=state=>state.liveSchedule[state.i];
 const setRow=(page,n)=>page.locator('.cinema-journal .workout-set-row[data-set="'+n+'"]');
 // 1.22.0: during a side change the set header already names the next side; the word over the big clock says
 // "Promjena strane"
-const phase=(page,side)=>page.locator('.workout-cinema-heading,.cinema-phase-word').getByText(new RegExp(side));
+// 1.23.0: in a group the heading also carries its screen-reader text ("A1, Superset A, krug 1 od 2, Lijeva strana"):
+// the visible text is the one to wait for
+const phase=(page,side)=>page.locator('.workout-cinema-heading,.cinema-phase-word').getByText(new RegExp(side)).first();
 async function startProtocol(page,id){
   await page.reload({waitUntil:'domcontentloaded'});
   await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
