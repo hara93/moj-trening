@@ -1,0 +1,436 @@
+{
+ "note": "The five shipped workouts exactly as 1.22.1 shipped them (data.js of c8aabfa), for tools/check-seed-merge.cjs: CI checks out without tags.",
+ "protocols": {
+  "snaga-a": {
+   "name": "Trening A · noge i kukovi",
+   "desc": "Noge i kukovi: mrtvo dizanje, zatim dva superseta. Prije prve serije odradi Aktivaciju s užetom (ili 5 minuta laganog zagrijavanja) i 2–3 lakše serije mrtvog dizanja. Cilj (snaga, hipertrofija, izdržljivost ili eksplozivnost) biraš u Napretku → Doziranje; kilograme upisuješ sam.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 1,
+   "items": [
+    {
+     "exId": "deadlift",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 150,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "bugarski",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "hip-thrust",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    }
+   ]
+  },
+  "snaga-b": {
+   "name": "Trening B · gornji dio i trup",
+   "desc": "Guranje i povlačenje u supersetovima, pa trup i nošenje. Prije prve serije odradi 5 minuta laganog zagrijavanja, 2 serije band pull-aparta i 1–2 lakše serije potiska s klupe. Cilj biraš u Napretku → Doziranje.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 4,
+   "items": [
+    {
+     "exId": "bench-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "pull-up",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 6,
+     "rest": 120,
+     "sides": false,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "half-kneeling-landmine-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "db-row",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "pallof-press",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "c"
+    },
+    {
+     "exId": "farmers-walk",
+     "measure": "time",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 60,
+     "sides": false,
+     "kg": 0,
+     "ss": "c"
+    }
+   ]
+  },
+  "snaga-c": {
+   "name": "Trening C · noge i stražnja loža",
+   "desc": "Čučanj, zatim supersetovi za stražnju ložu, listove i trup. Prije prve serije odradi Aktivaciju s užetom (ili 5 minuta laganog zagrijavanja) i 2–3 lakše serije čučnja. Cilj biraš u Napretku → Doziranje.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 5,
+   "items": [
+    {
+     "exId": "back-squat",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 150,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "rdl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "single-leg-calf-raise",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 90,
+     "sides": true,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "db-reverse-lunge",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "side-plank",
+     "measure": "time",
+     "sec": 30,
+     "sets": 3,
+     "reps": 1,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "ball-hamstring-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "c"
+    },
+    {
+     "exId": "dead-bug",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 45,
+     "sides": true,
+     "kg": 0,
+     "ss": "c"
+    }
+   ]
+  },
+  "eksplozivnost": {
+   "name": "Skokovi i bacanja",
+   "desc": "Radi ga dok si svjež, prije ostalih vježbi u teretani, ali nakon zagrijavanja: prvo odradi Aktivaciju s užetom (ili 5 minuta laganog trčanja ili poskoka). Svako ponavljanje maksimalno, s punim odmorom.",
+   "home": null,
+   "tag": "Teretana",
+   "updatedAt": 7,
+   "items": [
+    {
+     "exId": "pogo-jumps",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 60,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "box-jump",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "lateral-bound",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 90,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "med-ball-rotational-throw",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 5,
+     "rest": 90,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "kb-swing",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 8,
+     "rest": 90,
+     "sides": false,
+     "kg": 0
+    }
+   ]
+  },
+  "prevencija": {
+   "name": "Prevencija ozljeda",
+   "desc": "Stražnja loža, prepone, listovi i ravnoteža. U predsezoni 2 puta tjedno, u sezoni jednom, najkasnije 4 dana prije utakmice. Ako taj tjedan radiš i Trening A, Prevenciju radi jednom manje i ne isti dan, jer i on ima Nordic i Copenhagen. Prije prve vježbe se zagrij (5 minuta laganog trčanja ili poskoka), osim ako dolaziš ravno s treninga s loptom. Stisak lopte na početku je i provjera prepona: ako boli, preskoči Copenhagen.",
+   "home": null,
+   "tag": "Prevencija",
+   "updatedAt": 8,
+   "items": [
+    {
+     "exId": "adductor-squeeze",
+     "measure": "time",
+     "sec": 10,
+     "sets": 3,
+     "reps": 10,
+     "rest": 20,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 2,
+     "reps": 10,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "jednonozni-most-kutija",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 10,
+     "rest": 45,
+     "sides": true,
+     "kg": 0
+    },
+    {
+     "exId": "jednonozni-rdl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "single-leg-calf-raise",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 12,
+     "rest": 60,
+     "sides": true,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "ravnoteza-dosezanje",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 6,
+     "rest": 30,
+     "sides": true,
+     "kg": 0
+    }
+   ]
+  }
+ },
+ "older": {
+  "note": "Trening A as 1.4 shipped it (the superset order before 1.5): a phone dosed then, to show his doses follow the exercise, not the place.",
+  "snaga-a": {
+   "name": "Snaga A · donji dio",
+   "desc": "Glavni trening snage za noge i kukove: mrtvo dizanje, zatim dva superseta. Kilograme za mrtvo dizanje upiši u uređivanju.",
+   "home": null,
+   "tag": "Snaga",
+   "updatedAt": 1,
+   "items": [
+    {
+     "exId": "deadlift",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 4,
+     "reps": 5,
+     "rest": 150,
+     "sides": false,
+     "kg": 0
+    },
+    {
+     "exId": "bugarski",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 8,
+     "rest": 0,
+     "sides": true,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "kopenhagen-kratka",
+     "measure": "time",
+     "sec": 20,
+     "sets": 3,
+     "reps": 10,
+     "rest": 75,
+     "sides": true,
+     "kg": 0,
+     "ss": "a"
+    },
+    {
+     "exId": "hip-thrust",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 3,
+     "reps": 10,
+     "rest": 0,
+     "sides": false,
+     "kg": 0,
+     "ss": "b"
+    },
+    {
+     "exId": "nordic-curl",
+     "measure": "sets",
+     "sec": 30,
+     "sets": 2,
+     "reps": 5,
+     "rest": 90,
+     "sides": false,
+     "kg": 0,
+     "ss": "b"
+    }
+   ]
+  }
+ }
+}

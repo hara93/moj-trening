@@ -664,6 +664,7 @@ async function removePack(){
 }
 
 /* ---------- improvements from new versions ---------- */
+// ---- SEED MERGE begin ---- (tools/check-seed-merge.cjs runs this block as it is)
 const STATE_CARRY = ['ok', 'fail', 'snoozeOk', 'up', 'prev'];
 const ssLinkedAt = (items, i) => !!(items[i] && items[i].ss && items[i + 1] && items[i + 1].ss === items[i].ss);
 // the newer shipped exercises of a protocol with what is yours carried over, matched by exercise (then place):
@@ -734,6 +735,7 @@ function mergeSeed(seed){
   }));
   return changed;
 }
+// ---- SEED MERGE end ----
 // copies of programme sessions made before 1.5 kept the programme fields and were hidden everywhere:
 // they become your own protocols (listed in Moji protokoli, kept when the pack is removed)
 function repairCopies(){
@@ -3733,7 +3735,9 @@ function istep(label, key, i, shown, o){ return stepRow((o && o.act) || 'istep',
 // a part title applies to every exercise below it until the next title
 const secOf = items => { let s = ''; return items.map(it => (s = String(it.section || '').trim() || s)); };
 function secSet(items, eff){ items.forEach((it, k) => { if (eff[k]) it.section = eff[k]; else delete it.section; }); return items; }
-const WORKOUT_PARTS = ['Glavni dio','Priprema','Snaga','Kondicija','Trup','Mobilnost','Rehabilitacija','Oporavak'];
+// 1.23.0: three parts, in the order a workout runs them; any exercise may go into any part. A name already used in the
+// protocol still shows (the select adds the names in use), and "Vlastiti naziv…" gives any other.
+const WORKOUT_PARTS = ['Priprema','Glavni dio','Završni dio'];
 function builderSetSection(index,label){
   const items=S.draft?.items;
   if(!items || !Number.isInteger(index) || !items[index] || typeof label!=='string' || !label.trim())return false;
