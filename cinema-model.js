@@ -54,6 +54,63 @@
     if(step.kind==='prep')return before?-1:after.g;
     return !before||parts[before.g]!==parts[after.g]?after.g:-1;
   }
+  // 1.23.0: the first set of a group (superset, triset, circuit): its first exercise in round 1.
+  const firstOfGroup=step=>!!step&&isWork(step)&&Number.isInteger(step.g)&&!!step.ss&&step.ss.k===1&&step.ss.size>1&&(step.round||step.set)===1;
+  // 1.23.0: one overview before each part, and before each group that does not open a part. It shows on the steps the
+  // part overview uses: the start countdown and the pause before the next exercise (a transition step). A part that
+  // starts with a group shows the part overview; a workout without parts that starts with a group shows the group's.
+  // Returns {kind:'part', j} (the item opening the part), {kind:'group', j} (the group's first item) or null.
+  function overviewAt(steps,index,parts){
+    const j=partOpening(steps,index,parts);
+    if(j>=0)return {kind:'part',j};
+    const list=Array.isArray(steps)?steps:[],step=list[index];
+    if(!step||!(step.kind==='prep'||step.kind==='rest'&&step.trans))return null;
+    let before=null,after=null;
+    for(let k=index-1;k>=0&&!before;k--)if(list[k]&&isWork(list[k]))before=list[k];
+    for(let k=index+1;k<list.length&&!after;k++)if(list[k]&&isWork(list[k]))after=list[k];
+    if(step.kind==='prep'&&before)return null;
+    return firstOfGroup(after)?{kind:'group',j:after.g}:null;
+  }
+  // 1.23.0: the one line on the work screen of an exercise inside a group, from what really follows in the step list.
+  // null: not a group's set, the left side of a set whose right side follows, or the end of the workout. Otherwise
+  // {kind, word, g, at} (at = the next set's step, g = the item the line names):
+  // - the next set in the same group: 'Sljedeća' when nothing or only a side change or a setup countdown lies between,
+  //   'Nakon odmora' after a rest (the round rest or the exercise's own rest);
+  // - after the group's last set the overview that comes next decides (overviewAt on the pause between, so the line
+  //   promises exactly the screen that follows): kind 'part' 'Sljedeći dio' (g opens the part), kind 'group'
+  //   'Sljedeći' (g = the group's first item), else kind 'exercise' 'Sljedeća'.
+  function nextLine(steps,at,parts){
+    const list=Array.isArray(steps)?steps:[],st=list[at];
+    if(!st||!isWork(st)||!st.ss)return null;
+    let nx=-1;
+    for(let k=at+1;k<list.length;k++)if(list[k]&&isWork(list[k])){nx=k;break;}
+    if(nx<0)return null;
+    const to=list[nx];
+    if(to.g===st.g&&to.set===st.set)return null;
+    let trans=-1,rest=false;
+    for(let k=at+1;k<nx;k++)if(list[k].kind==='rest'){if(list[k].trans){trans=k;break;}rest=true;}
+    if(trans<0)return {kind:'exercise',word:rest?'Nakon odmora':'Sljedeća',g:to.g,at:nx};
+    const o=overviewAt(list,trans,parts);
+    if(o)return {kind:o.kind,word:o.kind==='part'?'Sljedeći dio':'Sljedeći',g:o.j,at:nx};
+    return {kind:'exercise',word:'Sljedeća',g:to.g,at:nx};
+  }
+  // 1.23.0: a jump that lands on a group's first set from outside the group lands on the group's overview (the pause
+  // before it), so the group is announced as when the workout reaches it. k: the step the jump lands on; from: the step
+  // it starts at. From inside the group (the overview itself included) the set stays the landing; a part's first set
+  // stays the landing as in 1.22.1, also when the part starts with a group (its overview is the part's).
+  function landing(steps,k,parts,from){
+    const list=Array.isArray(steps)?steps:[],st=list[k];
+    if(!firstOfGroup(st))return k;
+    let t=-1;
+    for(let x=k-1;x>=0&&list[x]&&!isWork(list[x]);x--){
+      const o=overviewAt(list,x,parts);
+      if(o){if(o.kind==='group'&&o.j===st.g)t=x;break;}
+    }
+    if(t<0)return k;
+    let end=list.length-1;
+    for(let x=k+1;x<list.length;x++)if(list[x]&&list[x].trans){end=x-1;break;}
+    return Number.isInteger(from)&&from>=t&&from<=end?k:t;
+  }
   // Rest phase 1 is the time alone: the first 3 s of a rest between sets, unless a tap, a pause or a sheet revealed
   // the rest (phase 2). The pause before the next exercise has no phases (0).
   const REST_ALONE_S=3;
@@ -131,5 +188,5 @@
     if(seconds>0||timed&&!counted)parts.push(clock(seconds)+' rada');
     return parts.join(' · ');
   }
-  return Object.freeze({prepare,rest,summary,totals,sections,groupSections,hasParts,partOpening,restPhase,upcoming,progress});
+  return Object.freeze({prepare,rest,summary,totals,sections,groupSections,hasParts,partOpening,overviewAt,nextLine,landing,restPhase,upcoming,progress});
 });
