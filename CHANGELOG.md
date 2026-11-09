@@ -1,5 +1,20 @@
 # Promjene
 
+## 1.23.0 — 9. 11. 2026.
+
+- **Trening u tri dijela: Priprema, Glavni dio i Završni dio.**
+  - U uređivaču svaka vježba ima **Dio treninga** s ta tri izbora (i Vlastiti naziv…). Bilo koja vježba može u bilo koji dio. Dio postaviš na prvoj vježbi, a one ispod idu u isti dio.
+  - Ugrađeni Trening A, B i C, Skokovi i bacanja i Prevencija ozljeda imaju tri dijela. Priprema je zagrijavanje koje je prije pisalo u opisu (Aktivacija s užetom, odnosno lagano trčanje i band pull-apart), a Završni dio je njihov zadnji blok. Zato traju dulje, a i opterećenje treninga uključuje Pripremu.
+  - Tvoje doze, kilogrami i napredak ostaju na istim vježbama. Trening koji si sam prepravljao ostaje kakav je.
+- **Pregled prije svakog dijela:** naslov, oprema, popis vježbi i odbrojavanje. Gumb ⏭ preskače dio i vodi na pregled sljedećeg. Popis vježbi je na zatamnjenoj fotografiji, pa se lakše čita.
+- **Supersetovi, triseti i kružni treninzi su označeni:**
+  - Na stranici treninga, u Dnevniku, Danas i Dijelovima treninga grupa ima naslov ("Superset A · 3 kruga · odmor 90 s nakon kruga"), zagradu i oznake A1, A2…
+  - Kad grupa počinje usred dijela, prije nje dolazi njezin pregled.
+  - U vježbi gore piše "A1 · krug 1 od 3", a ispod imena samo jedan redak: "Sljedeća: A2 · …" ili "Nakon odmora: A1 · …".
+  - Skok iz Dnevnika ili Dijelova treninga na prvu vježbu grupe vodi na njezin pregled. Skok unutar grupe ostaje u istom krugu.
+- **Danas** na lakši dan ili uz bol ne smanjuje Pripremu.
+- **Dnevnik** se otvara na vježbi koja je na redu.
+
 ## 1.22.1 — 9. 11. 2026.
 
 - **Serija na ponavljanja broji unaprijed** od 0:00:
