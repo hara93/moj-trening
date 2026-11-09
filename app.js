@@ -2288,10 +2288,14 @@ function workoutCompactHtml(items) {
     const weight=kind||weights.some(value=>value>0)?weights.every(value=>value==null)?'težina nije upisana':compactValues(weights)+(kind==='db'?' kg / kom':' kg')+(weights.some(value=>value==null)&&n<=4?' · dio težina nije upisan':''):'';
     return quantity+(timed?' s':' pon.')+(item.sides?' po strani':'')+(weight?' · '+weight:'');
   };
+  // 1.23.0: a group is one block (role=group, ssOpenHtml) under one part heading (groupSections); the row's name
+  // keeps the tag for screen readers ("A1 · Bench press, Superset A, 1. od 2 vježbe")
+  const parts=CinemaModel.groupSections(items);
   return '<div class="workout-compact-list" aria-label="Vježbe u treningu">'+items.map((item,j)=>{
-    const e=S.ex[item.exId],group=rounds[j];
-    const previous=j?sections[j-1]:null,section=sections[j];
-    return (section&&section!==previous?'<h2 class="workout-list-section">'+esc(section)+'</h2>':'')+WorkoutView.compactExercise({index:j,name:(group?group.L+group.k+' · ':'')+(e?.name||'Obrisana vježba'),thumbHtml:e?thumbHtml(e):'',summary:summary(item),previous:workoutPreviousShort(item)});
+    const e=S.ex[item.exId],group=rounds[j],gr=group?ssGroup(items,j):null;
+    const previous=j?parts[j-1]:null,section=parts[j],name=e?.name||'Obrisana vježba';
+    const row=WorkoutView.compactExercise({index:j,name,tagHtml:group?ssTagHtml(group.L+group.k):'',label:group?group.L+group.k+' · '+name+', '+gr.title+', '+group.k+'. od '+nVj(gr.size):'',thumbHtml:e?thumbHtml(e):'',summary:summary(item),previous:workoutPreviousShort(item)});
+    return (section&&section!==previous?'<h2 class="workout-list-section">'+esc(section)+'</h2>':'')+(gr&&group.k===1?ssOpenHtml(gr):'')+row+(gr&&group.k===gr.size?ssCloseHtml():'');
   }).join('')+'</div>';
 }
 function workoutCandidates(item) {
@@ -2326,7 +2330,14 @@ function workoutPrescriptionHtml(s,c) {
   const editor=!c.live&&!c.program?'<label>'+ (timed?'Ciljana rezerva (s)':'Ciljani RIR')+'<select id="workout-target" data-j="'+s.j+'"><option value="">Nije postavljeno</option>'+Array.from({length:max+1},(_,i)=>'<option value="'+i+'"'+(value===i?' selected':'')+'>'+i+'</option>').join('')+'</select></label>':'';
   const timer=!timed&&!c.live&&!c.program?'<button type="button" class="set-edit" data-a="workoutEdit" data-j="'+s.j+'" aria-label="Uredi tajmer serije">'+
     WorkoutView.icon('timer')+'<span>'+(repSetSeconds(item)===null?'Tajmer serije':repSetSeconds(item)+' s / seriji')+'</span></button>':'';
-  return '<div class="workout-prescription"><details class="workout-plan-options"><summary aria-label="'+esc(target+'. Objašnjenje i postavke serija')+'"><strong>'+esc(target)+'</strong><span class="workout-reserve-info" aria-hidden="true">'+WorkoutView.icon('info')+'</span></summary><div class="workout-prescription-editor"><p>'+esc(explain)+'</p>'+editor+'<button type="button" class="set-edit" data-a="workoutEdit" data-j="'+s.j+'"'+(c.program&&!c.live?' disabled':'')+'>Broj serija</button></div></details>'+timer+'<span>Odmor '+esc(item.rest||0)+' s</span></div>';
+  return '<div class="workout-prescription"><details class="workout-plan-options"><summary aria-label="'+esc(target+'. Objašnjenje i postavke serija')+'"><strong>'+esc(target)+'</strong><span class="workout-reserve-info" aria-hidden="true">'+WorkoutView.icon('info')+'</span></summary><div class="workout-prescription-editor"><p>'+esc(explain)+'</p>'+editor+'<button type="button" class="set-edit" data-a="workoutEdit" data-j="'+s.j+'"'+(c.program&&!c.live?' disabled':'')+'>Broj serija</button></div></details>'+timer+'<span>'+esc(workoutRestWords(c.items,s.j))+'</span></div>';
+}
+// 1.23.0: the rest as it works inside a group, in the words of Danas and Dijelovi treninga ("bez odmora do A2")
+function workoutRestWords(items,j){
+  const l=ssLetters(items)[j],item=items[j];
+  if(!l)return 'Odmor '+(item.rest||0)+' s';
+  if(l.k<l.size)return (item.rest?'Odmor '+item.rest+' s do ':'Bez odmora do ')+l.L+(l.k+1);
+  return item.rest?'Odmor '+item.rest+' s nakon kruga':'Bez odmora nakon kruga';
 }
 function workoutInstructionsHtml(e) {
   const muscles=exMuscles(e);
@@ -2845,7 +2856,7 @@ function cinemaUpcomingHtml(step){
   const item=step.it||P.items[step.g],e=S.ex[item.exId],dose=PlayerDose.at(item,step.set),target=cinemaTargetText(item);
   const side=PlayerDose.splitSide(step)?' · '+step.side:'';
   return '<div class="cinema-next" data-next-kind="exercise" data-next-ex="'+esc(item.exId)+'"><span class="workout-thumb">'+(e?thumbHtml(e):'')+
-    '</span><span class="cinema-next-text"><small>Serija '+step.set+' od '+item.sets+esc(side)+'</small><strong><b>'+esc(cinemaQuantity(item,dose))+'</b> '+esc(e?.name||'Vježba')+'</strong></span>'+
+    '</span><span class="cinema-next-text"><small>'+esc(ssWhere(step)?.head||'Serija '+step.set+' od '+item.sets)+esc(side)+'</small><strong><b>'+esc(cinemaQuantity(item,dose))+'</b> '+esc(e?.name||'Vježba')+'</strong></span>'+
     '<span class="cinema-next-side"><button type="button" class="ib" data-a="playDoseEdit" data-j="'+step.g+'" aria-label="Uredi sljedeću seriju">'+I.plus+'</button>'+
     (target?'<em class="cinema-effort">'+esc(target)+'</em>':'')+'</span></div>';
 }
@@ -2865,9 +2876,9 @@ function cinemaProgressParts(frac=cinemaStepFrac()){return CinemaModel.progress(
 // The bar announces what it shows: the dot's place along the dashes (the top-bar percent counts finished sets).
 function cinemaDashValue({n,current,within}){return Math.round(Math.max(0,Math.min(1,(current+within)/Math.max(1,n)))*100);}
 function cinemaProgressHtml(frac){
-  const parts=cinemaProgressParts(frac),{n,current,within}=parts;
+  const parts=cinemaProgressParts(frac),{n,current,within}=parts,lab=ssLetters(P.items);   // 1.23.0: a group's dashes stand closer (data-ss-join)
   return '<div class="cinema-dashes" role="progressbar" aria-label="Tijek plana treninga" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+cinemaDashValue(parts)+'" data-current="'+current+'">'+
-    Array.from({length:n},(_,k)=>k<current?'<i class="is-done"></i>':k>current?'<i></i>':'<i class="is-current" id="cinema-dash" style="--at:'+within.toFixed(4)+'"><b></b><em></em></i>').join('')+'</div>';
+    Array.from({length:n},(_,k)=>(k<current?'<i class="is-done"></i>':k>current?'<i></i>':'<i class="is-current" id="cinema-dash" style="--at:'+within.toFixed(4)+'"><b></b><em></em></i>').replace('<i','<i'+(lab[k]&&lab[k].k>1?' data-ss-join':''))).join('')+'</div>';
 }
 // Per tick only the dash and the dot change (the percent changes only when a set is finished, which renders);
 // a new current dash rewrites the dashes alone.
@@ -2906,10 +2917,22 @@ function cinemaSectionHtml(j,parts){
   return '<section class="cinema-section" aria-labelledby="cinema-section-title"><header><h1 id="cinema-section-title">'+esc(name)+'</h1>'+
     (next>=0?'<button type="button" class="cinema-glass" data-a="cinemaBlock" data-j="'+next+'" aria-label="Preskoči dio · '+esc(name)+'">'+I.next+'</button>':'')+'</header>'+
     (chips.length?'<div class="cinema-section-chips" role="group" aria-label="Oprema">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>':'')+
-    '<ol class="cinema-section-items">'+items.map((item,k)=>{
-      const e=S.ex[item.exId];
-      return '<li'+(k===0?' class="is-current" aria-current="step"':'')+'><strong><b>'+(item.sets||1)+'×</b> '+esc(e?.name||'Vježba')+'</strong><small>'+esc(cinemaDoseLine(item))+'</small></li>';
+    // 1.23.0: a group's exercises carry their chip instead of "3×", under one short line with the group's name
+    '<ol class="cinema-section-items ss-a">'+items.map((item,k)=>{
+      const gr=ssGroup(P.items,j+k),at=gr?gr.idx.indexOf(j+k)+1:0;
+      const head=gr&&at===1?'<li class="ss-head" aria-hidden="true"><span><b>'+esc(gr.title)+'</b> · '+esc(gr.rounds)+'</span></li>':'';
+      return head+cinemaOverviewRow(item,j+k,k===0,gr,true);
     }).join('')+'</ol></section>';
+}
+// One row of an overview: "3× name" and the first set's dose; in a group the chip ("A1") instead of "3×", and
+// "· 2 kruga" when the exercise has fewer sets than the group has rounds. bracket: draw the group's bracket (the part
+// overview, where a group is one block among other exercises); screen readers hear the group after the name.
+function cinemaOverviewRow(item,j,current,gr,bracket){
+  const e=S.ex[item.exId],at=gr?gr.idx.indexOf(j)+1:0,sets=item.sets||1;
+  const cls=[current?'is-current':'',gr&&bracket?'ss-m':'',gr&&bracket&&at===1?'ss-first':'',gr&&bracket&&at===gr.size?'ss-last':''].filter(Boolean).join(' ');
+  const sr=gr&&bracket?'<span class="workout-sr">, '+esc(gr.title)+', '+at+'. od '+esc(nVj(gr.size))+(at===1?', '+esc(gr.rounds+', '+gr.restText):'')+'</span>':'';
+  return '<li'+(cls?' class="'+cls+'"':'')+(current?' aria-current="step"':'')+'><strong>'+(gr?'<b class="ss-label">'+esc(gr.L+at)+'</b>':'<b>'+sets+'×</b>')+' '+esc(e?.name||'Vježba')+sr+
+    '</strong><small>'+esc(cinemaDoseLine(item))+(gr&&sets<gr.R?' · '+sets+' '+plural(sets,'krug','kruga','krugova'):'')+'</small></li>';
 }
 // Rest: phase 1 is the time alone for 3 s; a tap on the stage, a pause or an opened sheet reveals phase 2 for this rest.
 function cinemaRestPhase(st){
@@ -2935,10 +2958,13 @@ function workoutCinemaHtml() {
   const side=PlayerDose.splitSide(step)?step.side:'';
   const footer=cinemaFooter({st:rest||section?st:isWork(st)?st:{...st,kind:'prep'}},step,item,name,preparing&&!rest);
   const restClock=restPhase===1?'<div class="cinema-rest-stack"><p class="cinema-phase-word">Odmor</p>'+cinemaBigClock(st,'is-rest',true)+'</div>':'';
+  // 1.23.0: inside a group the heading says where the set stands in it ("A1 · krug 1 od 3")
+  const where=ssWhere(step);
   // the reserve (RIR) rows of the sets just closed: rest phase 2, and the pause before the next exercise or part
   const reserveAt=!editingPrep&&!pause&&st.kind==='rest'&&restPhase!==1?cinemaReserveSteps():[];
   return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
-    subtitle:section||rest?'':'Serija '+(step.set||1)+' od '+item.sets+(side?' · '+side:''),prepQuantity:section||rest?'':cinemaQuantity(item,dose),
+    subtitle:section||rest?'':(where?where.head:'Serija '+(step.set||1)+' od '+item.sets)+(side?' · '+side:''),subtitleSr:section||rest||!where?'':where.aria+(side?', '+side:''),
+    prepQuantity:section||rest?'':cinemaQuantity(item,dose),
     overviewHtml:section?cinemaSectionHtml(opening,parts):'',
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
@@ -2991,14 +3017,16 @@ function cinemaJournalFocus(back){
   el.scrollIntoView?.({block:'nearest'});
 }
 function workoutJournalHtml() {
-  const c=workoutContext({live:true}),v=curView(),state=cinemaState(v),sections=CinemaModel.sections(c.items,S.ex),stats=CinemaModel.summary(P,PlayerDose);
+  // 1.23.0: part headings per group (groupSections) and each group in one frame (ssOpenHtml/ssCloseHtml)
+  const c=workoutContext({live:true}),v=curView(),state=cinemaState(v),sections=CinemaModel.groupSections(c.items),stats=CinemaModel.summary(P,PlayerDose),lab=ssLetters(c.items);
   const blocks=c.items.map((item,j)=>{
+    const gr=lab[j]?ssGroup(c.items,j):null,tag=gr?ssTagHtml(gr.L+lab[j].k):'',group=gr?gr.title+', '+lab[j].k+'. od '+nVj(gr.size):'';
     const e=S.ex[item.exId],s={kind:'workoutExercise',j,live:true,journal:true,base:mtCanon(P.items)},open=state.all||state.group===j,name=e?.name||'Obrisana vježba';
     const section=j===0||sections[j]!==sections[j-1]?'<header class="cinema-block-heading"><h2>'+esc(sections[j])+'</h2><button type="button" class="ib" data-a="cinemaBlock" data-j="'+j+'" aria-label="Prijeđi na dio '+esc(sections[j])+'">'+I.next+'</button></header>':'';
     const thumb=e?thumbHtml(e):'',swapped=cinemaJournalSwapped(j),badge=swapped?'<span class="cj-badge" aria-hidden="true">'+WorkoutView.icon('shuffle')+'</span>':'';
     const sets=PlayerDose.checklist(item,P,j).map(row=>'<span data-state="'+row.state+'">'+(row.state==='done'?WorkoutView.icon('check'):row.set)+'</span>').join('');
-    const wrap=body=>section+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+body+'</div>';
-    if(!open)return wrap(WorkoutView.journalRow({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,setsHtml:sets}));
+    const wrap=body=>section+(gr&&lab[j].k===1?ssOpenHtml(gr,'ss-journal'):'')+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+body+'</div>'+(gr&&lab[j].k===gr.size?ssCloseHtml():'');
+    if(!open)return wrap(WorkoutView.journalRow({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,setsHtml:sets,tagHtml:tag,group}));
     const undo=swapped,canSwap=workoutCanSwap(c,j),target=cinemaTargetText(item),e1=cinemaE1Html(item);
     // the previous dose keeps its last number and unit on one line; both lines describe the card's open button
     const previous=workoutPreviousCompact(item).replace(/<\/?span>/g,'').replace(/ (pon\.|s)(?=$| )/g,'\u00a0$1').replace(/ ((?:prosječno )?po strani)/g,'\u00a0$1');
@@ -3014,7 +3042,7 @@ function workoutJournalHtml() {
       (j!==state.active?'<button type="button" data-a="cinemaGoSet" data-j="'+j+'">'+I.next+'Prijeđi na vježbu</button>':'');
     const remove=P.ref?.kind==='protocol'&&P.items.length>1&&!cinemaRemoveBlocked(j)
       ? '<button type="button" class="txtbtn cinema-remove-exercise" data-a="cinemaRemoveExercise" data-j="'+j+'" aria-label="Ukloni vježbu · '+esc(name)+'">'+I.close+'Ukloni vježbu</button>' : '';
-    return wrap(WorkoutView.journalCard({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,metaHtml:meta,describedBy:'cj-meta-'+j+(e1||target?' cj-meta-'+j+'-b':''),
+    return wrap(WorkoutView.journalCard({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,metaHtml:meta,tagHtml:tag,group,describedBy:'cj-meta-'+j+(e1||target?' cj-meta-'+j+'-b':''),
       collapseHtml:'<button type="button" class="ib cj-collapse" data-a="cinemaJournalGroup" data-j="'+j+'" aria-expanded="true" aria-label="Sažmi · '+esc(name)+'">'+WorkoutView.icon('chevron-up')+'</button>',
       chipsHtml:chips,menuHtml:state.equipment===j?cinemaEquipmentMenuHtml(j):'',rowsHtml:workoutTableHtml(c,j,s),footHtml:remove}));
   }).join('');
@@ -3120,7 +3148,14 @@ function cinemaCloseSheet(){
 }
 function cinemaJump(j){
   if(!P||P.done)return;
-  const k=P.steps.findIndex(st=>isWork(st)&&st.g===j);if(k<0)return;
+  let k=P.steps.findIndex(st=>isWork(st)&&st.g===j);if(k<0)return;
+  // 1.23.0: inside the group on screen a jump keeps the round (A2 from A1 round 2 lands on A2 round 2)
+  const here=P.steps[P.i],cur=isWork(here)?here:P.steps.slice(P.i).find(isWork),cw=ssWhere(cur),tg=ssLetters(P.items)[j];
+  if(cw&&tg&&tg.L===cw.L){
+    let r=P.steps.findIndex(st=>isWork(st)&&st.g===j&&st.set>=cw.round);
+    if(r<0)for(let x=P.steps.length-1;x>=0;x--)if(isWork(P.steps[x])&&P.steps[x].g===j){r=x;break;}
+    if(r>=0)k=r;
+  }
   delete P.dosePause;S.sheet=null;P.paused=false;P.sheetPause=false;enterStep(landAt(k));savePlay();render();
 }
 // After a touch the browser fires a click where the finger was. When the tap has already redrawn the player (rest
@@ -4182,6 +4217,43 @@ function ssLetters(items){
   const lab = {}; let n = 0;
   groupsOf(items).forEach(g => { if (!g.ss) return; const L = String.fromCharCode(65 + n++); g.idx.forEach((i, k) => lab[i] = { L, k: k + 1, size: g.idx.length }); });
   return lab;
+}
+// 1.23.0: one description of a group (superset, triset, circuit) for the protocol page, the player and the journal.
+// The group is marked with a bracket along its exercises and A1/A2 chips; its name stands above them. In the player
+// green means "current", so the group's lines are grey there.
+function ssGroup(items,j){
+  const g=groupsOf(items||[]).find(x=>x.ss&&x.idx.includes(j));if(!g)return null;
+  const lab=ssLetters(items),L=lab[g.idx[0]].L,sets=g.idx.map(i=>items[i].sets||1),R=Math.max(...sets),rest=items[g.idx[g.idx.length-1]].rest||0;
+  // mixed set counts: the rounds where not every exercise works ("3. krug samo C1", "3.–4. krug samo A1")
+  const lone=[];
+  for(let r=Math.min(...sets)+1;r<=R;r++){
+    const act=g.idx.filter(i=>(items[i].sets||1)>=r).map(i=>L+lab[i].k).join(' i '),last=lone[lone.length-1];
+    if(last&&last.act===act)last.b=r;else lone.push({a:r,b:r,act});
+  }
+  const word=groupWord(g.idx.length),rounds=R+' '+plural(R,'krug','kruga','krugova'),order=g.idx.length>3?'redom':'naizmjence';
+  const loneText=lone.map(x=>(x.a===x.b?x.a+'.':x.a+'.–'+x.b+'.')+' krug samo '+x.act).join(' · ');
+  const restText=rest?'odmor '+rest+' s nakon kruga':'bez odmora nakon kruga';
+  return {idx:g.idx,L,size:g.idx.length,word,title:word+' '+L,R,rest,rounds,order,lone:loneText,restText,
+    aria:word+' '+L+', '+nVj(g.idx.length)+' '+order+', '+rounds+', '+restText+(loneText?', '+loneText:'')};
+}
+// "3 kruga · odmor 90 s nakon kruga" (the editor's groupHead words)
+function ssMeta(gr){return gr.rounds+' · '+gr.restText;}
+// the label of one exercise of a group, a chip ("A1"); screen readers hear the name with the group instead
+function ssTagHtml(label){return '<span class="ss-tag" aria-hidden="true">'+esc(label)+'</span>';}
+// a group's frame around its rows (protocol page, journal): role=group, its name above the rows, the bracket along
+// the rows (.ss-rows)
+function ssOpenHtml(gr,cls){
+  const lone=gr.lone?'<span class="ss-lone">'+esc(gr.lone)+'</span>':'';
+  return '<div class="ss-block ss-a'+(cls?' '+cls:'')+'" role="group" aria-label="'+esc(gr.aria)+'">'+
+    '<p class="ss-head" aria-hidden="true"><b>'+esc(gr.title)+'</b> · '+esc(ssMeta(gr))+lone+'</p><div class="ss-rows">';
+}
+function ssCloseHtml(){return '</div></div>';}
+// where a player step stands in its group: "A1 · krug 2 od 3"; screen readers hear "A1, Superset A, krug 2 od 3"
+function ssWhere(step){
+  if(!step?.ss||!P)return null;
+  const gr=ssGroup(P.items,step.g);if(!gr)return null;
+  const k=gr.idx.indexOf(step.g)+1,round=step.round||step.set||1,label=gr.L+k;
+  return {...gr,k,label,round,head:label+' · krug '+round+' od '+gr.R,aria:label+', '+gr.title+', krug '+round+' od '+gr.R};
 }
 // keeps supersets well-formed after moving or removing: a key used by a single item is dropped, a key split in two becomes two groups
 function normGroups(items){
@@ -6041,7 +6113,8 @@ function cinemaReserveHtml(ks, active){
   const rows = ks.map(k => [k, rirRow(k)]), other = ks.length > 1 || P.steps[ks[0]].g !== active;
   const holds = rows.every(([, r]) => r.time), ask = holds ? 'Koliko si još sekundi mogao držati?' : 'Koliko si još mogao?';
   return (other ? '<p class="cinema-rest-rir-q">' + ask + '</p>' : '') + rows.map(([k, r]) => {
-    const line = r.failed ? 'Neuspjela serija · RIR 0' : other ? r.st.e.name + ' · ' + r.st.set + '. serija' + (r.time && !holds ? ' · sekunde' : '') : ask + ' · serija ' + r.st.set;
+    const tag = r.st.ss ? r.st.ss.L + r.st.ss.k : '';   // 1.23.0: "A1 · Bench press · 1. serija" (the step's own group label)
+    const line = r.failed ? 'Neuspjela serija · RIR 0' : other ? (tag ? tag + ' · ' : '') + r.st.e.name + ' · ' + r.st.set + '. serija' + (r.time && !holds ? ' · sekunde' : '') : ask + ' · serija ' + r.st.set;
     return '<section class="rir cinema-rest-rir" aria-label="' + esc(rirRowLabel(k, r, other)) + '"><p class="' + (other ? 'rirn' : 'rirq') + '">' + esc(line) + '</p>' + rirButtonsHtml(k, r) + '</section>';
   }).join('');
 }
@@ -6698,8 +6771,9 @@ function cinemaSheetHtml(s){
   if(s.kind==='cinemaPace')return '<h3>Tempo i prijelazi</h3><p class="label">Priprema pri promjeni strane</p>'+playerTimingChoices('switchSec',SIDE_PREP_CHOICES)+
     '<p>Odabrano vrijeme vrijedi od sljedećeg treninga.</p><div class="prow"><span>Između vježbi</span><strong>'+S.settings.transSec+' s</strong></div><button type="button" class="btn" data-a="cinemaSettings">Postavke playera</button>'+close;
   if(s.kind==='cinemaPlan'){
-    const parts=CinemaModel.sections(P.items,S.ex);
-    return '<h3>Dijelovi treninga</h3>'+P.items.map((it,j)=>(j===0||parts[j]!==parts[j-1]?'<h4>'+esc(parts[j])+'</h4>':'')+'<button type="button" class="opt" data-a="cinemaBlock" data-j="'+j+'"><span><strong>'+esc(S.ex[it.exId]?.name||'Vježba')+'</strong><small>'+esc(doseBase(it))+(it.rest?' · odmor '+it.rest+' s':'')+'</small></span>'+I.next+'</button>').join('')+close;
+    const parts=CinemaModel.groupSections(P.items),lab=ssLetters(P.items);   // 1.23.0: the tag and the rest as it works inside a group
+    const restOf=(it,j)=>{const l=lab[j];if(!l)return it.rest?' · odmor '+it.rest+' s':'';return l.k<l.size?(it.rest?' · '+it.rest+' s do '+l.L+(l.k+1):' · bez odmora do '+l.L+(l.k+1)):it.rest?' · odmor '+it.rest+' s nakon kruga':'';};
+    return '<h3>Dijelovi treninga</h3>'+P.items.map((it,j)=>(j===0||parts[j]!==parts[j-1]?'<h4>'+esc(parts[j])+'</h4>':'')+'<button type="button" class="opt" data-a="cinemaBlock" data-j="'+j+'"><span><strong>'+(lab[j]?esc(lab[j].L+lab[j].k)+' · ':'')+esc(S.ex[it.exId]?.name||'Vježba')+'</strong><small>'+esc(doseBase(it))+restOf(it,j)+'</small></span>'+I.next+'</button>').join('')+close;
   }
   return '<h3>Jednostavan player</h3><div class="cinema-guide"><p><strong>Tajmer</strong><br>Dodirni za pauzu ili nastavak. Na nuli player nastavlja sam.</p><p><strong>Kartica vježbe</strong><br>Dodirni za Dnevnik i unos stvarnih ponavljanja i rezerve.</p><p><strong>Vrijeme serije</strong><br>Uredi ga u postavkama serija.</p></div>'+close;
 }

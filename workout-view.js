@@ -119,11 +119,12 @@
     vm = vm || {};
     var valid = Number.isInteger(vm.index) && vm.index >= 0;
     var content = '<span class="workout-compact-thumb">' + (html(vm.thumbHtml) || '<span aria-hidden="true">' + (valid ? vm.index + 1 : '•') + '</span>') +
-      '</span><span class="workout-compact-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' +
+      '</span><span class="workout-compact-text"><strong>' + html(vm.tagHtml) + esc(vm.name || 'Vježba') + '</strong>' +
       (vm.summary ? '<small>' + esc(vm.summary) + '</small>' : '') +
       (vm.previous ? '<small class="workout-compact-previous">' + esc(vm.previous) + '</small>' : '') + '</span><span class="workout-compact-arrow" aria-hidden="true">›</span>';
+    // 1.23.0: tagHtml is a group's chip (A1), label the full name a screen reader hears ("A1 · Bench press, Superset A, …")
     return valid ? '<button type="button" class="workout-compact-row" data-a="workoutExercise" data-j="' + vm.index +
-      '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba')) + '">' + content + '</button>' : '<div class="workout-compact-row">' + content + '</div>';
+      '" aria-label="' + esc('Otvori vježbu: ' + (vm.label || vm.name || 'Vježba')) + '">' + content + '</button>' : '<div class="workout-compact-row">' + content + '</div>';
   }
   function list(vm) { return '<div class="workout-compact-list">' + html(vm && vm.itemsHtml) + '</div>'; }
   function footer(value) { return value ? '<div class="workout-footer">' + html(value) + '</div>' : ''; }
@@ -163,15 +164,15 @@
   // Player journal: a collapsed row (thumb, name, set circles) and the open card.
   function journalRow(vm) {
     vm = vm || {};
-    return '<button type="button" class="cj-row" data-a="cinemaJournalGroup" data-j="' + esc(vm.index) + '" aria-expanded="false" aria-label="' + esc('Prikaži serije · ' + (vm.name || 'Vježba') + (vm.swapped ? ' · zamijenjena' : '')) + '">' +
-      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' +
+    return '<button type="button" class="cj-row" data-a="cinemaJournalGroup" data-j="' + esc(vm.index) + '" aria-expanded="false" aria-label="' + esc('Prikaži serije · ' + (vm.name || 'Vježba') + (vm.group ? ' · ' + vm.group : '') + (vm.swapped ? ' · zamijenjena' : '')) + '">' +
+      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + html(vm.tagHtml) + esc(vm.name || 'Vježba') + '</strong>' +
       '<span class="cj-sets" aria-hidden="true">' + html(vm.setsHtml) + '</span></span></button>';
   }
   function journalCard(vm) {
     vm = vm || {};
-    return '<article class="cj-card" data-index="' + esc(vm.index) + '"><header class="cj-head"><button type="button" class="cj-open" data-a="workoutExercise" data-j="' + esc(vm.index) + '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba') + (vm.swapped ? ' · zamijenjena' : '')) + '"' +
+    return '<article class="cj-card" data-index="' + esc(vm.index) + '"><header class="cj-head"><button type="button" class="cj-open" data-a="workoutExercise" data-j="' + esc(vm.index) + '" aria-label="' + esc('Otvori vježbu: ' + (vm.name || 'Vježba') + (vm.group ? ' · ' + vm.group : '') + (vm.swapped ? ' · zamijenjena' : '')) + '"' +
       (vm.describedBy ? ' aria-describedby="' + esc(vm.describedBy) + '"' : '') + '>' +
-      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + esc(vm.name || 'Vježba') + '</strong>' + html(vm.metaHtml) + '</span></button>' + html(vm.collapseHtml) + '</header>' +
+      '<span class="cj-thumb">' + html(vm.thumbHtml) + html(vm.badgeHtml) + '</span><span class="cj-text"><strong>' + html(vm.tagHtml) + esc(vm.name || 'Vježba') + '</strong>' + html(vm.metaHtml) + '</span></button>' + html(vm.collapseHtml) + '</header>' +
       (vm.chipsHtml ? '<div class="cj-chips" role="group" aria-label="Mogućnosti vježbe">' + html(vm.chipsHtml) + '</div>' : '') + html(vm.menuHtml) + rows(vm.rowsHtml) + html(vm.footHtml) + '</article>';
   }
   function cinema(vm) {
@@ -186,7 +187,8 @@
       (vm.progressHtml ? '<div class="workout-cinema-progress">' + html(vm.progressHtml) + '</div>' : '') +
       (vm.overviewHtml ? '<div class="workout-cinema-overview">' + html(vm.overviewHtml) + '</div>' :
       vm.subtitle || vm.prepQuantity ? '<div class="workout-cinema-heading' + (vm.prepQuantity ? ' is-preparing' : '') + '">' +
-      (vm.subtitle ? '<p>' + esc(vm.subtitle) + '</p>' : '') + '<h1>' +
+      // 1.23.0: subtitleSr is what a screen reader hears instead ("A1, Superset A, krug 1 od 3")
+      (vm.subtitle ? '<p>' + (vm.subtitleSr ? '<span aria-hidden="true">' + esc(vm.subtitle) + '</span><span class="workout-sr">' + esc(vm.subtitleSr) + '</span>' : esc(vm.subtitle)) + '</p>' : '') + '<h1>' +
       (vm.prepQuantity ? '<b>' + esc(vm.prepQuantity) + '</b> ' : '') + esc(vm.name || 'Trening') + '</h1></div>' : '') +
       (vm.noticeHtml ? '<div class="workout-cinema-notice">' + html(vm.noticeHtml) + '</div>' : '') +
       '<div class="workout-cinema-stage"><div class="workout-cinema-media">' +

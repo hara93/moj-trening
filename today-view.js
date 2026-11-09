@@ -87,7 +87,15 @@
   }
   function doseRows(items,exercises,expanded) {
     if (!items?.length) return '';
-    const rows=items.map(item=>{
+    // 1.23.0: consecutive items with one "ss" key are a group: "A1 · name", and the rest said as it works
+    const tags={};let letter=0;
+    for (let i=0;i<items.length;) { let k=i+1; while (items[i].ss&&k<items.length&&items[k].ss===items[i].ss) k++;
+      if (k-i>1) { const L=String.fromCharCode(65+letter++); for (let n=i;n<k;n++) tags[n]={L,k:n-i+1,size:k-i}; } i=k; }
+    // the rest wraps as one phrase ("odmor 75 s nakon kruga" never leaves "kruga" alone on a line)
+    const nb=t=>t.replace(/ /g,'\u00a0');
+    const restText=(item,j)=>{const t=tags[j];if(!t)return item.rest!=null?'odmor '+item.rest+' s':'';
+      return nb(t.k<t.size?(item.rest?item.rest+' s do ':'bez odmora do ')+t.L+(t.k+1):item.rest?'odmor '+item.rest+' s nakon kruga':'bez odmora nakon kruga');};
+    const rows=items.map((item,j)=>{
       const e=exercises[item.exId];
       if (!e) return '';
       const timed=item.measure==='time', sets=item.sets || 1;
@@ -98,7 +106,8 @@
       };
       const qty=list(timed?'sec':'reps')+(timed?' s':' pon.');
       const kg=series.some(row=>row.kg>0)?list('kg')+' kg':'';
-      return '<li><strong>'+esc(e.name)+'</strong><span>'+esc([sets+' × '+qty,kg,item.sides?'po strani':'',item.rest!=null?'odmor '+item.rest+' s':''].filter(Boolean).join(' · '))+'</span></li>';
+      // a group's row shows its tag where the list number stands ("A1", not "1. A1 · ")
+      return '<li'+(tags[j]?' class="dy-ss"':'')+'><strong>'+(tags[j]?'<b class="dy-ss-tag">'+esc(tags[j].L+tags[j].k)+'</b>':'')+esc(e.name)+'</strong><span>'+esc([sets+' × '+qty,kg,item.sides?'po strani':'',restText(item,j)].filter(Boolean).join(' · '))+'</span></li>';
     }).filter(Boolean);
     return rows.length ? disclosure('Vježbe i doze ('+rows.length+')','<ol>'+rows.join('')+'</ol>','dose',expanded) : '';
   }

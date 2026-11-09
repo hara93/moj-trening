@@ -856,3 +856,42 @@ span.workout-exercise-open{cursor:default}
 .no-font-width :is(.workout-cinema-metric strong,.cinema-wheel-number){transform:scaleX(.82)}
 .no-font-width .cinema-wheel-number:has(+.is-selected){transform:perspective(90px) rotateX(27deg) scaleX(.82)}
 .no-font-width .cinema-wheel-number.is-selected+.cinema-wheel-number{transform:perspective(90px) rotateX(-27deg) scaleX(.82)}
+
+/* ===== 1.23.0: supersets, trisets and circuits =====
+   A group is named ABOVE its exercises (rounds, and on the protocol page the rest after the round), a bracket runs
+   along its rows and its exercises carry A1/A2 chips. Colours: existing tokens and the player's existing glass values
+   only. --accent-text / --tag-bg are the app blue on the protocol page and the player green inside the player and its
+   sheets (app-layout.css remaps them). The bracket is blue on the protocol page and grey (--text-2) in the player,
+   where a green bar on the left already means "current". Small text 13 px. */
+.ss-block{--ss-line:var(--accent-text)}
+.workout-cinema,.cinema-journal,.cinema-journal .ss-block{--ss-line:var(--text-2)}
+.ss-tag{display:inline-block;margin:0 7px 0 0;padding:0 6px;border-radius:6px;background:var(--tag-bg);color:var(--accent-text);font-size:13px;font-weight:700;line-height:20px;letter-spacing:0;vertical-align:1px;white-space:nowrap}
+.ss-lone{display:block;font-size:13px;font-weight:500;color:var(--text-2)}
+.ss-head b{color:var(--accent-text);font-weight:700;letter-spacing:.02em}
+.ss-rows{position:relative}
+/* the bracket */
+.ss-a>.ss-rows{padding-left:12px}
+.ss-a>.ss-rows::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:7px;box-sizing:border-box;border:3px solid var(--ss-line);border-right:0;border-radius:7px 0 0 7px}
+/* protocol page */
+.workout-compact-list .ss-block{position:relative;border-bottom:1px solid #303234}
+.workout-compact-list .ss-block .workout-compact-row:last-child{border-bottom:0}
+.workout-compact-list .ss-head{margin:12px 0 0;font-size:13px;line-height:1.4;color:var(--text-2)}
+.workout-compact-list .ss-head b{font-size:14px}
+/* player: the one line under the heading inside a group ("Sljedeća: A2 · …"), one line on a glass tile (a left bar
+   would be the "current" marker again); screen readers get the whole text */
+.workout-cinema-notice:has(.ss-next){padding:2px 14px 4px}
+.ss-next{width:fit-content;max-width:100%;box-sizing:border-box;margin:0;padding:3px 11px;border-radius:11px;background:#1A1E25CC;box-shadow:inset 0 0 0 1px #FFFFFF2E;font-size:13px;font-weight:600;line-height:18px;color:var(--text-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cinema-dashes>i[data-ss-join]{margin-left:-5px}
+/* player: the part overview; the group's line sits above its exercises, one line, with the glass backing over the photo */
+.cinema-section-items li.ss-m{position:relative;padding-left:26px}
+.cinema-section-items .ss-label{font-weight:800}
+.cinema-section-items.ss-a .ss-label{display:inline-block;padding:0 6px;border-radius:6px;background:var(--tag-bg);font-size:15px;line-height:20px;vertical-align:1px}
+.cinema-section-items li.ss-head{display:block;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:500;line-height:1.35;color:var(--text-body);border-left-color:transparent}
+.cinema-section-items li.ss-head{padding:4px 12px 0 20px}
+.cinema-section-items li.ss-head>span{display:inline-block;max-width:100%;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;padding:1px 8px;border-radius:8px;background:#1A1E25B3}
+.cinema-section-items.ss-a li.ss-m::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:7px;box-sizing:border-box;border-left:3px solid var(--ss-line)}
+.cinema-section-items.ss-a li.ss-first::before{top:12px;border-top:3px solid var(--ss-line);border-top-left-radius:7px}
+.cinema-section-items.ss-a li.ss-last::before{bottom:12px;border-bottom:3px solid var(--ss-line);border-bottom-left-radius:7px}
+/* journal (Dnevnik) */
+.cinema-journal .ss-block{position:relative}
+.cinema-journal .ss-head{margin:10px 4px 4px;font-size:13px;line-height:1.4;color:var(--text-2)}
