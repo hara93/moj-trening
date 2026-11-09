@@ -569,3 +569,33 @@ test('a partial session today keeps the day open instead of calling it done', ()
   const whole = Today.suggest(input({ logs: [part, log({ at: now - 1800000, historyId: 'whole' })] }));
   assert.equal(whole.title, 'Današnji trening je zabilježen');
 });
+
+// 1.23.0: the shipped gym workouts open with the part "Priprema" (the rope warm-up). A lighter day keeps the warm-up's
+// dose and names no warm-up exercise in its changes, as for a part named "Zagrijavanje…".
+test('the shipped Priprema is warm-up: a low-energy or pain day keeps its 2 sets and lists none of it', () => {
+  const W = {};
+  new Function('window', require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'data.js'), 'utf8'))(W);
+  const ex = Object.fromEntries(Object.entries(W.SEED.exercises).map(([id, e]) => [id, { ...clone(e), id }]));
+  for (const id of ['snaga-a', 'snaga-c', 'eksplozivnost']) {
+    const shipped = { ...clone(W.SEED.protocols[id]), id, kind: 'protocol', date };
+    shipped.items.forEach(item => { if (!item.kg && ex[item.exId] && ex[item.exId].cat === 'Snaga') item.kg = 20; });
+    const warm = shipped.items.map((item, k) => k).filter(k => shipped.items[k].section === 'Priprema');
+    assert.equal(warm.length, 6, id + ': the six rope exercises');
+    const names = warm.map(k => ex[shipped.items[k].exId].name);
+    const equipment = [...new Set(shipped.items.flatMap(item => ex[item.exId].equip || []))];
+    const day = status => Today.suggest(input({ exercises: ex, planned: [shipped], equipment, checkin: { ...checkin, ...status } }));
+    const low = day({ energy: 2 });
+    assert.equal(low.kind, 'reduce', id + ': a low-energy day is lighter');
+    assert.deepEqual(warm.map(k => low.items[k].sets), warm.map(k => shipped.items[k].sets), id + ': Priprema keeps its sets');
+    assert.ok(low.items.some((item, k) => !warm.includes(k) && item.sets < shipped.items[k].sets), id + ': the main work is cut');
+    const pain = day({ pain: 4, painArea: 'hip' });
+    assert.equal(pain.kind, 'reduce', id + ': hip pain gives the lighter version');
+    assert.deepEqual(warm.map(k => pain.items[k].sets), warm.map(k => shipped.items[k].sets), id + ': Priprema keeps its sets on a pain day');
+    const listed = pain.reasons.find(r => r.code === 'painLighter').text;
+    for (const name of names) assert.ok(!listed.includes(name), id + ': ' + name + ' is not listed: ' + listed);
+  }
+  assert.equal(Today.warmupPart('Priprema'), true);
+  assert.equal(Today.warmupPart('Zagrijavanje i mobilnost'), true);
+  assert.equal(Today.warmupPart('Glavni dio'), false);
+  assert.equal(Today.warmupPart('Završni dio'), false);
+});

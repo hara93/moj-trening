@@ -144,10 +144,20 @@
     var area = checkin.painArea && checkin.painArea !== 'other' ? checkin.painArea : null;
     return !area || painAreasOf(exercise, id).includes(area);
   }
+  // 1.23.0: the warm-up part keeps its dose on a lighter day: a part named "Zagrijavanje…" or "Priprema" (an item's
+  // part is the last one named at or before it), or an item marked as warm-up.
+  function warmupPart(name) { return /^(zagrij|priprem)/i.test(text(name)); }
+  function warmupFlags(items) {
+    var section = '';
+    return items.map(function (item) {
+      section = text(item && item.section, section);
+      return !!item && (item.warmup === true || warmupPart(section));
+    });
+  }
   // Pain 3-5: gentler variants in the same slots and one set fewer for the painful area.
   function painLighter(items, area, exercises) {
-    var changes = [];
-    var result = items.map(function (original) {
+    var changes = [], warm = warmupFlags(items);
+    var result = items.map(function (original, index) {
       var item = copy(original), exercise = exerciseFor(exercises, item.exId);
       var swap = PAIN_SWAPS[item.exId], target = swap && exerciseFor(exercises, swap.to);
       if (swap && target && swap.areas.includes(area)) {
@@ -162,7 +172,7 @@
         return swapped;
       }
       var loads = area === 'other' || painAreasOf(exercise, item.exId).includes(area);
-      if (!loads || item.warmup === true || !integer(item.sets, 2, 1000)) return item;
+      if (!loads || warm[index] || !integer(item.sets, 2, 1000)) return item;
       item.sets -= 1;
       ['reps', 'kg', 'sec'].forEach(function (key) {
         if (Array.isArray(item[key + 'List'])) item[key + 'List'] = item[key + 'List'].slice(0, item.sets);
@@ -182,9 +192,10 @@
   }
   function heavyLegs(plan, exercises) {
     if (typeof plan.heavyLegs === 'boolean') return plan.heavyLegs;
-    return workItems(plan).some(function (item) {
+    var items = workItems(plan), warm = warmupFlags(items);
+    return items.some(function (item, index) {
       var exercise = exerciseFor(exercises, item.exId);
-      if (!exercise || exercise.cat !== 'Snaga' || item.warmup === true) return false;
+      if (!exercise || exercise.cat !== 'Snaga' || warm[index]) return false;
       var primary = plain(exercise.muscles) && Array.isArray(exercise.muscles.prime)
         ? exercise.muscles.prime : [];
       return primary.some(function (region) { return LOWER_REGIONS.includes(region); }) ||
@@ -255,11 +266,10 @@
     });
   }
   function reduceItems(plan, doses) {
-    var section = '';
+    var warm = warmupFlags(plan.items);
     return plan.items.map(function (original, index) {
       var item = copy(original), dose = doses[index];
-      section = text(item.section, section);
-      if (!integer(item.sets, 1, 1000) || item.warmup === true || /^zagrij/i.test(section)) return item;
+      if (!integer(item.sets, 1, 1000) || warm[index]) return item;
       var count = Math.max(1, item.sets - 1);
       // Only contiguous, full-side work can be replayed as a numbered dose.
       var rows = dose && dose.rows.filter(function (row) {
@@ -617,5 +627,5 @@
   }
 
   return freeze({ version: 1, suggest: suggest, matchRule: matchRule, painLevel: painLevel, painAreasOf: painAreasOf,
-    painHolds: painHolds, painAreas: PAIN_AREAS, painAreasFor: PAIN_AREAS_FOR, dateKey: dateKey, validDate: validDate });
+    painHolds: painHolds, warmupPart: warmupPart, painAreas: PAIN_AREAS, painAreasFor: PAIN_AREAS_FOR, dateKey: dateKey, validDate: validDate });
 });

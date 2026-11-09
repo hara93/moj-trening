@@ -1612,12 +1612,14 @@ VIEWS.home = function(){
   '</div>';
 };
 
+// 1.23.0: the warm-up part, "Zagrijavanje…" or "Priprema" (TodayModel.warmupPart, the rule Danas uses)
+const warmupPart = name => TodayModel.warmupPart(norm(name));
 // A planned slot uses today's protocol. Completed work always uses the session's saved attribution.
 function protocolMuscleWork(protocol) {
   const items = protocol.items || [];
   const sections = secOf(items);
   return MuscleWork.plannedProtocol({
-    items: items.map((item,index) => ({ ...item, warmup: item.warmup === true || /^zagrij/.test(norm(sections[index])) }))
+    items: items.map((item,index) => ({ ...item, warmup: item.warmup === true || warmupPart(sections[index]) }))
   }, S.ex);
 }
 
@@ -3616,7 +3618,7 @@ function featRows(p){
   const items = p.items || [], parts = secOf(items), eq = {}, main = {}, all = {};
   items.forEach((it, i) => { const e = S.ex[it.exId]; if (!e) return;
     exEquip(e).forEach(x => { if (x !== 'Bez opreme') eq[x] = 1; });
-    const warm = /^zagrij/.test(norm(parts[i]));
+    const warm = warmupPart(parts[i]);
     (e.zones || []).forEach((z, k) => { const n = exZoneLabel(z), w = (it.sets || 1) * (k === 0 ? 2 : 1); all[n] = (all[n] || 0) + w; if (!warm) main[n] = (main[n] || 0) + w; });
   });
   const zw = Object.keys(main).length ? main : all, zones = Object.keys(zw).sort((a, b) => zw[b] - zw[a]).slice(0, 4), min = protoMin(p);
