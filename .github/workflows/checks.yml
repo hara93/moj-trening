@@ -150,6 +150,9 @@ jobs:
       - name: Serije koje broje unaprijed
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/rep-set-timer.cjs ${{ matrix.browser }}
+      - name: Dijelovi treninga i supersetovi
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/superset-parts.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

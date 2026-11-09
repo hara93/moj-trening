@@ -66,6 +66,8 @@ async function openItem(p,index){
 async function setPart(p,index,label){await openItem(p,index);await part(p,index).selectOption(label);}
 async function save(p){await p.locator('.topbar [data-a="savePr"]').click();await p.locator('.workout-overview').waitFor();}
 async function shot(p,name,width){await p.screenshot({path:path.join(artifacts,'sections-'+engine+'-'+name+'-'+width+'.png')});}
+// 1.23.0: the editor offers Priprema, Glavni dio and Završni dio (app.js WORKOUT_PARTS), so the parts chosen here are
+// Završni dio (was Snaga) and Priprema (was Kondicija)
 async function run(p,width){
   await importFixture(p);await openProtocol(p);
   assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Glavni dio'],'unassigned exercises have one generic block, irrespective of categories');
@@ -74,16 +76,16 @@ async function run(p,width){
   await edit(p);
   await setPart(p,0,'Priprema');
   assert.deepEqual((await draft(p)).items.map(x=>x.section),['Priprema','Glavni dio','Glavni dio','Glavni dio'],'one item assignment does not relabel later default items');
-  await setPart(p,1,'Priprema');await setPart(p,2,'Snaga');await setPart(p,3,'Snaga');
+  await setPart(p,1,'Priprema');await setPart(p,2,'Završni dio');await setPart(p,3,'Završni dio');
   const selected=(await draft(p)).items;
-  assert.deepEqual(selected.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);
+  assert.deepEqual(selected.map(x=>x.section),['Priprema','Priprema','Završni dio','Završni dio']);
   assert.deepEqual(selected.map(withoutPart),source.map(withoutPart),'assigning a part never changes the exercise dose');
   await shot(p,'builder',width);await save(p);await openProtocol(p);
   const saved=await data(p);
-  assert.deepEqual(saved.protocols[id].items.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);
+  assert.deepEqual(saved.protocols[id].items.map(x=>x.section),['Priprema','Priprema','Završni dio','Završni dio']);
   assert.deepEqual(saved.protocols[id].items.map(withoutPart),source.map(withoutPart));
   assert.deepEqual(saved.exercises,before.exercises,'assigning occurrences never mutates the library categories');
-  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Priprema','Snaga']);
+  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Priprema','Završni dio']);
   await shot(p,'overview',width);
   await p.locator('.workout-compact-list').scrollIntoViewIfNeeded();await shot(p,'overview-parts',width);
 
@@ -92,7 +94,7 @@ async function run(p,width){
   // 1.22.0: the set header reads "Serija 1 od 2" without the part; the journal names the part of the current exercise
   assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Serija 1 od 2$/);
   await openJournal(p);
-  assert.deepEqual(await p.locator('.cinema-block-heading h2').allTextContents(),['Priprema','Snaga']);
+  assert.deepEqual(await p.locator('.cinema-block-heading h2').allTextContents(),['Priprema','Završni dio']);
   assert.equal(await currentPart(p),'Priprema');
   assert.equal(await p.locator('.cinema-journal .cj-text>strong').filter({hasText:'Copenhagen plank'}).count(),2);   // 1.22.0: rows and cards
   assert.equal(Object.keys((await player(p)).doneSteps).length,0,'opening and grouping never invents completed work');
@@ -100,15 +102,15 @@ async function run(p,width){
   await p.locator('.cinema-journal [data-a="cinemaJournalGroup"][data-j="0"]').first().click();
   await shot(p,'journal-parts',width);
   await p.locator('.cinema-block-heading [data-a="cinemaBlock"][data-j="2"]').click();
-  // 1.22.0: the second Copenhagen occurrence (3 sets) belongs to strength: its part is in the journal, not the set header
+  // 1.22.0: the second Copenhagen occurrence (3 sets) belongs to the later part: its part is in the journal, not the set header
   assert.match(await p.locator('.workout-cinema-heading p').innerText(),/^Serija 1 od 3$/);
-  await openJournal(p);assert.equal(await currentPart(p),'Snaga','the second Copenhagen occurrence belongs to strength');
+  await openJournal(p);assert.equal(await currentPart(p),'Završni dio','the second Copenhagen occurrence belongs to the later part');
   await a(p,'cinemaJournalClose').click();await p.locator('.cinema-journal').waitFor({state:'hidden'});
   assert.equal(await p.locator('.workout-cinema').getAttribute('data-ex-id'),'kopenhagen-kratka');
   await a(p,'cinemaTimer').click();
   const snapshot=await player(p);
   assert.equal(snapshot.clock.paused,true);
-  assert.deepEqual(snapshot.items.map(x=>x.section),['Priprema','Priprema','Snaga','Snaga']);
+  assert.deepEqual(snapshot.items.map(x=>x.section),['Priprema','Priprema','Završni dio','Završni dio']);
   await p.reload({waitUntil:'domcontentloaded'});await a(p,'resumeGo').click();
   assert.match(await p.locator('.workout-cinema-heading p').textContent(),/^Serija 1 od 3$/);   // 1.22.0: no part in the set header
   assert.equal(await p.locator('.cinema-pause-layer').isVisible(),true);
@@ -119,15 +121,15 @@ async function run(p,width){
   await openProtocol(p);await edit(p);await openItem(p,2);await part(p,2).selectOption('_custom');
   const custom='Snaga <B> & ravnoteža';await p.locator('#builder-section-name').fill(custom);
   await by(p,'builderSectionApply',2).click();await save(p);await openProtocol(p);
-  assert.deepEqual((await data(p)).protocols[id].items.map(x=>x.section),['Priprema','Priprema',custom,'Snaga']);
-  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Priprema',custom,'Snaga']);
+  assert.deepEqual((await data(p)).protocols[id].items.map(x=>x.section),['Priprema','Priprema',custom,'Završni dio']);
+  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Priprema',custom,'Završni dio']);
   assert.equal(await p.locator('.workout-list-section b').count(),0,'custom part is escaped text, never markup');
   await edit(p);await openItem(p,0);await by(p,'imove',0).filter({hasText:'Dolje'}).click();
   const moved=(await draft(p)).items;
   assert.deepEqual(moved.map(x=>x.exId),['kopenhagen-kratka','dead-bug','kopenhagen-kratka','bench-press']);
-  assert.deepEqual(moved.map(x=>x.section),['Priprema','Priprema',custom,'Snaga']);
+  assert.deepEqual(moved.map(x=>x.section),['Priprema','Priprema',custom,'Završni dio']);
   await openItem(p,0);await by(p,'idel',0).click();await save(p);await openProtocol(p);
-  assert.deepEqual((await data(p)).protocols[id].items.map(x=>x.section),['Priprema',custom,'Snaga'],'deleting the first item keeps the remaining authored parts');
+  assert.deepEqual((await data(p)).protocols[id].items.map(x=>x.section),['Priprema',custom,'Završni dio'],'deleting the first item keeps the remaining authored parts');
 
   // A typed custom title belongs to this occurrence even when its numeric index
   // changes before the user presses Save. Deletion must not attach it downstream.
@@ -136,18 +138,18 @@ async function run(p,width){
   await openItem(p,0);await by(p,'idel',0).click();await save(p);await openProtocol(p);
   const afterPending=(await data(p)).protocols[id].items;
   assert.deepEqual(afterPending.map(x=>x.exId),['kopenhagen-kratka','bench-press']);
-  assert.deepEqual(afterPending.map(x=>x.section),[pending,'Snaga'],'pending custom title follows its item through deletion before Save');
-  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),[pending,'Snaga']);
+  assert.deepEqual(afterPending.map(x=>x.section),[pending,'Završni dio'],'pending custom title follows its item through deletion before Save');
+  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),[pending,'Završni dio']);
   assert.equal(await p.locator('.workout-list-section i').count(),0);
 
   await openProtocol(p,groupId);const groupSource=(await data(p)).protocols[groupId].items;
-  await edit(p,groupId);await setPart(p,0,'Kondicija');
+  await edit(p,groupId);await setPart(p,0,'Priprema');
   const groupDraft=(await draft(p)).items;
-  assert.deepEqual(groupDraft.map(x=>x.section),['Kondicija','Kondicija','Glavni dio'],'part assignment applies to the whole superset');
+  assert.deepEqual(groupDraft.map(x=>x.section),['Priprema','Priprema','Glavni dio'],'part assignment applies to the whole superset');
   assert.equal(groupDraft[0].ss,groupDraft[1].ss);
   assert.deepEqual(groupDraft.map(withoutPart),groupSource.map(withoutPart),'changing a superset part preserves all doses and linkage');
   await save(p);await openProtocol(p,groupId);
-  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Kondicija','Glavni dio']);
+  assert.deepEqual(await p.locator('.workout-list-section').allTextContents(),['Priprema','Glavni dio']);
 
   // Even before Primijeni, a custom title is an unsaved change. Browser Back
   // must protect it, and refreshing must recover the pending field and index.
@@ -159,7 +161,7 @@ async function run(p,width){
   assert.equal(await p.locator('#builder-section-name').inputValue(),recovered,'pending custom title survives dirty draft recovery');
   assert.equal((await draft(p))._sectionCustom,2);
   await save(p);await openProtocol(p,groupId);
-  assert.deepEqual((await data(p)).protocols[groupId].items.map(x=>x.section),['Kondicija','Kondicija',recovered],'Save applies the recovered custom title to its original item');
+  assert.deepEqual((await data(p)).protocols[groupId].items.map(x=>x.section),['Priprema','Priprema',recovered],'Save applies the recovered custom title to its original item');
   results.push({width,authorDefinesParts:true,genericDefault:true,duplicateExerciseInDifferentParts:true,
     sourceCategoriesAndDosesUnchanged:true,savedAndReloaded:true,playerAndJournalMatch:true,checkpointPreservesParts:true,
     customLabelEscaped:true,moveDeletePreserveParts:true,pendingCustomLabelFollowsDeletedIndex:true,wholeSupersetAssignment:true,

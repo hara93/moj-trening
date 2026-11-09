@@ -192,7 +192,8 @@ async function run() {
     await revealRest(p);   // 1.22.0
     await reserve(p).locator('.rir').nth(1).waitFor();
     assert.equal(await reserve(p).locator('.cinema-rest-rir-q').innerText(), 'Koliko si još mogao?', '1.22.0: one shared question');
-    assert.deepEqual(await reserve(p).locator('.rirn').allInnerTexts(), ['Bench press · 1. serija', 'Jednoručno veslanje bučicom uz oslonac · 1. serija']);
+    // 1.23.0: in a group each row starts with the exercise's chip label (A1, A2)
+    assert.deepEqual(await reserve(p).locator('.rirn').allInnerTexts(), ['A1 · Bench press · 1. serija', 'A2 · Jednoručno veslanje bučicom uz oslonac · 1. serija']);
     const names = await reserve(p).locator('.rirn').evaluateAll(nodes => nodes.map(node => ({ width: node.clientWidth, font: parseFloat(getComputedStyle(node).fontSize) })));
     for (const name of names) assert.ok(name.width > 250 && name.font >= 13, 'the name has its own full-width line: ' + JSON.stringify(name));
     await reserve(p).locator('.rir').nth(0).locator('.rirb button').nth(2).click();

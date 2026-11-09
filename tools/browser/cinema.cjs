@@ -710,6 +710,10 @@ async function setRecovery(p,width) {
 async function supersetPreview(p) {
   const data=baseFixture(), plan=data.protocols['snaga-a'];
   data.log=[];data.settings.sound=false;data.settings.switchSec=10;
+  // 1.23.0: the shipped Trening A starts with Priprema (6 rope exercises); this walk starts at Glavni dio, so the start
+  // shows Glavni dio's part overview (tools/browser/superset-parts.cjs walks the whole shipped workout)
+  plan.items=plan.items.filter(item=>item.section!=='Priprema');
+  assert.deepEqual([...new Set(plan.items.map(item=>item.section))],['Glavni dio','Završni dio']);
   plan.items.forEach(item=>{if(['deadlift','bugarski','hip-thrust'].includes(item.exId))item.kg=20;});
   data.protocols={'snaga-a':plan};
   await home(p);await importData(p,data);
@@ -737,15 +741,20 @@ async function supersetPreview(p) {
     if(text)assert.match(await card.innerText(),text);
   };
   const finishRest=async()=>advance(p,(await player(p)).left+.1);
-  await stage.waitFor();await named('deadlift');assert.match(await heading.getAttribute('class'),/is-preparing/);await finishRest();
+  // 1.23.0: the start countdown is Glavni dio's part overview (no heading)
+  const overview=async title=>{
+    assert.equal(await stage.getAttribute('data-phase'),'section');
+    assert.equal(await stage.locator('#cinema-section-title').textContent(),title);
+  };
+  await stage.waitFor();await named('deadlift');await overview('Glavni dio');await finishRest();
   for(let i=1;i<=4;i++){
     await working('deadlift');
     await mark.tap();
     if(i<4)await nextSet('deadlift',new RegExp('Serija '+(i+1)+' od 4'));
-    else {await named('bugarski');assert.match(await heading.getAttribute('class'),/is-preparing/,'the pause before the superset names it');}
+    else {await named('bugarski');await overview('Superset A');}   // 1.23.0: the pause before the superset is its overview
     await finishRest();
   }
-  await heading.getByText(/Lijeva strana/).waitFor();
+  await heading.getByText(/Lijeva strana/).first().waitFor();   // 1.23.0: the heading also has its screen-reader text
   await working('bugarski');
   await mark.tap();
   await named('bugarski');assert.match(await heading.innerText(),/Desna strana/,'the side change names the side to come');
@@ -755,7 +764,7 @@ async function supersetPreview(p) {
   await working('nordic-curl');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-next-rest.png')});
   await mark.tap();
-  await nextSet('bugarski',/Serija 2 od 3 · Lijeva strana/);
+  await nextSet('bugarski',/A1 · krug 2 od 3 · Lijeva strana/);   // 1.23.0: where the set stands in the group
   assert.equal(await card.getByRole('button').getAttribute('data-j'),'1','the card edits the next exercise, not the one just done');
   await p.screenshot({path:path.join(artifacts,'cinema-'+engine+'-superset-during-rest.png')});
   await openCinemaControls(p);
@@ -769,7 +778,7 @@ async function supersetPreview(p) {
   await mark.tap();await finishRest();
   await working('kopenhagen-kratka');
   await mark.tap();
-  await nextSet('hip-thrust',/Serija 2 od 3/);
+  await nextSet('hip-thrust',/B1 · krug 2 od 3/);   // 1.23.0
   results.push({shippedStrengthA:true,supersetNextExercise:true,roundRestPreview:true,upcomingSide:true});
 }
 

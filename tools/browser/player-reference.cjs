@@ -389,7 +389,9 @@ async function firstStartWithParts(p, width) {
   assert.equal(!!step(state).trans, true, 'the pause before the next exercise');
   await p.locator('.workout-cinema[data-phase="section"]').waitFor();
   assert.equal(await p.locator('#cinema-section-title').textContent(), 'Noge');
-  assert.equal(await p.locator('.cinema-section-items li').count(), 2, 'a superset shares its first exercise\'s part');
+  // 1.23.0: the superset's exercises sit under one short line with its name ("Superset A · 2 kruga")
+  assert.equal(await p.locator('.cinema-section-items li:not(.ss-head)').count(), 2, 'a superset shares its first exercise\'s part');
+  assert.deepEqual(await p.locator('.cinema-section-items li.ss-head').allInnerTexts(), ['Superset A · 2 kruga']);
   const doses = await p.locator('.cinema-section-items li small').allTextContents();
   assert.equal(doses[1], '5 pon.', 'no weight for nordic curl (kg 0): ' + doses);
   assert.ok(doses.every(text => !/(^|\s)0 kg/.test(text)), 'never "0 kg": ' + doses);
