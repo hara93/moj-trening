@@ -7899,7 +7899,30 @@ app.addEventListener('pointerdown',ev=>{
   const input=document.activeElement,button=ev.target.closest('.workout-exercise-page [data-a]');
   if(input?.classList?.contains('workout-set-input')&&button&&!button.disabled)ev.preventDefault();
 });
+// 1.24.0: a redraw (a countdown that ends, a toast that goes away) replaces every node, also the button under a finger
+// that is already down. The browser then sends its click to nothing and the tap is lost: ⋯ pressed just as a countdown
+// ends did not open the menu. If the same control lies under the finger when it lifts and no click arrives, the tap is
+// delivered to it; a late click of the browser for the same tap is then dropped.
+let pressed=null,pressDelivered=null;
+const pressSig=el=>el.dataset.a+'|'+JSON.stringify(el.dataset);
+document.addEventListener('pointerdown',ev=>{
+  const el=ev.isPrimary===false||ev.button>0?null:ev.target.closest?.('#app [data-a]');
+  pressed=el?{el,sig:pressSig(el),x:ev.clientX,y:ev.clientY,at:performance.now()}:null;
+},true);
+document.addEventListener('pointercancel',()=>{pressed=null;},true);
+document.addEventListener('pointerup',ev=>{
+  const p=pressed;pressed=null;
+  if(!p||p.el.isConnected||performance.now()-p.at>1000||Math.hypot(ev.clientX-p.x,ev.clientY-p.y)>10)return;
+  const el=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('#app [data-a]');
+  if(!el||el.disabled||pressSig(el)!==p.sig)return;
+  const seq=actionSeq;
+  setTimeout(()=>{if(actionSeq!==seq||!el.isConnected)return;pressDelivered={sig:p.sig,until:performance.now()+400};el.click();},50);
+},true);
 app.addEventListener('click', ev => {
+  if(ev.isTrusted&&pressDelivered){
+    const late=performance.now()<pressDelivered.until&&ev.target.closest?.('[data-a]'),same=late&&pressSig(late)===pressDelivered.sig;
+    pressDelivered=null;if(same){ev.preventDefault();return;}
+  }
   actionSeq++;
   const closePicker=!!cinemaPicker&&!ev.target.closest('.cinema-number-wheel');
   if(closePicker)cinemaPicker=null;

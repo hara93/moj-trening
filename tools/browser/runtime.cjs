@@ -107,7 +107,13 @@ async function openQuit(page){
   await closeJournal(page);
   if(await page.locator('.workout-cinema').count()){
     if(await page.locator('.sheet[data-kind="cinemaPlayback"]').count())await page.locator('[data-a="cinemaClose"]').click();
-    if(!await page.locator('.sheet[data-kind="cinemaMenu"]').count())await page.locator('[data-a="cinemaMenu"]').click();
+    // 1.24.0: wait until the menu is really open and press ⋯ once more if it is not (CI, WebKit: a press that straddled
+    // the end of a prep countdown lost its click; the app now delivers such a tap, this keeps the helper honest anyway)
+    const menu=page.locator('.sheet[data-kind="cinemaMenu"]');
+    for(let attempt=0;attempt<2&&!await menu.isVisible();attempt++){
+      await page.locator('[data-a="cinemaMenu"]').click();
+      await menu.waitFor({state:'visible',timeout:attempt?8000:1500}).catch(error=>{if(attempt)throw error;});
+    }
     await page.locator('[data-a="cinemaExit"]').click();
   }else await page.locator('[data-a="quitPlay"]').click();
 }

@@ -33,6 +33,7 @@
     {"name": "rest-reserve", "title": "Rezerva na odmoru"},
     {"name": "player-reference", "title": "Referentni player"},
     {"name": "rep-set-timer", "title": "Serije koje broje unaprijed"},
-    {"name": "superset-parts", "title": "Dijelovi treninga i supersetovi"}
+    {"name": "superset-parts", "title": "Dijelovi treninga i supersetovi"},
+    {"name": "tap-redraw", "title": "Dodir tijekom odbrojavanja"}
   ]
 }

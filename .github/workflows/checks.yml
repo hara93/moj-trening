@@ -153,6 +153,9 @@ jobs:
       - name: Dijelovi treninga i supersetovi
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/superset-parts.cjs ${{ matrix.browser }}
+      - name: Dodir tijekom odbrojavanja
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/tap-redraw.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
