@@ -16,7 +16,7 @@ test('the embedded component exposes three independent indicators under the shar
 test('unknown total is a dash and a known subtotal is explicit rather than a complete score',()=>{
   const html=render([entry(),entry({historyId:'missing',srpe:undefined})]);
   assert.match(html,/data-load-period="current" data-total-au="" data-known-au="25" data-missing-au="1"/);
-  assert.match(html,/data-load-metric="current-au">—/);assert.match(html,/Zbroj nije potpun/);assert.match(html,/25<\/span> j\.n\. poznato/);
+  assert.match(html,/data-load-metric="current-au">—/);assert.match(html,/Zbroj nije potpun/);assert.match(html,/25<\/span> <span aria-hidden="true">j\.n\.<\/span><span class="tl-sr">jedinice napora<\/span> poznato/);
 });
 test('the effort ring uses known AU shares and keeps unrated activities out of the arcs',()=>{
   const html=render([
@@ -36,7 +36,7 @@ test('the effort ring uses known AU shares and keeps unrated activities out of t
 });
 test('zero effort remains visible zero with no positive-height invented chart fill',()=>{
   const html=render([entry({srpe:0})]);assert.match(html,/data-load-metric="current-au">0/);assert.doesNotMatch(html,/class="tl-day-fill"/);assert.doesNotMatch(html,/Zbroj nije potpun/);
-  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd>0 <small>j\.n\.<\/small>/);
+  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd><span aria-hidden="true">0 <small>j\.n\.<\/small><\/span><span class="tl-sr">0 jedinica napora<\/span>/);
   assert.doesNotMatch(html,/class="tl-dial-segment"/);
 });
 test('empty and legacy missing states do not expose fabricated AU or zero muscle tables',()=>{
@@ -75,7 +75,13 @@ test('1.24.0: the effort screen says "j.n.", explains it once beside the first n
     assert.match(html,/<text class="tl-axis" x="1" y="16">j\.n\.<\/text>/);
     assert.match(html,/aria-label="[^"]*: 30 jedinica napora poznato[^"]*: 25 jedinica napora poznato/);
     assert.match(html,/Kratica j\.n\. znači jedinice napora\./);
-    assert.match(html,/<th scope="col">Napor \(j\.n\.\)<\/th>/);
+    assert.match(html,/<th scope="col">Napor \(<span aria-hidden="true">j\.n\.<\/span><span class="tl-sr">jedinice napora<\/span>\)<\/th>/);
+    // outside the charts too: every "j.n." in the markup is either hidden from a screen reader beside its spoken words, part of an explanation, or inside a named button or chart
+    assert.match(html,/<p class="tl-unit-note">j\.n\. su jedinice napora: tvoja ocjena × minute\.<\/p>/,'the explanation is its own paragraph (13 px in training-load.css)');
+    assert.match(html,/class="tl-effort-total" data-a="trainingLoadInfo" data-topic="effort" aria-haspopup="dialog" aria-label="Napor treninga · [^"]*jedinic[ae] napora · [^"]*\. Otvori objašnjenje"/);
+    const bare=html.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<button[^>]*aria-label[\s\S]*?<\/button>/g,'').replace(/<span aria-hidden="true">(?:[^<]|<\/?small>)*<\/span><span class="tl-sr">(?:[^<]*jedinic[ae] napora[^<]*|napor nije poznat)<\/span>/g,'')
+      .replace(/<[^>]*>/g,' ').replace(/Kratica j\.n\. znači jedinice napora|j\.n\. su jedinice napora|Jedinice napora \(j\.n\.\)/g,'');
+    assert.deepEqual(bare.match(/.{0,30}j\.n\..{0,20}/g)||[],[],'no bare "j.n." is left for a screen reader');
   }
   const words=n=>View.render({summary:Load.summary({log:[entry({secs:60,srpe:n})],now})}).match(/<title>[^<]*: ([^<]+)<\/title>/g).pop();
   assert.match(words(1),/: 1 jedinica napora</);assert.match(words(3),/: 3 jedinice napora</);assert.match(words(5),/: 5 jedinica napora</);

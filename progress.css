@@ -64,7 +64,8 @@
 .pg-activity-table>summary::after{content:'+';font-size:18px}
 .pg-activity-table[open]>summary::after{content:'−'}
 .pg-activity-table table{width:100%;table-layout:fixed;border-collapse:collapse;margin:1px 0 10px;line-height:1.5}
-.pg-activity-table caption{text-align:left;padding-bottom:9px;font-size:10px;color:#AEBFD5}
+.pg-activity-table caption{text-align:left;padding-bottom:9px;font-size:13px;line-height:1.45;color:#AEBFD5}
+.pg-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .pg-activity-table th,.pg-activity-table td{padding:9px 3px;border-top:1px solid #40516B;text-align:left;overflow-wrap:anywhere;font-weight:400;font-variant-numeric:tabular-nums}
 .pg-activity-table thead th{font-size:9px;color:#ADBFD7}
 .pg-activity-table th:first-child{width:29%}

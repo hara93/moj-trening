@@ -15,6 +15,9 @@
     if(!finite(value))return 'napor nije poznat';
     return text+' '+(text.indexOf(',')!==-1||(a>=2&&a<=4&&(b<12||b>14))?'jedinice napora':'jedinica napora');
   };
+  // the unit beside a number outside a chart: "j.n." for the eye, the words for a screen reader (the pattern of the options sheet)
+  var UNIT='<span aria-hidden="true">j.n.</span><span class="tl-sr">jedinice napora</span>';
+  var withUnit=function(value,digits,small){return '<span aria-hidden="true">'+number(value,digits)+' '+(small?'<small>j.n.</small>':'j.n.')+'</span><span class="tl-sr">'+spoken(value,digits)+'</span>';};
   var value=function(value){return finite(value)?String(value):'';};
   function date(at,year){return finite(at)?new Date(at).toLocaleDateString('hr-HR',{day:'numeric',month:'numeric',year:year?'numeric':undefined}):'—';}
   function crossesYear(from,to){return new Date(from).getFullYear()!==new Date(to-1).getFullYear();}
@@ -91,7 +94,7 @@
     var accessibleName=current.rated?'Napor treninga · '+spoken(partial?current.knownAU:current.totalAU,1)+(partial?' poznato':' ukupno'):'Napor treninga još nije poznat';
     var legend=buckets.map(function(bucket){
       var hasValue=bucket.rated>0;
-      return '<div class="tl-kind-row'+(bucket.knownAU>0?'':' tl-kind-muted')+'" data-load-ring-kind="'+bucket.kind+'"><dt><i aria-hidden="true"></i>'+esc(bucket.label)+'</dt><dd>'+(hasValue?number(bucket.knownAU,1)+' <small>j.n.</small>':'<small>Nepoznato</small>')+'</dd></div>';
+      return '<div class="tl-kind-row'+(bucket.knownAU>0?'':' tl-kind-muted')+'" data-load-ring-kind="'+bucket.kind+'"><dt><i aria-hidden="true"></i>'+esc(bucket.label)+'</dt><dd>'+(hasValue?withUnit(bucket.knownAU,1,true):'<small>Nepoznato</small>')+'</dd></div>';
     }).join('');
     return '<div class="tl-distribution"><button type="button" class="tl-effort-total tl-effort-dial" data-a="trainingLoadInfo" data-topic="effort" aria-haspopup="dialog" aria-label="'+esc(accessibleName+'. Otvori objašnjenje')+'" style="--tl-dial-glyphs:'+Math.max(4,display.length)+'">'+
       effortDial(buckets,current.knownAU)+
@@ -100,7 +103,7 @@
   }
   function effortBaseline(baseline){
     if(!baseline)return '';
-    return '<div class="tl-reference" data-load-period="baseline" data-total-au="'+value(baseline.totalAU)+'" data-known-au="'+value(baseline.knownAU)+'" data-weekly-average-au="'+value(baseline.weeklyAverageAU)+'" data-sessions="'+baseline.sessions+'" data-active-weeks="'+baseline.activeWeeks+'"><div><span>Prethodna 4 tjedna</span><strong>'+number(baseline.weeklyAverageAU,1)+' <small>j.n. / tjedan</small></strong></div><p>'+baseline.sessions+' zapisa u '+baseline.activeWeeks+' od 4 tjedna'+(baseline.missingAU?' · napor nije poznat za '+baseline.missingAU+' zapisa':baseline.sessions?' · prosjek zabilježenog napora':' · nema usporednog razdoblja')+'</p></div>';
+    return '<div class="tl-reference" data-load-period="baseline" data-total-au="'+value(baseline.totalAU)+'" data-known-au="'+value(baseline.knownAU)+'" data-weekly-average-au="'+value(baseline.weeklyAverageAU)+'" data-sessions="'+baseline.sessions+'" data-active-weeks="'+baseline.activeWeeks+'"><div><span>Prethodna 4 tjedna</span><strong><span aria-hidden="true">'+number(baseline.weeklyAverageAU,1)+' <small>j.n. / tjedan</small></span><span class="tl-sr">'+spoken(baseline.weeklyAverageAU,1)+(finite(baseline.weeklyAverageAU)?' tjedno':'')+'</span></strong></div><p>'+baseline.sessions+' zapisa u '+baseline.activeWeeks+' od 4 tjedna'+(baseline.missingAU?' · napor nije poznat za '+baseline.missingAU+' zapisa':baseline.sessions?' · prosjek zabilježenog napora':' · nema usporednog razdoblja')+'</p></div>';
   }
   function effortDetails(summary){
     var bins=summary.effort.days,range=summary.range,baseline=summary.effort.baseline;
@@ -108,7 +111,7 @@
     var rows=bins.slice().reverse().map(function(day){
       return '<tr><th scope="row">'+esc(dateSpan(day.from,day.to,year))+'</th><td>'+day.sessions+'</td><td>'+(day.sessions?day.totalAU!==null?number(day.totalAU):day.rated?number(day.knownAU)+' poznato':'—':'Nema zapisa')+(day.missingAU?' · '+day.missingAU+' nepoznato':'')+'</td></tr>';
     }).join('');
-    return '<details class="tl-details"><summary>Brojke i izvori napora</summary><p>Kratica j.n. znači jedinice napora. Računaju se kao tvoja ocjena cijelog treninga (sRPE, 0–10) × stvarne minute (sekunde ÷ 60). Nula je unesena ocjena, a prazno ostaje nepoznato. Protokoli, teren, ekipa i utakmice ulaze u ovaj pokazatelj. Pokusi iz knjižnice i budući zapisi ne ulaze.</p><div class="tl-table-wrap"><table><caption>'+periodName(range)+', samo spremljeni zapisi</caption><thead><tr><th scope="col">'+(range.binDays>1?'Razdoblje':'Datum')+'</th><th scope="col">Treninzi</th><th scope="col">Napor (j.n.)</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    return '<details class="tl-details"><summary>Brojke i izvori napora</summary><p>Kratica j.n. znači jedinice napora. Računaju se kao tvoja ocjena cijelog treninga (sRPE, 0–10) × stvarne minute (sekunde ÷ 60). Nula je unesena ocjena, a prazno ostaje nepoznato. Protokoli, teren, ekipa i utakmice ulaze u ovaj pokazatelj. Pokusi iz knjižnice i budući zapisi ne ulaze.</p><div class="tl-table-wrap"><table><caption>'+periodName(range)+', samo spremljeni zapisi</caption><thead><tr><th scope="col">'+(range.binDays>1?'Razdoblje':'Datum')+'</th><th scope="col">Treninzi</th><th scope="col">Napor ('+UNIT+')</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       (baseline?'<p>Referentni prosjek dijeli zabilježeni napor prethodnih 28 dana s četiri. Ne ocjenjuje je li trening za tebe optimalan.</p>':'')+
       '<button type="button" class="tl-link" data-a="historyList">Otvori povijest treninga <span aria-hidden="true">↗</span></button></details>';
   }
@@ -117,11 +120,11 @@
     var missing=current.missingAU>0;
     var minutes=current.missingDuration===current.sessions&&current.sessions>0?'trajanje nije poznato':number(current.knownMinutes,1)+' poznatih min'+(current.missingDuration?' · '+current.missingDuration+' bez trajanja':'');
     var missingDetail='<span>Poznati zbroj napora još nije dostupan.</span>';
-    if(current.rated)missingDetail=overview?'<span>Ukupno <strong data-load-metric="current-au">—</strong> j.n.</span>':'<strong><span data-load-metric="known-au">'+number(current.knownAU,1)+'</span> j.n. poznato iz '+current.rated+' zapisa</strong>';
+    if(current.rated)missingDetail=overview?'<span>Ukupno <strong data-load-metric="current-au">—</strong> '+UNIT+'</span>':'<strong><span data-load-metric="known-au">'+number(current.knownAU,1)+'</span> '+UNIT+' poznato iz '+current.rated+' zapisa</strong>';
     return '<section class="tl-card tl-effort" data-load-section="effort" data-load-period="current" data-total-au="'+value(current.totalAU)+'" data-known-au="'+value(current.knownAU)+'" data-missing-au="'+current.missingAU+'" data-sessions="'+current.sessions+'">'+
       title('01','Tvoj osjećaj × vrijeme','Napor treninga','Zabilježeno')+
-      (overview?effortDistribution(current):'<button type="button" class="tl-effort-total" data-a="trainingLoadInfo" data-topic="effort" aria-haspopup="dialog"><strong data-load-metric="current-au">'+number(current.totalAU,1)+'</strong><span>j.n. · '+periodName(range).toLowerCase()+'</span><i aria-hidden="true">↗</i></button>')+
-      '<p class="tl-lead">'+(current.sessions?number(current.sessions)+' spremljenih treninga · '+minutes:'Još nema spremljenih treninga u ovom razdoblju.')+'<br>j.n. su jedinice napora: tvoja ocjena × minute.</p>'+
+      (overview?effortDistribution(current):'<button type="button" class="tl-effort-total" data-a="trainingLoadInfo" data-topic="effort" aria-haspopup="dialog" aria-label="'+esc('Napor treninga · '+spoken(current.totalAU,1)+' · '+periodName(range).toLowerCase()+'. Otvori objašnjenje')+'"><strong data-load-metric="current-au">'+number(current.totalAU,1)+'</strong><span>j.n. · '+periodName(range).toLowerCase()+'</span><i aria-hidden="true">↗</i></button>')+
+      '<p class="tl-lead">'+(current.sessions?number(current.sessions)+' spremljenih treninga · '+minutes:'Još nema spremljenih treninga u ovom razdoblju.')+'</p><p class="tl-unit-note">j.n. su jedinice napora: tvoja ocjena × minute.</p>'+
       (missing?'<div class="tl-missing"><b>Zbroj nije potpun</b><span>Za '+current.missingAU+' '+(current.missingAU===1?'trening nedostaje':'treninga nedostaje')+' ocjena napora ili trajanje.</span>'+
         missingDetail+'</div>':'')+
       chart(summary.effort.days,range)+effortBaseline(summary.effort.baseline)+effortDetails(summary)+'</section>';
@@ -191,7 +194,7 @@
     return '<article class="tl-session-row" data-load-workout="'+esc(workout.id)+'">'+action+'<dl class="tl-session-values">'+
       '<div><dt>Trajanje</dt><dd>'+workoutDuration(workout.secs)+'</dd></div>'+
       '<div><dt>sRPE</dt><dd>'+(finite(workout.srpe)?number(workout.srpe)+' / 10':'—')+'</dd></div>'+
-      '<div><dt>Napor</dt><dd>'+(finite(workout.au)?number(workout.au)+' j.n.':'—')+'</dd></div></dl>'+form+'</article>';
+      '<div><dt>Napor</dt><dd>'+(finite(workout.au)?withUnit(workout.au):'—')+'</dd></div></dl>'+form+'</article>';
   }
   function readRating(form){
     var dialog=document.getElementById('training-load-info'),original=dayRating?.originals.get(form.dataset.loadRating);
@@ -219,7 +222,7 @@
         var single=day.date===(day.endDate||day.date);
         dayRating={date:day.date,endDate:day.endDate,originals:new Map()};
         title=dateSpan(day.from,day.to,crossesYear(summary.range.from,summary.range.to))+(single?' · dnevni napor':' · zabilježeni napor');
-        body='<div class="tl-day-detail" data-load-day-detail="'+esc(day.date)+'" data-end-date="'+esc(day.endDate||day.date)+'"><span>Zabilježeni napor</span><strong>'+number(day.totalAU,1)+' <small>j.n.</small></strong>'+(day.missingAU?'<p>Zbroj nije potpun. '+(day.rated?number(day.knownAU)+' j.n. poznato':'Napor još nije poznat')+'.</p>':'')+'<dl><div><dt>Spremljeni treninzi</dt><dd>'+number(day.sessions,0)+'</dd></div><div><dt>Poznate minute</dt><dd>'+(day.sessions&&day.missingDuration>=day.sessions?'—':number(day.knownMinutes,1))+'</dd></div></dl></div>';
+        body='<div class="tl-day-detail" data-load-day-detail="'+esc(day.date)+'" data-end-date="'+esc(day.endDate||day.date)+'"><span>Zabilježeni napor</span><strong>'+withUnit(day.totalAU,1,true)+'</strong>'+(day.missingAU?'<p>Zbroj nije potpun. '+(day.rated?withUnit(day.knownAU)+' poznato':'Napor još nije poznat')+'.</p>':'')+'<dl><div><dt>Spremljeni treninzi</dt><dd>'+number(day.sessions,0)+'</dd></div><div><dt>Poznate minute</dt><dd>'+(day.sessions&&day.missingDuration>=day.sessions?'—':number(day.knownMinutes,1))+'</dd></div></dl></div>';
         if(!day.sessions)body+='<p>Nema zabilježenog treninga '+(single?'za ovaj dan':'u ovom razdoblju')+'.</p>';
         else body+='<section class="tl-day-workouts" aria-label="Treninzi u odabranom razdoblju"><h3>Spremljeni treninzi</h3>'+day.workouts.map(function(workout){
           var original=workout.id&&workout.srpe===null?lastVM.readWorkout?.(workout.id):null;

@@ -143,7 +143,10 @@ test('the eight-week chart and accessible table show actual counts, known minute
   assert.equal((html.match(/class="pg-activity-track"/g)||[]).length,8);
   const table=html.slice(html.indexOf('<details class="pg-activity-table"'),html.indexOf('</table>',html.indexOf('<details class="pg-activity-table"')));
   assert.equal((table.match(/scope="row"/g)||[]).length,8);
-  assert.match(table, /<td>2<\/td><td>80,5<\/td><td>280 poznato · 1 bez j\.n\.<\/td>/);
+  assert.match(table, /<td>2<\/td><td>80,5<\/td><td>280 poznato · 1 nepoznato<\/td>/);
+  // 1.24.0: the abbreviation is explained at the table itself, and a screen reader hears the words in the column header
+  assert.match(table, /<caption>Aktivnost iz spremljenih treninga\. Napor je u jedinicama napora \(j\.n\.\)\.<\/caption>/);
+  assert.match(table, /<th scope="col">Napor \(<span aria-hidden="true">j\.n\.<\/span><span class="pg-sr">jedinice napora<\/span>\)<\/th>/);
   assert.match(html, /Zadnji tjedan još traje/);
 });
 
@@ -165,16 +168,16 @@ test('unknown duration and AU remain missing while a recorded zero remains a rea
   const render=week=>View.render({insights:{weeks:[{start,...week}]}});
   const unknown=render({count:1,minutes:0,missingDuration:1,au:0,unrated:1});
   assert.match(unknown, /— min · 1 bez trajanja/);
-  assert.match(unknown, /<td>1<\/td><td>— · 1 bez trajanja<\/td><td>— · 1 bez j\.n\.<\/td>/);
+  assert.match(unknown, /<td>1<\/td><td>— · 1 bez trajanja<\/td><td>— · 1 nepoznato<\/td>/);
   assert.doesNotMatch(unknown, /0 poznato|0 min zabilježeno|bez ocjene/);
   const mixed=render({count:2,minutes:30,missingDuration:1,au:180,unrated:1});
   assert.match(mixed, /30 min poznato · 1 bez trajanja/);
-  assert.match(mixed, /<td>2<\/td><td>30 · 1 bez trajanja<\/td><td>180 poznato · 1 bez j\.n\.<\/td>/);
+  assert.match(mixed, /<td>2<\/td><td>30 · 1 bez trajanja<\/td><td>180 poznato · 1 nepoznato<\/td>/);
   const zero=render({count:1,minutes:0,missingDuration:0,au:0,unrated:0});
   assert.match(zero, /0 min zabilježeno/);
   assert.match(zero, /<td>1<\/td><td>0<\/td><td>0<\/td>/);
   const ratedZeroMixed=render({count:2,minutes:30,missingDuration:0,au:0,unrated:1});
-  assert.match(ratedZeroMixed, /<td>0 poznato · 1 bez j\.n\.<\/td>/);
+  assert.match(ratedZeroMixed, /<td>0 poznato · 1 nepoznato<\/td>/);
   assert.match(View.infoHtml('activity'), /nema ocjenu napora ili trajanje/);
 });
 
