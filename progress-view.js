@@ -41,7 +41,7 @@
       title: 'Tvojih osam tjedana',
       paragraphs: ['Svaki stupac pokazuje broj spremljenih treninga u jednom kalendarskom tjednu, od ponedjeljka do nedjelje. Uključeni su vlastiti i ekipni treninzi. Isprobavanja vježbi, testovi i budući zapisi nisu uključeni.',
         'Zadnji tjedan još traje. Prazan stupac znači da nema spremljenog treninga. Broj treninga i minute mjere aktivnost, a ne kvalitetu ili fizički napredak.',
-        'Tablica prikazuje i poznate minute te zabilježeni sRPE × trajanje u AU. Ako neki trening nema ocjenu napora ili trajanje, njegov doprinos AU nije poznat i nije prikazan kao nula. Broj zapisa bez trajanja označen je i uz minute.']
+        'Tablica prikazuje i poznate minute te zabilježeni napor u jedinicama napora (j.n.): tvoja ocjena × minute. Ako neki trening nema ocjenu napora ili trajanje, njegov napor nije poznat i nije prikazan kao nula. Broj zapisa bez trajanja označen je i uz minute.']
     },
     load: {
       title: 'Količina rada kroz tjedne',
@@ -174,7 +174,7 @@
     function knownAu(week) {
       var hasKnown = finite(week.au) && week.au >= 0 && !(week.count > 0 && week.unrated >= week.count);
       var known = hasKnown ? amount(week.au) : '—';
-      return week.unrated > 0 ? known + (hasKnown ? ' poznato' : '') + ' · ' + amount(week.unrated) + ' bez AU' : known;
+      return week.unrated > 0 ? known + (hasKnown ? ' poznato' : '') + ' · ' + amount(week.unrated) + ' bez j.n.' : known;
     }
     function knownMinutes(week) {
       var hasKnown = finite(week.minutes) && week.minutes >= 0 && !(week.count > 0 && week.missingDuration >= week.count);
@@ -190,7 +190,7 @@
       esc('Broj spremljenih treninga po tjednima: ' + weeks.map(function (week) { return weekDate(week.start) + ' ' + week.count; }).join('; ') + '. Zadnji tjedan još traje. Iste vrijednosti su u tablici.') + '">' + activityGrid + bars + '</svg>' +
       '<p class="pg-activity-note"><span aria-hidden="true"></span>Ovaj tjedan je u tijeku</p>' +
       '<details class="pg-activity-table"><summary>Brojke po tjednima</summary><table><caption>Aktivnost iz spremljenih treninga</caption>' +
-      '<thead><tr><th scope="col">Tjedan od</th><th scope="col">Treninzi</th><th scope="col">Poznate min</th><th scope="col">AU</th></tr></thead><tbody>' +
+      '<thead><tr><th scope="col">Tjedan od</th><th scope="col">Treninzi</th><th scope="col">Poznate min</th><th scope="col">Napor (j.n.)</th></tr></thead><tbody>' +
       weeks.slice().reverse().map(function (week) {
         return '<tr><th scope="row">' + esc(shortDate(week.start)) + '</th><td>' + esc(amount(week.count)) + '</td><td>' +
           esc(knownMinutes(week)) + '</td><td>' + esc(knownAu(week)) + '</td></tr>';

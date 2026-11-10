@@ -16,7 +16,7 @@ test('the embedded component exposes three independent indicators under the shar
 test('unknown total is a dash and a known subtotal is explicit rather than a complete score',()=>{
   const html=render([entry(),entry({historyId:'missing',srpe:undefined})]);
   assert.match(html,/data-load-period="current" data-total-au="" data-known-au="25" data-missing-au="1"/);
-  assert.match(html,/data-load-metric="current-au">—/);assert.match(html,/Zbroj nije potpun/);assert.match(html,/25<\/span> AU poznato/);
+  assert.match(html,/data-load-metric="current-au">—/);assert.match(html,/Zbroj nije potpun/);assert.match(html,/25<\/span> j\.n\. poznato/);
 });
 test('the effort ring uses known AU shares and keeps unrated activities out of the arcs',()=>{
   const html=render([
@@ -31,12 +31,12 @@ test('the effort ring uses known AU shares and keeps unrated activities out of t
   assert.ok(Math.abs(Number(arcs[0][3])/step-28)<1e-8);
   assert.ok(Math.abs(Number(arcs[0][2])-(8*step+.75*tick))<1e-8);
   assert.ok(Math.abs(Number(arcs[0][2])+Number(arcs[1][2])-Number(arcs[0][3]))<1e-8);
-  assert.match(html,/<strong>80<\/strong><small>AU poznato<\/small>/);
+  assert.match(html,/<strong>80<\/strong><small>j\.n\. poznato<\/small>/);
   assert.match(html,/data-load-ring-kind="match"><dt><i aria-hidden="true"><\/i>Utakmice<\/dt><dd><small>Nepoznato<\/small>/);
 });
 test('zero effort remains visible zero with no positive-height invented chart fill',()=>{
   const html=render([entry({srpe:0})]);assert.match(html,/data-load-metric="current-au">0/);assert.doesNotMatch(html,/class="tl-day-fill"/);assert.doesNotMatch(html,/Zbroj nije potpun/);
-  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd>0 <small>AU<\/small>/);
+  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd>0 <small>j\.n\.<\/small>/);
   assert.doesNotMatch(html,/class="tl-dial-segment"/);
 });
 test('empty and legacy missing states do not expose fabricated AU or zero muscle tables',()=>{
@@ -61,4 +61,23 @@ test('untrusted labels are escaped and invalid summary renders a safe empty page
   copy.muscles.groups[0].label='<img onerror=bad>';copy.muscles.groups[0].equivalent=1;
   const html=View.render({summary:copy,morning:{date:'<svg onload=bad>'}});assert.doesNotMatch(html,/<img|<svg onload/);assert.match(html,/&lt;img/);
   assert.match(View.render({}),/Podaci za prikaz još nisu dostupni/);
+});
+
+// 1.24.0: one unit of effort in the whole app, "j.n." (jedinice napora), explained where the first number stands
+test('1.24.0: the effort screen says "j.n.", explains it once beside the first number and speaks the words',()=>{
+  const visible=html=>html.replace(/<[^>]*>/g,' ');
+  {
+    const html=View.render({summary:Load.summary({log:[entry(),entry({historyId:'two',at:now-2*86400000,secs:600,srpe:3})],now})});
+    assert.doesNotMatch(visible(html),/\bAU\b/,'no "AU" in any visible text');
+    assert.doesNotMatch(html,/(?:aria-label|<title>)[^<]*\bAU\b/,'nor in a spoken one');
+    assert.equal((html.match(/j\.n\. su jedinice napora: tvoja ocjena × minute\./g)||[]).length,2,'explained once on the page and once in its detail window, under the first number');
+    assert.ok(html.indexOf('data-load-metric="current-au"')<html.indexOf('j.n. su jedinice napora'));
+    assert.match(html,/<text class="tl-axis" x="1" y="16">j\.n\.<\/text>/);
+    assert.match(html,/aria-label="[^"]*: 30 jedinica napora poznato[^"]*: 25 jedinica napora poznato/);
+    assert.match(html,/Kratica j\.n\. znači jedinice napora\./);
+    assert.match(html,/<th scope="col">Napor \(j\.n\.\)<\/th>/);
+  }
+  const words=n=>View.render({summary:Load.summary({log:[entry({secs:60,srpe:n})],now})}).match(/<title>[^<]*: ([^<]+)<\/title>/g).pop();
+  assert.match(words(1),/: 1 jedinica napora</);assert.match(words(3),/: 3 jedinice napora</);assert.match(words(5),/: 5 jedinica napora</);
+  assert.match(View.render({summary:Load.summary({log:[entry({secs:90,srpe:3})],now})}),/: 4,5 jedinice napora</);
 });

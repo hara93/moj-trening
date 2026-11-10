@@ -249,14 +249,14 @@ async function runScenarios(page) {
   assert.equal(await dialog.evaluate(node => node.open), false, 'the focused grip dismisses the sheet by keyboard');
   assert.equal(await effortSummary.evaluate(node => document.activeElement === node), true);
   assert.equal(await page.locator('svg.tl-days').getAttribute('role'),'img');
-  assert.match(await page.locator('svg.tl-days').getAttribute('aria-label'),/AU poznato/);
+  assert.match(await page.locator('svg.tl-days').getAttribute('aria-label'),/jedinic[ae] napora poznato/);   // 1.24.0: the unit is "j.n." on screen and spoken in words
   const boundary = page.locator('[data-load-day="2026-10-30"]');
   closeNumber(await boundary.getAttribute('data-total-au'), 10.266667, '88 seconds × 7 / 60');
   const arcs = page.locator('.tl-dial-segment');
   assert.deepEqual(await arcs.evaluateAll(nodes => nodes.map(node => node.dataset.loadRingKind)), ['protocol', 'field', 'team']);
   const colors = await arcs.evaluateAll(nodes => nodes.map(node => getComputedStyle(node).stroke));
   assert.equal(new Set(colors).size, 3, 'each recorded activity uses its own accent');
-  assert.match(await effortSummary.innerText(), /261,3\s*AU poznato/);
+  assert.match(await effortSummary.innerText(), /261,3\s*j\.n\. poznato/);
   assert.match(await page.locator('.tl-kind-row[data-load-ring-kind="match"]').innerText(), /Nepoznato/);
   await page.locator('[data-a="trainingLoadDetail"][data-topic="day"][data-date="2026-10-30"]').click();
   assert.ok(await page.locator('[data-load-day-detail="2026-10-30"]').isVisible());
@@ -395,7 +395,7 @@ async function runPeriodScenario(page) {
   await trendButton.click();
   const detail = page.locator('[data-load-day-detail="' + start + '"]');
   assert.equal(await detail.getAttribute('data-end-date'), end, 'the drill-down opens the exact trend interval');
-  assert.match(await detail.innerText(), /120\s*AU/);
+  assert.match(await detail.innerText(), /120\s*j\.n\./);
   await page.keyboard.press('Escape');
   assert.equal(await trendButton.evaluate(node => document.activeElement === node), true);
   await layout(page, 320, 'all-period-320');

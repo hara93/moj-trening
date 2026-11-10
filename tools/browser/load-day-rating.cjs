@@ -40,7 +40,7 @@ async function run(page,context,url){
   await day(page,'2026-11-05').click();
   assert.deepEqual(await workouts(page).evaluateAll(rows=>rows.map(row=>row.dataset.loadWorkout)),['day-unrated','day-zero','day-no-duration']);
   assert.match(await row(page,'day-zero').innerText(),/0 \/ 10/);
-  assert.match(await row(page,'day-zero').innerText(),/0 AU/);
+  assert.match(await row(page,'day-zero').innerText(),/0 j\.n\./);   // 1.24.0: the unit is "j.n." everywhere
   assert.equal(await rating(page,'day-zero').count(),0);
   assert.equal(await rating(page,'day-unrated').inputValue(),'');
   await submit(page,'day-unrated');
@@ -63,7 +63,7 @@ async function run(page,context,url){
   assert.equal(await rating(page,'day-unrated').inputValue(),'0');
   assert.equal((await stored(page)).find(entry=>entry.historyId==='day-unrated').srpe,undefined);
   await submit(page,'day-unrated');
-  assert.match(await row(page,'day-unrated').innerText(),/0 AU/);
+  assert.match(await row(page,'day-unrated').innerText(),/0 j\.n\./);
   assert.equal(await rating(page,'day-unrated').count(),0);
   assert.equal((await stored(page)).find(entry=>entry.historyId==='day-unrated').srpe,0);
   await rating(page,'day-no-duration').fill('6');
@@ -108,7 +108,7 @@ async function run(page,context,url){
   await page.waitForFunction(()=>document.querySelector('[data-load-day="2026-10-07"]')?.dataset.knownAu==='130');
   await day(page,'2026-10-07').click();
   assert.match(await row(page,'bin-last').innerText(),/8 \/ 10/);
-  assert.match(await row(page,'bin-last').innerText(),/120 AU/);
+  assert.match(await row(page,'bin-last').innerText(),/120 j\.n\./);
   assert.equal(await rating(page,'bin-last').count(),0);
   await peer.close();
 }
