@@ -1,5 +1,18 @@
 # Promjene
 
+## 1.24.0 — 10. 11. 2026.
+
+- **Novi prozor Opcije treninga** (⋯ na stranici treninga):
+  - Gore su ime treninga, trajanje, broj vježbi i serija.
+  - Tipke **Uredi**, **Kopija**, **Podijeli** i **Povijest** tog treninga.
+  - **Dani u tjednu** biraju se odmah i ostaju vidljivi nakon dodira.
+  - **Očekivani napor** piše brojem. Dok ga nema, piše što još treba (npr. "Nakon 2 ocijenjena treninga").
+  - **Rad po mišićima** pokazuje serije po skupinama.
+  - **Prijedlog za cilj** opet ima ulaz, s "Ne nudi više".
+  - **Obriši trening** za tvoje treninge, uz pitanje i Odustani.
+- **Jedinica napora je svugdje "j.n."** (jedinice napora: tvoja ocjena × minute) umjesto "AU", s objašnjenjem uz prvi broj. Spremljeni podaci su isti.
+- **Player:** dodir na ⋯ u trenutku kad odbrojavanje završi više se ne gubi.
+
 ## 1.23.0 — 9. 11. 2026.
 
 - **Trening u tri dijela: Priprema, Glavni dio i Završni dio.**
