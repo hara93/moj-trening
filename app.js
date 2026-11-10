@@ -6233,7 +6233,7 @@ function rpeHtml(){
 }
 const auHtml=(v,min)=>{
   const au=TrainingLoad.sessionAU({srpe:v,secs:min*60});
-  return au===null?'Ocijeni napor cijelog treninga, po želji. Neodgovoreno ostaje nepoznato.':'Zabilježeni napor: <b data-au="'+au+'">'+au.toLocaleString('hr-HR',{maximumFractionDigits:2})+'</b> j.n. (jedinice napora) · ocjena '+v+'/10 · '+esc(Math.max(0,min*60).toLocaleString('hr-HR',{maximumFractionDigits:2}))+' s. Ocjena je zasebna od procjene LM1.';
+  return au===null?'Ocijeni napor cijelog treninga, po želji. Neodgovoreno ostaje nepoznato.':'Zabilježeni napor: <b data-au="'+au+'">'+au.toLocaleString('hr-HR',{maximumFractionDigits:2})+'</b> <span aria-hidden="true">j.n. </span>(jedinice napora) · ocjena '+v+'/10 · '+esc(Math.max(0,min*60).toLocaleString('hr-HR',{maximumFractionDigits:2}))+' s. Ocjena je zasebna od procjene LM1.';
 };
 function rpeTap(t,ev){
   const r=t.getBoundingClientRect(),w=r.width-28;
