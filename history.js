@@ -13,7 +13,7 @@
   const plural=(n,one,few,many)=>n%10===1&&n%100!==11?one:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?few:many;
   const inputNumber=v=>number(v)==null?'':String(v).replace('.',',');
   const title=e=>String(e&&(e.title||e.name)||'Trening bez naziva');
-  const kind=e=>e.kind==='team'?Team.label(e.teamType):e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?'Trening po protokolu':'Stariji zapis';
+  const kind=e=>e.kind==='team'?Team.label(e.teamType):e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?'Trening u teretani':'Stariji zapis';
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+({
     back:'<path d="m14 5-7 7 7 7"/>',search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',arrow:'<path d="m9 5 7 7-7 7"/>',
@@ -159,7 +159,7 @@
   }
   function editView(vm) {
     const entry=vm.entry,minutes=number(entry.secs)==null?null:Math.round(entry.secs/60*1e6)/1e6;
-    return header('Uredi zapis',entry.kind==='team'?'Ispravi podatke odrađene sesije.':'Mijenja se spremljena izvedba, bez promjene protokola.')+'<form id="history-edit-form" novalidate><div id="history-edit-error" class="hy-form-error" role="alert" aria-live="polite">'+esc(vm.error||'')+'</div><fieldset class="hy-card"><legend>Osnovni podaci</legend>'+
+    return header('Uredi zapis',entry.kind==='team'?'Ispravi podatke odrađene sesije.':'Mijenja se spremljena izvedba, bez promjene treninga.')+'<form id="history-edit-form" novalidate><div id="history-edit-error" class="hy-form-error" role="alert" aria-live="polite">'+esc(vm.error||'')+'</div><fieldset class="hy-card"><legend>Osnovni podaci</legend>'+
       field('Naziv treninga',entry.name||'','type="text" id="history-title" data-history-meta="name" maxlength="200"')+
       field(entry.kind==='team'?'Datum i vrijeme završetka':'Datum i vrijeme',localInput(entry.at),'type="datetime-local" step="0.001" id="history-at" data-history-meta="at"',entry.kind==='team'?'Lokalno vrijeme; za sesiju preko ponoći odaberi dan završetka.':'Lokalno vrijeme na ovom uređaju.')+
       '<div class="hy-form-grid">'+numericField(entry.kind==='team'?'Stvarno trajanje (min)':'Trajanje (min)',minutes,'id="history-minutes" data-history-meta="secs"')+numericField('Ocjena napora (0–10)',entry.srpe,'id="history-srpe" data-history-meta="srpe"','Prazno uklanja ocjenu; 0 je unesena ocjena.')+'</div></fieldset>'+

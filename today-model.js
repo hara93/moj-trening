@@ -611,7 +611,7 @@
       result.items = reduceItems(selected, doses);
       reason('reducedDose', 'U cijelom treningu ostaje isti redoslijed: jedna radna serija manje po vježbi, najmanje jedna; kilogrami i ponavljanja se ne povećavaju.');
       return finish('reduce', 'Danas kraće: ' + text(selected.name, 'tvoj trening'),
-        'Odradi prikazanu kraću dozu. To je prijedlog za ovu izvedbu; spremljeni protokol nije promijenjen.',
+        'Odradi prikazanu kraću dozu. To je prijedlog za ovu izvedbu; spremljeni trening nije promijenjen.',
         { type: 'protocol', id: selected.id });
     }
     result.items = copy(selected.items);

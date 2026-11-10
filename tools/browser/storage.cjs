@@ -145,7 +145,7 @@ async function singleProtocol(browser, url) {
     const showProtocols = async () => {
       await page.getByRole('button',{name:'Moj pregled',exact:true}).click();
       await action(page,'dashboardProtocols').click();
-      await page.getByRole('heading',{name:'Moji protokoli',exact:true}).waitFor();
+      await page.getByRole('heading',{name:'Moji treninzi',exact:true}).waitFor();
     };
     const importDialog = page.getByRole('dialog',{name:'Uvezi trening',exact:true});
     const openImport = async () => {

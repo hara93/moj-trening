@@ -314,7 +314,7 @@ function packVideo(e){ return e && (S.pack && S.pack.videos || {})[e.id] || ''; 
 function exAlt(e){ return e && e.alt && norm(e.alt) !== norm(e.name) ? e.alt : ''; }
 
 /* ---------- on-device storage ---------- */
-const APP_VERSION = '1.24.0';
+const APP_VERSION = '1.24.1';
 const STORE_KEY = 'mt.data.v1';
 const BACKUP_KIND = 'moj-trening-backup', PACK_KIND = 'moj-trening-media-pack';
 const WORKOUT_FILE_KIND = 'moj-trening-protocol';
@@ -737,7 +737,7 @@ function mergeSeed(seed){
 }
 // ---- SEED MERGE end ----
 // copies of programme sessions made before 1.5 kept the programme fields and were hidden everywhere:
-// they become your own protocols (listed in Moji protokoli, kept when the pack is removed)
+// they become your own protocols (listed in Moji treninzi, kept when the pack is removed)
 function repairCopies(){
   let own = false;
   Object.values(S.pr).forEach(p => {
@@ -842,7 +842,7 @@ const nothingOwn = () => !S.log.length && !(S._deleted || []).length && !Object.
   !Object.keys(S.settings.morningChecks || {}).length && !Object.keys(S.settings.planDates || {}).length && !Object.keys(S.settings.matchDates || {}).length &&
   ['exercises', 'protocols', 'field'].every(c => Object.values(collMap(c)).every(x => { const f = ((window.SEED || {})[c] || {})[x.id]; return !!f && contentHash(x) === contentHash(f); }));
 const dataCounts = (d, settings) => { const nPr = Object.values(d.protocols || {}).filter(p => !(p && p.program)).length, nG = Object.keys(d.programs || {}).length, nT = nTrainings(d.log), nM=Object.keys(settings?.morningChecks || {}).length;
-  return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'protokol', 'protokola', 'protokola') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti' + (nM?' • '+nM+' '+plural(nM,'jutarnja provjera','jutarnje provjere','jutarnjih provjera'):''); };
+  return nVj(Object.keys(d.exercises || {}).length) + ' • ' + nPr + ' ' + plural(nPr, 'trening', 'treninga', 'treninga') + (nG ? ' • ' + nG + ' ' + plural(nG, 'program', 'programa', 'programa') : '') + ' • ' + nT + ' ' + plural(nT, 'trening', 'treninga', 'treninga') + ' u povijesti' + (nM?' • '+nM+' '+plural(nM,'jutarnja provjera','jutarnje provjere','jutarnjih provjera'):''); };
 const backupObject = () => ({ kind: BACKUP_KIND, v: 1, app: APP_VERSION, exportedAt: new Date().toISOString(), exercises: S.ex, protocols: S.pr, field: S.field, programs: S.prog, log: S.log, _deleted: S._deleted || [], settings: S.settings });
 // A sheet intentionally defers another tab's UI changes. Export a detached,
 // up-to-date snapshot instead of exporting that deferred screen or saving over it.
@@ -888,7 +888,7 @@ function freshBackupObject(){
 // a backup is recognised by its content; the photo pack (also a .json file) is sent to its own row
 function backupProblem(d){
   if (isPlainObj(d) && d.kind === PACK_KIND) return 'Ovo je paket slika, a ne sigurnosna kopija. Ništa nije promijenjeno. Paket se uvozi u retku „Uvezi paket slika”.';
-  if (isPlainObj(d) && d.kind === WORKOUT_FILE_KIND) return 'Trening dodaj kroz Moji protokoli → Uvezi trening.';
+  if (isPlainObj(d) && d.kind === WORKOUT_FILE_KIND) return 'Trening dodaj kroz Moji treninzi → Uvezi trening.';
   if (!isPlainObj(d) || (d.kind && d.kind !== BACKUP_KIND) || !(d.v === 1 || d.v === 2) || !isPlainObj(d.exercises) || !isPlainObj(d.protocols) || !Array.isArray(d.log)) return 'Ta datoteka nije sigurnosna kopija ove aplikacije. Ništa nije promijenjeno.';
   return '';
 }
@@ -1564,7 +1564,7 @@ function weekHtml(){
   // (review) a week whose plan is all skipped still has a plan: 0/0 and the streak, not the empty-plan hint
   const line = st.planned || st.slots.length
     ? 'Ovaj tjedan ' + st.done + '/' + st.planned + (sk ? ' • niz: ' + sk + ' ' + plural(sk, 'tjedan', 'tjedna', 'tjedana') + ' po planu' : '') + (!todo.length && st.slots.some(s => s.day === today && s.done) ? ' • danas odrađeno' : '')
-    : 'Odaberi dane u protokolu i složi svoj tjedni plan';
+    : 'Odaberi dane u treningu i složi svoj tjedni plan';
   return strip + '<p class="week-summary">' + esc(line) + '</p>' + (rows ? '<div class="list" style="margin:12px 16px 0">' + rows + '</div>' : '');
 }
 
@@ -1590,7 +1590,7 @@ VIEWS.home = function(){
     .sort((a, b) => rank(a) - rank(b) || a.day - b.day)[0];
   const gym = planned ? { name: planned.name, a: { a:'openPr', id: planned.kind === 'program' ? planned.pr : planned.id } } : (g => g && { name: g.name, a: { a:'openPr', id: g.id } })(nextGym());
   const cards = [
-    { k:'rehab', t:'Rehabilitacija', s: rehab ? 'Moj protokol · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
+    { k:'rehab', t:'Rehabilitacija', s: rehab ? 'Moj trening · ' + protoMin(rehab) + ' min' : 'Moje vježbe za kuk', bg:'#5B5148', ic:I.pulse, a: rehab ? {a:'openPr', id: rehab.id} : {a:'libCat', cat:'Rehab kuka'} },
     { k:'teretana', t:'Teretana', s: gym ? (planned ? (planned.day === today ? 'Danas: ' : 'Sljedeći: ') : 'Sljedeći: ') + gym.name : 'Treninzi snage', bg:'#38425A', ic:I.dumb, a: gym ? gym.a : {a:'tab', tab:'protocols'} },
     { k:'aktivacija', t:'Aktivacija', s:'Uže i kolotur · prije treninga', bg:'#3A3F47', ic:I.rope, a: akt ? {a:'openPr', id: akt.id} : {a:'libCat', cat:'Uže i kolotur'} },
     { k:'kondicija', t:'Kondicija', s:'Na terenu · STATSports', bg:'#33404A', ic:I.run, a:{a:'fieldList'} },
@@ -1903,7 +1903,7 @@ function changeHistory(original, replacement, reportError=historyError) {
   return false;
 }
 
-// Moji protokoli: Trening A, B, C on top in their order, then the rest by last use (trained or changed);
+// Moji treninzi: Trening A, B, C on top in their order, then the rest by last use (trained or changed);
 // ones never used keep the shipped order (the seed numbers them 1–10)
 function protoListOrder(list){
   const last = {}; S.log.forEach(l => { if (l.kind === 'protocol' && l.refId && !(last[l.refId] >= l.at)) last[l.refId] = l.at; });
@@ -1915,13 +1915,13 @@ VIEWS.protocols = function(){
   const progs = Object.values(S.prog);
   const fieldN = Object.keys(S.field).length;
   return '<div class="view gut">' + topbar(S.stack.length > 1 ? backBtn() : '', '') +
-    '<h1 class="h1">Moji protokoli</h1>' +
+    '<h1 class="h1">Moji treninzi</h1>' +
     (stateNote() || (
       '<div class="list" style="margin-top:24px">' +
       (list.length ? list.map(p => {
         const first = p.items && p.items[0] && S.ex[p.items[0].exId];
         return '<button class="row" data-a="openPr" data-id="'+esc(p.id)+'"><span class="thumb">' + (exMedia(first) ? thumbHtml(first) : pathIcon(p.home === 'aktivacija' ? I.rope : p.home === 'rehab' ? I.pulse : I.dumb, 28)) + '</span><span class="tx"><span class="t">' + esc(p.name) + '</span><span class="m"><span>' + nVj((p.items||[]).length) + ' • ' + protoMin(p) + ' min</span>' + (p.goal && GOALS[p.goal] ? '<span class="tag">'+esc(GOALS[p.goal].name)+'</span>' : '') + ((p.days||[]).length ? '<span class="tag">'+esc(daysText(p.days))+'</span>' : !p.goal && p.tag ? '<span class="tag">'+esc(p.tag)+'</span>' : '') + '</span></span>' + I.chev + '</button>';
-      }).join('') : '<div class="empty">Još nemaš protokol. Složi prvi od svojih vježbi.</div>') +
+      }).join('') : '<div class="empty">Još nemaš trening. Složi prvi od svojih vježbi.</div>') +
       '</div>' +
       (progs.length ? '<h2 class="h2">Programi</h2><div class="list" style="margin-top:14px">' + progs.map(g => { const st = progStatus(g); const ex0 = progCover(g);
         return '<button class="row" data-a="openProg" data-id="'+esc(g.id)+'"><span class="thumb">'+(ex0 ? thumbHtml(ex0) : pathIcon(I.dumb, 28))+'</span><span class="tx"><span class="t">'+esc(g.name)+'</span><span class="m"><span>'+st.done+'/'+st.total+' treninga</span><span class="tag">'+esc(st.next ? 'Sljedeće: ' + st.next.short : 'Završeno')+'</span></span></span>'+I.chev+'</button>'; }).join('') + '</div>' : '') +
@@ -1929,7 +1929,7 @@ VIEWS.protocols = function(){
       '<div class="list" style="margin-top:14px"><button class="row" data-a="fieldList"><span class="thumb" style="background:#33404A">' + pathIcon(I.run, 28) + '</span><span class="tx"><span class="t">Treninzi na terenu</span><span class="m"><span>' + (fieldN ? fieldN + ' ' + plural(fieldN,'trening','treninga','treninga') : 'Učitavanje') + '</span><span class="tag">STATSports</span></span></span>' + I.chev + '</button></div>'
     )) +
     '<div style="height:16px"></div></div>' +
-    '<div class="footer gut"><button class="btn" data-a="newPr">' + I.plus.replace('<svg', '<svg width="18" height="18"') + 'Novi protokol</button>' +
+    '<div class="footer gut"><button class="btn" data-a="newPr">' + I.plus.replace('<svg', '<svg width="18" height="18"') + 'Novi trening</button>' +
     (S.dbState === 'ready' ? '<button type="button" class="txtbtn flink" data-a="importWorkout">Uvezi trening</button>' : '') + '</div>';
 };
 
@@ -1984,7 +1984,7 @@ function libListHtml(){
 }
 VIEWS.library = function(){
   const favN = Object.values(S.ex).filter(e => e.fav).length;
-  const prN = Object.values(S.pr).filter(p => !p.program).length;   // as listed in Moji protokoli: a programme's sessions are not yours
+  const prN = Object.values(S.pr).filter(p => !p.program).length;   // as listed in Moji treninzi: a programme's sessions are not yours
   const picking = !!S.pick;
   const head = picking
     ? topbar('<button class="txtbtn" data-a="pickCancel">Odustani</button>', '', 'DODAJ VJEŽBE')
@@ -1994,7 +1994,7 @@ VIEWS.library = function(){
     (picking ? '' :
     '<div class="tiles">' +
       '<button class="tile" data-a="libCat" data-cat="Favoriti" aria-pressed="'+(S.lib.cat==='Favoriti')+'"><span class="circ">'+I.heart+'</span><span class="lbl"><b>Favoriti</b><span>'+nVj(favN)+'</span></span></button>' +
-      '<button class="tile" data-a="tab" data-tab="protocols"><span class="circ">'+I.dots4+'</span><span class="lbl"><b>Moji protokoli</b><span>'+prN+' '+plural(prN,'protokol','protokola','protokola')+'</span></span></button>' +
+      '<button class="tile" data-a="tab" data-tab="protocols"><span class="circ">'+I.dots4+'</span><span class="lbl"><b>Moji treninzi</b><span>'+prN+' '+plural(prN,'trening','treninga','treninga')+'</span></span></button>' +
     '</div>' +
     '<h2 class="h2">Popis vježbi</h2>') +
     '<div class="search">' + I.search + '<input id="libq" class="input" type="search" placeholder="Traži vježbu" aria-label="Traži vježbu" autocomplete="off" value="'+esc(S.lib.q)+'">' +
@@ -2004,7 +2004,7 @@ VIEWS.library = function(){
     '<div class="chips" role="group" aria-label="Kategorija" style="margin-top:12px">' + (S.pack && (S.pack.members || []).length ? LIBCATS.slice(0, 3).concat(['TAE'], LIBCATS.slice(3)) : LIBCATS).map(c => '<button class="chip" data-a="libCat" data-cat="'+esc(c)+'" aria-pressed="'+(S.lib.cat===c)+'">'+esc(c)+'</button>').join('') + '</div>') +
     '<div class="list" id="liblist" style="margin-top:14px">' + libListHtml() + '</div>' +
     '<div style="height:20px"></div></div>' +
-    (picking ? '<div class="footer gut"><button class="btn" data-a="pickDone"'+(S.pick.ids.length?'':' disabled')+'>Dodaj u protokol ('+S.pick.ids.length+')</button></div>' : '');
+    (picking ? '<div class="footer gut"><button class="btn" data-a="pickDone"'+(S.pick.ids.length?'':' disabled')+'>Dodaj u trening ('+S.pick.ids.length+')</button></div>' : '');
 };
 
 const stillMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -2103,7 +2103,7 @@ function exOptHtml(e){
   const h = historyOf(e.id);
   const head = '<div class="opthd"><span>'+(h.length ? 'Zadnje: <b>'+esc(shortDate(h[0].at) + ' · ' + recordedDoseLabel(h[0]))+'</b>' : '')+'</span><button class="txtbtn lnk" data-a="loadInfo">Kako se računa?</button></div>';
   if (!h.length) return head + '<div class="lc"><div class="emp"><div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg></div>' +
-    '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u protokol. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
+    '<div><b>Još nema treninga s ovom vježbom</b><p>Pokreni je ili je dodaj u trening. Nakon prvog treninga ovdje vidiš volumen, a od drugog graf i povijest.</p></div></div></div>';
   const lp = exLastPts(e.id);
   return head + exLoadCard(e, S.loadRange) + (lp ? '<div class="lmlast">Opterećenje zadnjeg treninga: <b>≈ ' + lmPts(lp.B) + ' ' + (lmPts(lp.B).indexOf(',') !== -1 ? 'boda' : plural(Math.round(lp.B), 'bod', 'boda', 'bodova')) + '</b></div>' : '') + exHistHtml(e, h);
 }
@@ -3366,7 +3366,7 @@ VIEWS.ex = function(t){
   const item=viewDoseItems(t)[0],e=item&&S.ex[item.exId];
   if(!e)return '<div class="view gut">'+topbar(backBtn())+'<p class="empty">Ova vježba više nije u knjižnici.</p></div>';
   const state={kind:'workoutExercise',j:0,live:false,base:mtCanon(viewDoseSource(t))},c=workoutContext(state);
-  return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="back" aria-label="Natrag">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button class="ib" data-a="workoutInfo" data-j="0" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(state,c),targetHtml:workoutPrescriptionHtml(state,c),rowsHtml:workoutTableHtml(c,0,state)+workoutAddSetHtml(state,c),footerHtml:'<div class="footer gut"><button class="btn" data-a="playEx" data-id="'+esc(t.id)+'">'+WorkoutView.icon('play')+'Pokreni vježbu</button><div class="workout-library-secondary"><button class="txtbtn" data-a="fav" data-id="'+esc(e.id)+'" aria-label="Favorit" aria-pressed="'+!!e.fav+'">'+(e.fav?I.heartF:I.heart)+'Favorit</button><button class="txtbtn" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'Uredi</button><button class="txtbtn" data-a="addTo" data-id="'+esc(e.id)+'">Dodaj u protokol</button></div></div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="library"');
+  return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="back" aria-label="Natrag">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button class="ib" data-a="workoutInfo" data-j="0" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(state,c),targetHtml:workoutPrescriptionHtml(state,c),rowsHtml:workoutTableHtml(c,0,state)+workoutAddSetHtml(state,c),footerHtml:'<div class="footer gut"><button class="btn" data-a="playEx" data-id="'+esc(t.id)+'">'+WorkoutView.icon('play')+'Pokreni vježbu</button><div class="workout-library-secondary"><button class="txtbtn" data-a="fav" data-id="'+esc(e.id)+'" aria-label="Favorit" aria-pressed="'+!!e.fav+'">'+(e.fav?I.heartF:I.heart)+'Favorit</button><button class="txtbtn" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'Uredi</button><button class="txtbtn" data-a="addTo" data-id="'+esc(e.id)+'">Dodaj u trening</button></div></div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="library"');
 };
 
 /* ---------- protocol builder & exercise editor ---------- */
@@ -3676,10 +3676,10 @@ async function sharePlan(title, items) {
   }catch(e){if(e.name!=='AbortError')toast('Dijeljenje plana nije uspjelo.',true);}
 }
 VIEWS.pr = function(t){
-  const p=S.pr[t.id];if(!p)return '<div class="view gut">'+topbar(backBtn())+'<p class="empty">Ovaj protokol više ne postoji.</p></div>';
+  const p=S.pr[t.id];if(!p)return '<div class="view gut">'+topbar(backBtn())+'<p class="empty">Ovaj trening više ne postoji.</p></div>';
   const items=viewDoseItems(t,p.items||[]),first=items.find(item=>S.ex[item.exId]);
   const left='<button type="button" class="ib" data-a="back" aria-label="Natrag">'+WorkoutView.icon('chevron-left')+'</button>',right='<button type="button" class="ib" data-a="workoutProtocolOptions" aria-label="Opcije treninga">'+WorkoutView.icon('ellipsis')+'</button>';
-  return WorkoutView.overview({topbarHtml:topbar(left,right,'MOJ TRENING'),heroHtml:workoutOverviewHero(p,first),eyebrow:workoutOverviewEyebrow(items),title:p.name,description:p.desc,metaHtml:workoutOverviewMeta(p,items),blocksHtml:items.length?workoutCompactHtml(items):'<p class="empty">Dodaj prvu vježbu u protokol.</p>',footerHtml:'<div class="footer gut workout-overview-footer"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"'+(items.length?'':' disabled')+'>'+WorkoutView.icon('play')+'Pokreni trening</button></div>'});
+  return WorkoutView.overview({topbarHtml:topbar(left,right,'MOJ TRENING'),heroHtml:workoutOverviewHero(p,first),eyebrow:workoutOverviewEyebrow(items),title:p.name,description:p.desc,metaHtml:workoutOverviewMeta(p,items),blocksHtml:items.length?workoutCompactHtml(items):'<p class="empty">Dodaj prvu vježbu u trening.</p>',footerHtml:'<div class="footer gut workout-overview-footer"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"'+(items.length?'':' disabled')+'>'+WorkoutView.icon('play')+'Pokreni trening</button></div>'});
 };
 
 VIEWS.trainingLoad = t => VIEWS.progress(t);
@@ -3697,7 +3697,7 @@ VIEWS.build = function(){
   const eff = CinemaModel.sections(d.items);
   return '<div class="view gut">' +
     topbar(backBtn(), '<button class="txtbtn" data-a="savePr">Spremi</button>', '') +
-    '<h1 class="h1">' + (isNew ? 'Novi protokol' : 'Uredi protokol') + '</h1>' +
+    '<h1 class="h1">' + (isNew ? 'Novi trening' : 'Uredi trening') + '</h1>' +
     '<div class="field" style="margin-top:22px"><label class="label" for="p-name">Naziv</label><input id="p-name" class="input" data-bind="name" value="'+esc(d.name)+'" placeholder="npr. Aktivacija prije treninga" style="font-weight:600;font-size:17px"></div>' +
     '<div class="field" style="margin-top:16px"><label class="label" for="p-desc">Opis</label><textarea id="p-desc" class="input" rows="2" data-bind="desc" placeholder="Kada i zašto ga radiš">'+esc(d.desc)+'</textarea></div>' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:28px 17px 14px"><h2 style="margin:0;font-size:17px;font-weight:600">Vježbe</h2><span style="font-size:14px;color:var(--text-body)">'+nVj(d.items.length)+' • ≈ '+total+' min</span></div>' +
@@ -3749,8 +3749,8 @@ VIEWS.build = function(){
       '<button class="dash" data-a="pickStart">'+I.plus.replace('<svg','<svg width="18" height="18"')+'Dodaj vježbe iz knjižnice</button>' +
       // a programme session has no days of its own: the programme's days offer its next session (as on the session page)
       (d.program ? '<p class="sub" style="margin:8px 17px 0;line-height:19px">Dane u tjednu za treninge programa biraš na stranici programa.</p>' : '<div style="margin:8px 0 0">' + daysPicker('ddays', d.id, d.days) + '</div>') +
-      (isNew ? '' : '<button class="btn sec" data-a="copyPr" style="height:48px">Kopiraj protokol</button>') +
-      (isNew ? '' : '<button class="btn danger" data-a="delPr">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši protokol') + '</button>') +
+      (isNew ? '' : '<button class="btn sec" data-a="copyPr" style="height:48px">Kopiraj trening</button>') +
+      (isNew ? '' : '<button class="btn danger" data-a="delPr">' + (d._confirmDel ? 'Dodirni još jednom za brisanje' : 'Obriši trening') + '</button>') +
     '</div><div style="height:16px"></div></div>' +
     '<div class="footer gut"><button class="btn" data-a="savePr" data-start="1"' + (d.items.length ? '' : ' disabled') + '>Spremi i kreni</button></div>';
 };
@@ -4421,7 +4421,7 @@ function openStartingLoad(cfg,repeating){
   const rows=StartingLoad.requests(cfg.items,startLoadDescription);
   if (!rows.length) return false;
   const source=startSource(cfg);
-  if (!source) {toast('Vježba ili protokol više nisu dostupni.',true);return true;}
+  if (!source) {toast('Vježba ili trening više nisu dostupni.',true);return true;}
   if(cfg.ref.kind==='protocol' && cfg.items.some((it,j)=>it.exId!==source.items[j]?.exId))cfg={...cfg,sessionOnly:true};
   S.sheet={kind:'startingLoad',cfg,repeating,rows,values:{},sourceKey:mtCanon(source),proposal:top().v==='today'?top().proposalKey:null};
   render();return true;
@@ -5019,7 +5019,7 @@ function nextDose(e, it, recorded){
   if (k === 'time') { const cap = it.cap || e.cap || (e.cat === 'Rehab' ? 30 : 60), sec = it.sec || 30; if (sec >= cap) return { item:null, text:'Dosegnuo si ' + cap + ' s: prijeđi na težu varijantu' }; n.sec = Math.min(cap, sec + 5); return { item:n, text: sec + ' → ' + n.sec + ' s' }; }
   // jumps and throws get better through height, speed and harder variations, not more reps or kilograms (the kettlebell swing keeps its own rule)
   if (e.cat === 'Eksplozivnost' && k !== 'kb') return { item:null, text: loadKind(e) === 'bar' ? 'Skok sa šipkom ostaje lagan: napreduj brzinom i visinom skoka, ne kilogramima' : exEquip(e).indexOf('Plyo box') !== -1 ? 'Prijeđi na višu stranu kutije (40 → 50 → 60 cm) ili na težu varijantu skoka' : exEquip(e).indexOf('Medicinka') !== -1 ? 'Prijeđi na težu medicinku ili težu varijantu bacanja; ponavljanja ostaju ista' : 'Prijeđi na težu varijantu; skokovi i bacanja ne napreduju s više ponavljanja' };
-  if (k === 'reps' && !(it.kg > 0) && needsKg(e)) return { item:null, text:'Upiši kilograme u uređivanju protokola pa ću ih povećavati' };
+  if (k === 'reps' && !(it.kg > 0) && needsKg(e)) return { item:null, text:'Upiši kilograme u uređivanju treninga pa ću ih povećavati' };
   if (k === 'bar' || k === 'db') {
     // double progression: the next load comes once its step is at most ~10 % of your estimated max; until then the reps go up
     const nx = nextLoad(e, it.kg), rec = typeof recorded === 'function' ? recorded() : recorded, e1r = nx ? rirE1(rec) : null;
@@ -6660,11 +6660,11 @@ function sheetHtml(){
   } else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
-    body = '<h3>Dodaj u protokol</h3>' + list.map(p => '<button class="opt" data-a="addToPick" data-id="'+esc(p.id)+'"><span>'+esc(p.name)+'</span><span style="color:var(--text-2);font-size:14px">'+nVj((p.items||[]).length)+'</span></button>').join('') +
-      '<button class="opt" data-a="addToNew" style="color:var(--accent-text);font-weight:600"><span>+ Novi protokol s ovom vježbom</span></button>';
+    body = '<h3>Dodaj u trening</h3>' + list.map(p => '<button class="opt" data-a="addToPick" data-id="'+esc(p.id)+'"><span>'+esc(p.name)+'</span><span style="color:var(--text-2);font-size:14px">'+nVj((p.items||[]).length)+'</span></button>').join('') +
+      '<button class="opt" data-a="addToNew" style="color:var(--accent-text);font-weight:600"><span>+ Novi trening s ovom vježbom</span></button>';
   } else if (s.kind === 'leave') {
     const pr = top().v === 'build';
-    body = '<h3>Spremiti promjene?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">' + (pr ? 'Promjene u ovom protokolu još nisu spremljene.' : top().v==='exEdit' ? 'Promjene u ovoj vježbi još nisu spremljene.' : 'Ovaj unos još nije spremljen.') + '</p>' +
+    body = '<h3>Spremiti promjene?</h3><p style="margin:0 0 16px;font-size:15px;line-height:22px;color:var(--text-body)">' + (pr ? 'Promjene u ovom treningu još nisu spremljene.' : top().v==='exEdit' ? 'Promjene u ovoj vježbi još nisu spremljene.' : 'Ovaj unos još nije spremljen.') + '</p>' +
       '<div class="stack" style="gap:10px"><button class="btn" data-a="leaveSave" style="height:52px;font-size:17px">Spremi i izađi</button><button class="btn danger" data-a="leaveDiscard">Izađi bez spremanja</button><button class="btn sec" data-a="sheetDone" style="height:48px">Nastavi uređivanje</button></div>';
   } else if (s.kind === 'progTest' || s.kind === 'progRestart') {
     body = progSheet(s);
@@ -6699,7 +6699,7 @@ function sheetHtml(){
       }).join('') : '<p style="margin:0 0 8px;color:var(--text-2)">Za ovaj dan nema plana.</p>') +
       (i >= today ? matchBox(plan.filter(x => !x.done && !x.skip).map(x => matchNote(x, i)).find(Boolean), i, '12px 0 0') : '') +
       (done.length ? '<p class="label" style="padding:14px 0 6px">Odrađeno</p>' + done.map(l => '<div class="opt"><span>'+esc(l.name)+'</span><span style="color:var(--text-2);font-size:14px">'+(planCounts(l) ? '' : 'djelomično · ')+fmtDur(l.secs)+'</span></div>').join('') : '') +
-      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom protokolu, programu i treningu na terenu (Dani u tjednu), a stalni dan utakmice u Napretku (Doziranje). Ovdje označiš i dodatnu utakmicu.</p>';
+      '<p style="margin:14px 0 0;font-size:13px;line-height:19px;color:var(--text-2)">Dane biraš u svakom treningu, programu i terenskom treningu (Dani u tjednu), a stalni dan utakmice u Napretku (Doziranje). Ovdje označiš i dodatnu utakmicu.</p>';
   } else if (s.kind === 'goal' || s.kind === 'kg') {
     const p = S.pr[s.id], G = GOALS[S.settings.goal], plan = p && (s.kind === 'kg' || G) ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
     body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(G ? G.name : '') + '” za ' + esc(p ? p.name : '') : 'Kilogrami za ' + esc(p ? p.name : '')) + '</h3>' +
@@ -6725,7 +6725,7 @@ function sheetHtml(){
     const small = t => '<span style="display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--text-2)">' + esc(t) + '</span>';
     const parts = pk ? packParts(pk) : [], hasProg = pk && Object.values(S.prog).some(g => g.pack === pk.id);
     body = '<h3>Moji podaci</h3>' +
-      '<p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Vježbe, protokoli, plan, povijest i postavke spremaju se samo na ovom mobitelu. Povremeno izvezi kopiju i spremi je u Datoteke (npr. iCloud Drive) da ih ne izgubiš. Videi i slike nisu dio kopije.</p>' +
+      '<p style="margin:0 0 12px;font-size:14px;line-height:21px;color:var(--text-2)">Vježbe, treninzi, plan, povijest i postavke spremaju se samo na ovom mobitelu. Povremeno izvezi kopiju i spremi je u Datoteke (npr. iCloud Drive) da ih ne izgubiš. Videi i slike nisu dio kopije.</p>' +
       '<button class="opt" data-a="exportData"><span>Izvezi sigurnosnu kopiju' + small('Zadnja kopija: ' + (last ? shortDate(last) : 'još nijedna')) + '</span></button>' +
       '<label class="opt" for="importFile" style="cursor:pointer;box-sizing:border-box"><span>Uvezi kopiju</span></label><input id="importFile" class="vsr" type="file" accept="application/json,.json">' +
       (undoAt ? '<button class="opt" data-a="undoRestore"><span>Vrati podatke od prije uvoza' + small('Kopija je uvezena ' + shortDate(undoAt)) + '</span></button>' : '') +
@@ -6745,7 +6745,7 @@ function sheetHtml(){
     body = '<h3>' + (s.undo ? 'Vratiti podatke od prije uvoza?' : 'Vratiti podatke iz kopije?') + '</h3>' +
       box(s.undo ? 'Podaci od prije uvoza' + (when ? ' (' + shortDate(when) + ')' : '') : 'Kopija' + (when ? ' od ' + shortDate(when, true) : ''), d, s.undo?s.settings:d.settings) + box('Sada na mobitelu', storeObj(),S.settings) +
       (lost.length ? '<div class="lift warn" style="margin:12px 0 0"><div class="why" style="color:var(--text-body)">' + esc((s.undo ? 'Ovo nije u podacima od prije uvoza' : 'Ovo nije u kopiji') + ' i nestat će iz povijesti ako zamijeniš podatke: ' + lostText(lost) + '.') + '</div></div>' : '') +
-      '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.undo ? 'Sve na mobitelu zamijenit će se podacima od prije uvoza.' : 'Sve na mobitelu (vježbe, protokoli, plan, povijest i postavke) zamijenit će se kopijom. Slike i videi ostaju.' + (none ? '' : ' Sadašnje podatke možeš vratiti u Mojim podacima dok ne uvezeš sljedeću kopiju.')) + '</p>' +
+      '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.undo ? 'Sve na mobitelu zamijenit će se podacima od prije uvoza.' : 'Sve na mobitelu (vježbe, treninzi, plan, povijest i postavke) zamijenit će se kopijom. Slike i videi ostaju.' + (none ? '' : ' Sadašnje podatke možeš vratiti u Mojim podacima dok ne uvezeš sljedeću kopiju.')) + '</p>' +
       (s.noUndo ? '<p style="margin:0 0 14px;font-size:14px;line-height:20px;color:var(--danger)">Sadašnje podatke nije moguće sačuvati za povratak. Ako ih zamijeniš, ne možeš ih vratiti.</p>' : '') +
       '<div class="seg"><button class="btn sec" data-a="sheetDone" style="height:48px">Odustani</button><button class="btn" data-a="restoreApply" style="height:48px;font-size:16px"' + (s._busy ? ' disabled' : '') + '>' + (s.noUndo ? 'Ipak zamijeni' : 'Zamijeni podatke') + '</button></div>';
   } else if (s.kind === 'settings') {
@@ -7005,7 +7005,7 @@ const A = {
     const again=app.querySelector('.sheet [data-a="protocolOptionsToggle"][data-k="'+d.k+'"]');
     if(s.open[d.k])again?.closest('.wopt-card')?.scrollIntoView({block:'nearest'});
     again?.focus({preventScroll:true}); },   // a tap focuses nothing in Safari: the row just opened or closed keeps the focus, like a tapped day
-  protocolCopy: d => { if(!S.pr[d.id])return; A.editPr(d); A.copyPr(); },   // the editor opens on a ready copy (Uredi, then Kopiraj protokol, in one tap); nothing is saved until Spremi
+  protocolCopy: d => { if(!S.pr[d.id])return; A.editPr(d); A.copyPr(); },   // the editor opens on a ready copy (Uredi, then Kopiraj trening, in one tap); nothing is saved until Spremi
   protocolShare: async d => { const p=S.pr[d.id]; if(!p)return; if(!(p.items||[]).length){toast('Trening još nema vježbi.');return;} await sharePlan(p.name,p.items); },   // a title alone is nothing to share
   protocolHistory: d => { const p=S.pr[d.id]; if(p)go({v:'history',page:1,ref:p.id}); },
   historyRefClear: () => { const t=top(); if(t.v!=='history')return; delete t.ref; t.page=1; render(); document.getElementById('history-query')?.focus({preventScroll:true}); },   // the button is gone with the filter; the search field above the list takes the focus
@@ -7230,7 +7230,7 @@ const A = {
     const items=protocol.program || !rec.items?.length ? protocol.items : rec.items;
     // A pain-adjusted dose may put a gentler exercise into the same slot (painSwapOf names the original).
     if (items.length!==protocol.items.length || items.some((it,i)=>(it.exId!==protocol.items[i].exId && it.painSwapOf!==protocol.items[i].exId) || !S.ex[it.exId])) {
-      render();toast('Sadržaj protokola se promijenio. Ponovno otvori prijedlog.');return;
+      render();toast('Sadržaj treninga se promijenio. Ponovno otvori prijedlog.');return;
     }
     startPlayer({mode:'ex',title:protocol.name,items,originalItems:protocol.items,ref:{kind:'protocol',id:protocol.id}});
   },
@@ -7518,7 +7518,7 @@ const A = {
   savePr: async d => {
     const dr = S.draft; const name = (dr.name||'').trim();
     builderCommitSection();
-    if (!name) { toast('Upiši naziv protokola.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
+    if (!name) { toast('Upiši naziv treninga.'); const el = document.getElementById('p-name'); if (el) el.focus(); return; }
     if (!dr.items.length) { toast('Dodaj barem jednu vježbu.'); return; }
     if (dr._fromWorkoutFile) {
       try {
@@ -7555,12 +7555,12 @@ const A = {
     const id = dr.id; S.draft = null; S.draftSig = null; S.stack.pop();
     if (top().v !== 'pr' || top().id !== id) S.stack.push({ v:'pr', id });
     if (d.start) { A.startPr({ id }); return; }
-    render(); toast('Protokol je spremljen.');
+    render(); toast('Trening je spremljen.');
   },
   delPr: async () => {
     const d = S.draft; if (!d._confirmDel) { d._confirmDel = true; render(); return; }
     if (!(await remove('protocols', d.id))) return;
-    delete S.pr[d.id]; S.draft = null; S.draftSig = null; S.stack = [{ v: S.tab }]; render(); toast('Protokol je obrisan.');
+    delete S.pr[d.id]; S.draft = null; S.draftSig = null; S.stack = [{ v: S.tab }]; render(); toast('Trening je obrisan.');
   },
   startPr: d => {
     const p=S.pr[d.id]; if (!p?.items?.length) return;
@@ -7778,7 +7778,7 @@ const A = {
   kgSheet: d => { S.sheet = { kind:'kg', id: d.id }; render(); },
   goalSkip: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; n.goalSkip = S.settings.goal; S.pr[d.id].goalSkip = n.goalSkip; render(); await save('protocols', d.id, n); },
   goalApply: async d => { const p = S.pr[d.id]; if (!p || !GOALS[S.settings.goal] || !gymProto(p)) return; const plan = goalPlan(p, S.settings.goal); const n = clone(p); delete n.id; n.items = plan.items; n.goal = S.settings.goal; n.updatedAt = Date.now();
-    S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Protokol je prilagođen cilju „' + GOALS[n.goal].name + '”.'); },
+    S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Trening je prilagođen cilju „' + GOALS[n.goal].name + '”.'); },
   kgApply: async d => { const p = S.pr[d.id]; if (!p) return; const plan = kgPlan(p); const n = clone(p); delete n.id; n.items = plan.items;
     S.pr[d.id] = Object.assign({ id: d.id }, n); S.sheet = null; render(); await save('protocols', d.id, n); toast('Kilogrami su upisani.'); },
   setProgN: d => { if (!writeSetting('progN',+d.v)) return; render(); },
@@ -7887,7 +7887,7 @@ const A = {
     render();
   },
   // a copy is your own protocol: not part of a programme or the pack, and its progress starts from zero
-  copyPr: () => { builderCommitSection(); const d = S.draft; const c = clone(d); c.id = uid('p'); c.name = (d.name || 'Protokol') + ' (kopija)'; c.home = null; c.days = []; c._confirmDel = false; c._open = null;
+  copyPr: () => { builderCommitSection(); const d = S.draft; const c = clone(d); c.id = uid('p'); c.name = (d.name || 'Trening') + ' (kopija)'; c.home = null; c.days = []; c._confirmDel = false; c._open = null;
     ['program','week','slot','pack','goalSkip'].forEach(k => delete c[k]); (c.items || []).forEach(it => ['ok','fail','snoozeOk','up','prev','easy'].forEach(k => delete it[k]));
     S.draft = c; render(); toast('Kopija je spremna. Promijeni naziv i spremi.'); },
   dequip: d => { const z = S.draft.equip = (S.draft.equip || []).slice(); const i = z.indexOf(d.v); if (i === -1) z.push(d.v); else z.splice(i, 1); render(); },
@@ -8158,7 +8158,7 @@ const monthShort = key => monthDate(key, {day:'numeric',month:'numeric'});
 const monthCap = s => s.charAt(0).toLocaleUpperCase('hr') + s.slice(1);
 const monthDayName = key => monthCap(monthDate(key,{weekday:'long'})) + ', ' + monthDate(key,{day:'numeric',month:'long'});
 const calendarMap = () => S.settings.planDates || {};
-const monthCat = s => s.kind === 'field' ? 'Teren' : s.kind === 'program' ? 'Program' : S.pr[s.id]?.tag || 'Protokol';
+const monthCat = s => s.kind === 'field' ? 'Teren' : s.kind === 'program' ? 'Program' : S.pr[s.id]?.tag || 'Trening';
 const monthRef = s => ' data-kind="' + esc(s.kind) + '" data-id="' + esc(s.id) + '"';
 const monthBall = '<span class="mc-ball" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 5.8 4 2.8-1.5 4.5h-5L6 8.6z" fill="currentColor"/></svg></span>';
 const monthDot = '<i class="mc-dot" aria-hidden="true"></i>';
@@ -8205,7 +8205,7 @@ function monthTools(t){
 }
 function monthPicker(t, slots){
   if (!t.picker) return '';
-  const groups = [['all','Sve'],['protocol','Protokoli'],['field','Teren'],['program','Programi']];
+  const groups = [['all','Sve'],['protocol','Treninzi'],['field','Teren'],['program','Programi']];
   const filter = groups.map(([k,n])=>'<button data-a="monthFilter" data-kind="'+k+'" aria-pressed="'+(t.picker===k)+'">'+n+'</button>').join('');
   const options = [];
   for (const [kind, items] of [['protocol',S.pr],['field',S.field],['program',S.prog]]) {

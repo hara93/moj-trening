@@ -1,7 +1,7 @@
 {
  "name": "Moj trening",
  "short_name": "Moj trening",
- "description": "Moje vježbe, protokoli i kondicija na terenu.",
+ "description": "Moje vježbe, treninzi i kondicija na terenu.",
  "lang": "hr",
  "start_url": "./",
  "scope": "./",

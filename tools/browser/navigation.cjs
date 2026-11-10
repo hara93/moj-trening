@@ -94,11 +94,11 @@ async function run(){
   await progressBack(p);
   await home(p);await a(p,'dataSheet').click();const b=fixture();b.log=[];b.settings.sound=false;b.settings.planDates={};b.protocols['nav-timed']={id:'nav-timed',name:'Provjera vremenskih serija',items:[{exId:'side-plank',sets:2,sec:60,rest:5,measure:'time',sides:true}],days:[]};
   await p.locator('#importFile').setInputFiles({name:'synthetic-navigation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(b))});await a(p,'restoreApply').click();await a(p,'restoreApply').waitFor({state:'hidden'});
-  await protocols(p);await a(p,'newPr').click();await p.locator('#p-name').fill('Nacrt protokola · provjera');
-  await a(p,'pickStart').click();await back(p);await waitView(p,'build');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt protokola · provjera');
-  await a(p,'pickStart').click();await named(p,'pickToggle','bench-press').click();await a(p,'pickDone').click();await back(p);await p.getByRole('dialog',{name:'Spremiti promjene?'}).waitFor();await p.keyboard.press('Escape');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt protokola · provjera');
-  assert.equal((await draft(p)).draft.items.length,1);await p.reload();await waitView(p,'build');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt protokola · provjera');assert.equal((await draft(p)).draft.items.length,1);
-  await p.locator('.topbar [data-a=savePr]').click();await waitView(p,'pr');const saved=Object.values((await data(p)).protocols).find(x=>x.name==='Nacrt protokola · provjera');assert.ok(saved);assert.equal(await draft(p),null);await back(p);await waitView(p,'protocols');
+  await protocols(p);await a(p,'newPr').click();await p.locator('#p-name').fill('Nacrt treninga · provjera');
+  await a(p,'pickStart').click();await back(p);await waitView(p,'build');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt treninga · provjera');
+  await a(p,'pickStart').click();await named(p,'pickToggle','bench-press').click();await a(p,'pickDone').click();await back(p);await p.getByRole('dialog',{name:'Spremiti promjene?'}).waitFor();await p.keyboard.press('Escape');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt treninga · provjera');
+  assert.equal((await draft(p)).draft.items.length,1);await p.reload();await waitView(p,'build');assert.equal(await p.locator('#p-name').inputValue(),'Nacrt treninga · provjera');assert.equal((await draft(p)).draft.items.length,1);
+  await p.locator('.topbar [data-a=savePr]').click();await waitView(p,'pr');const saved=Object.values((await data(p)).protocols).find(x=>x.name==='Nacrt treninga · provjera');assert.ok(saved);assert.equal(await draft(p),null);await back(p);await waitView(p,'protocols');
   await p.evaluate(()=>history.forward());await p.waitForTimeout(100);assert.notEqual(await p.locator('#app').getAttribute('data-key'),'build:'+saved.id);
   console.log('navigation: browser Back guard, picker return, refresh recovery, save and no stale Forward form passed');
 

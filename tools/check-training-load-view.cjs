@@ -36,7 +36,7 @@ test('the effort ring uses known AU shares and keeps unrated activities out of t
 });
 test('zero effort remains visible zero with no positive-height invented chart fill',()=>{
   const html=render([entry({srpe:0})]);assert.match(html,/data-load-metric="current-au">0/);assert.doesNotMatch(html,/class="tl-day-fill"/);assert.doesNotMatch(html,/Zbroj nije potpun/);
-  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Protokoli<\/dt><dd><span aria-hidden="true">0 <small>j\.n\.<\/small><\/span><span class="tl-sr">0 jedinica napora<\/span>/);
+  assert.match(html,/data-load-ring-kind="protocol"><dt><i aria-hidden="true"><\/i>Treninzi<\/dt><dd><span aria-hidden="true">0 <small>j\.n\.<\/small><\/span><span class="tl-sr">0 jedinica napora<\/span>/);
   assert.doesNotMatch(html,/class="tl-dial-segment"/);
 });
 test('empty and legacy missing states do not expose fabricated AU or zero muscle tables',()=>{

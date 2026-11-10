@@ -53,7 +53,7 @@ function fixture() {
   ];
   data.protocols[ids.protocol] = {
     id: ids.protocol, name: 'Kontrolni trening sa zamjenom', tag: 'Teretana', days: [], items,
-    desc: 'Kontrolni opis protokola ostaje vidljiv uz izvorni veliki prikaz.'
+    desc: 'Kontrolni opis treninga ostaje vidljiv uz izvorni veliki prikaz.'
   };
   data.protocols[ids.clock] = {
     id: ids.clock, name: 'Samo aktivno trajanje', days: [], tag: 'Teretana',
@@ -462,7 +462,7 @@ async function library(page) {
 async function preview(page, baseline) {
   await openProtocol(page);
   assert.equal(await page.locator('.workout-compact-row[data-a="workoutExercise"]').count(), 2);
-  assert.match(await page.locator('.workout-overview').innerText(), /Kontrolni opis protokola/);
+  assert.match(await page.locator('.workout-overview').innerText(), /Kontrolni opis treninga/);
   assert.equal(await page.locator('.workout-overview .workout-set-table').count(), 0);
   for (const width of [375, 320]) {
     await page.setViewportSize({ width, height: 850 });

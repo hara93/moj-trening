@@ -1,5 +1,10 @@
 # Promjene
 
+## 1.24.1 — 10. 11. 2026.
+
+- **Svugdje piše "trening"** umjesto "protokol": Moji treninzi, Novi trening, Dodaj u trening, Uredi trening, Trening je spremljen. Zapis u povijesti je "Trening u teretani".
+- **Veći tekst u Napretku i Praćenju opterećenja:** sitni tekst je najmanje 13 px. Mali natpisi velikim slovima su 11 px, a brojke na grafovima 9–11 px.
+
 ## 1.24.0 — 10. 11. 2026.
 
 - **Novi prozor Opcije treninga** (⋯ na stranici treninga):

@@ -36,7 +36,7 @@
 
   function quickLinks() {
     return '<nav class="db-quick" aria-label="Prečaci iz pregleda">' +
-      '<button type="button" data-a="dashboardProtocols">'+icon('protocol')+'<span>Moji protokoli</span></button>' +
+      '<button type="button" data-a="dashboardProtocols">'+icon('protocol')+'<span>Moji treninzi</span></button>' +
       '<button type="button" data-a="dashboardCalendar">'+icon('calendar')+'<span>Kalendar</span></button>' +
       '<button type="button" data-a="historyList" aria-label="Povijest treninga">'+icon('history')+'<span>Povijest</span></button></nav>';
   }
@@ -45,7 +45,7 @@
     const error = !!vm.error;
     return '<div class="view dashboard '+(detailed?'db-analytics':'db-home')+'"><header class="db-heading"><h1>'+(detailed?'Analiza tjedna':'Moj pregled')+'</h1></header>' + (detailed?'<button type="button" class="db-back" data-a="back" aria-label="Natrag">'+icon('arrow')+'</button>':quickLinks()) +
       '<section class="db-state" role="'+(error?'alert':'status')+'">'+icon(error?'info':'chart')+'<h2>'+(error?'Pregled trenutačno nije dostupan':'Učitavam tvoj tjedan')+'</h2><p>'+
-      (error?'Podaci se nisu mogli pripremiti za pregled. Svojim treninzima možeš pristupiti kroz Moje protokole.':'Pripremam zabilježene treninge i preostali raspored.')+'</p></section></div>';
+      (error?'Podaci se nisu mogli pripremiti za pregled. Svojim treninzima možeš pristupiti kroz Moje treninge.':'Pripremam zabilježene treninge i preostali raspored.')+'</p></section></div>';
   }
 
   function bodyFigure(groups, selected, forecast) {
@@ -208,7 +208,7 @@
       (rows.length?'<ul>'+rows.map(s=>{
         const action=sessionAction(s), tag=action?'button':'div', planned=s.status==='planned';
         return '<li><'+tag+' class="db-session"'+(action?' type="button"'+action:'')+'><span class="db-session-icon'+(planned?' is-plan':'')+'">'+icon(planned?'calendar':'check')+'</span><span class="db-session-text"><b>'+esc(s.label)+'</b><small>'+esc(dateLabel(s.date,vm.today))+(s.kind==='field'?' · Kondicija na terenu':'')+'</small><span class="db-session-state">'+(planned?'U preostalom planu':'Odrađeno')+'</span></span>'+(action?icon('arrow'):'')+'</'+tag+'></li>';
-      }).join('')+'</ul>':'<p class="db-empty-copy">Još nema odrađenih treninga ovog tjedna.'+(vm.forecast?' U preostalom rasporedu nema treninga.':' Uključi plan za pregled budućih termina.')+'</p><button type="button" class="db-primary" data-a="dashboardProtocols">'+icon('plus')+'Otvori Moje protokole</button>')+'</section>';
+      }).join('')+'</ul>':'<p class="db-empty-copy">Još nema odrađenih treninga ovog tjedna.'+(vm.forecast?' U preostalom rasporedu nema treninga.':' Uključi plan za pregled budućih termina.')+'</p><button type="button" class="db-primary" data-a="dashboardProtocols">'+icon('plus')+'Otvori Moje treninge</button>')+'</section>';
   }
 
   function analytics(input) {

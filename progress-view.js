@@ -52,7 +52,7 @@
     suggestions: {
       title: 'Prijedlozi koje ti potvrđuješ',
       paragraphs: ['Prijedlog se pojavi nakon zadanog broja uzastopnih uspješnih izvedbi. Može predložiti veću dozu, težu varijantu ili povratak na prethodnu dozu.',
-        'Protokol se mijenja tek kad prihvatiš prijedlog. Djelomičan, preskočen ili uživo izmijenjen trening ne gura brojač prema povećanju. Programi zadržavaju svoju propisanu dozu.']
+        'Trening se mijenja tek kad prihvatiš prijedlog. Djelomičan, preskočen ili uživo izmijenjen trening ne gura brojač prema povećanju. Programi zadržavaju svoju propisanu dozu.']
     },
     exercises: {
       title: 'Trendovi glavnih vježbi',

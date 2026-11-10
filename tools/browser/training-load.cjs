@@ -33,7 +33,7 @@ function fixture(empty = false) {
   ];
   data.protocols[protocolId] = {
     id: protocolId, name: 'Opterećenje · isti stvarni rad', tag: 'Teretana', days: [],
-    desc: 'Kontrolni protokol za provjeru stvarne izvedbe i zasebnih mjera opterećenja.',
+    desc: 'Kontrolni trening za provjeru stvarne izvedbe i zasebnih mjera opterećenja.',
     items: JSON.parse(JSON.stringify(items)).map(item => {
       for (const key of ['done', 'setsDone', 'rirList', 'sirList', 'setNumbers', 'sideCounts']) delete item[key];
       return item;

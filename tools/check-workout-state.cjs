@@ -10,7 +10,7 @@ const oldB={exId:'oldB',measure:'sets',sets:1,reps:5,sec:30,kg:0,sides:false,res
 const replacement={...oldA,exId:'newA',kg:0};
 const exercise=(id,prime=['front_chest'])=>({id,name:id,cat:'Snaga',measure:'sets',muscles:{prime},steps:[]});
 function starting(sessionOnly=true){
-  const sourceProtocol={id:'p',name:'Protokol',items:clone([oldA,oldB])},baseline=clone(sourceProtocol.items),warnings=[];
+  const sourceProtocol={id:'p',name:'Trening',items:clone([oldA,oldB])},baseline=clone(sourceProtocol.items),warnings=[];
   const cfg={mode:'ex',ref:{kind:'protocol',id:'p'},items:clone([replacement,oldB]),originalItems:baseline,sessionOnly};
   const inputs={'kg-0':{value:'10',focus(){}},'kg-1':{value:'30',focus(){}}},error={textContent:''};
   const ctx={P:null,S:{pr:{p:sourceProtocol},ex:{newA:{id:'newA',kg:0}},sheet:{kind:'startingLoad',cfg,rows:[{index:0,exId:'newA',name:'New',kind:'db'},{index:1,exId:'oldB',name:'B',kind:'bar'}],values:{},sourceKey:JSON.stringify(sourceProtocol)}},

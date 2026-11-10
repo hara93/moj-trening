@@ -79,7 +79,7 @@
       esc(vm.checkin?'Jutarnja provjera spremljena':'Pogledaj prijedlog i jutarnju provjeru')+'</span></span><b aria-hidden="true">›</b></button>';
   }
   const actionLabels={protocol:'Pokreni trening',field:'Otvori terenski trening',calendar:'Otvori planer',checkin:'Ispuni jutarnju provjeru',team:'Upiši ekipni trening',history:'Otvori povijest'};
-  const evidenceLabels={history:'Povijest',plan:'Plan',match:'Utakmica',checkin:'Jutarnja provjera',protocol:'Protokol',field:'Terenski trening'};
+  const evidenceLabels={history:'Povijest',plan:'Plan',match:'Utakmica',checkin:'Jutarnja provjera',protocol:'Trening',field:'Terenski trening'};
   function disclosure(title,body,key,expanded,status='') {
     if (!body) return '';
     return '<details class="dy-disclosure dy-'+key+'" data-today-detail="'+key+'"'+(expanded.includes(key)?' open':'')+'><summary><span>'+esc(title)+

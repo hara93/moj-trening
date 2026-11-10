@@ -196,7 +196,7 @@ async function main() {
     report.checks.historyOpensOnLiveApp=true;
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     await page.locator('.db-quick [data-a="dashboardProtocols"]').click();
-    await page.getByRole('heading',{name:'Moji protokoli',exact:true}).waitFor();
+    await page.getByRole('heading',{name:'Moji treninzi',exact:true}).waitFor();
     assert.ok(await page.locator('[data-a="newPr"]').count(),'actual protocol list retains creation control');
     await page.getByRole('button',{name:'Natrag',exact:true}).click();
     await page.getByRole('heading',{name:'Moj pregled',exact:true}).waitFor();

@@ -40,8 +40,8 @@
     return anonymous.concat(Array.from(byId.values())).filter(function(row){return kind(row.entry)&&row.entry.at<=now;})
       .sort(function(a,b){return b.entry.at-a.entry.at||a.index-b.index;}).map(function(row){return row.entry;});
   }
-  var labels={protocol:'Protokoli',field:'Teren',team:'Ekipni trening',match:'Utakmice',legacy:'Stariji zapisi'};
-  var workoutLabels={protocol:'Protokol',field:'Trening na terenu',team:'Ekipni trening',match:'Utakmica',legacy:'Stariji zapis'};
+  var labels={protocol:'Treninzi',field:'Teren',team:'Ekipni trening',match:'Utakmice',legacy:'Stariji zapisi'};
+  var workoutLabels={protocol:'Trening',field:'Trening na terenu',team:'Ekipni trening',match:'Utakmica',legacy:'Stariji zapis'};
   function period(log,from,to,includeWorkouts){
     var entries=log.filter(function(entry){return entry.at>=from&&entry.at<to;});
     var out={from:from,to:to,sessions:entries.length,rated:0,knownMinutes:0,missingDuration:0,missingRpe:0,missingAU:0,knownAU:0,totalAU:null,complete:false,byKind:[]};
