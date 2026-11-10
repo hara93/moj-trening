@@ -172,7 +172,11 @@ test('real app toolbar wrappers, sheet primary action and secondary library acti
   assert.match(css,/\.workout-detail-tools>\.workout-equipment-menu\{grid-column:1\/-1/);
   assert.match(css,/\.sheet\.workout-fullscreen \.workout-footer \.btn:not\(\.sec\):not\(\.danger\)\{background:#dce88d/);
   assert.match(css,/\.workout-library-secondary\{display:flex;flex-wrap:wrap/);
-  assert.match(css,/\.sheet\[data-kind=workoutProtocolOptions\] \.opt>svg\{width:24px;height:24px;flex:none\}/);
+  // 1.24.0: the "Opcije treninga" sheet uses the app's tokens: no prototype grey, no yellow button, no system font of its own
+  const sheet=css.split('\n').filter(line=>/workoutProtocolOptions|\.wopt/.test(line)).join('\n');
+  assert.ok(sheet.includes('.wopt-card{'));
+  assert.doesNotMatch(sheet,/#[0-9a-f]{3,8}\b|rgba?\(|-apple-system/i,'only tokens in the sheet');
+  assert.doesNotMatch(css,/\[data-kind=workoutProtocolOptions\] \.(opt|btn)/,'the old sheet rules are gone');
 });
 
 test('app compact rows preserve varying doses, unknown weight and intentional zero without repeating sides',()=>{
@@ -333,4 +337,126 @@ test('a long protocol description shows two lines and "više"',()=>{
   assert.match(html,/<p class="workout-description clamp">/);
   assert.match(html,/<button type="button" class="workout-description-more" data-a="descMore" aria-expanded="false">više<\/button>/);
   assert.doesNotMatch(View.overview({title:'Snaga A',description:'Kontrolirana izvedba'}),/clamp|više/);
+});
+
+// ---- 1.24.0: "Opcije treninga" (WorkoutView.options) ----
+const count=(html,re)=>(html.match(re)||[]).length;
+const optionsVm=more=>({id:'p1',name:'Trening 1',meta:'18 min · 4 vježbe · 12 serija',days:[],effort:{status:'insufficient',sampleCount:0},muscles:{groups:[],gap:false},history:false,proposal:null,canDelete:true,confirmDelete:false,open:{},...more});
+const available={status:'available',sampleCount:3,min:168,max:203};
+const nine=['Prsa','Gluteus','Kvadriceps','Prednja ramena','Trbušni mišići','Aduktori','Triceps','Donja leđa','Stražnja loža'].map((label,i)=>({label,equivalent:[4.5,6,6,3,3,3,3,1.5,1.5][i]}));
+
+test('1.24.0 options: the value beside "Dani u tjednu" stays short for any choice',()=>{
+  assert.equal(View.optionsDays([]),'Nisu odabrani');
+  assert.equal(View.optionsDays(undefined),'Nisu odabrani');
+  assert.equal(View.optionsDays([3,0]),'Pon, Čet');
+  assert.equal(View.optionsDays([0,1,2,3]),'Pon, Uto, Sri, Čet');
+  assert.equal(View.optionsDays([0,1,2,3,4]),'5 dana');
+  assert.equal(View.optionsDays([6,5,4,3,2,1,0]),'Svaki dan');
+  assert.equal(View.optionsDays([2,2,9,-1,'x']),'Sri','invalid and repeated days are ignored');
+});
+
+test('1.24.0 options: the effort texts tell "not yet" from "not possible" and use correct plurals',()=>{
+  const none=View.optionsEffort({status:'insufficient',sampleCount:0}),one=View.optionsEffort({status:'insufficient',sampleCount:1});
+  assert.equal(none.short,'Nakon 2 ocijenjena treninga');assert.match(none.note,/Odradi ga dvaput s istom dozom/);
+  assert.equal(one.short,'Još 1 ocijenjeni trening');assert.match(one.note,/Imaš 1 ocijenjeni trening/);
+  const kg=View.optionsEffort({status:'unavailable',sampleCount:0,missingKg:true}),dose=View.optionsEffort({status:'unavailable',sampleCount:0}),empty=View.optionsEffort({status:'unavailable',sampleCount:0,empty:true});
+  assert.equal(kg.short,'Nedostaju kilogrami');assert.match(kg.note,/Upiši ih/);
+  assert.equal(dose.short,'Doza nije potpuna');
+  assert.equal(empty.short,'Nema vježbi');assert.match(empty.note,/Dodaj vježbe/);
+  for(const state of [none,one,kg,dose,empty]){assert.equal(state.ok,false);assert.equal(state.range,'');assert.doesNotMatch(state.short+state.note+state.more,/usporediv|izvedb|AU\b/);}
+  const ok=View.optionsEffort(available);
+  assert.deepEqual([ok.ok,ok.range,ok.spoken,ok.sub],[true,'168–203','168 do 203 jedinice napora','iz 3 ocijenjena treninga s istom dozom']);
+  assert.match(ok.more,/Jedinice napora \(j\.n\.\) su tvoja ocjena težine puta minute treninga/);
+  assert.equal(View.optionsEffort({...available,sampleCount:2}).sub,'iz 2 ocijenjena treninga s istom dozom');
+  assert.equal(View.optionsEffort({...available,sampleCount:5}).sub,'iz 5 ocijenjenih treninga s istom dozom');
+  assert.equal(View.optionsEffort({...available,sampleCount:21}).sub,'iz 21 ocijenjenog treninga s istom dozom');
+  const single=View.optionsEffort({...available,min:120.2,max:120.4});
+  assert.deepEqual([single.range,single.spoken],['120','120 jedinica napora'],'one value when the range rounds to one number');
+  assert.equal(View.optionsEffort({...available,min:1200,max:1451}).range,'1.200–1.451');
+  assert.equal(View.optionsEffort({status:'available',sampleCount:2,min:null,max:null}).ok,false,'no numbers, no estimate');
+});
+
+test('1.24.0 options: a new own workout shows tiles, direct day chips, two calm rows and delete',()=>{
+  const html=View.options(optionsVm());
+  assert.match(html,/^<div class="wopt"><div class="wopt-head"><h3 aria-label="Opcije treninga: Trening 1">Trening 1<\/h3><p class="wopt-meta">18 min · 4 vježbe · 12 serija<\/p>/);
+  assert.equal(count(html,/<h3/g),1,'one title: the generic sheet wrapper names the dialog by it');
+  assert.deepEqual([...html.matchAll(/<div class="wopt-tiles">(.*?)<\/div>/g)][0][1].match(/data-a="[a-zA-Z]+"/g),['data-a="editPr"','data-a="protocolCopy"','data-a="protocolShare"']);
+  assert.match(html,/data-a="editPr" data-id="p1" aria-label="Uredi trening">.*?<span>Uredi<\/span>/);
+  assert.match(html,/data-a="protocolCopy" data-id="p1" aria-label="Napravi kopiju treninga">.*?<span>Kopija<\/span>/);
+  assert.match(html,/data-a="protocolShare" data-id="p1" aria-label="Podijeli plan treninga">.*?<span>Podijeli<\/span>/);
+  assert.doesNotMatch(html,/protocolHistory/,'never done: no Povijest tile');
+  assert.match(html,/<div class="wopt-card wopt-days" role="group" aria-labelledby="wopt-days"><div class="wopt-k"><h4 id="wopt-days">Dani u tjednu<\/h4><span class="v">Nisu odabrani<\/span>/);
+  assert.equal(count(html,/class="dchip" data-a="prDays" data-id="p1" data-i="[0-6]" aria-pressed="false" aria-label="[a-zčđšž]+"/g),7,'seven toggle buttons named by the full day');
+  assert.match(html,/data-i="3" aria-pressed="false" aria-label="četvrtak">Č</);
+  assert.match(html,/<div class="wopt-item" data-load-expectation data-status="insufficient" data-sample-count="0"><button type="button" class="wopt-line" data-a="protocolOptionsToggle" data-k="napor" aria-expanded="false"><span class="k">Očekivani napor<\/span><span class="v">Nakon 2 ocijenjena treninga<\/span>/);
+  assert.match(html,/<span class="k">Rad po mišićima<\/span><span class="v">Nema serija snage<\/span>/);
+  assert.equal(count(html,/class="wopt-card wopt-rows"/g),1,'what does not exist yet is one card with two rows');
+  assert.doesNotMatch(html,/trainingLoadOpen|wopt-open/,'closed: no explanation yet');
+  assert.match(html,/<button type="button" class="wopt-delete-row" data-a="protocolDeleteAsk" data-id="p1">.*?Obriši trening<\/button><\/div>$/);
+  assert.doesNotMatch(html,/<details|<summary|style="padding|j\.n\.|\bAU\b/);
+  const open=View.options(optionsVm({open:{napor:true}}));
+  assert.match(open,/data-k="napor" aria-expanded="true"/);
+  assert.match(open,/<div class="wopt-open"><p class="wopt-note">Odradi ga dvaput s istom dozom i oba puta ocijeni napor\. Tada stiže procjena\.<\/p><p class="wopt-sub">Napor je tvoja ocjena težine pomnožena s minutama treninga\..*?<\/p><button type="button" class="wopt-link" data-a="trainingLoadOpen">Praćenje opterećenja/);
+});
+
+test('1.24.0 options: days, an estimate with its unit explained once, the top three muscle groups and the proposal',()=>{
+  const html=View.options(optionsVm({days:[3,0],effort:available,muscles:{groups:nine,gap:false},history:true,proposal:{kind:'goal',title:'Prijedlog za cilj „Snaga”',count:3}}));
+  assert.match(html,/data-a="protocolHistory" data-id="p1" aria-label="Povijest ovog treninga">.*?<span>Povijest<\/span>/);
+  assert.match(html,/<span class="v on">Pon, Čet<\/span>/);
+  assert.deepEqual([...html.matchAll(/data-i="(\d)" aria-pressed="true"/g)].map(match=>match[1]),['0','3']);
+  assert.match(html,/<div class="wopt-card wopt-effort" role="group" aria-labelledby="wopt-effort" data-load-expectation data-status="available" data-sample-count="3" data-min="168" data-max="203"><h4 id="wopt-effort">Očekivani napor<\/h4>/);
+  assert.match(html,/<p class="wopt-val"><span aria-hidden="true"><b>168–203<\/b> <small>j\.n\.<\/small> <small class="wopt-unit">\(jedinice napora\)<\/small><\/span><span class="wopt-sr">168 do 203 jedinice napora<\/span><\/p><p class="wopt-sub">iz 3 ocijenjena treninga s istom dozom<\/p>/);
+  assert.equal(count(html,/jedinice napora\)/g),1,'the abbreviation is explained once, beside the number');
+  assert.match(html,/class="wopt-more" data-a="protocolOptionsToggle" data-k="napor" aria-expanded="false">Kako se računa/);
+  assert.equal(count(html,/data-load-expectation/g),1);
+  const labels=[...html.matchAll(/<li><span>([^<]+)<\/span>/g)].map(match=>match[1]);
+  assert.deepEqual(labels,['Gluteus','Kvadriceps','Prsa'],'the three largest groups, largest first');
+  assert.match(html,/<li><span>Gluteus<\/span><i aria-hidden="true"><b style="width:100%"><\/b><\/i><b>6<\/b><\/li>/);
+  assert.match(html,/<li><span>Prsa<\/span><i aria-hidden="true"><b style="width:75%"><\/b><\/i><b>4,5<\/b><\/li>/);
+  assert.match(html,/class="wopt-more" data-a="protocolOptionsToggle" data-k="misici" aria-expanded="false">Sve skupine/);
+  assert.doesNotMatch(html,/Glavna serija vrijedi 1/,'the note about series comes with the full list');
+  assert.match(html,/<button type="button" class="wopt-line" data-a="goalSheet" data-id="p1"><span class="t">Prijedlog za cilj „Snaga”<\/span><span class="v acc">3 vježbe<\/span>/);
+  const all=View.options(optionsVm({effort:available,muscles:{groups:nine,gap:true},open:{misici:true,napor:true}}));
+  assert.equal(count(all,/<li>/g),9);
+  assert.match(all,/data-k="misici" aria-expanded="true"/);
+  assert.match(all,/Procijenjene serije ako dovršiš trening\. Glavna serija vrijedi 1, pomoćna 0,5\./);
+  assert.match(all,/Dio rada nema potpunu raspodjelu/);
+  assert.match(all,/<div class="wopt-open"><p class="wopt-sub">Raspon napora zabilježenog nakon prijašnjih treninga s istom dozom\..*?<\/p><button type="button" class="wopt-link" data-a="trainingLoadOpen">/);
+  const few=View.options(optionsVm({muscles:{groups:nine.slice(0,4),gap:false}}));
+  assert.equal(count(few,/<li>/g),4);assert.doesNotMatch(few,/Sve skupine/,'four groups need no "Sve skupine"');
+  assert.match(few,/class="wopt-card wopt-rows"><div class="wopt-item" data-load-expectation/,'no estimate yet: the effort row is a card of its own above the muscles');
+  const onlyEffort=View.options(optionsVm({effort:available}));
+  assert.match(onlyEffort,/wopt-effort/);assert.match(onlyEffort,/<span class="k">Rad po mišićima<\/span><span class="v">Nema serija snage<\/span>/);
+  assert.equal(count(onlyEffort,/data-k="napor"/g),1);
+  assert.match(View.options(optionsVm({muscles:{groups:[],gap:true}})),/<span class="v">Nepotpuno<\/span><\/div><div class="wopt-open"><p class="wopt-sub">Dio rada nema potpunu raspodjelu/);
+});
+
+test('1.24.0 options: a programme session has one row to its programme, the kilogram proposal and no delete',()=>{
+  const html=View.options(optionsVm({days:null,program:{id:'prog<1>',name:'Program "A"'},proposal:{kind:'kg',title:'Prijedlog kilograma',count:1},canDelete:false}));
+  assert.match(html,/<button type="button" class="wopt-line" data-a="openProg" data-id="prog&lt;1&gt;" aria-label="Dani u tjednu: po programu\. Otvori program Program &quot;A&quot;\."><span class="k">Dani u tjednu<\/span><span class="v">Po programu<\/span>/);
+  assert.doesNotMatch(html,/dchip|prDays|protocolDelete/);
+  assert.match(html,/data-a="kgSheet" data-id="p1"><span class="t">Prijedlog kilograma<\/span><span class="v acc">1 vježba<\/span>/);
+  const lost=View.options(optionsVm({program:{id:'',name:''},canDelete:false}));
+  assert.match(lost,/<div class="wopt-line"><span class="k">Dani u tjednu<\/span><span class="v">Po programu<\/span><\/div>/,'a missing programme is plain text, not a dead button');
+  assert.doesNotMatch(lost,/openProg|dchip/);
+  assert.match(View.options(optionsVm({proposal:{kind:'goal',title:'Prijedlog za cilj „Snaga”',count:5}})),/<span class="v acc">5 vježbi<\/span>/);
+  assert.doesNotMatch(View.options(optionsVm({proposal:{kind:'goal',title:'x',count:0}})),/goalSheet/);
+});
+
+test('1.24.0 options: delete asks first with "Odustani" before "Obriši", and every supplied text is escaped',()=>{
+  const ask=View.options(optionsVm({confirmDelete:true,name:'Noge „teško” <b>&'}));
+  assert.match(ask,/<div class="wopt-delete" role="alert"><p class="wopt-note">Obrisati trening „Noge „teško” &lt;b&gt;&amp;”\? To se ne može vratiti\.<\/p><div class="wopt-delete-actions"><button type="button" data-a="protocolDeleteCancel">Odustani<\/button><button type="button" class="danger" data-a="protocolDelete" data-id="p1">Obriši<\/button>/);
+  assert.doesNotMatch(ask,/protocolDeleteAsk|<b>&</);
+  assert.match(ask,/<h3 aria-label="Opcije treninga: Noge „teško” &lt;b&gt;&amp;">/);
+  const shipped=View.options(optionsVm({canDelete:false,confirmDelete:true}));
+  assert.doesNotMatch(shipped,/protocolDelete|Obriši/,'a shipped workout has no delete, whatever the sheet state says');
+  const hostile=View.options(optionsVm({id:'"><i>',meta:'<i>',muscles:{groups:[{label:'<i>x',equivalent:2}],gap:false},proposal:{kind:'goal',title:'<i>',count:2}}));
+  assert.doesNotMatch(hostile,/<i>/);
+  assert.doesNotThrow(()=>View.options());
+});
+
+test('1.24.0 options: the three new icons are drawn in the shared stroke style',()=>{
+  for(const name of ['chevron-right','copy','trash-2'])assert.match(View.icon(name),/class="workout-icon"[^>]*viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"[^>]*aria-hidden="true">.+<\/svg>$/);
+  const html=View.options(optionsVm({history:true}));
+  assert.equal(count(html,/<svg class="workout-icon"/g),6,'four tiles, the effort chevron and delete');
 });

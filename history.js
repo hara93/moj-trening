@@ -178,8 +178,9 @@
     });
     if(group!==null)rows+='</div></section>';
     return header('Povijest treninga','Spremljeni treninzi i samostalne vježbe, od najnovijeg.')+'<button type="button" class="hy-team-new" data-a="teamNew">+ Zabilježi klub ili utakmicu</button><div class="hy-search">'+icon('search')+'<label class="hy-visually-hidden" for="history-query">Pretraži treninge</label><input type="search" id="history-query" placeholder="Pretraži po nazivu" value="'+esc(query)+'" autocomplete="off"></div>'+
+      (vm.ref?'<p class="hy-ref"><span>Trening: '+esc(vm.ref.name)+'</span><button type="button" data-a="historyRefClear" aria-label="Ukloni filtar i prikaži sve treninge">Prikaži sve</button></p>':'')+
       '<p class="hy-list-count" aria-live="polite">'+fmt(total,0)+' '+(query?plural(total,'rezultat pretrage','rezultata pretrage','rezultata pretrage'):plural(total,'spremljen zapis','spremljena zapisa','spremljenih zapisa'))+'</p>'+(vm.error?note(vm.error,'hy-error'):'')+
-      (rows||'<section class="hy-empty">'+icon('clock')+'<h2>'+(query?'Nema rezultata pretrage':'Povijest je još prazna')+'</h2><p>'+(query?'Pokušaj upisati dio naziva treninga.':'Spremljeni trening ili vježba iz knjižnice pojavit će se ovdje. Rezultati testova imaju zasebnu evidenciju.')+'</p></section>')+
+      (rows||'<section class="hy-empty">'+icon('clock')+'<h2>'+(query?'Nema rezultata pretrage':vm.ref?'Ovaj trening još nije odrađen':'Povijest je još prazna')+'</h2><p>'+(query?'Pokušaj upisati dio naziva treninga.':vm.ref?'Kad ga odradiš i spremiš, pojavit će se ovdje.':'Spremljeni trening ili vježba iz knjižnice pojavit će se ovdje. Rezultati testova imaju zasebnu evidenciju.')+'</p></section>')+
       (pages>1?'<nav class="hy-pagination" aria-label="Stranice povijesti"><button type="button" data-a="historyPage" data-page="'+(page-1)+'"'+(page<=1?' disabled':'')+'>Prethodna</button><span>Stranica '+page+' od '+pages+'</span><button type="button" data-a="historyPage" data-page="'+(page+1)+'"'+(page>=pages?' disabled':'')+'>Sljedeća</button></nav>':'');
   }
   function render(vm) {

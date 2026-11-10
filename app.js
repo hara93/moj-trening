@@ -1164,7 +1164,7 @@ function refocus(fk, key){
   if (sheet) for (const el of app.children) if (!el.classList.contains('sheet-bg') && !el.classList.contains('toast')) el.inert = true;
   const first = sheet ? () => document.getElementById('sheet-h') || sheet.querySelector('[data-a]') : () => app.querySelector('.view [data-a]');
   let el = null;
-  if (sheet && kind !== sheetKindWas) { if (!sheetKindWas) sheetOpener = fk; el = first(); }   // a sheet opened (or another one replaced it)
+  if (sheet && kind !== sheetKindWas) { if (!sheetKindWas) sheetOpener = fk || S.sheet?.opener || null; el = first(); }   // a sheet opened (or another one replaced it)
   else if (!sheet && sheetKindWas) { if (sheetOpener) el = focusEl(sheetOpener) || first(); sheetOpener = null; }   // it closed
   else if (fk) el = (fk.a === 'back' && focusEl(focusMem[key])) || focusEl(fk, sheet) || first();
   sheetKindWas = kind;
@@ -1638,18 +1638,6 @@ function muscleContributions(snapshots, source) {
   return contributions;
 }
 
-function protocolMusclePreview(protocol) {
-  const summary = MuscleWork.sumSnapshots(protocolMuscleWork(protocol));
-  const groups = Object.values(summary.groups).filter(g => g.equivalent > 0);
-  const rows = groups.map(g => '<div><span>' + esc(g.label) + '</span><b>' +
-    esc(g.equivalent.toLocaleString('hr-HR')) + '</b></div>').join('');
-  const gap = summary.coverage.unassignedItems || summary.coverage.unknownItems || summary.coverage.invalidItems;
-  return '<details class="protocol-muscles"><summary>Planirani rad po mišićima</summary>' +
-    (rows ? '<p>Procijenjene serije ako dovršiš protokol. Glavna serija vrijedi 1, pomoćna 0,5.</p>' + rows
-      : '<p>U protokolu nema raspoređenih serija snage.</p>') +
-    (gap ? '<p>Dio rada nema potpunu raspodjelu. Provjeri mišiće i postavke vježbi.</p>' : '') + '</details>';
-}
-
 function sessionMuscleComparison(entry, plan) {
   if (!entry || !Array.isArray(entry.muscleWork) || !Array.isArray(plan)) return '';
   const actual = MuscleWork.sumSnapshots(entry.muscleWork), target = MuscleWork.sumSnapshots(plan);
@@ -1829,14 +1817,16 @@ function historyDisplay(l) {
 }
 
 VIEWS.history = function(t) {
-  const all = S.log.filter(historyWorkout).sort((a,b) => b.at-a.at), query = norm(t.query).trim();
+  // 1.24.0: t.ref = Povijest of ONE workout (from its ⋯ sheet), by its id and not by its name: a renamed workout keeps its runs, "Trening 1" does not match "Trening 10"
+  const all = S.log.filter(historyWorkout).filter(l => !t.ref || (l.kind === 'protocol' && l.refId === t.ref)).sort((a,b) => b.at-a.at), query = norm(t.query).trim();
   const matches = query ? all.filter(l => norm(l.name).includes(query)) : all;
   const pageSize = 15, page = Math.min(Math.max(1,t.page || 1), Math.max(1, Math.ceil(matches.length/pageSize)));
   const entries = matches.slice((page-1)*pageSize, page*pageSize).map(l => ({
     id:l.historyId, historyId:l.historyId, title:l.name, name:l.name, at:l.at, kind:l.kind, secs:l.secs, srpe:l.srpe, teamType:l.teamType,
     archived:l.kind !== 'field' && l.kind !== 'team' && !Array.isArray(l.items), partial:!planCounts(l)
   }));
-  return TrainingHistory.render({ mode:'list', query:t.query || '', page, pageSize, total:all.length, filteredTotal:matches.length, entries });
+  return TrainingHistory.render({ mode:'list', query:t.query || '', page, pageSize, total:all.length, filteredTotal:matches.length, entries,
+    ref:t.ref ? { name:S.pr[t.ref]?.name || all[0]?.name || 'Trening' } : null });
 };
 VIEWS.historyDetail = t => TrainingHistory.render({ mode:'detail', entry:historyDisplay(historyRecord(t.id)), deleteConfirm:!!t.original });
 VIEWS.historyEdit = t => TrainingHistory.render({ mode:'edit', entry:historyDisplay(t.original) });
@@ -3618,14 +3608,6 @@ VIEWS.program = function(t){
     (st.next ? '<div class="footer gut"><button class="btn" data-a="openPr" data-id="'+esc(st.next.pr)+'">Sljedeći trening</button></div>'
       : st.done ? '<div class="footer gut"><button class="btn" data-a="progRestartAsk" data-id="'+esc(g.id)+'">Kreni ispočetka</button></div>' : '');
 };
-function goalCard(p){
-  const g = S.settings.goal;
-  if (p.program) { const k = kgPlan(p); return k.changes.length && p.kgSkip !== kgSig(k) ? '<div class="lift go" style="margin:0 17px"><div class="why" style="color:var(--text-body)">Kilogrami za ovaj trening mogu se izračunati iz tvojih težina ('+k.changes.length+' '+plural(k.changes.length, 'vježba', 'vježbe', 'vježbi')+'). Ponavljanja i serije ostaju kao u programu.</div><div class="acts"><button class="bt" data-a="kgSheet" data-id="'+esc(p.id)+'">Predloži kilograme</button><button class="bt ghost" data-a="kgSkip" data-id="'+esc(p.id)+'">Ne</button></div></div>' : ''; }
-  const tag = p.goal && GOALS[p.goal] ? '<div style="display:flex;gap:8px;margin:0 17px;flex-wrap:wrap"><span class="tag">Cilj: '+esc(GOALS[p.goal].name)+'</span><span class="tag">'+esc(goalDesc(p.goal).slice(0, 2).join(' · '))+'</span></div>' : '';
-  if (!g || !GOALS[g] || !gymProto(p) || p.goal === g || p.goalSkip === g) return tag;
-  const plan = goalPlan(p, g); if (!plan.changes.length) return tag;
-  return tag + '<div class="lift go" style="margin:0 17px"><div class="why" style="color:var(--text-body)">Cilj razdoblja je „'+esc(GOALS[g].name)+'”. Za '+plan.changes.length+' '+plural(plan.changes.length, 'vježbu', 'vježbe', 'vježbi')+' s opterećenjem postoji prijedlog serija, ponavljanja, odmora i kilograma.</div><div class="acts"><button class="bt" data-a="goalSheet" data-id="'+esc(p.id)+'">Pogledaj i primijeni</button><button class="bt ghost" data-a="goalSkip" data-id="'+esc(p.id)+'">Ne</button></div></div>';
-}
 // the header: minutes, the zones the session trains most (by sets, an exercise's main zone counts double; the warm-up
 // only when there is nothing else) and all the equipment to set up
 function featRows(p){
@@ -3659,8 +3641,39 @@ function workoutOverviewHero(p,first) {
   const band=m&&m.two&&m.type==='image'?['<div class="hero-band" style="--cover:url(\''+esc(m.src)+'\')">','</div>']:['',''];
   return m?band[0]+'<div class="hero single'+(m.two?' two':'')+'">'+(m.type==='image'?'<img fetchpriority="high" alt="'+esc(e.name)+'" src="'+esc(m.src)+'"'+mediaFailAttr(e,64)+'>':videoTag(m))+'<span class="fade"></span>'+creditHtml(m)+'</div>'+band[1]:heroHtml(p,null);
 }
-function workoutProtocolOptionsHtml(p,items) {
-  return '<h3>Opcije treninga</h3><button type="button" class="opt" data-a="editPr" data-id="'+esc(p.id)+'">'+I.edit+'<span>Uredi trening</span></button>'+workoutExpectationHtml(p.id,items)+'<details class="workout-protocol-options"><summary>Raspored i planirani rad po mišićima</summary>'+protocolMusclePreview({items})+(p.program?'':daysPicker('prDays',p.id,p.days))+'</details>';
+// 1.24.0: "Opcije treninga", the sheet behind ⋯ on a workout's page. WorkoutView.options owns its texts and markup; this
+// gathers the values. What is open and whether the delete question shows live in S.sheet, so a tap on a day (a re-render)
+// keeps the sheet exactly as it was.
+const protocolOwn = p => !p.program && !p.pack && !(window.SEED && SEED.protocols && SEED.protocols[p.id]);   // delete is offered for your own workouts only: a shipped one cannot be brought back, a programme session would leave a hole in its programme
+const protocolDeleteKey = p => 'd' + (p.days || []).join('');   // the delete question is armed for this exact state: a day tap in between disarms it for good
+// the proposal the workout page offered until 1.17.0: the goal's doses for a gym workout, your kilograms for a programme session
+function protocolProposal(p) {
+  if (p.program) { const k = kgPlan(p); return k.changes.length && p.kgSkip !== kgSig(k) ? { kind:'kg', title:'Prijedlog kilograma', count:k.changes.length } : null; }
+  const g = S.settings.goal; if (!g || !GOALS[g] || !gymProto(p) || p.goal === g || p.goalSkip === g) return null;
+  const plan = goalPlan(p, g); return plan.changes.length ? { kind:'goal', title:'Prijedlog za cilj „' + GOALS[g].name + '”', count:plan.changes.length } : null;
+}
+function workoutProtocolOptionsHtml(p, items) {
+  const s = S.sheet || {}, now = Date.now(), kinds = items.map(item => startLoadDescription(item.exId)?.kind);
+  const missing = items.map((item, j) => Array.from({ length:item.sets || 1 }, (_, i) => StartingLoad.missingSet(item, i, kinds[j])));
+  const prepared = items.map((item, j) => ({ ...item, sides:!!item.sides, kgList:missing[j].map((none, i) => none ? null : PlayerDose.at(item, i + 1).kg) }));
+  const estimate = TrainingLoad.expectation({ entry:{ kind:'protocol', refId:p.id, items:prepared }, log:S.log, now });
+  const summary = MuscleWork.sumSnapshots(protocolMuscleWork({ items }));
+  const runs = S.log.filter(l => historyWorkout(l) && l.kind === 'protocol' && l.refId === p.id), last = runs.reduce((m, l) => l.at <= now ? Math.max(m, l.at) : m, 0);
+  const sets = items.reduce((n, item) => n + (item.sets || 1), 0), program = p.program ? S.prog[p.program] : null;
+  if (s.del && s.del !== protocolDeleteKey(p)) s.del = '';
+  return WorkoutView.options({ id:p.id, name:p.name,
+    meta:(items.length ? protoMin({ ...p, items }) + ' min · ' + nVj(items.length) + ' · ' + sets + ' ' + plural(sets, 'serija', 'serije', 'serija') : 'Još nema vježbi') + (last ? ' · zadnji put ' + shortDate(last) : ''),
+    days:p.days, program:p.program ? { id:program ? program.id : '', name:program ? program.name : '' } : null,
+    effort:{ status:estimate.status, sampleCount:estimate.sampleCount, min:estimate.min, max:estimate.max, empty:!items.length, missingKg:missing.some(row => row.some(Boolean)) },
+    muscles:{ groups:Object.values(summary.groups).map(g => ({ label:g.label, equivalent:g.equivalent })), gap:!!(summary.coverage.unassignedItems || summary.coverage.unknownItems || summary.coverage.invalidItems) },
+    history:runs.length > 0, proposal:protocolProposal(p), canDelete:protocolOwn(p), confirmDelete:!!s.del && s.del === protocolDeleteKey(p), open:s.open });
+}
+// the plan as text: the player's "Podijeli trening" and the sheet's "Podijeli" send the same thing
+async function sharePlan(title, items) {
+  const parts=CinemaModel.sections(items,S.ex),text=title+'\n\n'+items.map((it,j)=>(j===0||parts[j]!==parts[j-1]?parts[j]+'\n':'')+(S.ex[it.exId]?.name||'Vježba')+' · '+dose(it)).join('\n');
+  try{if(navigator.share){await navigator.share({title,text});return;}
+    const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='moj-trening-plan.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){if(e.name!=='AbortError')toast('Dijeljenje plana nije uspjelo.',true);}
 }
 VIEWS.pr = function(t){
   const p=S.pr[t.id];if(!p)return '<div class="view gut">'+topbar(backBtn())+'<p class="empty">Ovaj protokol više ne postoji.</p></div>';
@@ -3669,12 +3682,6 @@ VIEWS.pr = function(t){
   return WorkoutView.overview({topbarHtml:topbar(left,right,'MOJ TRENING'),heroHtml:workoutOverviewHero(p,first),eyebrow:workoutOverviewEyebrow(items),title:p.name,description:p.desc,metaHtml:workoutOverviewMeta(p,items),blocksHtml:items.length?workoutCompactHtml(items):'<p class="empty">Dodaj prvu vježbu u protokol.</p>',footerHtml:'<div class="footer gut workout-overview-footer"><button class="btn" data-a="startPr" data-id="'+esc(p.id)+'"'+(items.length?'':' disabled')+'>'+WorkoutView.icon('play')+'Pokreni trening</button></div>'});
 };
 
-function workoutExpectationHtml(id,items) {
-  const prepared=items.map(item=>({...item,sides:!!item.sides,kgList:Array.from({length:item.sets||1},(_,i)=>StartingLoad.missingSet(item,i,startLoadDescription(item.exId)?.kind)?null:PlayerDose.at(item,i+1).kg)}));
-  const estimate=TrainingLoad.expectation({entry:{kind:'protocol',refId:id,items:prepared},log:S.log,now:Date.now()});
-  const amount=v=>v.toLocaleString('hr-HR',{maximumFractionDigits:2});
-  return '<details class="workout-expectation" data-load-expectation data-status="'+estimate.status+'" data-sample-count="'+estimate.sampleCount+'"'+(estimate.min===null?'':' data-min="'+estimate.min+'" data-max="'+estimate.max+'"')+'><summary>Očekivani napor · '+(estimate.status==='available'?amount(estimate.min)+(estimate.min===estimate.max?'':'–'+amount(estimate.max))+' j.n.':'još nema dovoljno usporedivih zapisa')+'</summary><p>'+esc(estimate.reason)+'</p><p>'+estimate.sampleCount+' ocijenjenih usporedivih izvedbi · stvarni napor unosiš nakon treninga.</p><button class="txtbtn" data-a="trainingLoadOpen">Praćenje opterećenja</button></details>';
-}
 VIEWS.trainingLoad = t => VIEWS.progress(t);
 
 VIEWS.exerciseLoad = function(t) {
@@ -5252,7 +5259,7 @@ function progressDosingSections(){
     const lo = loadFor(e, v, G.reps[1]), hi = loadFor(e, v, G.reps[0]); return lo === hi ? kgs(lo) : kgs(lo) + '–' + kgs(hi); };
   return [{ title:'Cilj ovog razdoblja', hint:'Snaga, mišićna masa, izdržljivost ili eksplozivnost', html:'<div class="goal">' +
     Object.keys(GOALS).map(k => '<button class="'+(g === k ? 'on' : '')+'" data-a="setGoal" data-v="'+k+'" aria-pressed="'+(g === k)+'"><b>'+GOALS[k].name+'</b><span>'+goalDesc(k).map(nwNum).join(' · ')+'</span></button>').join('') + '</div>' +
-    (g ? '<p class="sub" style="margin:10px 17px 0;line-height:19px">Otvori protokol za teretanu (npr. Trening A): dobit ćeš prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”. Ništa se ne mijenja dok prijedlog ne potvrdiš.'+(GOALS[g].rir ? ' Mijenjaju se samo glavne vježbe sa šipkom i landmine; bučice, girja i skokovi ostaju kako jesu.' : '')+'</p>' : '') },
+    (g ? '<p class="sub" style="margin:10px 17px 0;line-height:19px">Otvori trening za teretanu (npr. Trening A) i dodirni ⋯: tamo je prijedlog serija, ponavljanja, odmora i kilograma za cilj „'+esc(GOALS[g].name)+'”. Ništa se ne mijenja dok prijedlog ne potvrdiš.'+(GOALS[g].rir ? ' Mijenjaju se samo glavne vježbe sa šipkom i landmine; bučice, girja i skokovi ostaju kako jesu.' : '')+'</p>' : '') },
     { title:'Nogometni tjedan', hint:'Treninzi s loptom i datumi utakmica', html:'<div class="chart">' +
       '<div class="prow" style="border:0;min-height:52px"><span class="k">Treninzi s loptom</span><div class="step"><button class="sbtn" data-a="setBall" data-d="-1" aria-label="Treninzi s loptom: smanji">−</button><b>'+b+'</b><button class="sbtn" data-a="setBall" data-d="1" aria-label="Treninzi s loptom: povećaj">+</button></div></div>' +
       // "Nema utakmice" sits beside the label, so the seven day buttons share the whole row (44 px tall, about 40 px wide)
@@ -6698,7 +6705,8 @@ function sheetHtml(){
     body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(G ? G.name : '') + '” za ' + esc(p ? p.name : '') : 'Kilogrami za ' + esc(p ? p.name : '')) + '</h3>' +
       plan.changes.map(c => '<div class="opt" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 4px"><b style="font-size:15px">'+esc(c.e.name)+'</b><span style="font-size:13px;color:var(--text-2)">'+esc(c.from)+(c.to !== c.from ? ' → <span style="color:var(--accent-text);font-weight:600">'+esc(c.to)+'</span>' : '')+(c.rest ? ' · odmor '+esc(c.rest[0])+' s → <span style="color:var(--accent-text);font-weight:600">'+esc(c.rest[1])+' s</span>' : '')+(c.est ? ' · kilograme upiši sam' : c.fromItem ? ' · procjena iz dosadašnje doze' : '')+'</span></div>').join('') +
       '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.kind === 'goal' && G && G.rir ? 'Bučice, girja i skokovi ostaju kako jesu. ' : '') + 'Sve možeš i dalje ručno promijeniti u uređivanju protokola.</p>' +
-      '<div class="seg"><button class="btn sec" data-a="sheetDone" style="height:48px">Odustani</button><button class="btn" data-a="'+(s.kind === 'goal' ? 'goalApply' : 'kgApply')+'" data-id="'+esc(s.id)+'" style="height:48px;font-size:16px">Primijeni</button></div>';
+      '<div class="seg"><button class="btn sec" data-a="sheetDone" style="height:48px">Odustani</button><button class="btn" data-a="'+(s.kind === 'goal' ? 'goalApply' : 'kgApply')+'" data-id="'+esc(s.id)+'" style="height:48px;font-size:16px">Primijeni</button></div>' +
+      (p ? '<button type="button" class="wopt-skip" data-a="proposalSkip" data-id="'+esc(s.id)+'" data-k="'+s.kind+'">'+(s.kind === 'goal' ? 'Ne nudi više za ovaj trening' : 'Ne nudi ovaj prijedlog')+'</button>' : '');
   } else if (s.kind === 'progInfo') {
     const pk = plateKg(), up = (a, b) => a === b ? '+' + fmtKg(a) : '+' + fmtKg(a) + ', za noge +' + fmtKg(b);
     body = '<h3>Kako napredujem?</h3>' +
@@ -6990,13 +6998,23 @@ const A = {
   },
   cinemaNotes:d=>{const j=Number(d.j);if(P?.items[j])cinemaOpenSheet({kind:'cinemaNotes',j,text:P.notes?.[j]||''});},
   cinemaNotesSave:()=>{const s=S.sheet;if(s?.kind!=='cinemaNotes'||!P)return;const text=document.getElementById('cinema-note')?.value.slice(0,2000)||'';if(savePlayerChoice(['notes'],()=>{P.notes={...P.notes,[s.j]:text};}))cinemaCloseSheet();},
-  cinemaShare:async()=>{
-    if(!P)return;const parts=CinemaModel.sections(P.items,S.ex),text=P.title+'\n\n'+P.items.map((it,j)=>(j===0||parts[j]!==parts[j-1]?parts[j]+'\n':'')+(S.ex[it.exId]?.name||'Vježba')+' · '+dose(it)).join('\n');
-    try{if(navigator.share){await navigator.share({title:P.title,text});return;}
-      const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='moj-trening-plan.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    }catch(e){if(e.name!=='AbortError')toast('Dijeljenje plana nije uspjelo.',true);}
-  },
-  workoutProtocolOptions: () => {if(top().v==='pr'){S.sheet={kind:'workoutProtocolOptions',id:top().id};render();}},
+  cinemaShare:async()=>{if(P)await sharePlan(P.title,P.items);},
+  // 1.24.0: a tap on a phone focuses nothing, so the sheet remembers its opener itself and gives the focus back to ⋯ when it closes
+  workoutProtocolOptions: (d,el) => {if(top().v==='pr'){S.sheet={kind:'workoutProtocolOptions',id:top().id,opener:focusKey(el)};render();}},
+  protocolOptionsToggle: d => { const s=S.sheet; if(s?.kind!=='workoutProtocolOptions'||!['napor','misici'].includes(d.k))return; s.open={...s.open,[d.k]:!s.open?.[d.k]}; s.del=''; render();
+    if(s.open[d.k])app.querySelector('.sheet [data-k="'+d.k+'"]')?.closest('.wopt-card')?.scrollIntoView({block:'nearest'}); },
+  protocolCopy: d => { if(!S.pr[d.id])return; A.editPr(d); A.copyPr(); },   // the editor opens on a ready copy (Uredi, then Kopiraj protokol, in one tap); nothing is saved until Spremi
+  protocolShare: async d => { const p=S.pr[d.id]; if(p)await sharePlan(p.name,p.items||[]); },
+  protocolHistory: d => { const p=S.pr[d.id]; if(p)go({v:'history',page:1,ref:p.id}); },
+  historyRefClear: () => { const t=top(); if(t.v!=='history')return; delete t.ref; t.page=1; render(); },
+  // delete asks first. The question replaces the row, with "Odustani" where the finger was, so a double tap never deletes.
+  protocolDeleteAsk: d => { const s=S.sheet,p=S.pr[d.id]; if(!p||!protocolOwn(p)||s?.kind!=='workoutProtocolOptions')return; s.del=protocolDeleteKey(p); render();
+    const no=app.querySelector('.sheet [data-a="protocolDeleteCancel"]'); if(no){const sheet=no.closest('.sheet');sheet.scrollTop=sheet.scrollHeight;no.focus({preventScroll:true});} },   // the question is the last thing in the sheet: all of it is shown, above the home indicator
+  protocolDeleteCancel: () => { const s=S.sheet; if(s?.kind!=='workoutProtocolOptions')return; s.del=''; render(); app.querySelector('.sheet [data-a="protocolDeleteAsk"]')?.focus({preventScroll:true}); },
+  protocolDelete: async d => { const s=S.sheet,p=S.pr[d.id]; if(!p||!protocolOwn(p)||s?.kind!=='workoutProtocolOptions'||!s.del||s.del!==protocolDeleteKey(p))return;
+    if(!(await remove('protocols',d.id)))return; delete S.pr[d.id]; S.sheet=null; S.stack=[{v:S.tab}]; render(); toast('Trening je obrisan.'); },
+  // "Ne" of the goal / kilogram proposal (the card of 1.17.0 had it), now inside the proposal's own sheet
+  proposalSkip: async d => { if(!S.pr[d.id]||!['goal','kg'].includes(S.sheet?.kind))return; const kg=d.k==='kg'; S.sheet=null; await A[kg?'kgSkip':'goalSkip'](d); toast(kg?'Ovaj prijedlog se više ne nudi.':'Prijedlog se za ovaj trening više ne nudi.'); },
   workoutExercise: d => {
     const j=Number(d.j),live=top().v==='play',c=workoutContext({live});if(!c||!Number.isInteger(j)||!c.items[j])return;
     const s={kind:'workoutExercise',j,live,base:mtCanon(live?P.items:c.source)};

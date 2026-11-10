@@ -23,12 +23,12 @@ test('the player menu uses one icon set and one divider between groups',()=>{
 });
 test('disclosure rows use the Danas accordion row instead of the bare ▶ marker',()=>{
   const css=read('style.css');
-  for(const cls of ['workout-expectation','workout-protocol-options','tl-analysis-details','dy-previous','protocol-muscles','ltab','tl-details','tl-model-note','pg-activity-table']){
+  // 1.24.0: the "Opcije treninga" sheet has no disclosure rows any more (cards and rows from WorkoutView.options)
+  for(const cls of ['tl-analysis-details','dy-previous','protocol-muscles','ltab','tl-details','tl-model-note','pg-activity-table']){
     assert.match(css,new RegExp(':is\\([^)]*\\b'+cls+'\\b[^)]*\\)>summary\\{[^}]*list-style:none'),cls);
     assert.match(css,new RegExp(':is\\([^)]*\\b'+cls+'\\b[^)]*\\)>summary::-webkit-details-marker\\{display:none\\}'),cls);
   }
-  assert.match(source,/<details class="workout-protocol-options"><summary>/);
-  assert.match(source,/<details class="workout-expectation"/);
+  assert.doesNotMatch(source+css+read('workout.css'),/workout-protocol-options|workout-expectation/,'1.24.0: the old sheet markup and its CSS are gone');
   assert.match(read('training-load-view.js'),/<details class="tl-analysis-details"/);
   assert.match(read('today-view.js'),/<details class="dy-panel dy-previous"><summary>/);
 });

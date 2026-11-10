@@ -46,7 +46,10 @@
     "skip-forward": "<path d=\"M5 4.5v15L16 12z\"/><path d=\"M19 5v14\"/>",
     "arrow-right": "<path d=\"M5 12h14M13 6l6 6-6 6\"/>",
     "check": "<path d=\"M20 6 9 17l-5-5\"/>",
-    "plus": "<path d=\"M12 5v14M5 12h14\"/>"
+    "plus": "<path d=\"M12 5v14M5 12h14\"/>",
+    "chevron-right": "<path d=\"m9 18 6-6-6-6\"/>",
+    "copy": "<rect x=\"8\" y=\"8\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2\"/>",
+    "trash-2": "<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><path d=\"M10 11v6M14 11v6\"/>"
   };
   function icon(name) {
     return ICONS[name] ? '<svg class="workout-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[name] + '</svg>' : '';
@@ -301,7 +304,114 @@
       (html(vm.chartsHtml) || '<p class="workout-empty">Još nema zabilježenih vrijednosti za trend.</p>') + html(vm.currentHtml) +
       (vm.note ? '<p class="workout-note">' + esc(vm.note) + '</p>' : '') + '</div>';
   }
-  return Object.freeze({ icon:icon, overview:overview, block:block, exercise:exercise, panel:panel, list:list,
+  // ---- "Opcije treninga" (1.24.0): the sheet behind ⋯ on a workout's page. The app passes plain values; every text and
+  // every state of the sheet is decided here, so check-workout-view.cjs can read them without a browser.
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+  }
+  var DAY_LETTERS = ['P','U','S','Č','P','S','N'], DAY_SHORT = ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'],
+    DAY_NAMES = ['ponedjeljak','utorak','srijeda','četvrtak','petak','subota','nedjelja'];
+  function validDays(days) {
+    return (Array.isArray(days) ? days : []).filter(function (day, index, all) {
+      return Number.isInteger(day) && day >= 0 && day < 7 && all.indexOf(day) === index;
+    }).sort(function (a, b) { return a - b; });
+  }
+  // the value beside "Dani u tjednu": short enough for one line at 375 px whatever is chosen
+  function optionsDays(days) {
+    var list = validDays(days);
+    if (!list.length) return 'Nisu odabrani';
+    if (list.length === 7) return 'Svaki dan';
+    if (list.length > 4) return list.length + ' dana';
+    return list.map(function (day) { return DAY_SHORT[day]; }).join(', ');
+  }
+  // Expected effort. The estimate needs two rated runs of exactly the planned dose (TrainingLoad.expectation), so "not yet"
+  // (do it, rate it) and "not possible" (the plan itself is incomplete) are two different messages.
+  function optionsEffort(effort) {
+    effort = effort || {};
+    var whole = function (value) { return Math.round(value).toLocaleString('hr-HR'); };
+    var ok = effort.status === 'available' && finite(effort.min) && finite(effort.max), count = Math.max(0, Math.floor(effort.sampleCount) || 0);
+    if (ok) {
+      var same = whole(effort.min) === whole(effort.max);
+      return { ok:true, range:whole(effort.min) + (same ? '' : '–' + whole(effort.max)),
+        spoken:whole(effort.min) + (same ? '' : ' do ' + whole(effort.max)) + ' ' + plural(Math.round(effort.max), 'jedinica napora', 'jedinice napora', 'jedinica napora'),
+        sub:'iz ' + count + ' ' + plural(count, 'ocijenjenog treninga', 'ocijenjena treninga', 'ocijenjenih treninga') + ' s istom dozom',
+        short:'', note:'',
+        more:'Raspon napora zabilježenog nakon prijašnjih treninga s istom dozom. Nije jamstvo: odmor i današnje stanje mogu ga promijeniti. Jedinice napora (j.n.) su tvoja ocjena težine puta minute treninga.' };
+    }
+    var short, note;
+    if (effort.empty) { short = 'Nema vježbi'; note = 'Dodaj vježbe pa će se napor moći procijeniti.'; }
+    else if (effort.status === 'unavailable' && effort.missingKg) { short = 'Nedostaju kilogrami'; note = 'Nekim vježbama nedostaju kilogrami. Upiši ih pa će procjena biti moguća.'; }
+    else if (effort.status === 'unavailable') { short = 'Doza nije potpuna'; note = 'Doza nekih vježbi nije potpuna. Dopuni je u uređivanju pa će procjena biti moguća.'; }
+    else if (count) { short = 'Još 1 ocijenjeni trening'; note = 'Imaš 1 ocijenjeni trening s ovom dozom. Još jedan i stiže procjena.'; }
+    else { short = 'Nakon 2 ocijenjena treninga'; note = 'Odradi ga dvaput s istom dozom i oba puta ocijeni napor. Tada stiže procjena.'; }
+    return { ok:false, range:'', spoken:'', sub:'', short:short, note:note,
+      more:'Napor je tvoja ocjena težine pomnožena s minutama treninga. Uspoređuju se samo treninzi s istim serijama, ponavljanjima i kilogramima.' };
+  }
+  function options(vm) {
+    vm = vm || {};
+    var id = esc(vm.id), open = vm.open || {}, e = optionsEffort(vm.effort), raw = vm.effort || {};
+    var muscles = vm.muscles || {}, gap = !!muscles.gap;
+    var groups = (Array.isArray(muscles.groups) ? muscles.groups : []).filter(function (group) { return group && finite(group.equivalent) && group.equivalent > 0; })
+      .slice().sort(function (a, b) { return b.equivalent - a.equivalent; });
+    var days = validDays(vm.days);
+    var tile = function (action, name, label, spoken) {
+      return '<button type="button" data-a="' + action + '" data-id="' + id + '" aria-label="' + spoken + '">' + icon(name) + '<span>' + label + '</span></button>';
+    };
+    var more = function (key, label) {
+      return '<button type="button" class="wopt-more" data-a="protocolOptionsToggle" data-k="' + key + '" aria-expanded="' + !!open[key] + '">' + label + icon('chevron-down') + '</button>';
+    };
+    var card = function (name, cls, attrs, body) {
+      return '<div class="wopt-card' + (cls ? ' ' + cls : '') + '" role="group" aria-labelledby="wopt-' + name + '"' + (attrs || '') + '>' + body + '</div>';
+    };
+    var rowsCard = function (list) { return '<div class="wopt-card wopt-rows">' + list.join('') + '</div>'; };
+    var effortAttrs = ' data-load-expectation data-status="' + esc(raw.status || 'unavailable') + '" data-sample-count="' + esc(raw.sampleCount || 0) + '"' +
+      (finite(raw.min) && finite(raw.max) ? ' data-min="' + raw.min + '" data-max="' + raw.max + '"' : '');
+    var effortMore = '<p class="wopt-sub">' + esc(e.more) + '</p><button type="button" class="wopt-link" data-a="trainingLoadOpen">Praćenje opterećenja' + icon('chevron-right') + '</button>';
+    var gapNote = '<p class="wopt-sub">Dio rada nema potpunu raspodjelu. Provjeri mišiće i postavke vježbi.</p>';
+
+    var head = '<div class="wopt-head"><h3 aria-label="Opcije treninga: ' + esc(vm.name) + '">' + esc(vm.name) + '</h3>' +
+      (vm.meta ? '<p class="wopt-meta">' + esc(vm.meta) + '</p>' : '') + '</div>';
+    var tiles = '<div class="wopt-tiles">' + tile('editPr', 'pencil', 'Uredi', 'Uredi trening') + tile('protocolCopy', 'copy', 'Kopija', 'Napravi kopiju treninga') +
+      tile('protocolShare', 'share-2', 'Podijeli', 'Podijeli plan treninga') + (vm.history ? tile('protocolHistory', 'notebook-text', 'Povijest', 'Povijest ovog treninga') : '') + '</div>';
+    // a programme session has no days of its own: one row that leads to the programme, where its days are chosen
+    var program = vm.program, schedule;
+    if (program) {
+      var line = '<span class="k">Dani u tjednu</span><span class="v">Po programu</span>';
+      schedule = rowsCard(['<div class="wopt-item">' + (program.id
+        ? '<button type="button" class="wopt-line" data-a="openProg" data-id="' + esc(program.id) + '" aria-label="Dani u tjednu: po programu. Otvori program' + (program.name ? ' ' + esc(program.name) : '') + '.">' + line + icon('chevron-right') + '</button>'
+        : '<div class="wopt-line">' + line + '</div>') + '</div>']);
+    } else {
+      schedule = card('days', 'wopt-days', '', '<div class="wopt-k"><h4 id="wopt-days">Dani u tjednu</h4><span class="v' + (days.length ? ' on' : '') + '">' + optionsDays(days) + '</span></div>' +
+        '<div class="drow">' + DAY_LETTERS.map(function (letter, index) {
+          return '<button type="button" class="dchip" data-a="prDays" data-id="' + id + '" data-i="' + index + '" aria-pressed="' + (days.indexOf(index) !== -1) + '" aria-label="' + DAY_NAMES[index] + '">' + letter + '</button>';
+        }).join('') + '</div>');
+    }
+    var effortRow = '<div class="wopt-item"' + effortAttrs + '><button type="button" class="wopt-line" data-a="protocolOptionsToggle" data-k="napor" aria-expanded="' + !!open.napor + '">' +
+      '<span class="k">Očekivani napor</span><span class="v">' + esc(e.short) + '</span>' + icon('chevron-down') + '</button>' +
+      (open.napor ? '<div class="wopt-open"><p class="wopt-note">' + esc(e.note) + '</p>' + effortMore + '</div>' : '') + '</div>';
+    // the unit is spelled out once, beside the first number of the sheet; a screen reader hears only the words
+    var effortCard = card('effort', 'wopt-effort', effortAttrs, '<h4 id="wopt-effort">Očekivani napor</h4>' +
+      '<p class="wopt-val"><span aria-hidden="true"><b>' + esc(e.range) + '</b> <small>j.n.</small> <small class="wopt-unit">(jedinice napora)</small></span><span class="wopt-sr">' + esc(e.spoken) + '</span></p>' +
+      '<p class="wopt-sub">' + esc(e.sub) + '</p>' + more('napor', 'Kako se računa') + (open.napor ? '<div class="wopt-open">' + effortMore + '</div>' : ''));
+    var all = !!open.misici || groups.length <= 4, max = groups.length ? groups[0].equivalent : 1;
+    var muscleRow = '<div class="wopt-item"><div class="wopt-line"><span class="k">Rad po mišićima</span><span class="v">' + (gap ? 'Nepotpuno' : 'Nema serija snage') + '</span></div>' +
+      (gap ? '<div class="wopt-open">' + gapNote + '</div>' : '') + '</div>';
+    var muscleCard = card('muscles', '', '', '<div class="wopt-k"><h4 id="wopt-muscles">Rad po mišićima <small>· serije</small></h4>' + (groups.length > 4 ? more('misici', 'Sve skupine') : '') + '</div>' +
+      '<ul class="wopt-muscles">' + (all ? groups : groups.slice(0, 3)).map(function (group) {
+        return '<li><span>' + esc(group.label) + '</span><i aria-hidden="true"><b style="width:' + Math.max(4, Math.round(group.equivalent / max * 100)) + '%"></b></i><b>' + esc(group.equivalent.toLocaleString('hr-HR')) + '</b></li>';
+      }).join('') + '</ul>' + (all ? '<p class="wopt-sub">Procijenjene serije ako dovršiš trening. Glavna serija vrijedi 1, pomoćna 0,5.</p>' : '') + (gap ? gapNote : ''));
+    var middle = (e.ok ? effortCard : groups.length ? rowsCard([effortRow]) : '') + (groups.length ? muscleCard : rowsCard(e.ok ? [muscleRow] : [effortRow, muscleRow]));
+    var proposal = vm.proposal && vm.proposal.count > 0 ? rowsCard(['<div class="wopt-item"><button type="button" class="wopt-line" data-a="' + (vm.proposal.kind === 'kg' ? 'kgSheet' : 'goalSheet') + '" data-id="' + id + '">' +
+      '<span class="t">' + esc(vm.proposal.title) + '</span><span class="v acc">' + vm.proposal.count + ' ' + plural(vm.proposal.count, 'vježba', 'vježbe', 'vježbi') + '</span>' + icon('chevron-right') + '</button></div>']) : '';
+    // delete: asked first; "Odustani" appears where the finger was, "Obriši" on the other side
+    var remove = !vm.canDelete ? '' : vm.confirmDelete
+      ? '<div class="wopt-delete" role="alert"><p class="wopt-note">Obrisati trening „' + esc(vm.name) + '”? To se ne može vratiti.</p><div class="wopt-delete-actions">' +
+        '<button type="button" data-a="protocolDeleteCancel">Odustani</button><button type="button" class="danger" data-a="protocolDelete" data-id="' + id + '">Obriši</button></div></div>'
+      : '<button type="button" class="wopt-delete-row" data-a="protocolDeleteAsk" data-id="' + id + '">' + icon('trash-2') + 'Obriši trening</button>';
+    return '<div class="wopt">' + head + tiles + schedule + middle + proposal + remove + '</div>';
+  }
+  return Object.freeze({ icon:icon, overview:overview, options:options, optionsDays:optionsDays, optionsEffort:optionsEffort, block:block, exercise:exercise, panel:panel, list:list,
     compactExercise:compactExercise, exercisePage:exercisePage, journal:journal, journalExercise:journalExercise,
     cinema:cinema, journalRow:journalRow, journalCard:journalCard, seriesTable:seriesTable, instructions:instructions, chart:chart, trends:trends });
 });

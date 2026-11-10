@@ -13,6 +13,9 @@
 .hy-search>input{display:block;width:100%;min-width:0;height:48px;border:1px solid #45536A;border-radius:15px;background:#253143;color:#F1F5FB;font:inherit;font-size:16px;padding:0 12px 0 42px}
 .hy-search input::placeholder{color:#A4B2C6}
 .hy-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.hy-ref{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 0;padding:0 4px 0 14px;border-radius:14px;background:var(--tag-bg);color:var(--text);font-size:14px;line-height:1.3}
+.hy-ref>span{min-width:0;overflow-wrap:anywhere}
+.hy-ref>button{flex:none;min-height:44px;padding:0 10px;border:0;background:none;color:var(--accent-text);font:inherit;font-size:14px;font-weight:600}
 .hy-list-count{font-size:11px;color:var(--hy-muted);margin:12px 2px 17px}
 .hy-date-group{margin-top:21px}
 .hy-date-group>h2{font-size:12px;line-height:1.5;font-weight:600;color:#C8D4E5;margin:0 3px 9px}

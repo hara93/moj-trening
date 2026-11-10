@@ -360,11 +360,63 @@ span.workout-exercise-open{cursor:default}
 .workout-library-secondary{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 12px;margin-top:6px}
 .workout-library-secondary .txtbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:6px 4px;font-size:11px;color:#cbd2c0}
 .workout-library-secondary .txtbtn svg{width:16px;height:16px;flex:none}
-.sheet[data-kind=workoutProtocolOptions]{background:#242527;color:#f5f5f3;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol"}
-.sheet[data-kind=workoutProtocolOptions] :is(button,select){font-family:inherit}
-.sheet[data-kind=workoutProtocolOptions] .opt{justify-content:flex-start;gap:12px}
-.sheet[data-kind=workoutProtocolOptions] .opt>svg{width:24px;height:24px;flex:none}
-.sheet[data-kind=workoutProtocolOptions] .btn:not(.sec):not(.danger){background:#dce88d;color:#151608}
+/* "Opcije treninga" (1.24.0): the sheet behind ⋯ on a workout's page. App tokens only; the sheet is as tall as its content (the app's 80 % cap). */
+.wopt{display:flex;flex-direction:column;gap:10px}
+.wopt :is(p,h3,h4,ul){margin:0}
+.wopt ul{padding:0;list-style:none}
+.wopt button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.wopt .workout-icon{flex:none}
+.wopt-head{padding:0 14px 2px}
+.sheet .wopt-head h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0 0 3px;font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere}
+.wopt-meta{font-size:14px;line-height:1.45;color:var(--text-2)}
+.wopt-sub{font-size:13px;line-height:1.5;color:var(--text-2)}
+.wopt-note{font-size:14px;line-height:1.45;color:var(--text-body)}
+.wopt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wopt-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.wopt-tiles button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:58px;padding:6px 2px;border:0;border-radius:16px;background:var(--surface-2);color:var(--text);font-size:14px;font-weight:600;line-height:1.2}
+.wopt-tiles .workout-icon{width:21px;height:21px;color:var(--accent-text)}
+.wopt-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:11px 14px 12px;border-radius:16px;background:var(--surface-2)}
+.wopt-card.wopt-rows{gap:0;padding:0;overflow:hidden}
+.wopt h4{font-size:13px;font-weight:600;line-height:1.4;color:var(--text-2)}
+.wopt h4 small{font-size:13px;font-weight:400}
+.wopt-k{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:22px}
+.wopt-k>.v{min-width:0;font-size:14px;color:var(--text-2);text-align:right}
+.wopt-k>.v.on{font-weight:600;color:var(--text)}
+.wopt-days{gap:7px;padding-bottom:10px}
+.wopt-days>.drow{gap:3px;margin:0 -8px}
+.wopt-item+.wopt-item{border-top:1px solid var(--border)}
+.wopt-line{display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;min-height:48px;padding:6px 14px;border:0;background:none;color:var(--text);font-size:14px;line-height:1.3;text-align:left}
+.wopt-line>.k{flex:none;font-size:13px;font-weight:600;color:var(--text-2)}
+.wopt-line>.t{flex:0 1 auto;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.wopt-line>.v{flex:1;min-width:0;text-align:right;color:var(--text-2)}
+.wopt-line>.t+.v{flex:1 0 auto}
+.wopt-line>.v.acc{font-weight:600;color:var(--accent-text)}
+.wopt-line>.workout-icon{width:16px;height:16px;color:var(--text-2)}
+.wopt-rows .wopt-open{display:flex;flex-direction:column;gap:6px;padding:0 14px 14px}
+.wopt-card:not(.wopt-rows)>.wopt-open{display:flex;flex-direction:column;gap:6px;margin-top:4px;padding-top:10px;border-top:1px solid var(--border)}
+.wopt-more{display:inline-flex;align-items:center;gap:3px;flex:none;min-height:44px;padding:0 6px;border:0;background:none;color:var(--text-2);font-size:13px;font-weight:600}
+.wopt-more .workout-icon{width:16px;height:16px}
+.wopt-k>.wopt-more{margin:-11px -6px -11px 0}
+.wopt-effort>.wopt-more{position:absolute;top:0;right:8px}
+.wopt :is(.wopt-more,.wopt-line)[aria-expanded=true]>.workout-icon:last-child{transform:rotate(180deg)}
+.wopt-val>span:first-child{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px}
+.wopt-val b{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.wopt-val small{font-size:14px;font-weight:500;color:var(--text-2)}
+.wopt-val small.wopt-unit{font-size:13px;font-weight:400}
+.wopt-link{display:inline-flex;align-items:center;align-self:flex-start;gap:4px;min-height:44px;margin:-4px 0 -12px;padding:0;border:0;background:none;color:var(--accent-text);font-size:14px;font-weight:600}
+.wopt-link .workout-icon{width:16px;height:16px}
+.wopt-muscles li{display:grid;grid-template-columns:minmax(0,136px) minmax(0,1fr) 30px;align-items:center;gap:10px;min-height:26px;font-size:14px;line-height:1.25;color:var(--text-body)}
+.wopt-muscles li>span{overflow-wrap:anywhere}
+.wopt-muscles li>i{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.wopt-muscles li>i>b{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.wopt-muscles li>b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.wopt-delete-row{display:inline-flex;align-items:center;align-self:flex-start;gap:7px;min-height:44px;margin:-4px 0 -16px 14px;padding:0 8px 0 0;border:0;background:none;color:var(--danger);font-size:14px;font-weight:500}
+.wopt-delete-row .workout-icon{width:16px;height:16px}
+.wopt-delete{display:flex;flex-direction:column;gap:8px;padding:2px 14px 0}
+.wopt-delete-actions{display:flex;justify-content:space-between;gap:12px}
+.wopt-delete-actions button{min-width:112px;min-height:44px;padding:0 16px;border:1px solid var(--border);border-radius:14px;background:none;color:var(--text);font-size:15px;font-weight:600}
+.wopt-delete-actions .danger{border-color:var(--danger);color:var(--danger)}
+.wopt-skip{display:block;width:100%;min-height:44px;margin-top:8px;border:0;background:none;color:var(--text-2);font-family:inherit;font-size:14px;font-weight:600}
 .workout-instructions-body,.workout-trends-body{padding:21px 20px 26px;min-width:0}
 :is(.workout-instructions-body,.workout-trends-body) h1{font-size:22px;line-height:1.25;letter-spacing:-.025em;font-weight:600;margin:0;overflow-wrap:anywhere}
 .workout-instructions-body h2{font-size:15px;line-height:1.4;font-weight:550;margin:22px 0 8px}
