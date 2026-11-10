@@ -34,6 +34,7 @@
     {"name": "player-reference", "title": "Referentni player"},
     {"name": "rep-set-timer", "title": "Serije koje broje unaprijed"},
     {"name": "superset-parts", "title": "Dijelovi treninga i supersetovi"},
-    {"name": "tap-redraw", "title": "Dodir tijekom odbrojavanja"}
+    {"name": "tap-redraw", "title": "Dodir tijekom odbrojavanja"},
+    {"name": "workout-options", "title": "Opcije treninga"}
   ]
 }

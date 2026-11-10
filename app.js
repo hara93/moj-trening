@@ -7867,7 +7867,9 @@ const A = {
   progTestKeep: () => { const s = S.sheet; if (!s) return; progTyped(s); s._del = false; render(); },
   progRestartAsk: d => { if (!S.prog[d.id]) return; S.sheet = { kind:'progRestart', id: d.id }; render(); },
   progRestart: d => { const g = S.prog[d.id]; if (!g) return; if (!writeSetting('progFrom',{ ...S.settings.progFrom, [g.id]:Date.now() })) return; S.sheet = null; render(); toast('Program kreće ispočetka.'); },
-  prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; planSaved(); render(); await save('protocols', d.id, n); },
+  prDays: async d => { const p = S.pr[d.id]; if (!p) return; const n = clone(p); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.pr[d.id].days = ds; planSaved(); render();
+    app.querySelector('.sheet .dchip[data-a="prDays"][data-i="'+(+d.i)+'"]')?.focus({preventScroll:true});   // 1.24.0: a tap focuses nothing in Safari; the day just toggled keeps the focus (and VoiceOver its place)
+    await save('protocols', d.id, n); },
   fieldDays: async d => { const f = S.field[d.id]; if (!f) return; const n = clone(f); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.field[d.id].days = ds; planSaved(); render(); await save('field', d.id, n); },
   progDays: async d => { const g = S.prog[d.id]; if (!g) return; const n = clone(g); delete n.id; const ds = n.days = (n.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); S.prog[d.id].days = ds; planSaved(); render(); await save('programs', d.id, n); },
   ddays: d => { const ds = S.draft.days = (S.draft.days || []).slice(); const i = ds.indexOf(+d.i); if (i === -1) ds.push(+d.i); else ds.splice(i, 1); ds.sort(); render(); },
