@@ -386,6 +386,7 @@ span.workout-exercise-open{cursor:default}
 .wopt-days>.drow{gap:3px;margin:0 -8px}
 .wopt-item+.wopt-item{border-top:1px solid var(--border)}
 .wopt-line{display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;min-height:48px;padding:6px 14px;border:0;background:none;color:var(--text);font-size:14px;line-height:1.3;text-align:left}
+.wopt-line:focus-visible{outline-offset:-2px;border-radius:14px}
 .wopt-line>.k{flex:none;font-size:13px;font-weight:600;color:var(--text-2)}
 .wopt-line>.t{flex:0 1 auto;min-width:0;font-weight:600;overflow-wrap:anywhere}
 .wopt-line>.v{flex:1;min-width:0;text-align:right;color:var(--text-2)}

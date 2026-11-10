@@ -6704,7 +6704,7 @@ function sheetHtml(){
     const p = S.pr[s.id], G = GOALS[S.settings.goal], plan = p && (s.kind === 'kg' || G) ? (s.kind === 'goal' ? goalPlan(p, S.settings.goal) : kgPlan(p)) : { changes: [] };
     body = '<h3>' + (s.kind === 'goal' ? 'Cilj „' + esc(G ? G.name : '') + '” za ' + esc(p ? p.name : '') : 'Kilogrami za ' + esc(p ? p.name : '')) + '</h3>' +
       plan.changes.map(c => '<div class="opt" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 4px"><b style="font-size:15px">'+esc(c.e.name)+'</b><span style="font-size:13px;color:var(--text-2)">'+esc(c.from)+(c.to !== c.from ? ' → <span style="color:var(--accent-text);font-weight:600">'+esc(c.to)+'</span>' : '')+(c.rest ? ' · odmor '+esc(c.rest[0])+' s → <span style="color:var(--accent-text);font-weight:600">'+esc(c.rest[1])+' s</span>' : '')+(c.est ? ' · kilograme upiši sam' : c.fromItem ? ' · procjena iz dosadašnje doze' : '')+'</span></div>').join('') +
-      '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.kind === 'goal' && G && G.rir ? 'Bučice, girja i skokovi ostaju kako jesu. ' : '') + 'Sve možeš i dalje ručno promijeniti u uređivanju protokola.</p>' +
+      '<p style="margin:12px 0 14px;font-size:13px;line-height:19px;color:var(--text-2)">' + (s.kind === 'goal' && G && G.rir ? 'Bučice, girja i skokovi ostaju kako jesu. ' : '') + 'Sve možeš i dalje ručno promijeniti u uređivanju treninga.</p>' +
       '<div class="seg"><button class="btn sec" data-a="sheetDone" style="height:48px">Odustani</button><button class="btn" data-a="'+(s.kind === 'goal' ? 'goalApply' : 'kgApply')+'" data-id="'+esc(s.id)+'" style="height:48px;font-size:16px">Primijeni</button></div>' +
       (p ? '<button type="button" class="wopt-skip" data-a="proposalSkip" data-id="'+esc(s.id)+'" data-k="'+s.kind+'">'+(s.kind === 'goal' ? 'Ne nudi više za ovaj trening' : 'Ne nudi ovaj prijedlog')+'</button>' : '');
   } else if (s.kind === 'progInfo') {
@@ -7002,11 +7002,13 @@ const A = {
   // 1.24.0: a tap on a phone focuses nothing, so the sheet remembers its opener itself and gives the focus back to ⋯ when it closes
   workoutProtocolOptions: (d,el) => {if(top().v==='pr'){S.sheet={kind:'workoutProtocolOptions',id:top().id,opener:focusKey(el)};render();}},
   protocolOptionsToggle: d => { const s=S.sheet; if(s?.kind!=='workoutProtocolOptions'||!['napor','misici'].includes(d.k))return; s.open={...s.open,[d.k]:!s.open?.[d.k]}; s.del=''; render();
-    if(s.open[d.k])app.querySelector('.sheet [data-k="'+d.k+'"]')?.closest('.wopt-card')?.scrollIntoView({block:'nearest'}); },
+    const again=app.querySelector('.sheet [data-a="protocolOptionsToggle"][data-k="'+d.k+'"]');
+    if(s.open[d.k])again?.closest('.wopt-card')?.scrollIntoView({block:'nearest'});
+    again?.focus({preventScroll:true}); },   // a tap focuses nothing in Safari: the row just opened or closed keeps the focus, like a tapped day
   protocolCopy: d => { if(!S.pr[d.id])return; A.editPr(d); A.copyPr(); },   // the editor opens on a ready copy (Uredi, then Kopiraj protokol, in one tap); nothing is saved until Spremi
-  protocolShare: async d => { const p=S.pr[d.id]; if(p)await sharePlan(p.name,p.items||[]); },
+  protocolShare: async d => { const p=S.pr[d.id]; if(!p)return; if(!(p.items||[]).length){toast('Trening još nema vježbi.');return;} await sharePlan(p.name,p.items); },   // a title alone is nothing to share
   protocolHistory: d => { const p=S.pr[d.id]; if(p)go({v:'history',page:1,ref:p.id}); },
-  historyRefClear: () => { const t=top(); if(t.v!=='history')return; delete t.ref; t.page=1; render(); },
+  historyRefClear: () => { const t=top(); if(t.v!=='history')return; delete t.ref; t.page=1; render(); document.getElementById('history-query')?.focus({preventScroll:true}); },   // the button is gone with the filter; the search field above the list takes the focus
   // delete asks first. The question replaces the row, with "Odustani" where the finger was, so a double tap never deletes.
   protocolDeleteAsk: d => { const s=S.sheet,p=S.pr[d.id]; if(!p||!protocolOwn(p)||s?.kind!=='workoutProtocolOptions')return; s.del=protocolDeleteKey(p); render();
     const no=app.querySelector('.sheet [data-a="protocolDeleteCancel"]'); if(no){const sheet=no.closest('.sheet');sheet.scrollTop=sheet.scrollHeight;no.focus({preventScroll:true});} },   // the question is the last thing in the sheet: all of it is shown, above the home indicator
@@ -7901,12 +7903,12 @@ app.addEventListener('pointerdown',ev=>{
   const input=document.activeElement,button=ev.target.closest('.workout-exercise-page [data-a]');
   if(input?.classList?.contains('workout-set-input')&&button&&!button.disabled)ev.preventDefault();
 });
-// 1.24.0: a redraw (a countdown that ends, a toast that goes away) replaces every node, also the button under a finger
+// 1.24.0: a redraw (a countdown that ends, a phase that changes) replaces every node, also the button under a finger
 // that is already down. The browser then sends its click to nothing and the tap is lost: ⋯ pressed just as a countdown
 // ends did not open the menu. If the same control lies under the finger when it lifts and no click arrives, the tap is
 // delivered to it; a late click of the browser for the same tap is then dropped.
 let pressed=null,pressDelivered=null;
-const pressSig=el=>el.dataset.a+'|'+JSON.stringify(el.dataset);
+const pressSig=el=>JSON.stringify(el.dataset);
 document.addEventListener('pointerdown',ev=>{
   const el=ev.isPrimary===false||ev.button>0?null:ev.target.closest?.('#app [data-a]');
   pressed=el?{el,sig:pressSig(el),x:ev.clientX,y:ev.clientY,at:performance.now()}:null;

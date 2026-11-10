@@ -55,7 +55,7 @@ async function open(p,id,how='click'){
   assert.equal(await more.getAttribute('aria-label'),'Opcije treninga');
   await more[how]();await sheet(p).waitFor();
 }
-const focused=p=>p.evaluate(()=>{const el=document.activeElement;return el?{id:el.id,a:el.dataset.a||'',i:el.dataset.i||'',tag:el.tagName}:null;});
+const focused=p=>p.evaluate(()=>{const el=document.activeElement;return el?{id:el.id,a:el.dataset.a||'',i:el.dataset.i||'',k:el.dataset.k||'',tag:el.tagName}:null;});
 // what the rules ask of every state: nothing wider than the screen, no text under 13 px, no tap target under 44 px, the
 // sheet as tall as its content (at most 80 % of the screen), ending at the bottom edge with the safe area under the last row
 async function measure(p,label,{fits=false}={}){
@@ -206,13 +206,20 @@ async function actions(p){
   // effort: the explanation and the way to Praćenje opterećenja
   await open(p,'opt-full');
   const how=inSheet(p,'[data-a="protocolOptionsToggle"][data-k="napor"]');assert.equal(await how.innerText(),'Kako se računa');assert.equal(await how.getAttribute('aria-expanded'),'false');
-  await how.click();assert.match(await text(p),/Raspon napora zabilježenog nakon prijašnjih treninga s istom dozom\. Nije jamstvo: .* Jedinice napora \(j\.n\.\) su tvoja ocjena težine puta minute treninga\. Praćenje opterećenja/);
+  // a tap focuses nothing in Safari: the row that was opened or closed keeps the focus itself, so VoiceOver keeps its place
+  await how.tap();assert.deepEqual([(await focused(p)).a,(await focused(p)).k],['protocolOptionsToggle','napor'],'the tapped effort row keeps the focus');
+  assert.match(await text(p),/Raspon napora zabilježenog nakon prijašnjih treninga s istom dozom\. Nije jamstvo: .* Jedinice napora \(j\.n\.\) su tvoja ocjena težine puta minute treninga\. Praćenje opterećenja/);
   // muscles: all groups, largest first, with the note about what a series counts
-  const all=inSheet(p,'[data-a="protocolOptionsToggle"][data-k="misici"]');await all.click();assert.equal(await all.getAttribute('aria-expanded'),'true');
+  const all=inSheet(p,'[data-a="protocolOptionsToggle"][data-k="misici"]');await all.tap();assert.equal(await all.getAttribute('aria-expanded'),'true');
+  assert.equal((await focused(p)).k,'misici','the tapped muscle row keeps the focus');
   const groups=await inSheet(p,'.wopt-muscles li').evaluateAll(list=>list.map(li=>[li.querySelector('span').innerText,Number(li.querySelector(':scope > b').innerText.replace(',','.'))]));
   assert.ok(groups.length>4,'more groups than the closed card shows');assert.deepEqual(groups.map(g=>g[1]),groups.map(g=>g[1]).sort((a,b)=>b-a),'largest first');
   assert.match(await text(p),/Procijenjene serije ako dovršiš trening\. Glavna serija vrijedi 1, pomoćna 0,5\./);
-  await all.click();assert.equal(await inSheet(p,'.wopt-muscles li').count(),3);
+  await all.tap();assert.equal(await inSheet(p,'.wopt-muscles li').count(),3);assert.equal((await focused(p)).k,'misici','and when it closes');
+  // the keyboard ring of a row inside a card is drawn inside the row, where the card does not cut it off
+  await p.keyboard.press('Shift+Tab');await p.keyboard.press('Tab');
+  const ring=await p.evaluate(()=>{const el=document.activeElement,line=document.querySelector('.sheet .wopt-rows .wopt-line');line.focus();const st=getComputedStyle(line);return {on:line.matches(':focus-visible'),offset:st.outlineOffset,width:st.outlineWidth,style:st.outlineStyle};});
+  assert.deepEqual(ring,{on:true,offset:'-2px',width:'2px',style:'solid'},'the focus ring of a row is inside the card');
   await inSheet(p,'[data-a="trainingLoadOpen"]').click();await p.locator('#analysis-load').waitFor();
   assert.equal(await p.locator('.sheet').count(),0);assert.match(await p.locator('#analysis-load').innerText(),/j\.n\. su jedinice napora/);
   assert.doesNotMatch((await p.locator('#analysis-load').innerText()),/\bAU\b/,'Praćenje opterećenja uses the same unit');
@@ -236,11 +243,17 @@ async function actions(p){
   assert.equal(shared.title,'Snaga cijelo tijelo');assert.equal(shared.text,'Snaga cijelo tijelo\n\nGlavni dio\nGoblet squat · 3 × 10 · 20 kg\nSklek · 3 × 12\nHip thrust · 3 × 10 · 80 kg\nBench press · 3 × 8 · 60 kg');assert.equal(shared.text.split('\n').length,7,'title, blank line, the part and four exercises');
   assert.equal(await sheet(p).count(),1,'sharing leaves the sheet open');
 
+  // a workout without exercises has nothing to share
+  await open(p,'opt-empty');await p.evaluate(()=>{window.__shared=[];Object.defineProperty(navigator,'share',{configurable:true,value:data=>{window.__shared.push(data);return Promise.resolve();}});});
+  await inSheet(p,'[data-a="protocolShare"]').click();await p.locator('.toast').waitFor();
+  assert.equal(await p.locator('.toast').innerText(),'Trening još nema vježbi.');assert.equal(await p.evaluate(()=>window.__shared.length),0);
+  await open(p,'opt-full');
   // history of this workout only, by its id; "Prikaži sve" removes the filter
   await inSheet(p,'[data-a="protocolHistory"]').click();await p.locator('.hy-ref').waitFor();
   assert.equal(await p.locator('.hy-ref > span').innerText(),'Trening: Snaga cijelo tijelo');
   assert.match(await p.locator('.hy-list-count').innerText(),/^3 spremljena zapisa$/);
-  await p.locator('[data-a="historyRefClear"]').click();await p.locator('.hy-ref').waitFor({state:'hidden'});
+  await p.locator('[data-a="historyRefClear"]').tap();await p.locator('.hy-ref').waitFor({state:'hidden'});
+  assert.equal((await focused(p)).id,'history-query','"Prikaži sve" is gone with the filter; the search field has the focus');
   assert.match(await p.locator('.hy-list-count').innerText(),/^7 spremljenih zapisa$/);
 
   // the goal proposal: its sheet, "Odustani", and "Ne nudi više za ovaj trening"
@@ -248,6 +261,7 @@ async function actions(p){
   const proposal=p.locator('.sheet[data-kind="goal"]');await proposal.waitFor();
   assert.match(await proposal.locator('h3').innerText(),/^Cilj „Snaga” za Snaga cijelo tijelo$/);
   assert.deepEqual(await proposal.locator('button').evaluateAll(list=>list.filter(b=>!b.matches('.sheet-drag-handle')).map(b=>b.innerText.trim())),['Odustani','Primijeni','Ne nudi više za ovaj trening']);
+  assert.match(await proposal.innerText(),/u uređivanju treninga\./);assert.doesNotMatch(await proposal.innerText(),/protokol/i);
   const skip=await proposal.locator('[data-a="proposalSkip"]').boundingBox();assert.ok(skip.height>=44&&skip.width>=44);
   await proposal.locator('[data-a="sheetDone"]').click();await proposal.waitFor({state:'hidden'});
   assert.equal((await store(p)).protocols['opt-full'].goalSkip,undefined);
