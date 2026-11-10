@@ -110,7 +110,13 @@ async function openQuit(page){
     // 1.24.0: wait until the menu is really open and press ⋯ once more if it is not (CI, WebKit: a press that straddled
     // the end of a prep countdown lost its click; the app now delivers such a tap, this keeps the helper honest anyway)
     const menu=page.locator('.sheet[data-kind="cinemaMenu"]');
+    // A second press is never silent: it is written to the suite's log, and MT_NO_TAP_RETRY=1 turns it into a failure,
+    // so a lost tap cannot hide behind the retry.
     for(let attempt=0;attempt<2&&!await menu.isVisible();attempt++){
+      if(attempt){
+        if(process.env.MT_NO_TAP_RETRY)throw new Error('openQuit: the first press on ⋯ did not open the menu (MT_NO_TAP_RETRY is set)');
+        console.warn('openQuit: the first press on ⋯ did not open the menu; pressing once more');
+      }
       await page.locator('[data-a="cinemaMenu"]').click();
       await menu.waitFor({state:'visible',timeout:attempt?8000:1500}).catch(error=>{if(attempt)throw error;});
     }
