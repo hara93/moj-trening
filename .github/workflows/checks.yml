@@ -159,6 +159,9 @@ jobs:
       - name: Opcije treninga
         if: (success() || failure()) && steps.deps.outcome == 'success'
         run: node tools/browser/workout-options.cjs ${{ matrix.browser }}
+      - name: Disanje
+        if: (success() || failure()) && steps.deps.outcome == 'success'
+        run: node tools/browser/breathing.cjs ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
