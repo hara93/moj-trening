@@ -69,7 +69,7 @@
     return History.recordedRows(item);
   }
   function isWorkout(log) {
-    return plain(log) && (log.kind == null || ['protocol', 'field', 'team'].includes(log.kind));
+    return plain(log) && !log.calmOnly && (log.kind == null || ['protocol', 'field', 'team'].includes(log.kind));   // 1.25.0: calm breathing alone is not a workout
   }
   function sameWorkout(log, plan) {
     return log.refId === plan.id && (log.kind === plan.kind || (log.kind == null && plan.kind === 'protocol'));
@@ -185,9 +185,11 @@
   function exerciseFor(exercises, id) {
     return typeof id === 'string' && has(exercises, id) && plain(exercises[id]) ? exercises[id] : null;
   }
+  // 1.25.0: calm breathing is not work for Danas (no load, no equipment, no muscles)
+  function calmItem(item) { return plain(item) && typeof item.exId === 'string' && !!item.exId && plain(item.breath) && item.breath.kind === 'calm'; }
   function workItems(plan) {
     return (Array.isArray(plan.items) ? plan.items : []).filter(function (item) {
-      return plain(item) && typeof item.exId === 'string' && !!item.exId;
+      return plain(item) && typeof item.exId === 'string' && !!item.exId && !calmItem(item);
     });
   }
   function heavyLegs(plan, exercises) {
@@ -215,7 +217,7 @@
     if (plan.kind === 'field') return !Array.isArray(plan.equip) || !Array.isArray(input.equipment) ||
       plan.equip.every(function (tag) { return tag === 'Bez opreme' || input.equipment.includes(tag); });
     var items = workItems(plan);
-    if (!items.length || !Array.isArray(plan.items) || items.length !== plan.items.length) return false;
+    if (!items.length || !Array.isArray(plan.items) || items.length + plan.items.filter(calmItem).length !== plan.items.length) return false;
     return items.every(function (item) {
       var exercise = exerciseFor(exercises, item.exId);
       if (!exercise || exercise.todayEligible === false) return false;
@@ -526,7 +528,7 @@
           return sameWorkout(log, candidate) && actualWork(log);
         });
         if (!easyPlan(candidate, exercises) && (!last || now - last.at < 48 * 3600000)) return false;
-        return candidate.kind === 'protocol' && workItems(candidate).every(function (item) {
+        return candidate.kind === 'protocol' && workItems(candidate).length > 0 && workItems(candidate).every(function (item) {   // a training of calm breathing only is never proposed
           var exercise = exerciseFor(exercises, item.exId);
           return exercise && ['Snaga', 'Trup', 'Mobilnost', 'Aktivacija', 'Rehab'].includes(exercise.cat);
         });

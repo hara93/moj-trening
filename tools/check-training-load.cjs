@@ -160,3 +160,16 @@ test('models remain immutable and edits/deletions are reflected without writing 
   assert.equal(summary(log.slice(0,1)).effort.current.sessions,1);assert.equal(expectation(log.slice(0,1)).status,'insufficient');
   assert.equal(Load.summary({now:'bad'}).status,'invalid');assert.equal(Load.expectation({now:'bad'}).status,'unavailable');
 });
+test('1.25.0: calm breathing carries no j.n. and is no session; a mixed session scores as if the breathing were absent',()=>{
+  const mixed=entry('mixed',{secs:900,calmSecs:300,srpe:6});
+  assert.equal(Load.sessionAU(mixed),60,'(900 − 300) s × 6 / 60');assert.equal(H.sessionAU(mixed),60);
+  assert.equal(Load.sessionAU(entry('plain',{secs:600,srpe:6})),60,'the same session without breathing');
+  const calm=entry('calm',{secs:600,calmSecs:600,calmOnly:true,srpe:undefined,items:[actual({exId:'sporo-disanje',measure:'time',sec:600,breath:{kind:'calm',min:10}})]});
+  assert.equal(Load.sessionAU(calm),0);
+  const base=summary([entry('a'),entry('b',{at:at('2026-11-04')})]),withCalm=summary([entry('a'),entry('b',{at:at('2026-11-04')}),calm]);
+  assert.deepEqual(withCalm,base,'a calm-only entry changes no total, count, minute or missing rating');
+  const minutes=summary([mixed]).effort.current;
+  assert.equal(minutes.knownMinutes,10,'the session minutes leave out the breathing');assert.equal(minutes.totalAU,60);
+  // stored data of existing users: an entry without the new fields keeps its exact AU
+  for(const e of [entry('x',{secs:749,srpe:7}),{kind:'team',secs:5400,srpe:6,at:at('2026-11-05')}])assert.equal(Load.sessionAU(e),Math.round(e.srpe*e.secs/60*1e6)/1e6);
+});

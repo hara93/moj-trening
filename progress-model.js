@@ -22,7 +22,8 @@
     }
     return value;
   }
-  function workout(entry){return plain(entry)&&(entry.kind==null||['protocol','field','team'].indexOf(entry.kind)!==-1);}
+  // 1.25.0: a session of calm breathing only (calmOnly) is not a workout
+  function workout(entry){return plain(entry)&&!entry.calmOnly&&(entry.kind==null||['protocol','field','team'].indexOf(entry.kind)!==-1);}
   function revision(entry){return Math.max(validTime(entry.editedAt)?entry.editedAt:0,validTime(entry.updatedAt)?entry.updatedAt:0);}
   function records(log,now){
     var byId=new Map(),anonymous=[];
@@ -48,7 +49,7 @@
       var entry=row.entry,index=out.findIndex(function(week,i){return entry.at>=week.start&&(i===7||entry.at<out[i+1].start);});
       if(index<0)return;
       var week=out[index];week.count++;
-      if(finite(entry.secs)&&entry.secs>=0)week.minutes+=entry.secs/60;else week.missingDuration++;
+      if(finite(entry.secs)&&entry.secs>=0)week.minutes+=Math.max(0,entry.secs-(finite(entry.calmSecs)&&entry.calmSecs>0?entry.calmSecs:0))/60;else week.missingDuration++;   // calm breathing minutes are not training minutes
       var au=History.sessionAU(entry);
       if(au===null)week.unrated++;else week.au+=au;
     });

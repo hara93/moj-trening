@@ -619,3 +619,18 @@ test('Danas dose rows: group chips, the group for screen readers and the rest in
     ['[B2]Bench press{, Superset B}', '2 × 8 pon. · 20 kg · bez odmora nakon kruga'],
     ['Zgib', '1 × 5 pon. · odmor 60 s']]);
 });
+
+test('1.25.0: calm breathing alone is no workout for Danas, and calm breathing items are no work in a plan', () => {
+  const calmItem = { exId: 'sporo-disanje', measure: 'time', sec: 600, sets: 1, reps: 1, kg: 0, sides: false, rest: 0, breath: { kind: 'calm', preset: 'svaki-dan', min: 10 } };
+  const calmLog = log({ historyId: 'calm', at: at(date), secs: 600, calmSecs: 600, calmOnly: true,
+    items: [{ ...calmItem, done: true, setsDone: 1, secList: [600], sideCounts: [1], setNumbers: [1] }] });
+  const ex = { ...clone(exercises), 'sporo-disanje': { id: 'sporo-disanje', name: 'Sporo disanje', cat: 'Disanje', equip: ['Bez opreme'], muscleWorkEligible: false } };
+  for (const extra of [{}, { checkin: { date, energy: 2, legs: 4, pain: 3 } }]) {
+    const without = Today.suggest(input({ exercises: ex, ...extra })), withCalm = Today.suggest(input({ exercises: ex, logs: [calmLog], ...extra }));
+    assert.deepEqual(withCalm, without, 'a calm-only entry today changes nothing ' + JSON.stringify(extra));
+  }
+  // a plan's calm breathing is not counted as work (heavy legs, easy plans); the plan itself stays as written
+  const mixedPlan = plan({ items: [dose(), calmItem] });
+  const result = Today.suggest(input({ exercises: ex, planned: [mixedPlan] }));
+  assert.equal(result.kind, 'planned');assert.deepEqual(result.items, mixedPlan.items);
+});

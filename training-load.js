@@ -21,13 +21,17 @@
   var duration=function(n){return finite(n)&&n>=0;};
   function freeze(value){if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.keys(value).forEach(function(k){freeze(value[k]);});Object.freeze(value);}return value;}
   function sessionAU(entry){
-    return plain(entry)&&rating(entry.srpe)&&duration(entry.secs)?round(entry.srpe*entry.secs/60):null;
+    // 1.25.0: calm breathing minutes are not training minutes (calmSecs); a session of calm breathing only carries 0 j.n.
+    if(plain(entry)&&entry.calmOnly)return 0;
+    var calm=plain(entry)&&duration(entry.calmSecs)?entry.calmSecs:0;
+    return plain(entry)&&rating(entry.srpe)&&duration(entry.secs)?round(entry.srpe*Math.max(0,entry.secs-calm)/60):null;
   }
   function dateKey(at){var d=new Date(at);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function midnight(at){var d=new Date(at);d.setHours(0,0,0,0);return d.getTime();}
   function shift(at,days){var d=new Date(at);d.setDate(d.getDate()+days);d.setHours(0,0,0,0);return d.getTime();}
   function calendarDay(at){var d=new Date(at);return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;}
-  function kind(entry){return entry.kind==='team'?(entry.teamType==='match'?'match':'team'):entry.kind==='protocol'?'protocol':entry.kind==='field'?'field':entry.kind==null?'legacy':null;}
+  function kind(entry){if(entry.calmOnly)return null;   // calm breathing alone is not a session (not counted, not missing RPE)
+    return entry.kind==='team'?(entry.teamType==='match'?'match':'team'):entry.kind==='protocol'?'protocol':entry.kind==='field'?'field':entry.kind==null?'legacy':null;}
   function records(log,now){
     var byId=new Map(),anonymous=[];
     (Array.isArray(log)?log:[]).forEach(function(entry,index){
@@ -51,7 +55,7 @@
       var au=sessionAU(entry),type=kind(entry);
       if(includeWorkouts)out.workouts.push({id:text(entry.historyId),name:text(entry.name)||workoutLabels[type],label:workoutLabels[type],
         kind:type,at:entry.at,secs:duration(entry.secs)?entry.secs:null,srpe:rating(entry.srpe)?entry.srpe:null,au:au});
-      if(duration(entry.secs))out.knownMinutes+=entry.secs/60;else out.missingDuration++;
+      if(duration(entry.secs))out.knownMinutes+=Math.max(0,entry.secs-(duration(entry.calmSecs)?entry.calmSecs:0))/60;else out.missingDuration++;
       if(!rating(entry.srpe))out.missingRpe++;
       if(au===null)out.missingAU++;else{out.rated++;out.knownAU+=au;}
       if(!buckets.has(type))buckets.set(type,{kind:type,label:labels[type],sessions:0,rated:0,knownAU:0,missingAU:0,totalAU:null});
