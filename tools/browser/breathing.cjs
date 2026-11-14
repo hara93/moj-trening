@@ -349,6 +349,7 @@ async function brightest(p,box){
         await A(p,'cinemaJournal').click();
         const rows=await p.locator('.breath-journal-row').allInnerTexts();
         assert.equal(rows.length,2);assert.match(rows[0],/Serija 1 · 6 sprinteva/);
+        assert.match(rows[0],/u tijeku/,'the set in progress is marked');assert.doesNotMatch(rows[1],/u tijeku/);
         await A(p,'cinemaJournalClose').click();
         await A(p,'workoutSetDone').click();await p.locator('.workout-cinema[data-phase="rest"]').waitFor();
         assert.match(await p.locator('.workout-cinema').innerText(),/3:00/,'the player\'s normal 3-min rest');

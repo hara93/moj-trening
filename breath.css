@@ -144,6 +144,8 @@ html:has(.workout-cinema.is-dim),body:has(.workout-cinema.is-dim),#app:has(.work
 .breath-journal-row[data-state=done]>span{background:var(--player-accent);box-shadow:none;color:var(--player-on-accent)}
 .breath-journal-row>span svg{width:16px;height:16px}
 .breath-journal-row small{margin-left:auto;color:var(--text-2);font-size:13px;font-weight:500}
+.breath-journal-row[data-state=active]>span{box-shadow:inset 0 0 0 2px var(--player-accent);color:var(--text)}
+.breath-journal-row[data-state=active] small{color:var(--player-accent)}
 /* the library page uses the exercise page's own header (round back button, title on the left) */
 .breath-page>.workout-cover-bar{flex:none}
 .breath-src-more summary{display:flex;align-items:center;min-height:44px;color:var(--text-2);font-size:13px;list-style:none;cursor:pointer}

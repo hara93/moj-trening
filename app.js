@@ -8839,6 +8839,8 @@ function breathPageHtml(e, item, t){
     '<h2 class="breath-h2">Zašto</h2>' + breathWhyHtml(p) + breathCautionHtml(p, b) + '</div>' +
     '<div class="workout-footer"><div class="footer gut"><button class="btn" data-a="playEx" data-id="' + esc(t.id) + '">' + WorkoutView.icon('play') + 'Pokreni vježbu</button><div class="workout-library-secondary"><button class="txtbtn" data-a="fav" data-id="' + esc(e.id) + '" aria-label="Favorit" aria-pressed="' + !!e.fav + '">' + (e.fav ? I.heartF : I.heart) + 'Favorit</button><button class="txtbtn" data-a="editEx" data-id="' + esc(e.id) + '" aria-label="Uredi vježbu">' + I.edit + 'Uredi</button><button class="txtbtn" data-a="addTo" data-id="' + esc(e.id) + '">Dodaj u trening</button></div></div></div></div>';
 }
+// a set row's state in words (PlayerDose.checklist: done, partial, active, skipped, waiting, planned)
+const breathRowState = st => ({ done: 'odrađeno', partial: 'djelomično', active: 'u tijeku', skipped: 'preskočeno' })[st] || '';
 // Dnevnik: one row per set with its check; no kg, reserve, equipment or swap. "Prethodno": the same preset only.
 function breathPrevious(item){
   const e = S.ex[item.exId], sprint = breathSprintEx(e), preset = (item.breath || {}).preset;
@@ -8853,7 +8855,7 @@ function breathJournalCard(item, j, o){
   const meta = '<small class="cj-meta" id="cj-meta-' + j + '">' + esc(breathPrevious(item)) + '</small>';
   const rows = PlayerDose.checklist(item, P, j).map(row => '<div class="breath-journal-row" data-state="' + row.state + '"><span>' + (row.state === 'done' ? WorkoutView.icon('check') : row.set) + '</span>' +
     esc(bp ? Breath.fmt(bp.total) + ' · ' + [bp.label, Breath.rhythm(bp.phases, true)].filter(Boolean).join(' · ') : 'Serija ' + row.set + ' · ' + item.reps + ' ' + plural(item.reps, 'sprint', 'sprinta', 'sprinteva')) +
-    '<small>' + (row.state === 'done' ? 'odrađeno' : row.state === 'current' ? 'u tijeku' : '') + '</small></div>').join('');
+    '<small>' + breathRowState(row.state) + '</small></div>').join('');
   const chips = '<button type="button" data-a="workoutHistory" data-j="' + j + '">' + WorkoutView.icon('notebook-text') + 'Povijest</button>' +
     '<button type="button" data-a="cinemaNotes" data-j="' + j + '">' + WorkoutView.icon('notebook-pen') + 'Bilješke</button>' +
     (!active ? '<button type="button" data-a="cinemaGoSet" data-j="' + j + '">' + I.next + 'Prijeđi na vježbu</button>' : '');
@@ -8868,7 +8870,7 @@ function breathPanelHtml(e, item, c, s, footer){
   const states = live ? PlayerDose.checklist(item, P, s.j) : Array.from({ length: item.sets || 1 }, (_, k) => ({ set: k + 1, state: 'planned' }));
   const rows = states.map(row => '<div class="breath-journal-row" data-state="' + row.state + '"><span>' + (row.state === 'done' ? WorkoutView.icon('check') : row.set) + '</span>' +
     esc(bp ? Breath.fmt(bp.total) + ' · ' + [bp.label, Breath.rhythm(bp.phases, true)].filter(Boolean).join(' · ') : 'Serija ' + row.set + ' · ' + item.reps + ' ' + plural(item.reps, 'sprint', 'sprinta', 'sprinteva')) +
-    '<small>' + (row.state === 'done' ? 'odrađeno' : row.state === 'current' ? 'u tijeku' : '') + '</small></div>').join('');
+    '<small>' + breathRowState(row.state) + '</small></div>').join('');
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),
     infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:breathName(item),eyebrow:c.live?'Trening je pauziran':'Disanje',
     previousHtml:'<span>'+esc(breathPrevious(item))+'</span>',toolsHtml:'',targetHtml:'<p class="breath-panel-dose">'+esc(bp ? breathLine(bp) : breathDoseText(item) + ' · ' + Math.round((item.rest || 0) / 60) + ' min odmora')+'</p>',
