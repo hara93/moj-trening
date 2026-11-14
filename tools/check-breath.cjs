@@ -16,9 +16,9 @@ function walk(r){
   return {bounds:out,end:t};
 }
 
-test('the four shipped breathing exercises: category, the calm ones paced, the sprints a plain sets × reps exercise',()=>{
+test('the five shipped breathing exercises: category, the calm ones paced, the sprints a plain sets × reps exercise',()=>{
   const ids=Object.keys(E).filter(id=>E[id].cat==='Disanje').sort();
-  assert.deepEqual(ids,['ciklicki-uzdah','kvadratno-disanje','sporo-disanje','sprintevi-bez-daha']);
+  assert.deepEqual(ids,['ciklicki-uzdah','disanje-4-7-8','kvadratno-disanje','sporo-disanje','sprintevi-bez-daha']);
   for(const id of ids){
     const e=E[id];assert.equal(e.muscleWorkEligible,false,id);assert.deepEqual(e.zones,[],id);assert.equal(typeof e.breath,'object',id);
     assert.equal(window.EXFX[id].pat,id==='sprintevi-bez-daha'?'R':'D',id+' load pattern');
@@ -32,6 +32,8 @@ test('the four shipped breathing exercises: category, the calm ones paced, the s
   assert.deepEqual(s.breath.structure.distance_m_range,[30,40]);assert.equal(window.EXFX['sprintevi-bez-daha'].runM,35);
   const how=s.breath.steps_hr.join(' ');
   for(const words of ['ne do kraja','samo dok traje sprint','hodaj natrag dišući slobodno','svakih 30 s','70–80 % brzine','vrtoglavice'])assert.ok(how.includes(words),words);
+  assert.match(how,/Kad završiš seriju, označi je kvačicom\. Za sprinteve ti mobitel ne treba\./);
+  assert.deepEqual(s.breath.always_hr.slice(0,1),['Nikad u vodi.'],'driving does not apply to sprinting');
   // copy rules (katalog §1.1): never a faster top speed, a better match or "tested without a coach"
   assert.match(s.breath.why_hr,/najveća brzina nije porasla/);assert.doesNotMatch(JSON.stringify(s.breath),/brži sprint|bolja utakmica/i);
   assert.match(B('sporo-disanje').presets.spavanje.audio_hr,/potpuno zatamnjen; ne zaključavaj mobitel/);
@@ -125,4 +127,33 @@ test('rhythm texts and Croatian plurals for the voice and VoiceOver: sekunda, se
   assert.equal(Breath.perMin(Breath.resolve(B('sporo-disanje'),{})),6);assert.equal(Breath.fmt(603.5),'10:04');
   // the strings never carry the seconds of the live phase: only the pattern
   for(const id of ['sporo-disanje','ciklicki-uzdah','kvadratno-disanje'])assert.doesNotMatch(Breath.spoken(Breath.resolve(B(id),{}).phases),/undefined|NaN/);
+});
+
+test('Disanje 4-7-8 (added at his request): a circle with one hold after the inhale, Lakši 4-6-8, 5 min = 16 breaths = 5:04, very low evidence, listed last',()=>{
+  const e=E['disanje-4-7-8'],b=e.breath;
+  assert.equal(e.name,'Disanje 4-7-8');assert.equal(e.cat,'Disanje');assert.equal(b.kind,'calm');assert.equal(window.EXFX['disanje-4-7-8'].pat,'D');
+  assert.ok(Object.keys(E).filter(id=>E[id].cat==='Disanje'&&id!=='disanje-4-7-8').every(id=>E[id].order<e.order),'after the evidence-based exercises');
+  assert.equal(b.grade,'very_low');assert.equal(b.grade_hr,'vrlo slabi dokazi');
+  assert.equal(Object.keys(E).filter(id=>E[id].breath&&E[id].breath.grade==='very_low').length,1,'the only exercise with this grade');
+  // copy (katalog §1.1): no calming, anxiety, sleep or HRV benefit claimed; not while out of breath
+  assert.match(b.when_hr,/Ne dok si zadihan/);assert.match(b.why_list_hr.join(' '),/Dokazi su vrlo slabi/);
+  assert.doesNotMatch(JSON.stringify(b),/smanjuje tjeskobu|bolji san|brže zaspi|pouzdano smiruje|raste HRV/i);
+  assert.equal(e.sec,304);
+  const r=Breath.resolve(b,{});
+  assert.deepEqual(r.phases,[{k:'in',s:4},{k:'hold_in',s:7},{k:'out',s:8}]);
+  assert.equal(r.shape,'circle','one hold: a circle, not the square');assert.equal(r.min,5);assert.equal(r.cycles,16);assert.equal(r.total,304);assert.equal(Breath.fmt(r.total),'5:04');
+  assert.deepEqual(b.minutes_options,[2,5]);
+  const two=Breath.resolve(b,{min:2});assert.equal(two.cycles,6);assert.equal(two.total,114);
+  const easy=Breath.resolve(b,{variant:'4-6-8'});assert.equal(easy.variant.label_hr,'Lakši 4-6-8');
+  assert.deepEqual(easy.phases.map(x=>x.s),[4,6,8]);assert.equal(easy.cycles,17);assert.equal(easy.total,306);
+  assert.equal(Breath.rhythm(r.phases,true),'4-7-8 s');assert.equal(Breath.rhythm(easy.phases,true),'4-6-8 s');
+  assert.equal(Breath.spoken(r.phases),'Udah 4 sekunde, zadrži 7 sekundi, izdah 8 sekundi');
+  // the hold keeps the circle full while the rim's progress runs; every phase on time; whole cycles of 19 s
+  for(const [t,k,left] of [[0.05,'in',3.95],[3.95,'in',0.05],[4.05,'hold_in',6.95],[10.95,'hold_in',0.05],[11.05,'out',7.95],[18.95,'out',0.05],[19.05,'in',3.95]]){
+    const a=Breath.at(r,t);assert.equal(a.k,k,'phase at '+t);near(a.left,left,'seconds left at '+t);
+  }
+  for(const t of [4.05,7.5,10.95]){const a=Breath.at(r,t);near(a.level,1,'full during the hold at '+t);assert.equal(a.hold,true);assert.equal(a.square,null);}
+  near(Breath.at(r,7.5).frac,0.5,'the rim is half way at the middle of the hold');
+  near(Breath.at(r,18.999).level,0,'empty at the end of the exhale');
+  assert.equal(Breath.at(r,19.05).breath,2);assert.equal(Breath.at(r,303.9).breath,16);assert.equal(walk(r).end,304);
 });

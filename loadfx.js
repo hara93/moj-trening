@@ -40,6 +40,7 @@ window.EXFX = {
 "deadlift":{"v":1,"pat":"L1","mx":null,"uni":false,"ecc":0,"prime":["Gluteus","Stražnja loža"],"rw":{"Gluteus":0.333,"Stražnja loža":0.333,"Leđa":0.167,"Kvadriceps":0.167},"bw":null,"cpr":0,"tier":null,"rir":2,"runM":null,"runInt":null,"tags":[]},
 "depth-drop":{"v":1,"pat":"P","mx":null,"uni":false,"ecc":2,"prime":["Kvadriceps","Gluteus"],"rw":{"Kvadriceps":0.4,"Gluteus":0.4,"Koljeno":0.1,"Gležanj":0.1},"bw":null,"cpr":1,"tier":"vrlo visoko","rir":6,"runM":null,"runInt":null,"tags":[]},
 "depth-jump":{"v":1,"pat":"P","mx":null,"uni":false,"ecc":1,"prime":["Kvadriceps","Lisni mišić"],"rw":{"Kvadriceps":0.363,"Gluteus":0.182,"Lisni mišić":0.364,"Gležanj":0.091},"bw":null,"cpr":2,"tier":"visoko","rir":6,"runM":null,"runInt":null,"tags":[]},
+"disanje-4-7-8":{"v":1,"pat":"D","mx":null,"uni":false,"ecc":0,"prime":[],"rw":{"Cijelo tijelo":1},"bw":null,"cpr":0,"tier":null,"rir":6,"runM":null,"runInt":null,"tags":["disanje"]},
 "face-pull-cord":{"v":1,"pat":"S","mx":null,"uni":false,"ecc":0,"prime":["Ramena"],"rw":{"Ramena":0.667,"Leđa":0.333},"bw":null,"cpr":0,"tier":null,"rir":3,"runM":null,"runInt":null,"tags":[]},
 "farmers-walk":{"v":1,"pat":"K","mx":null,"uni":false,"ecc":0,"prime":["Core"],"rw":{"Cijelo tijelo":0.143,"Ruke":0.286,"Core":0.571},"bw":null,"cpr":0,"tier":null,"rir":3,"runM":null,"runInt":null,"tags":[]},
 "figure-4":{"v":1,"pat":"A","mx":null,"uni":true,"ecc":0,"prime":["Gluteus"],"rw":{"Gluteus":0.8,"Kuk":0.2},"bw":null,"cpr":0,"tier":null,"rir":6,"runM":null,"runInt":null,"tags":[]},

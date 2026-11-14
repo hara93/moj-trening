@@ -8731,7 +8731,7 @@ window.SEED = {
        }
       ],
       "rate_per_min": 5,
-      "note_hr": "Ako se 4 s zadržavanja muči. U Balbanovoj studiji duljinu faze svatko je odredio testom izdaha (3–10 s); ako se muči, skrati."
+      "note_hr": "Ako ti je 4 s zadržavanja teško. U Balbanovoj studiji duljinu faze svatko je odredio testom izdaha (3–10 s). Ako ti je teško, skrati."
      }
     ],
     "minutes_default": 5,
@@ -8813,7 +8813,7 @@ window.SEED = {
     "Mirno izdahni, ne do kraja.",
     "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
     "Izdahni, udahni i hodaj natrag dišući slobodno.",
-    "Novi sprint kreće svakih 30 s. Nakon serije je označi kvačicom; mobitel ti za sprinteve ne treba.",
+    "Novi sprint kreće svakih 30 s. Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
     "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
    ],
    "mistakes": [],
@@ -8843,7 +8843,7 @@ window.SEED = {
      "Mirno izdahni, ne do kraja.",
      "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
      "Izdahni, udahni i hodaj natrag dišući slobodno.",
-     "Novi sprint kreće svakih 30 s. Nakon serije je označi kvačicom; mobitel ti za sprinteve ne treba.",
+     "Novi sprint kreće svakih 30 s. Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
      "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
     ],
     "why_hr": "Kod treniranih sportaša (10 malih studija, uz trenera) nakon 6–12 treninga brzina je manje padala kroz niz sprinteva; najveća brzina nije porasla. Za utakmicu nema dokaza, a bez trenera nije testirano.",
@@ -8911,7 +8911,137 @@ window.SEED = {
     },
     "kind": "sprint",
     "always_hr": [
+     "Nikad u vodi.",
+     "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
+    ]
+   }
+  },
+  "disanje-4-7-8": {
+   "name": "Disanje 4-7-8",
+   "alt": "4-7-8 breathing",
+   "cat": "Disanje",
+   "phase": null,
+   "cord": "",
+   "zones": [],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "",
+   "measure": "time",
+   "sets": 1,
+   "reps": 1,
+   "sec": 304,
+   "rest": 0,
+   "kg": 0,
+   "sides": false,
+   "feel": "Smirivanje s dugim izdahom",
+   "steps": [
+    "Sjedni uspravno ili lezi.",
+    "Udahni na nos 4 s.",
+    "Zadrži dah 7 s, opušteno.",
+    "Izdahni polako na usta 8 s.",
+    "Ako ti je zadržavanje predugo, uzmi lakši ritam 4-6-8 ili prijeđi na Sporo disanje."
+   ],
+   "mistakes": [],
+   "note": "Disanje koje je popularizirao liječnik Andrew Weil. Dokazi su vrlo slabi: nekoliko malih studija, uglavnom s bolesnicima i bez prave usporedbe. U studiji sa zdravim studentima sporo disanje 6 u minuti podiglo je HRV više, a raspoloženje se ni od jednog nije promijenilo.",
+   "source": "",
+   "sourceTitle": "",
+   "order": 904,
+   "fav": false,
+   "media": null,
+   "mediaType": null,
+   "muscles": {
+    "prime": [],
+    "sec": []
+   },
+   "muscleWorkEligible": false,
+   "breath": {
+    "technique": "4-7-8",
+    "name_hr": "Disanje 4-7-8",
+    "goal_hr": "Smirivanje s dugim izdahom",
+    "phases": [
+     {
+      "k": "in",
+      "s": 4
+     },
+     {
+      "k": "hold_in",
+      "s": 7
+     },
+     {
+      "k": "out",
+      "s": 8
+     }
+    ],
+    "variants": [
+     {
+      "id": "4-6-8",
+      "label_hr": "Lakši 4-6-8",
+      "phases": [
+       {
+        "k": "in",
+        "s": 4
+       },
+       {
+        "k": "hold_in",
+        "s": 6
+       },
+       {
+        "k": "out",
+        "s": 8
+       }
+      ],
+      "rate_per_min": 3.33,
+      "note_hr": "Kraće zadržavanje; nije zasebno istraživan, dokazi jednako vrlo slabi."
+     }
+    ],
+    "minutes_default": 5,
+    "minutes_options": [
+     2,
+     5
+    ],
+    "frequency_hr": "Po želji; nije dokazana kao svakodnevna vježba.",
+    "nose_mouth_hr": "Udah na nos, izdah polako na usta.",
+    "posture_hr": "Sjedeći uspravno ili ležeći.",
+    "when_hr": "Kad se želiš smiriti. Ne dok si zadihan (ne između serija ni odmah nakon sprinta).",
+    "steps_hr": [
+     "Sjedni uspravno ili lezi.",
+     "Udahni na nos 4 s.",
+     "Zadrži dah 7 s, opušteno.",
+     "Izdahni polako na usta 8 s.",
+     "Ako ti je zadržavanje predugo, uzmi lakši ritam 4-6-8 ili prijeđi na Sporo disanje."
+    ],
+    "why_hr": "Disanje koje je popularizirao liječnik Andrew Weil. Dokazi su vrlo slabi: nekoliko malih studija, uglavnom s bolesnicima i bez prave usporedbe. U studiji sa zdravim studentima sporo disanje 6 u minuti podiglo je HRV više, a raspoloženje se ni od jednog nije promijenilo.",
+    "grade": "very_low",
+    "grade_hr": "vrlo slabi dokazi",
+    "caution_hr": "Zadržavaj opušteno, nikad na silu; ako osjetiš glad za zrakom ili nemir, prekini. Ne dok si zadihan. Vrtoglavica ili trnci: stani. Nikad u vožnji ni u vodi. Kod srčane ili plućne bolesti, glaukoma ili trudnoće prvo pitaj liječnika.",
+    "sources": [
+     "Marchant J, Khazan I, Cressman M, Steffen P. Comparing the effects of square, 4-7-8, and 6 breaths-per-minute breathing on HRV, CO2 levels, and mood. Appl Psychophysiol Biofeedback 2025 (abstract only)",
+     "Aktaş GK, İlgin VE. Deep breathing and 4-7-8 breathing after bariatric surgery: RCT. Obes Surg 2023;33:920-929 (abstract only)",
+     "Kirazli G, et al. 4-7-8 breathing in tinnitus: RCT. Brain Behav 2026 (abstract only)",
+     "Vierra J, et al. Effects of sleep deprivation and 4-7-8 breathing control on HRV, BP. Physiol Rep 2022;10:e15389 (abstract only)"
+    ],
+    "why_list_hr": [
+     "Disanje koje je popularizirao liječnik Andrew Weil.",
+     "Dokazi su vrlo slabi: nekoliko malih studija, uglavnom s bolesnicima i bez prave usporedbe.",
+     "U studiji sa zdravim studentima sporo disanje 6 u minuti podiglo je HRV više, a raspoloženje se ni od jednog nije promijenilo."
+    ],
+    "src_hr": [
+     "Marchant i sur. 2025, Applied Psychophysiology and Biofeedback",
+     "Aktaş i İlgin 2023, Obesity Surgery",
+     "Kirazli i sur. 2026, Brain and Behavior",
+     "Vierra i sur. 2022, Physiological Reports"
+    ],
+    "oprez_hr": [
+     "Zadržavaj opušteno, nikad na silu. Ako osjetiš glad za zrakom ili nemir, prekini.",
+     "Ne dok si zadihan.",
+     "Kod glaukoma ili trudnoće prvo pitaj liječnika."
+    ],
+    "prep_hr": "Sjedni uspravno ili lezi",
+    "kind": "calm",
+    "always_hr": [
      "Nikad u vodi i nikad u vožnji.",
+     "Vrtoglavica ili trnci znače da dišeš previše. Diši pliće i sporije ili stani.",
      "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
     ]
    }

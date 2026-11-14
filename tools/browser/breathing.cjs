@@ -1,5 +1,5 @@
 'use strict';
-// 1.25.0 Disanje: the four breathing exercises in the library, the breathing pacer in the player (circle and square) on a
+// 1.25.0 Disanje: the five breathing exercises in the library (4-7-8 last, on the circle with its hold), the breathing pacer in the player (circle and square) on a
 // fast clock, the bedtime night display (black pixels, a tap that does not pause, no finish tone, the entry saving
 // itself), pause and a jump from the background with no tone in the middle of a phase, reduced motion, the breath-hold
 // sprints as a plain sets × reps exercise with the player's rest and the one-time safety gate from the library, a
@@ -89,7 +89,8 @@ async function brightest(p,box){
         await s.home();await p.getByRole('button',{name:'Knjižnica vježbi',exact:true}).click();
         await p.locator('.chip',{hasText:/^Disanje$/}).first().click();
         const ids=await A(p,'openEx').evaluateAll(n=>n.map(x=>x.dataset.id));
-        assert.deepEqual(ids.sort(),['ciklicki-uzdah','kvadratno-disanje','sporo-disanje','sprintevi-bez-daha'],'the Disanje category lists the four exercises');
+        assert.deepEqual(ids.slice().sort(),['ciklicki-uzdah','disanje-4-7-8','kvadratno-disanje','sporo-disanje','sprintevi-bez-daha'],'the Disanje category lists the five exercises');
+        assert.equal(ids[ids.length-1],'disanje-4-7-8','4-7-8 comes after the evidence-based exercises');
         await overflow(p,'library 393');
         await by(p,'openEx','sporo-disanje').click();
         await p.locator('.breath-page').waitFor();
@@ -104,6 +105,29 @@ async function brightest(p,box){
         assert.match(await p.locator('.breath-practice').innerText(),/Uvježbano 0 od 6/);
         await s.shot('page-utakmica');await overflow(p,'exercise page 393');
         ok('library and exercise page');
+
+        // Disanje 4-7-8: very low evidence in words, Lakši 4-6-8, 5 min = 16 breaths; on the circle the hold keeps it full
+        // while the rim fills, every phase on time
+        await s.library('disanje-4-7-8');await p.locator('.breath-page').waitFor();
+        const page478=await p.locator('.breath-page').innerText();
+        assert.match(page478,/Dokazi: vrlo slabi/);assert.match(page478,/Stvarno 5:04 · 16 udaha/);assert.match(page478,/Ne dok si zadihan/);
+        assert.equal(await p.locator('[data-a="exBreath"][data-k="variant"][data-v="4-6-8"]').innerText(),'Lakši 4-6-8');
+        assert.deepEqual(await p.locator('[data-a="exBreath"][data-k="min"]').allInnerTexts(),['2 min','5 min']);
+        await s.shot('page-478');await overflow(p,'4-7-8 page 393');
+        await A(p,'playEx').click();await p.locator('.workout-cinema').waitFor();
+        for(let i=0;i<80&&!await p.locator('.breath-pacer').count();i++)await s.clock(.25);
+        let w=await s.pacer();assert.equal(w.shape,'circle');assert.equal(w.word,'Udah');assert.equal(w.pill,'1 od 16');assert.match(w.head,/^Još 5:0[34] · 4-7-8 s$/);
+        const ring=()=>p.locator('.breath-ring-fill').evaluate(n=>({d:parseFloat(n.getAttribute('stroke-dasharray')),op:n.style.opacity}));
+        assert.equal((await ring()).op,'0','no rim on the inhale');
+        await s.clock(4.6);w=await s.pacer();assert.equal(w.word,'Zadrži');assert.equal(w.k,'hold_in');assert.equal(w.lv,'1.0000','full during the hold');
+        const r1=await ring();await s.clock(3);const r2=await ring();
+        assert.ok(r1.d>0&&r2.d>r1.d&&r2.op==='1','the rim shows the hold\'s progress: '+JSON.stringify([r1,r2]));
+        assert.equal((await s.pacer()).lv,'1.0000');
+        await s.shot('circle-478-hold');
+        await s.clock(3.6);w=await s.pacer();assert.equal(w.word,'Izdah');assert.equal(w.sec,'8');assert.equal((await ring()).op,'0');
+        await s.clock(8.1);w=await s.pacer();assert.equal(w.word,'Udah');assert.equal(w.pill,'2 od 16','a whole cycle is 19 s');
+        await openQuit(p);await A(p,'quitDiscard').click();await p.locator('.workout-cinema').waitFor({state:'hidden'});
+        ok('Disanje 4-7-8');
 
         // the square on a fast clock, from a training (the plank before it is skipped)
         await s.openPr('dis-mix');await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();

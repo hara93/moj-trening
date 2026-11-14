@@ -1,6 +1,7 @@
 // The breathing pacer's model (1.25.0). Pure: no DOM and no clock of its own. The player gives it the seconds its work step
 // has run (dur − remaining(), from the session clock, so a pause and time with the screen off are already counted) and it
 // says which phase that is, how far into it, the circle's size and the square's side. window.Breath / module.exports.
+// A pattern with one hold (4-7-8) is a circle: the hold keeps it at its size and the rim shows the hold's progress.
 // Only the calm exercises are paced. "Sprintevi bez daha" is a plain sets × reps exercise and never reaches this model.
 (function (root) {
   'use strict';
@@ -90,11 +91,11 @@
     }
     return null;
   }
-  // "Udah 4 s · izdah 6 s"; short "4/6 s", "3 + 1 + 6 s", "4-4-4-4 s"
+  // "Udah 4 s · izdah 6 s"; short "4/6 s", "3 + 1 + 6 s", and with a hold "4-4-4-4 s", "4-7-8 s"
   function rhythm(ph, short) {
     if (!short) return ph.map(function (p, i) { var w = WORD[p.k] || ''; return (i ? w.charAt(0).toLowerCase() + w.slice(1) : w) + ' ' + num(p.s) + ' s'; }).join(' · ');
     var s = ph.map(function (p) { return num(p.s); });
-    return (ph.some(function (p) { return p.k === 'top'; }) ? s.join(' + ') : ph.length === 4 ? s.join('-') : s.join('/')) + ' s';
+    return (ph.some(function (p) { return p.k === 'top'; }) ? s.join(' + ') : ph.some(function (p) { return HOLD[p.k]; }) ? s.join('-') : s.join('/')) + ' s';
   }
   // for the voice and VoiceOver: "Udah 4 sekunde, izdah 6 sekundi"
   function spoken(ph) {

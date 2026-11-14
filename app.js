@@ -8501,7 +8501,12 @@ function breathDoseText(it){
 // the line under the name in overviews: the preset, the rhythm and the REAL length of whole breaths
 function breathLine(bp){
   const e = S.ex[bp.exId], label = bp.name && e && bp.name !== e.name ? '' : bp.label;
-  return [label, bp.variant ? bp.variant.label_hr : '', breathRhythmText(bp), Breath.fmt(bp.total)].filter(Boolean).join(' · ');
+  return [label, ...breathVariantParts(bp), Breath.fmt(bp.total)].filter(Boolean).join(' · ');
+}
+// the setting and the rhythm; a setting named by its seconds ("Lakši 4-6-8") stands for the rhythm
+function breathVariantParts(bp){
+  const vl = bp.variant ? bp.variant.label_hr || '' : '';
+  return /\d/.test(vl) && !bp.intro.length ? [vl] : [vl, breathRhythmText(bp)];
 }
 function breathName(item){ const bp = breathPlan(item); return (bp && bp.name) || S.ex[item.exId]?.name || 'Disanje'; }
 function breathMeta(e){
@@ -8747,6 +8752,12 @@ function breathPatternHtml(bp){
   const ramp = bp.intro.length ? '<p class="breath-pattern-ramp">Uvod ' + bp.intro.concat([{ phases: bp.phases }]).map(b => '<span>' + esc(Breath.rhythm(b.phases, true).replace(' s', '')) + '</span>').join('›') + '</p>' : '';
   return '<div class="breath-pattern" role="img" aria-label="' + esc(Breath.spoken(bp.phases)) + '">' + segs + '</div>' + ramp;
 }
+// a rhythm chip: the setting's name and its seconds, short ("Lakši 3,5/5", "Kraće faze 3-3-3-3"); a name that already
+// carries its seconds ("Lakši 4-6-8") is not repeated
+function breathVariantChip(v){
+  const r = Breath.rhythm(v.phases, true).replace(/ s$/, ''), l = String(v.label_hr || '');
+  return /\d/.test(l) ? l : l.replace(/ ritam$/, '') + ' ' + r;
+}
 function breathChoicesHtml(e, it, act, extra){
   const data = extra ? extra + ' ' : '', a = act || 'exBreath';
   const ch = (l, k, v, on) => '<button type="button" class="chip" ' + data + 'data-a="' + a + '" data-k="' + k + '" data-v="' + esc(v) + '" aria-pressed="' + !!on + '">' + esc(l) + '</button>';
@@ -8761,7 +8772,7 @@ function breathChoicesHtml(e, it, act, extra){
   if (keys.length > 1) h += '<div class="breath-field"><span class="breath-label">Postavka</span><div class="chips wrap breath-presets">' + keys.map(k => ch(ps[k].label_hr || ps[k].name_hr, 'preset', k, bp.key === k)).join('') + '</div>' +
     '<p class="breath-hint">Isti način disanja; razlikuju se trajanje, položaj i vrijeme.</p></div>';
   if ((p.variants || []).length) h += '<div class="breath-field"><span class="breath-label">Ritam</span><div class="chips wrap">' + ch(Breath.rhythm(p.phases, true), 'variant', '', !bp.variant) +
-    p.variants.map(v => ch(v.label_hr + ' ' + Breath.rhythm(v.phases, true).replace(/ s$/, ''), 'variant', v.id, bp.variant && bp.variant.id === v.id)).join('') + '</div>' +
+    p.variants.map(v => ch(breathVariantChip(v), 'variant', v.id, bp.variant && bp.variant.id === v.id)).join('') + '</div>' +
     (bp.variant && bp.variant.note_hr ? '<p class="breath-hint">' + esc(bp.variant.note_hr) + '</p>' : '') + '</div>';
   (p.intro_options || []).forEach(io => {
     h += '<div class="prow breath-intro"><span class="k">' + esc(io.label_hr) + '<small>' + esc(Breath.rhythm(io.phases, true) + ' kroz ' + Breath.num(Breath.blocksS([io]) / 60) + ' min, zatim ' + Breath.rhythm(bp.phases, true)) + '</small></span>' +
@@ -8838,7 +8849,7 @@ function breathHistoryLine(x){
   const e = S.ex[x.exId]; if (!breathOf(e)) return null;
   if (breathSprintEx(e)) return { kind: 'sprint', text: 'Broji se kao trčanje (oko ' + ((loadFx(e) || {}).runM || 35) + ' m po sprintu).' };
   const r = Breath.resolve(e.breath, isPlainObj(x.breath) ? x.breath : {});
-  return { kind: 'calm', text: [r.name !== e.name ? r.label : '', r.variant ? r.variant.label_hr : '', breathRhythmText(r)].filter(Boolean).join(' · ') + '. Disanje nema opterećenje.' };
+  return { kind: 'calm', text: [r.name !== e.name ? r.label : '', ...breathVariantParts(r)].filter(Boolean).join(' · ') + '. Disanje nema opterećenje.' };
 }
 
 init();
