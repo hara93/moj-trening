@@ -319,6 +319,8 @@ async function brightest(p,box){
         assert.equal(await p.locator('.breath-pacer').count(),0,'the sprints are not paced');
         assert.match(await p.locator('.breath-howto').innerText(),/Zadrži dah i sprintaj do čunja/);
         assert.match(await p.locator('.breath-howto').innerText(),/Stani odmah kod vrtoglavice/);
+        assert.match(await p.locator('.breath-howto').innerText(),/Prva 2 treninga uči tehniku na 70–80 % brzine/,'the work step keeps the learning rule (review F2)');
+        assert.doesNotMatch(await p.locator('.breath-howto').innerText(),/Postavi čunjeve/);
         assert.equal(await p.locator('.cinema-weight-unavailable,[data-field="kg"]').count(),0,'no kg on the sprint step');
         await s.shot('sprint-work');await overflow(p,'sprint step 375');
         await p.locator('.workout-cinema [data-a="workoutInfo"]').click();await p.locator('.breath-info').waitFor();

@@ -8560,9 +8560,10 @@ function breathHtml(bp, a){
     : '<div class="breath-shape breath-circle"><i class="breath-track"></i><i class="breath-disc"></i><svg class="breath-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="breath-ring-fill" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="0 100" style="opacity:0"/></svg>' + text + '</div>';
   return '<div class="breath-pacer is-' + bp.shape + '" role="img" aria-label="' + esc('Pacer disanja: ' + Breath.rhythm(bp.phases).toLowerCase()) + '">' + shape + ramp + '</div>';
 }
-// the sprints' work step: the how-to stays on screen while the set runs (he may not look at it; the check closes the set)
+// the sprints' work step: the full how-to stays on screen while the set runs, the learning rule (first 2 sessions at
+// 70–80 % speed) included (decision 2); only the cone set-up is left out (he may not look at it; the check closes the set)
 function breathSprintHowtoHtml(e){
-  const steps = (e.breath.steps_hr || e.steps || []).filter(s => !/^Prva 2 treninga|^Postavi čunjeve/.test(s));
+  const steps = (e.breath.steps_hr || e.steps || []).filter(s => !/^Postavi čunjeve/.test(s));
   return '<div class="breath-howto"><ol>' + steps.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>';
 }
 // the header's green line on the breathing work step: the remaining time and the rhythm (the bottom clock row is gone)
