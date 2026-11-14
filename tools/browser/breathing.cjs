@@ -328,6 +328,9 @@ async function brightest(p,box){
       try{
         await s.library('sprintevi-bez-daha');await p.locator('.breath-page').waitFor();
         assert.match(await p.locator('.breath-page').innerText(),/Mobitel ti za sprinteve ne treba/);
+        // no phone to time 30 s: "otprilike" everywhere, the next sprint when he is back at the start
+        assert.match(await p.locator('.breath-page').innerText(),/Novi sprint kreni čim se vratiš na start \(otprilike svakih 30 s\)/);
+        assert.doesNotMatch(await p.locator('.breath-page').innerText(),/Svakih 30 s jedan|Sprint svakih|kreće svakih/);
         await overflow(p,'sprint page 375');
         await A(p,'playEx').click();await p.locator('.breath-gate').waitFor();
         assert.equal(await A(p,'breathGateGo').isDisabled(),true,'the gate needs every check');
@@ -345,6 +348,7 @@ async function brightest(p,box){
         assert.match(await p.locator('.breath-howto').innerText(),/Stani odmah kod vrtoglavice/);
         assert.match(await p.locator('.breath-howto').innerText(),/Prva 2 treninga uči tehniku na 70–80 % brzine/,'the work step keeps the learning rule (review F2)');
         assert.doesNotMatch(await p.locator('.breath-howto').innerText(),/Postavi čunjeve/);
+        assert.match(await p.locator('.breath-howto').innerText(),/Novi sprint kreni čim se vratiš na start \(otprilike svakih 30 s\)/);
         assert.equal(await p.locator('.cinema-weight-unavailable,[data-field="kg"]').count(),0,'no kg on the sprint step');
         await s.shot('sprint-work');await overflow(p,'sprint step 375');
         await p.locator('.workout-cinema [data-a="workoutInfo"]').click();await p.locator('.breath-info').waitFor();

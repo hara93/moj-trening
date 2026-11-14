@@ -8823,7 +8823,7 @@ function breathChoicesHtml(e, it, act, extra){
     const d = breathSprintDose(e, it);
     return '<div class="breath-field"><span class="breath-label">Serije</span><div class="chips wrap">' + d.options.sets.map(n => ch(n + ' ' + plural(n, 'serija', 'serije', 'serija'), 'sets', n, it.sets === n)).join('') + '</div></div>' +
       '<div class="breath-field"><span class="breath-label">Sprintevi u seriji</span><div class="chips wrap">' + d.options.reps.map(n => ch(String(n), 'reps', n, it.reps === n)).join('') + '</div>' +
-      '<p class="breath-hint">Sprint svakih 30 s · ' + d.rest / 60 + ' min odmora između serija · seriju označiš kvačicom</p></div>';
+      '<p class="breath-hint">Sprint otprilike svakih 30 s · ' + d.rest / 60 + ' min odmora između serija · seriju označiš kvačicom</p></div>';
   }
   const bp = breathPlan(it), b = e.breath, ps = Breath.presets(b), keys = Object.keys(ps), p = bp.preset || {};
   let h = '';
@@ -8854,7 +8854,7 @@ function breathPageHtml(e, item, t){
   // the whole progression (sessions 1–2, 3–6, 7–12) and its caveat, so the caveat never refers to lines left out
   const advanced = sprint ? '<p class="breath-note"><b>Napredno.</b> ' + esc(prog.join(' ')) + ' Prije prvog treninga pitat ćemo te za zdravlje.</p>' : '';
   const freq = p.frequency_hr ? '<p class="breath-meta-line">' + esc(p.frequency_hr) + '</p>' : '';
-  const top = sprint ? '<p class="breath-meta-line">' + esc('Svakih 30 s jedan sprint od 30–40 m bez daha, zatim hod natrag dišući slobodno. Mobitel ti za sprinteve ne treba.') + '</p>'
+  const top = sprint ? '<p class="breath-meta-line">' + esc('Otprilike svakih 30 s jedan sprint od 30–40 m bez daha, zatim hod natrag dišući slobodno. Mobitel ti za sprinteve ne treba.') + '</p>'
     : breathPatternHtml(bp) + '<p class="breath-meta-line">' + esc(Breath.num(Breath.perMin(bp)) + ' udaha u minuti. ' + (p.nose_mouth_hr || '')) + '</p>';
   return '<div class="view workout-exercise-page breath-page" data-context="library"><div class="workout-cover-bar">' + topbar('<button class="ib" data-a="back" aria-label="Natrag">' + WorkoutView.icon('chevron-left') + '</button>', '', 'MOJ TRENING') + '</div>' +
     '<div class="gut breath-main"><p class="breath-eyebrow">Disanje</p><h1>' + esc(e.name) + '</h1><p class="breath-goal">' + esc(p.goal_hr || '') + '</p>' +
