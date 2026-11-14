@@ -318,7 +318,9 @@
     return Array.from(new Set(ids)).map(function(id){return items.find(function(item){return item.id===id;});}).filter(Boolean).slice(0,3);
   }
   function selectedChoice(vm,items,pinned) {
-    return items.find(function(item){return item.id===vm.chartExerciseId;}) || pinned[0] || items[0];
+    // 1.25.0: the app may give no default on purpose (only calm breathing recorded); then nothing is picked for him
+    var none=Object.prototype.hasOwnProperty.call(vm,'chartExerciseId')&&!vm.chartExerciseId;
+    return items.find(function(item){return item.id===vm.chartExerciseId;}) || pinned[0] || (none?null:items[0]);
   }
   function rangeTabs(period) {
     var options = [['7d','7 dana','Zadnjih 7 dana'],['1m','1 mj.','Zadnjih 30 dana'],['3m','3 mj.','Zadnjih 90 dana'],['all','Sve','Sve vrijeme']];
@@ -452,7 +454,9 @@
   function mainChart(vm) {
     var items=choices(vm),pinned=pinnedChoices(vm,items),selected=selectedChoice(vm,items,pinned);
     var content='<section class="pg-main-card" aria-label="Glavni graf napretka"><div class="pg-main-title"><h2>'+esc(selected?selected.name:'Tvoj trend')+'</h2>';
-    if(!selected)return content+'</div><div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div></section>';
+    // with exercises to choose from, the picker stays (he may pick or pin calm breathing himself)
+    if(!selected)return content+(items.length?'<div class="pg-chart-actions"><button type="button" class="pg-choose" data-a="progressDetail" data-topic="choose" aria-label="Odaberi vježbu za graf" aria-haspopup="dialog">'+pickerSearchIcon+'</button></div>':'')+
+      '</div><div class="pg-main-empty pg-main-unavailable"><p>Graf će se prikazati kad spremiš dovoljno izvedbi iste vježbe.</p></div></section>';
     var id=selected.id,isPinned=pinned.some(function(item){return item.id===id;}),pinFull=!isPinned&&pinned.length>=3;
     var comparison=comparisons(vm).find(function(item){return item.id===id;});
     var hasComparison=typeof vm.chartHasComparison==='boolean'?vm.chartHasComparison:!!comparison;

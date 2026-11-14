@@ -249,7 +249,11 @@ async function brightest(p,box){
         const calmDetail=await p.locator('.hy-card').first().innerText();
         assert.doesNotMatch(calmDetail,/Procjena napora|Napor × trajanje|Ocjena napora/,'no effort rows: '+calmDetail);
         await s.home();await p.getByRole('navigation',{name:'Glavna navigacija'}).getByRole('button',{name:'Napredak',exact:true}).click();
-        await p.locator('.pg-cinema').waitFor();await p.locator('.pg-zero').waitFor();assert.doesNotMatch(await p.locator('.view').innerText(),/Količina rada/,'no chart of calm breathing');
+        await p.locator('.pg-cinema').waitFor();
+        assert.equal(await p.locator('#progress-detail-cache').evaluate(t=>t.innerHTML.includes('pg-zero')),true,'Napredak keeps its zero state');
+        const main=await p.locator('.pg-main-card').innerText();
+        assert.match(main,/Graf će se prikazati/);assert.doesNotMatch(main,/Sporo disanje|Količina rada/,'calm breathing is not the default chart');
+        assert.equal(await p.locator('.pg-main-card [data-topic="choose"]').count(),1,'he can still pick it');
         await s.shot('napredak-after-calm');
         ok('calm-only: no points, no effort rows, Napredak zero');
 

@@ -5165,6 +5165,9 @@ function painHoldsAt(j){
 // the chosen period; the first recorded exercise only when nothing has any.
 const MAIN_LIFTS = ['deadlift','back-squat'];
 function defaultChartExercise(candidates, hasTrend){
+  // 1.25.0: calm breathing (breathCalmEx) is never the chart's default: no load, not training. He can still pick or pin it;
+  // with nothing else recorded there is no default (undefined) and the chart waits for a training
+  candidates = candidates.filter(id => !(S.ex[id] && S.ex[id].cat === 'Disanje' && S.ex[id].breath && S.ex[id].breath.kind !== 'sprint'));
   const main = id => S.ex[id] && S.ex[id].cat === 'Snaga' && loadKind(S.ex[id]) === 'bar';
   return MAIN_LIFTS.find(id => candidates.includes(id) && hasTrend(id)) || candidates.find(id => main(id) && hasTrend(id)) ||
     candidates.find(hasTrend) || candidates[0];
@@ -6074,8 +6077,7 @@ VIEWS.progress = function(t=top()){
   const trend = (id,since) => ProgressModel.exerciseTrend({...insightInput,from:since,exerciseId:id});
   // "with data": recorded in the chosen period (a lift whose weight rises each week has no same-weight comparison, and then
   // the chart opens on Količina rada)
-  // calm breathing is never the chart's default (no load, not training); it shows when he picks or pins it
-  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates.filter(id=>!breathCalmEx(S.ex[id])),id=>from===null||(hist[id]||[]).some(x=>x.at>=from));
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates,id=>from===null||(hist[id]||[]).some(x=>x.at>=from));
   const chartComparison = chartExerciseId ? trend(chartExerciseId,from) : null;
   const chartHasComparison = !!(chartComparison || (from!==null && chartExerciseId && trend(chartExerciseId,null)));
   const chartPinnedTrends = chartPinnedIds.map(id=>id===chartExerciseId?chartComparison:trend(id,from)).filter(Boolean);

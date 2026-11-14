@@ -203,5 +203,8 @@ test('Napredak opens on 3 months and a main lift with data; a picked 7 days and 
   assert.equal(pick(['pallof', 'row', 'rdl'], ['pallof', 'row', 'rdl']), 'rdl', 'first barbell lift');
   assert.equal(pick(['pallof', 'row'], ['row']), 'row');
   assert.equal(pick(['pallof', 'row'], []), 'pallof');
+  // 1.25.0: calm breathing is never the default chart (the sprints are training); only calm breathing recorded: no default
+  Object.assign(ctx.S.ex, { sporo: { cat: 'Disanje', breath: { kind: 'calm' } }, rsh: { cat: 'Disanje', breath: { kind: 'sprint' } } });
+  assert.equal(pick(['sporo', 'pallof'], ['sporo', 'pallof']), 'pallof');assert.equal(pick(['sporo'], ['sporo']), undefined);assert.equal(pick(['sporo', 'rsh'], []), 'rsh');
   assert.match(cut('const chartExerciseId =', '\n'), /chartPinnedIds\[0\] \|\| defaultChartExercise\(candidates,id=>from===null\|\|\(hist\[id\]\|\|\[\]\)\.some\(x=>x\.at>=from\)\)/);
 });
