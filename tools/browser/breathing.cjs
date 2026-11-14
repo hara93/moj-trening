@@ -242,6 +242,16 @@ async function brightest(p,box){
         await s.home();await A(p,'todayOpen').click();await p.locator('#today-recommendation').waitFor();
         assert.equal(await p.locator('#today-recommendation').innerText(),todayBefore,'calm breathing alone does not change Danas');
         ok('circle, calm-only done screen, Danas unchanged');
+        // calm breathing alone carries 0 points (its prep and transitions are no gym minutes) and shows no effort rows in
+        // the history detail; Napredak stays in its zero state (review F3, F4)
+        assert.equal(entry.load2.B,0,'0 LM1 points');assert.equal(entry.load2.min,0);
+        await s.home();await A(p,'historyList').first().click();await by(p,'historyOpen',entry.historyId).click();await p.locator('.hy-card').first().waitFor();
+        const calmDetail=await p.locator('.hy-card').first().innerText();
+        assert.doesNotMatch(calmDetail,/Procjena napora|Napor × trajanje|Ocjena napora/,'no effort rows: '+calmDetail);
+        await s.home();await p.getByRole('navigation',{name:'Glavna navigacija'}).getByRole('button',{name:'Napredak',exact:true}).click();
+        await p.locator('.pg-cinema').waitFor();await p.locator('.pg-zero').waitFor();assert.doesNotMatch(await p.locator('.view').innerText(),/Količina rada/,'no chart of calm breathing');
+        await s.shot('napredak-after-calm');
+        ok('calm-only: no points, no effort rows, Napredak zero');
 
         // bedtime: black after 8 s, a tap shows the controls without pausing, no finish tone, the entry saves itself
         await s.openPr('dis-noc');await A(p,'startPr').click();await p.locator('.workout-cinema[data-phase="ready"]').waitFor();

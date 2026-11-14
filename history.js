@@ -118,11 +118,12 @@
       '<p class="hy-footnote">Prikazane su vrijednosti sačuvane uz trening. Nisu ponovno izračunate iz današnje MAS ili današnjeg predloška.</p></section>';
   }
   function metadata(entry) {
-    const srpe=number(entry.srpe),lm=entry.load2&&typeof entry.load2==='object'?entry.load2:null;
-    const computedAu=History&&typeof History.sessionAU==='function'?History.sessionAU(entry):null;
+    // 1.25.0: calm breathing alone carries no load, so it shows no effort score or j.n. rows
+    const calmOnly=entry.calmOnly===true,srpe=number(entry.srpe),lm=!calmOnly&&entry.load2&&typeof entry.load2==='object'?entry.load2:null;
+    const computedAu=!calmOnly&&History&&typeof History.sessionAU==='function'?History.sessionAU(entry):null;
     const au=computedAu;
     const score=lm&&!['needsProfile','needsDose','needsFieldData'].includes(entry.load2Status)?number(lm.B):null,band=lm?number(lm.band):null;
-    return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric(entry.kind==='team'&&entry.teamType==='match'?'Odigrano':'Trajanje',duration(entry.secs))+metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno')+
+    return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric(entry.kind==='team'&&entry.teamType==='match'?'Odigrano':'Trajanje',duration(entry.secs))+(calmOnly&&srpe==null?'':metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno'))+
       (score!=null?metric(lm.v==='LM1'?'Procjena napora LM1':'Spremljena procjena napora',fmt(score)+(band!=null?' ± '+fmt(band):'')+' bodova'):'')+(au!=null?metric(computedAu!=null?'Napor × trajanje':'Spremljene jedinice napora',fmt(au)):'')+'</dl>'+
       (entry.load2Status==='needsProfile'?'<p class="hy-footnote">Za LM1 nedostaju izvorni podaci o vježbama. Bodovi se ne preuzimaju iz današnje knjižnice.</p>':'')+
       (entry.load2Status==='needsDose'?'<p class="hy-footnote">Za LM1 nije poznata sva stvarno odrađena izvedba. Nedostajuće serije, ponavljanja ili sekunde nisu nula.</p>':'')+

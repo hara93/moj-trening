@@ -5816,7 +5816,9 @@ function computeSession(entry, o){
     ['L', 'U', 'C'].forEach(c => r.SL[c] += q.SL[c]);
     Object.keys(q.HS).forEach(T => r.HS[T] = (r.HS[T] || 0) + q.HS[T]);
   });
-  r.min = Math.max(0, (+entry.secs || 0) - (+entry.calmSecs || 0)) / 60;   // calm breathing minutes are not training minutes
+  // calm breathing minutes are not training minutes; a session of calm breathing only has none (its prep and transitions
+  // are not gym minutes either), so it carries 0 points
+  r.min = entry.calmOnly ? 0 : Math.max(0, (+entry.secs || 0) - (+entry.calmSecs || 0)) / 60;
   const fl = entry.load;
   if (entry.kind === 'field' && (!lmObj(fl) || ['m','hsr','spr','min'].some(k => !lmNum(fl[k]) || fl[k] < 0))) {
     r.incomplete = true; r.incompleteReason = 'field';
