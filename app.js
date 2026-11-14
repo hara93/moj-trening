@@ -921,7 +921,13 @@ function workoutFileDraft(data){
     if (breathCalmEx(exercise)) {
       if ((item.breath != null && !isPlainObj(item.breath)) || (item.section != null && !textFits(item.section, 80)) || (item.note != null && !textFits(item.note, 300)))
         throw new Error('Provjeri disanje za vježbu ' + number + '.');
-      const dose = breathItem(exercise, item.breath || {});
+      // the minutes: one the preset offers; without them, the file's seconds give the nearest offered minute (never a
+      // silent fall-back to the default)
+      const sel = Object.assign({}, item.breath || {}), ps = Breath.presets(exercise.breath), opts = (ps[Breath.presetKey(exercise.breath, sel.preset)] || {}).minutes_options || [];
+      if (sel.min != null && opts.indexOf(sel.min) === -1) throw new Error('Provjeri disanje za vježbu ' + number + '.');
+      if (sel.min == null && Number.isFinite(item.sec) && item.sec > 0 && opts.length)
+        sel.min = opts.reduce((best, m) => Math.abs(m * 60 - item.sec) < Math.abs(best * 60 - item.sec) ? m : best, opts[0]);
+      const dose = breathItem(exercise, sel);
       if (item.section?.trim()) dose.section = item.section.trim();
       if (item.note?.trim()) dose.note = item.note.trim();
       return dose;

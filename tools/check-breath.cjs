@@ -196,4 +196,11 @@ test('a workout file keeps the breathing choices: bedtime 20 min imports, 1 min 
   assert.equal(d.items[1].sec,64);assert.deepEqual(d.items[1].breath,{kind:'calm',min:1});assert.equal(d.items[1].section,'Završni dio');
   assert.equal(draft.breathPlan(d.items[1]).total,64,'the plan matches the step: no false "Još"');
   assert.throws(()=>draft.workoutFileDraft(file([{exId:'sporo-disanje',breath:'x'}])),/Provjeri disanje/);
+  // without breath.min the seconds give the nearest offered minute; a minute the preset does not offer is refused (verify V3)
+  const bySec=draft.workoutFileDraft(file([{exId:'kvadratno-disanje',sets:1,sec:64},{exId:'sporo-disanje',sec:1100,breath:{preset:'spavanje'}},{exId:'sporo-disanje',sec:600}]));
+  assert.equal(bySec.items[0].sec,64);assert.equal(bySec.items[0].breath.min,1,'64 s is box breathing\'s 1 min');
+  assert.equal(bySec.items[1].breath.min,20);assert.equal(bySec.items[2].breath.min,10);
+  assert.throws(()=>draft.workoutFileDraft(file([{exId:'kvadratno-disanje',breath:{min:999}}])),/Provjeri disanje za vježbu 1/);
+  assert.throws(()=>draft.workoutFileDraft(file([{exId:'sporo-disanje',breath:{preset:'spavanje',min:5}}])),/Provjeri disanje/,'bedtime offers 15 or 20 min');
+  assert.throws(()=>draft.workoutFileDraft(file([{exId:'sporo-disanje',breath:{min:'10'}}])),/Provjeri disanje/);
 });
