@@ -171,3 +171,13 @@ test('a session of calm breathing only is not a training anywhere: Napredak tota
   assert.equal(f.lostText([calm,gym]),'1 trening i 1 vježba disanja','a lost calm session is still named');
   assert.equal(f.lostText([gym,{kind:'test'}]),'1 trening i 1 rezultat testa','unchanged without breathing');
 });
+
+test('load pattern: a breathing exercise (with breath) is D or R; his own exercise in Disanje without one is ordinary work (review code F5)',()=>{
+  const a=APP.indexOf('function lmPattern(e){'),b=APP.indexOf('\n}\n',a)+3;
+  const LM={MUSCLE:['Kvadriceps','Gluteus','Stražnja loža','Aduktori','Lisni mišić','Vrat'],JOINT:['Gležanj'],UPPER:['Prsa','Leđa'],ALLZ:['Kvadriceps','Gluteus','Stražnja loža','Aduktori','Lisni mišić','Vrat','Gležanj','Prsa','Leđa','Cijelo tijelo']};
+  const lmZones=e=>(e&&Array.isArray(e.zones)?e.zones:[]).filter(z=>LM.ALLZ.indexOf(z)!==-1);
+  const pat=new Function('LM','lmZones',APP.slice(a,b)+'\nreturn lmPattern;')(LM,lmZones);
+  assert.equal(pat(E['sporo-disanje']),'D');assert.equal(pat(E['disanje-4-7-8']),'D');assert.equal(pat(E['sprintevi-bez-daha']),'R');
+  const own={name:'Moj čučanj',cat:'Disanje',zones:['Kvadriceps'],equip:[],measure:'sets',sides:false};
+  assert.equal(pat(own),'L1','no breath object: not silently zero load');
+});

@@ -5661,7 +5661,9 @@ const lmZones = e => (e && Array.isArray(e.zones) ? e.zones : []).filter(z => ty
 function lmPattern(e){
   const zs = lmZones(e), z = zs.filter(x => LM.MUSCLE.indexOf(x) !== -1), z0 = z[0] || '', eq = Array.isArray(e.equip) ? e.equip : [];
   const nm = ((typeof e.name === 'string' ? e.name : '') + ' ' + (typeof e.alt === 'string' ? e.alt : '')).toLowerCase();
-  if (e.cat === 'Disanje') return e.breath && e.breath.kind === 'sprint' ? 'R' : 'D';   // breathing: the sprints run, the rest is calm
+  // breathing exercises (with a breath object, as breathOf): the sprints run, the rest is calm (no load). His own exercise in
+  // the category Disanje without one is ordinary work and gets its pattern below, like everywhere else in the app
+  if (e.cat === 'Disanje' && e.breath && typeof e.breath === 'object' && !Array.isArray(e.breath)) return e.breath.kind === 'sprint' ? 'R' : 'D';
   if (e.cat === 'Kondicija') return /climber|plank/.test(nm) ? 'C' : 'R';
   if (e.cat === 'Aktivacija' || e.cat === 'Mobilnost') return /trx (squat|reverse|lateral)/.test(nm) ? (e.sides ? 'L2' : 'L1') : (/trčanj|ubrzanj/.test(nm) ? 'R' : 'A');
   if (e.cat === 'Eksplozivnost') return /med ball|medicink|slam|bacanj|throw|swing|pass|power pull|sprinter/.test(nm) || eq.indexOf('Medicinka') !== -1 || eq.indexOf('Girja') !== -1 || /barbell/.test(nm) ? 'B' : 'P';
