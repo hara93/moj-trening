@@ -181,3 +181,19 @@ test('load pattern: a breathing exercise (with breath) is D or R; his own exerci
   const own={name:'Moj čučanj',cat:'Disanje',zones:['Kvadriceps'],equip:[],measure:'sets',sides:false};
   assert.equal(pat(own),'L1','no breath object: not silently zero load');
 });
+
+test('a workout file keeps the breathing choices: bedtime 20 min imports, 1 min of box breathing keeps its plan (review code F6)',()=>{
+  const draftSrc=between('function workoutFileDraft(data){','\n// ')+'';
+  const helpers=between('const breathOf = e =>','// one choice in the training editor');
+  const isPlainObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
+  const S={ex:Object.fromEntries(Object.entries(E).map(([id,e])=>[id,{...e,id}]))};
+  const exItem=e=>({exId:e.id,measure:e.measure,sec:e.sec,sets:e.sets,reps:e.reps,rest:e.rest,sides:!!e.sides,kg:0});
+  const draft=new Function('S','isPlainObj','exItem','Breath','PlayerDose','WORKOUT_FILE_KIND','contentHash',helpers+draftSrc+'\nreturn {workoutFileDraft,breathPlan};')
+    (S,isPlainObj,exItem,Breath,{validRepSetSeconds:()=>true},'moj-trening-workout',()=>'h');
+  const file=items=>({kind:'moj-trening-workout',v:1,name:'Navečer',items});
+  const d=draft.workoutFileDraft(file([{exId:'sporo-disanje',sets:1,rest:0,breath:{preset:'spavanje',min:20}},{exId:'kvadratno-disanje',sets:1,rest:0,sec:64,breath:{min:1},section:'Završni dio'}]));
+  assert.equal(d.items[0].sec,1200);assert.deepEqual(d.items[0].breath,{kind:'calm',preset:'spavanje',min:20});
+  assert.equal(d.items[1].sec,64);assert.deepEqual(d.items[1].breath,{kind:'calm',min:1});assert.equal(d.items[1].section,'Završni dio');
+  assert.equal(draft.breathPlan(d.items[1]).total,64,'the plan matches the step: no false "Još"');
+  assert.throws(()=>draft.workoutFileDraft(file([{exId:'sporo-disanje',breath:'x'}])),/Provjeri disanje/);
+});

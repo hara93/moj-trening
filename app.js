@@ -916,6 +916,16 @@ function workoutFileDraft(data){
     const number = index + 1;
     const exercise = isPlainObj(item) && typeof item.exId === 'string' && Object.hasOwn(S.ex, item.exId) && S.ex[item.exId];
     if (!exercise) throw new Error('Vježba ' + number + ' nije u tvojoj knjižnici.');
+    // 1.25.0: a calm breathing item's length comes from its breath choices (preset, rhythm, minutes; unknown ones fall back
+    // to the exercise's defaults), never from a free number of seconds capped at 600 (bedtime runs 15 or 20 min)
+    if (breathCalmEx(exercise)) {
+      if ((item.breath != null && !isPlainObj(item.breath)) || (item.section != null && !textFits(item.section, 80)) || (item.note != null && !textFits(item.note, 300)))
+        throw new Error('Provjeri disanje za vježbu ' + number + '.');
+      const dose = breathItem(exercise, item.breath || {});
+      if (item.section?.trim()) dose.section = item.section.trim();
+      if (item.note?.trim()) dose.note = item.note.trim();
+      return dose;
+    }
     const base = exItem(exercise);
     const timed = base.measure === 'time';
     const validDose = timed ? integerIn(item.sec, 5, 600) : integerIn(item.reps, 1, 60);
