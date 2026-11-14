@@ -173,3 +173,22 @@ test('1.25.0: calm breathing carries no j.n. and is no session; a mixed session 
   // stored data of existing users: an entry without the new fields keeps its exact AU
   for(const e of [entry('x',{secs:749,srpe:7}),{kind:'team',secs:5400,srpe:6,at:at('2026-11-05')}])assert.equal(Load.sessionAU(e),Math.round(e.srpe*e.secs/60*1e6)/1e6);
 });
+test('1.25.0: a history edit keeps calm breathing out of the LM1 minutes and recalculates the calm seconds (review F3)',()=>{
+  const press=actual({sets:3,setsDone:3,repsList:[8,8,8],kgList:[20,20,20],sideCounts:[1,1,1],setNumbers:[1,2,3]});
+  const calm={exId:'sporo-disanje',measure:'time',sec:600,sets:1,reps:1,kg:0,sides:false,rest:0,breath:{kind:'calm',preset:'svaki-dan',min:10},done:true,setsDone:1,secList:[600],sideCounts:[1],setNumbers:[1]};
+  // as the app stores it: 25 min, 10 of them calm; LM1 min = 15 (secs − calmSecs), B = Bsets + Bfield + 15
+  const mixed=entry('mix',{secs:1500,calmSecs:600,srpe:6,items:[press,calm],load2:{v:'LM1',B:45,Bsets:30,Bfield:0,band:13.5,min:15,ex:[30,0]}});
+  const longer=H.edit(mixed,{secs:1560});assert.equal(longer.ok,true);
+  assert.equal(longer.entry.load2.min,16,'26 min − 10 min of breathing');assert.equal(longer.entry.load2.B,46,'the calm minutes carry no points');
+  assert.equal(longer.entry.load2.au,96,'(1560 − 600) s × 6 / 60');assert.equal(longer.entry.calmSecs,600);
+  // the breathing edited to not done: its seconds are no longer subtracted
+  const none=H.edit(mixed,{items:[{index:1,setsDone:0}]});assert.equal(none.ok,true);
+  assert.equal(none.entry.calmSecs,undefined);assert.equal(none.entry.calmOnly,undefined);assert.equal(Load.sessionAU(none.entry),150,'1500 s × 6 / 60');
+  const shorter=H.edit(mixed,{items:[{index:1,secList:[300]}]});assert.equal(shorter.entry.calmSecs,300);
+  // calm breathing only: no gym minutes after an edit either
+  const only=entry('calm',{secs:640,calmSecs:600,calmOnly:true,srpe:undefined,items:[calm],load2:{v:'LM1',B:0,Bsets:0,Bfield:0,band:0,min:0,ex:[0]}});
+  const edited=H.edit(only,{secs:700});assert.equal(edited.entry.load2.min,0);assert.equal(edited.entry.load2.B,0);assert.equal(edited.entry.calmOnly,true);
+  // stored data without breathing: unchanged rule (the whole duration counts)
+  const plain=H.edit(entry('p',{secs:900,load2:{v:'LM1',B:40,Bsets:25,Bfield:0,band:12,min:15,ex:[25]}}),{secs:960});
+  assert.equal(plain.entry.load2.min,16);assert.equal(plain.entry.load2.B,41);assert.equal(plain.entry.calmSecs,undefined);
+});

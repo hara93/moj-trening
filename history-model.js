@@ -65,6 +65,19 @@
     var rows=recordedRows(x);if(!rows||rows.some(r=>r.sec===null||r.sides===null))return null;
     return rows.reduce((sum,r)=>sum+r.sec*r.sides,0);
   }
+  // 1.25.0: calm breathing (an item whose stored breath choices say kind 'calm') is not training time. Its seconds done
+  // (calmSecs) leave the gym minutes and j.n.; a session of calm breathing only (calmOnly) is not a training.
+  function calmPart(x){return plain(x)&&plain(x.breath)&&x.breath.kind==='calm';}
+  function calmSeconds(items){
+    return items.reduce(function(sum,x){
+      if(!calmPart(x)||x.skipped===true)return sum;
+      return sum+(recordedRows(x)||[]).reduce(function(a,r){return a+(finite(r.sec)?r.sec:0)*(finite(r.sides)?r.sides:0);},0);
+    },0);
+  }
+  function gymSeconds(entry){
+    if(entry.calmOnly===true)return 0;
+    return Math.max(0,entry.secs-(finite(entry.calmSecs)&&entry.calmSecs>0?entry.calmSecs:0));
+  }
   function fieldSummary(entry){
     var l=plain(entry) && plain(entry.load)?entry.load:null, out={m:null,hsr:null,spr:null,min:null,zones:null,recorded:!!l,complete:false};
     ['m','hsr','spr','min'].forEach(function(k){if(l && finite(l[k]) && l[k]>=0)out[k]=l[k];});
@@ -222,6 +235,12 @@
       }
     }
     if(errors.length)return failure(errors);
+    // an edited breathing item changes the calm seconds (an entry without calm breathing keeps its exact fields)
+    if(doseChanged&&Array.isArray(out.items)&&out.items.some(calmPart)){
+      var calmS=calmSeconds(out.items);
+      if(calmS>0)out.calmSecs=calmS;else delete out.calmSecs;
+      if(out.items.every(calmPart))out.calmOnly=true;else delete out.calmOnly;
+    }
     var timeChanged=changes.indexOf('secs')!==-1,rpeChanged=changes.indexOf('srpe')!==-1;
     if(kind==='field'&&(fieldChanged||!plain(entry.load)&&changes.length>0)){
       out.fieldLoadStatus=fieldSummary(out).complete?'recorded':'partial';
@@ -242,7 +261,9 @@
         // changes. No exercise factors, reserve or novelty are reconstructed.
         var gymItems=Array.isArray(entry.items)?entry.items.length:lm.ex.length;
         var subtotal=lm.Bsets+lm.Bfield;
-        lm.min=round(out.secs/60);lm.B=round(subtotal+(gymItems?out.secs/60:0));lm.band=round(lm.B*0.3);
+        // 1.25.0: the calm breathing minutes stay out, as when the session was saved (app.js computeSession)
+        var gymMin=gymSeconds(out)/60;
+        lm.min=round(gymMin);lm.B=round(subtotal+(gymItems?gymMin:0));lm.band=round(lm.B*0.3);
         delete out.load2Status;
       }else{
         var unknownDose=Array.isArray(out.items)&&out.items.some(function(item){
