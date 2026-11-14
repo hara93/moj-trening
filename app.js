@@ -3843,6 +3843,12 @@ function builderWeight(it,kg,explicit) {
 // an exercise added to a protocol starts from the weight you last lifted on it, else the library value. When the reps differ, a
 // barbell, landmine or dumbbell load is converted to the real load for the new reps; any other load (kettlebell, medicine ball,
 // an own exercise without a weight tag) is kept as it was, since roundLoad only knows bar, plate and dumbbell steps
+// "Dodaj u trening" from a breathing page keeps what was chosen there (preset, rhythm, minutes; the sprints' sets and
+// sprints); anything else is a new item as before
+function addToItem(e){
+  const t = top();
+  return breathOf(e) ? breathItem(e, t.v === 'ex' && t.id === e.id ? t.breathSel || {} : {}) : newItem(e);
+}
 function newItem(e){
   const it = exItem(e); if (it.measure === 'time') return it;
   for (const x of historyOf(e.id)) {
@@ -7506,12 +7512,12 @@ const A = {
   addTo: d => { S.sheet = { kind:'addTo', exId: d.id }; render(); },
   addToPick: async d => {
     const p = S.pr[d.id], e = S.ex[S.sheet.exId]; if (!p || !e) return;
-    const n = clone(p); delete n.id; n.items = n.items || []; const it = newItem(e), eff = secOf(n.items); if (eff[eff.length - 1]) it.section = eff[eff.length - 1];
+    const n = clone(p); delete n.id; n.items = n.items || []; const it = addToItem(e), eff = secOf(n.items); if (eff[eff.length - 1]) it.section = eff[eff.length - 1];
     n.items.push(it); n.updatedAt = Date.now();
     S.sheet = null; render();
     if (await save('protocols', p.id, n)) toast('Dodano u „' + p.name + '”.');
   },
-  addToNew: () => { const e = S.ex[S.sheet.exId]; S.sheet = null; S.draft = { id: uid('p'), name:'', desc:'', items: e ? [newItem(e)] : [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
+  addToNew: () => { const e = S.ex[S.sheet.exId]; S.sheet = null; S.draft = { id: uid('p'), name:'', desc:'', items: e ? [addToItem(e)] : [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   newPr: () => { S.draft = { id: uid('p'), name:'', desc:'', items: [], _open: null }; S.draftSig = draftSig(S.draft); go({ v:'build', id: S.draft.id }); },
   importWorkout: () => { S.sheet = { kind:'importWorkout' }; render(); },
   pickWorkoutFile: () => { document.getElementById('importWorkoutFile')?.click(); },

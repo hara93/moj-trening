@@ -104,6 +104,10 @@ async function brightest(p,box){
         assert.match(await p.locator('.breath-pattern-ramp').innerText(),/4\/4\s*›\s*4\/5\s*›\s*4\/6/);
         assert.match(await p.locator('.breath-practice').innerText(),/Uvježbano 0 od 6/);
         await s.shot('page-utakmica');await overflow(p,'exercise page 393');
+        // "Dodaj u trening" keeps the preset chosen on the page (review F7)
+        await p.locator('.breath-page [data-a="addTo"]').click();await A(p,'addToNew').click();await p.locator('#dose-0').waitFor();
+        assert.match(await p.locator('#dose-0').innerText(),/5 min · uvod 34 s \+ 4\/6 s/,'the pre-match preset from the page');
+        await A(p,'back').first().click();await A(p,'leaveDiscard').click();await p.locator('.breath-page').waitFor();
         ok('library and exercise page');
 
         // Disanje 4-7-8: very low evidence in words, Lakši 4-6-8, 5 min = 16 breaths; on the circle the hold keeps it full
