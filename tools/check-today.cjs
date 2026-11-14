@@ -634,3 +634,25 @@ test('1.25.0: calm breathing alone is no workout for Danas, and calm breathing i
   const result = Today.suggest(input({ exercises: ex, planned: [mixedPlan] }));
   assert.equal(result.kind, 'planned');assert.deepEqual(result.items, mixedPlan.items);
 });
+
+test('1.25.0: last time\'s calm breathing never steers Danas, and Danas never rewrites a calm item (review F2)', () => {
+  const ex = { ...clone(exercises), 'sporo-disanje': { id: 'sporo-disanje', name: 'Sporo disanje', cat: 'Disanje', equip: ['Bez opreme'], muscleWorkEligible: false } };
+  const calm = { exId: 'sporo-disanje', measure: 'time', sec: 600, sets: 1, reps: 1, kg: 0, sides: false, rest: 0, breath: { kind: 'calm', preset: 'svaki-dan', min: 10 }, section: 'Završni dio' };
+  const mixed = plan({ items: [dose(), calm] });
+  const pressDone = dose('press', { done: true, setsDone: 3, repsList: [8, 8, 8], kgList: [20, 20, 20], rirList: [3, 3, 3], sideCounts: [1, 1, 1], setNumbers: [1, 2, 3] });
+  const last = calmDone => log({ secs: 1500, calmSecs: 300, items: [pressDone, calmDone] });
+  const suggest = (calmDone, extra = {}) => Today.suggest(input({ exercises: ex, planned: [mixed], logs: [last(calmDone)], ...extra }));
+  const full = suggest({ ...calm, done: true, setsDone: 1, secList: [600], sideCounts: [1], setNumbers: [1] });
+  // the breathing stopped half way last time: that is no reason to make today lighter
+  const half = suggest({ ...calm, done: false, setsDone: 1, secList: [300], sideCounts: [1], setNumbers: [1] });
+  assert.equal(half.kind, full.kind);assert.deepEqual(codes(half), codes(full));assert.deepEqual(half.items, full.items);
+  assert.deepEqual(half.items[1], calm, 'the calm item comes back as planned');
+  // low energy makes the work lighter, never the breathing (its seconds belong to its breath choices)
+  const low = suggest({ ...calm, sec: 300, breath: { kind: 'calm', preset: 'svaki-dan', min: 5 }, done: true, setsDone: 1, secList: [300], sideCounts: [1], setNumbers: [1] },
+    { checkin: { date, energy: 1, legs: 1, pain: 0 } });
+  assert.deepEqual(low.items[1], calm);
+  for (const r of [full, half, low]) assert.equal(r.items[1].sec, 600);
+  // pain: the breathing is never cut
+  const pain = suggest({ ...calm, done: true, setsDone: 1, secList: [600], sideCounts: [1], setNumbers: [1] }, { checkin: { date, energy: 4, legs: 1, pain: 4, painArea: 'other' } });
+  assert.deepEqual(pain.items[1], calm);
+});

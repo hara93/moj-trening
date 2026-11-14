@@ -158,6 +158,7 @@
   function painLighter(items, area, exercises) {
     var changes = [], warm = warmupFlags(items);
     var result = items.map(function (original, index) {
+      if (calmItem(original)) return copy(original);   // 1.25.0: calm breathing is never made lighter (no load)
       var item = copy(original), exercise = exerciseFor(exercises, item.exId);
       var swap = PAIN_SWAPS[item.exId], target = swap && exerciseFor(exercises, swap.to);
       if (swap && target && swap.areas.includes(area)) {
@@ -246,6 +247,7 @@
     if (!log || !Array.isArray(log.items) || !Array.isArray(plan.items) || log.items.length !== plan.items.length) return [];
     return plan.items.map(function (item, index) {
       var previous = log.items[index];
+      if (calmItem(item)) return null;   // 1.25.0: last time's calm breathing never steers today's dose
       if (!plain(previous) || previous.exId !== item.exId || previous.measure !== item.measure ||
           !!previous.sides !== !!item.sides) return null;
       if (previous.skipped) return null;
@@ -271,7 +273,8 @@
     var warm = warmupFlags(plan.items);
     return plan.items.map(function (original, index) {
       var item = copy(original), dose = doses[index];
-      if (!integer(item.sets, 1, 1000) || warm[index]) return item;
+      // 1.25.0: a calm breathing item keeps its whole plan (its seconds belong to its breath choices)
+      if (!integer(item.sets, 1, 1000) || warm[index] || calmItem(original)) return item;
       var count = Math.max(1, item.sets - 1);
       // Only contiguous, full-side work can be replayed as a numbered dose.
       var rows = dose && dose.rows.filter(function (row) {
