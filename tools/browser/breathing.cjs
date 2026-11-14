@@ -4,7 +4,8 @@
 // itself), pause and a jump from the background with no tone in the middle of a phase, reduced motion, the breath-hold
 // sprints as a plain sets × reps exercise with the player's rest and the one-time safety gate from the library, a
 // training and Danas, Dnevnik without kg or reserve, the training editor's breathing chips, the history detail, calm
-// breathing carrying no load and no horizontal overflow at 375 and 393 px. Synthetic data only.
+// breathing carrying no load, bedtime with the sound off, a quit after the breathing and no horizontal overflow at
+// 375 and 393 px. Synthetic data only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {artifacts,engine,fixture:baseFixture,launch,serve,openQuit}=require('./runtime.cjs');
 const A=(p,n)=>p.locator('[data-a="'+n+'"]');
@@ -15,9 +16,9 @@ const play=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('mt.play')));
 const START=new Date('2026-11-13T18:30:00+01:00').getTime();   // a Friday
 const square={exId:'kvadratno-disanje',measure:'time',sec:64,sets:1,reps:1,rest:0,sides:false,kg:0,breath:{kind:'calm',min:1}};
 const sprint={exId:'sprintevi-bez-daha',measure:'sets',sec:30,sets:2,reps:6,rest:180,sides:false,kg:0};
-function fixture(){
+function fixture({sound=true}={}){
   const d=baseFixture();d.log=[];d.field={};d.programs={};
-  Object.assign(d.settings,{sound:true,vibration:false,planDates:{},matchDates:{},matchDay:-1,playerGuideSeen:true,transSec:10,switchSec:5,
+  Object.assign(d.settings,{sound,vibration:false,planDates:{},matchDates:{},matchDay:-1,playerGuideSeen:true,transSec:10,switchSec:5,
     morningChecks:{'2026-11-13':{date:'2026-11-13',energy:5,legs:4,pain:0}}});
   delete d.settings.rshGate;
   d.protocols={
@@ -27,7 +28,10 @@ function fixture(){
       {exId:'sporo-disanje',measure:'time',sec:300,sets:1,reps:1,rest:0,sides:false,kg:0,breath:{kind:'calm',preset:'svaki-dan',min:5}}]},
     'dis-noc':{id:'dis-noc',name:'Prije spavanja',days:[],items:[
       {exId:'sporo-disanje',measure:'time',sec:600,sets:1,reps:1,rest:0,sides:false,kg:0,breath:{kind:'calm',preset:'spavanje',min:10}}]},
-    'dis-sprint':{id:'dis-sprint',name:'Sprintevi bez daha',days:[4],items:[sprint]}};
+    'dis-sprint':{id:'dis-sprint',name:'Sprintevi bez daha',days:[4],items:[sprint]},
+    'dis-prvo':{id:'dis-prvo',name:'Disanje pa izdržaj',days:[],items:[
+      {...square,section:'Priprema'},{exId:'plank',measure:'time',sec:30,sets:3,reps:1,rest:30,sides:false,kg:0,section:'Glavni dio'}]},
+    'dis-dva':{id:'dis-dva',name:'Dva disanja',days:[],items:[square,{...square}]}};
   return d;
 }
 // every oscillator the app starts: its first frequency and when it was asked to sound (audio clock), plus the beeps
@@ -58,7 +62,7 @@ async function brightest(p,box){
 (async()=>{
   const host=await serve(),browser=await launch(),report={engine,checks:[]};
   const ok=(name,extra)=>report.checks.push({name,...(extra||{})});
-  async function session({width=393,height=852,reduced=false}={}){
+  async function session({width=393,height=852,reduced=false,sound=true}={}){
     const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:2,serviceWorkers:'block',
       locale:'hr-HR',timezoneId:'Europe/Zagreb',reducedMotion:reduced?'reduce':'no-preference'});
     await context.addInitScript(AUDIO_PROBE);
@@ -67,7 +71,7 @@ async function brightest(p,box){
     const clock=async s=>{now+=s*1000;await p.clock.setFixedTime(new Date(now));await p.waitForTimeout(260);};
     await p.clock.setFixedTime(new Date(now));await p.goto(host.url,{waitUntil:'domcontentloaded'});
     await A(p,'dataSheet').click();
-    await p.locator('#importFile').setInputFiles({name:'breathing-synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture()))});
+    await p.locator('#importFile').setInputFiles({name:'breathing-synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture({sound})))});
     await A(p,'restoreApply').click();await A(p,'restoreApply').waitFor({state:'hidden'});await p.reload({waitUntil:'domcontentloaded'});
     const home=async()=>{const nav=p.getByRole('button',{name:'Moj pregled',exact:true});
       for(let i=0;i<6&&!await nav.isVisible();i++){await A(p,'back').first().click().catch(()=>{});await p.waitForTimeout(200);}await nav.click();};
@@ -409,6 +413,62 @@ async function brightest(p,box){
         ok('Uredi keeps the breath data');
         assert.deepEqual(s.errors,[]);
       }catch(e){await s.shot('failure-4').catch(()=>{});throw e;}finally{await s.context.close();}
+    }
+    /* ---------- 5. sound off at bedtime; a quit after the breathing (verify V2, V4, N1) ---------- */
+    {
+      const s=await session({sound:false}),{p}=s;
+      try{
+        // the bedtime page says what the player does with the sound off, as the prep does
+        await s.library('sporo-disanje');await p.locator('.breath-page').waitFor();
+        assert.equal(await p.locator('.breath-sound-off').count(),0,'only the bedtime preset has the night display');
+        await p.locator('[data-a="exBreath"][data-k="preset"][data-v="spavanje"]').click();
+        assert.match(await p.locator('.breath-sound-off').innerText(),/^Zvuk je isključen, pa ekran ostaje prigušen/);
+        ok('bedtime page with the sound off');
+        await s.home();await A(p,'todayOpen').click();await p.locator('#today-recommendation').waitFor();
+        const todayBefore=await p.locator('#today-recommendation').innerText();
+        // with the sound off the bedtime screen never goes black
+        await s.openPr('dis-noc');await A(p,'startPr').click();await p.locator('.workout-cinema[data-phase="ready"]').waitFor();
+        assert.match(await p.locator('.workout-cinema-notice').innerText(),/Zvuk je isključen, pa ekran ostaje prigušen/);
+        await s.clock(5.2);await p.locator('.breath-pacer').waitFor();
+        await s.clock(8.5);await p.waitForTimeout(1400);await s.clock(10);
+        assert.equal((await s.pacer()).night,false,'no black screen with the sound off');
+        const disc=await p.locator('.breath-track').boundingBox();
+        assert.ok(await brightest(p,disc)>40,'the circle stays visible');
+        await s.shot('night-sound-off');
+        await openQuit(p);await A(p,'quitDiscard').click();await p.locator('.workout-cinema').waitFor({state:'hidden'});
+        ok('bedtime with the sound off');
+        // a quit of a breathing-only training says "Vježba je prekinuta" (review co F11) and asks for no effort rating
+        await s.openPr('dis-dva');await A(p,'startPr').click();await p.locator('.workout-cinema[data-phase="ready"]').waitFor();
+        await s.clock(5.2);await p.locator('.breath-pacer').waitFor();
+        for(let i=0;i<7;i++)await s.clock(10);   // the first 1:04 is over; the pause before the second
+        await openQuit(p);await A(p,'quitSave').click();await A(p,'finishPlay').waitFor();
+        assert.equal((await p.locator('.done h1').innerText()).trim(),'Vježba je prekinuta');
+        assert.equal(await p.locator('#srpe').count(),0);
+        await A(p,'finishPlay').click();
+        let entry=(await store(p)).log[0];assert.equal(entry.refId,'dis-dva');assert.equal(entry.calmOnly,true);
+        ok('breathing-only quit');
+        // a mixed training quit after its breathing (the plank not done) is calm-only: no effort rating, 0 points, Danas
+        // unchanged; its title stays "Trening je prekinut"
+        await s.openPr('dis-prvo');await A(p,'startPr').click();await p.locator('.workout-cinema').waitFor();await p.waitForTimeout(300);
+        await s.clock(5.2);await p.locator('.breath-pacer').waitFor();
+        for(let i=0;i<8&&await p.locator('.breath-pacer').count();i++)await s.clock(10);
+        assert.equal(await p.locator('.breath-pacer').count(),0,'the breathing is over');
+        await s.clock(3);
+        await openQuit(p);await A(p,'quitSave').click();await A(p,'finishPlay').waitFor();
+        assert.equal((await p.locator('.done h1').innerText()).trim(),'Trening je prekinut');
+        assert.equal(await p.locator('#srpe').count(),0,'no effort rating for the breathing alone');
+        assert.match(await p.locator('.breath-done').innerText(),/Disanje nema opterećenje/);
+        await A(p,'finishPlay').click();
+        entry=(await store(p)).log[0];assert.equal(entry.refId,'dis-prvo');
+        assert.equal(entry.items[1].skipped===true||entry.items[1].setsDone===0,true,'the plank was not done: '+JSON.stringify(entry.items[1]));
+        assert.equal(entry.calmOnly,true,'only the breathing was done');assert.equal(entry.load2.B,0);assert.equal(entry.load2.min,0);
+        await s.home();await A(p,'todayOpen').click();await p.locator('#today-recommendation').waitFor();
+        assert.equal(await p.locator('#today-recommendation').innerText(),todayBefore,'breathing alone does not change Danas');
+        await s.home();await A(p,'historyList').first().click();await by(p,'historyOpen',entry.historyId).click();await p.locator('.hy-record-kind').waitFor();
+        assert.equal(await p.locator('.hy-record-kind').textContent(),'Disanje');
+        ok('mixed training quit after the breathing');
+        assert.deepEqual(s.errors,[]);
+      }catch(e){await s.shot('failure-5').catch(()=>{});throw e;}finally{await s.context.close();}
     }
     report.passed=true;
     fs.writeFileSync(path.join(artifacts,'breathing-'+engine+'-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));

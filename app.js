@@ -8610,10 +8610,10 @@ function breathSprintReadyText(item, step){
   return 'Serija ' + (step.set || 1) + ' od ' + item.sets + ' · ' + (learning ? '70–80 % brzine' : e?.breath?.prep_hr || 'na start');
 }
 // bedtime guides by sound; with the player's sound off the screen never goes black (it stays dim, the circle visible)
+const BREATH_SOUND_OFF = 'Zvuk je isključen, pa ekran ostaje prigušen da vidiš krug. Za disanje u mraku uključi zvuk.';
 function breathNotice(bp){
   if (!bp.night) return '';
-  return '<p class="breath-notice">' + (S.settings.sound ? 'Ekran će se potpuno zatamniti. Ne zaključavaj mobitel; dodir vraća kontrole.'
-    : 'Zvuk je isključen, pa ekran ostaje prigušen da vidiš krug. Za disanje u mraku uključi zvuk.') + '</p>';
+  return '<p class="breath-notice">' + (S.settings.sound ? 'Ekran će se potpuno zatamniti. Ne zaključavaj mobitel; dodir vraća kontrole.' : BREATH_SOUND_OFF) + '</p>';
 }
 // the pill's count on the calm breathing step: the breath ("13 od 60"); a breathing item has one set, so the pill counts
 // breaths instead of sets (the sprints keep "1 od 2" sets)
@@ -8848,7 +8848,8 @@ function breathPageHtml(e, item, t){
   const done = p.practice_min ? Math.min(breathPracticeCount(e.id), p.practice_min) : 0;
   const practice = p.practice_min ? '<div class="breath-practice"><div class="breath-dots" aria-hidden="true">' + Array.from({ length: p.practice_min }, (_, i) => '<i' + (i < done ? ' class="on"' : '') + '></i>').join('') + '</div>' +
     '<p><b>Uvježbano ' + done + ' od ' + p.practice_min + '.</b> Prije prve utakmice napravi ga barem ' + p.practice_min + ' puta kroz tjedan dana. Prvi put može pojačati napetost.</p></div>' : '';
-  const night = bp && bp.night && p.audio_hr ? '<p class="breath-note">' + esc(p.audio_hr) + '</p>' : '';
+  // the bedtime note promises a dark screen; with the sound off the page says what the player really does (as the prep)
+  const night = bp && bp.night && p.audio_hr ? '<p class="breath-note">' + esc(p.audio_hr) + '</p>' + (S.settings.sound ? '' : '<p class="breath-note breath-sound-off">' + esc(BREATH_SOUND_OFF) + '</p>') : '';
   const prog = sprint ? (b.structure && b.structure.progression_hr) || [] : [];
   // the whole progression (sessions 1–2, 3–6, 7–12) and its caveat, so the caveat never refers to lines left out
   const advanced = sprint ? '<p class="breath-note"><b>Napredno.</b> ' + esc(prog.join(' ')) + ' Prije prvog treninga pitat ćemo te za zdravlje.</p>' : '';
