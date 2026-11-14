@@ -4570,7 +4570,8 @@ function tick(){
     // a rep set ends on its own only with a set timer (Tajmer serije); otherwise it counts up and waits for the tap
     // (the same rule as cinemaCountsUp: no countdown cues for it)
     const manual=st.kind==='manual', timer=!manual||repSetSeconds(st.it||{})!==null, whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
-    if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole && !(isWork(st) && breathPlan(st.it||P.items[st.g])) && !breathPlan(st.it||P.items[st.g])?.night) {   // no 3-2-1 on calm breathing, none before bedtime breathing
+    const calmIt = P.mode === 'ex' && P.items ? breathPlan(st.it || P.items[st.g]) : null;
+    if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole && !(isWork(st) && calmIt) && !calmIt?.night) {   // no 3-2-1 on calm breathing, none before bedtime breathing
       P.lastBeep = whole;
       if (P.mode === 'ex') workoutSignal('countdown');
       else beep(740, 120, 0.14);
@@ -6384,7 +6385,7 @@ VIEWS.play = function(){
     const wk = willCount ? weekAfter(entry) : { planned: 0 };
     const share = entry ? sessionShare(entry) : 1, partial = willCount && (share < 0.5 || P.countAsDone === true);
     const lm = entry ? computeSession(entry) : null, rks = any ? reserveSteps() : []; P._lm = lm;
-    const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex()), calmOnly = breathCalmOnly(entry), allBreath = P.items.every(it => breathPlan(it)); P._calmSecs = entry?.calmSecs || 0;
+    const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex()), calmOnly = breathCalmOnly(entry), allBreath = !!(P.items && P.items.length && P.items.every(it => breathPlan(it))); P._calmSecs = entry?.calmSecs || 0;
     return '<div class="view gut stack">' + breathVeilHtml() + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
@@ -8692,6 +8693,7 @@ function breathVeilHtml(){
   return P && P._nightEnd ? '<button type="button" class="breath-veil" data-a="breathVeil"><span>' + (P._autoSaved ? 'Spremljeno. Laku noć.' : 'Gotovo. Laku noć.') + '</span><small>Dodir za sažetak</small></button>' : '';
 }
 function breathEndsAtNight(){
+  if (P.mode !== 'ex' || !P.items) return false;   // field sessions have no items
   const st = [...(P.steps || [])].reverse().find(isWork); return !!(st && breathPlan(st.it || P.items[st.g])?.night);
 }
 
