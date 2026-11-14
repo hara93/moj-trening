@@ -8828,7 +8828,8 @@ function breathPageHtml(e, item, t){
     '<p><b>Uvježbano ' + done + ' od ' + p.practice_min + '.</b> Prije prve utakmice napravi ga barem ' + p.practice_min + ' puta kroz tjedan dana. Prvi put može pojačati napetost.</p></div>' : '';
   const night = bp && bp.night && p.audio_hr ? '<p class="breath-note">' + esc(p.audio_hr) + '</p>' : '';
   const prog = sprint ? (b.structure && b.structure.progression_hr) || [] : [];
-  const advanced = sprint ? '<p class="breath-note"><b>Napredno.</b> ' + esc([prog[0], prog[prog.length - 1]].filter(Boolean).join(' ')) + ' Prije prvog treninga pitat ćemo te za zdravlje.</p>' : '';
+  // the whole progression (sessions 1–2, 3–6, 7–12) and its caveat, so the caveat never refers to lines left out
+  const advanced = sprint ? '<p class="breath-note"><b>Napredno.</b> ' + esc(prog.join(' ')) + ' Prije prvog treninga pitat ćemo te za zdravlje.</p>' : '';
   const freq = p.frequency_hr ? '<p class="breath-meta-line">' + esc(p.frequency_hr) + '</p>' : '';
   const top = sprint ? '<p class="breath-meta-line">' + esc('Svakih 30 s jedan sprint od 30–40 m bez daha, zatim hod natrag dišući slobodno. Mobitel ti za sprinteve ne treba.') + '</p>'
     : breathPatternHtml(bp) + '<p class="breath-meta-line">' + esc(Breath.num(Breath.perMin(bp)) + ' udaha u minuti. ' + (p.nose_mouth_hr || '')) + '</p>';
@@ -8880,7 +8881,7 @@ function breathPanelHtml(e, item, c, s, footer){
 // the item card in the training editor: preset, rhythm and minute chips instead of Trajanje (≤ 600 s); the sprints sets × reps
 function breathEditorHtml(it, i){
   const e = S.ex[it.exId]; if (!breathOf(e) || (!breathPlan(it) && !breathSprintEx(e))) return '';
-  return '<div class="breath-editor">' + breathChoicesHtml(e, it, 'ibreath', 'data-i="' + i + '"') + '<p class="breath-hint">' + (breathSprintEx(e) ? 'Broji se kao trčanje: oko 35 m sprinta po ponavljanju.' : 'Disanje nema opterećenje i ne ulazi u tjedan mišića.') + '</p></div>';
+  return '<div class="breath-editor">' + breathChoicesHtml(e, it, 'ibreath', 'data-i="' + i + '"') + '<p class="breath-hint">' + (breathSprintEx(e) ? 'Broji se kao trčanje: oko 35 m po sprintu.' : 'Disanje nema opterećenje i ne ulazi u tjedan mišića.') + '</p></div>';
 }
 // the history detail of a breathing item (history.js draws it): what was done, in words
 function breathHistoryLine(x){
