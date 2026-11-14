@@ -163,3 +163,5 @@ html:has(.workout-cinema.is-dim),body:has(.workout-cinema.is-dim),#app:has(.work
 .breath-howto li+li{margin-top:6px}
 .breath-howto li:last-child{color:#C2CACE;font-weight:500}
 .workout-cinema.has-pause-overlay .breath-howto{opacity:0}
+/* the exercise page of a breathing item inside a training: the dose in words, rows without inputs */
+.breath-panel-dose{margin:4px 0 8px;color:var(--text-body);font-size:15px;line-height:1.45}

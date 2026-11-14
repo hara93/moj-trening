@@ -2375,6 +2375,7 @@ function workoutPanelHtml(s) {
     return '<div class="view workout-exercise-panel"><header class="workout-panel-bar"><strong>'+title+'</strong><button class="ib" data-a="workoutPanelBack" aria-label="Zatvori '+title.toLowerCase()+'">'+I.close+'</button></header><div class="workout-panel-body">'+(s.panel==='instructions'?workoutInstructionsHtml(e,item):s.panel==='history'?'<h1>'+esc(e.name)+'</h1>'+workoutPreviousHtml(item)+exHistHtml(e,historyOf(e.id)):workoutTrendsHtml(item))+'</div></div>';
   }
   const footer='<button class="btn" data-a="'+(c.live?'workoutClose':top().v==='pr'?'workoutStart':'playEx')+'"'+(top().v==='ex'?' data-id="'+esc(top().id)+'"':'')+'>'+WorkoutView.icon('play')+ (c.live?'Natrag u trening':'Pokreni '+(top().v==='ex'?'vježbu':'trening'))+'</button>';
+  if(breathPlan(item)||breathItemSprint(item))return breathPanelHtml(e,item,c,s,footer);   // breathing: no kg, reserve, equipment or swap
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:c.live?'Trening je pauziran':'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(s,c),targetHtml:workoutPrescriptionHtml(s,c),rowsHtml:workoutTableHtml(c,s.j,s)+workoutAddSetHtml(s,c),note:s.error||'',footerHtml:'<div class="footer gut">'+(s.pendingReplacement?'<button class="txtbtn" data-a="workoutCancelPending">Vrati prethodnu vježbu</button>':'')+footer+'</div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="'+(c.live?'live':top().v==='ex'?'library':'preview')+'"');
 }
 // one line for the protocol list: "Prethodno 95 kg · 5 / 5 / 5 / 5 pon." from the last recorded dose ('' when unknown or mixed)
@@ -8731,9 +8732,9 @@ function breathPresetOf(e, item){
   return (breathPlan(item) || Breath.resolve(e.breath, {})).preset || {};
 }
 function breathInfoHtml(e, item){
-  const p = breathPresetOf(e, item), bp = breathPlan(item), sprint = breathSprintEx(e);
+  const sprint = breathSprintEx(e), p = breathPresetOf(e, item), bp = sprint ? null : breathPlan(item) || Breath.resolve(e.breath, {});
   return '<div class="workout-instructions-body breath-info"><h1>' + esc((bp && bp.name) || e.name) + '</h1>' +
-    '<p class="breath-info-rhythm">' + esc(sprint ? breathDoseText(item) + ' · ' + breathSprintDose(e, {}).rest / 60 + ' min odmora između serija' : Breath.rhythm(bp.phases) + ' · ' + Breath.num(Breath.perMin(bp)) + ' udaha u minuti') + '</p>' +
+    '<p class="breath-info-rhythm">' + esc(sprint ? (item ? breathDoseText(item) + ' · ' : '') + breathSprintDose(e, {}).rest / 60 + ' min odmora između serija' : Breath.rhythm(bp.phases) + ' · ' + Breath.num(Breath.perMin(bp)) + ' udaha u minuti') + '</p>' +
     '<section><h2>Kako</h2><ol>' + (p.steps_hr || e.steps || []).map(t => '<li>' + esc(t) + '</li>').join('') + '</ol>' + breathWhenHtml(p) + '</section>' +
     '<section><h2>Zašto</h2>' + breathWhyHtml(p) + '</section>' + breathCautionHtml(p, e.breath) + '</div>';
 }
@@ -8812,6 +8813,20 @@ function breathJournalCard(item, j, o){
   return WorkoutView.journalCard({ index: j, name: breathName(item), swapped: o.swapped, thumbHtml: o.thumb, badgeHtml: o.badge, metaHtml: meta, tagHtml: o.tag, group: o.group, describedBy: 'cj-meta-' + j,
     collapseHtml: '<button type="button" class="ib cj-collapse" data-a="cinemaJournalGroup" data-j="' + j + '" aria-expanded="true" aria-label="Sažmi · ' + esc(o.name) + '">' + WorkoutView.icon('chevron-up') + '</button>',
     chipsHtml: chips, menuHtml: '', rowsHtml: '<div class="breath-journal-rows">' + rows + '</div>', footHtml: '' });
+}
+// the exercise page of a breathing item in a training (from its overview, or the player paused): what it is, without the
+// set table (no kg, reserve, equipment or swap); the dose is chosen in the training editor
+function breathPanelHtml(e, item, c, s, footer){
+  const bp = breathPlan(item), live = c.live && P && P.mode === 'ex';
+  const states = live ? PlayerDose.checklist(item, P, s.j) : Array.from({ length: item.sets || 1 }, (_, k) => ({ set: k + 1, state: 'planned' }));
+  const rows = states.map(row => '<div class="breath-journal-row" data-state="' + row.state + '"><span>' + (row.state === 'done' ? WorkoutView.icon('check') : row.set) + '</span>' +
+    esc(bp ? Breath.fmt(bp.total) + ' · ' + [bp.label, Breath.rhythm(bp.phases, true)].filter(Boolean).join(' · ') : 'Serija ' + row.set + ' · ' + item.reps + ' ' + plural(item.reps, 'sprint', 'sprinta', 'sprinteva')) +
+    '<small>' + (row.state === 'done' ? 'odrađeno' : row.state === 'current' ? 'u tijeku' : '') + '</small></div>').join('');
+  return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),
+    infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:breathName(item),eyebrow:c.live?'Trening je pauziran':'Disanje',
+    previousHtml:'<span>'+esc(breathPrevious(item))+'</span>',toolsHtml:'',targetHtml:'<p class="breath-panel-dose">'+esc(bp ? breathLine(bp) : breathDoseText(item) + ' · ' + Math.round((item.rest || 0) / 60) + ' min odmora')+'</p>',
+    rowsHtml:'<div class="breath-journal-rows">'+rows+'</div>',note:s.error||'',footerHtml:'<div class="footer gut">'+footer+'</div>'})
+    .replace('class="view workout-exercise-page"','class="view workout-exercise-page breath-panel" data-context="'+(c.live?'live':top().v==='ex'?'library':'preview')+'"');
 }
 // the item card in the training editor: preset, rhythm and minute chips instead of Trajanje (≤ 600 s); the sprints sets × reps
 function breathEditorHtml(it, i){
