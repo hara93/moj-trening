@@ -12,7 +12,7 @@
 /* circle: a faint outer ring (where a full inhale ends), the breathing disc (glass, thin green rim), a hold ring */
 .breath-track{position:absolute;inset:0;border-radius:50%;border:1.5px solid #FFFFFF38}
 .breath-disc,.breath-ring{position:absolute;inset:0;border-radius:50%;transform:scale(calc(.5 + .5 * var(--lv)));transform-origin:50% 50%;will-change:transform}
-.breath-disc{border:2.5px solid var(--player-accent);background:#1A1E2599;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 0 28px color-mix(in srgb,var(--player-accent) 18%,transparent)}
+.breath-disc{border:2.5px solid var(--player-accent);background:#1A1E25B3;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 0 28px color-mix(in srgb,var(--player-accent) 18%,transparent)}
 .breath-ring{width:100%;height:100%;overflow:visible;fill:none;transform:scale(calc(.5 + .5 * var(--lv))) rotate(-90deg)}
 .breath-ring-fill{stroke:var(--player-accent);stroke-width:2.2;stroke-linecap:round}
 /* a hold: the disc stands still, its rim goes neutral and the green ring fills over the hold */
@@ -26,21 +26,21 @@
 .breath-sec{font-family:system-ui,-apple-system,sans-serif;font-stretch:40%;font-weight:900;font-size:clamp(64px,21vw,88px);line-height:.95;letter-spacing:0;font-variant-numeric:tabular-nums}
 .no-font-width .breath-sec{font-stretch:100%;letter-spacing:-.055em;transform:scaleX(.72)}
 /* square (box breathing): one side per phase, the travelled part green, a dot on the edge, earlier sides white */
-.breath-square::before{content:"";position:absolute;inset:9.5%;border-radius:7%;background:#1A1E2599;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.breath-square::before{content:"";position:absolute;inset:9.5%;border-radius:7%;background:#1A1E25B3;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .breath-square svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .breath-shape.breath-square{width:min(87cqw,91cqh,347px)}
 /* stroke widths in the 200-unit viewBox: the box is ~342 px wide at 393, so 0.88 / 1.17 / 1.75 units = 1.5 / 2 / 3 px
    (vector-effect:non-scaling-stroke would break the pathLength dashes in WebKit) */
 .breath-sq-track{stroke:#FFFFFF38;stroke-width:.88}
 /* done sides are a faint trail (40 % white), faded out over the first 0.6 s of the next inhale (breathPaint) */
-.breath-sq-done{stroke:#FFFFFF66;stroke-width:1.17}
+.breath-sq-done{stroke:#FFFFFF59;stroke-width:1.17}
 .breath-sq-lit{stroke:var(--player-accent);stroke-width:1.75}
 .breath-sq-dot{fill:var(--player-accent);stroke:none;filter:drop-shadow(0 0 6px var(--player-accent))}
 /* the pre-match ramp: the exhale gets longer, 4/4 › 4/5 › 4/6 */
 .breath-ramp{position:absolute;left:0;right:0;bottom:3cqh;display:flex;justify-content:center;align-items:center;gap:6px}
 .breath-ramp span{padding:4px 11px;border-radius:12px;background:#1A1E25CC;box-shadow:inset 0 0 0 1px #FFFFFF2E;color:#C2CACE;font-size:15px;font-weight:650;line-height:20px;font-variant-numeric:tabular-nums}
 .breath-ramp span.is-on{color:#fff;box-shadow:inset 0 0 0 2px var(--player-accent)}
-.breath-ramp span.is-done{color:#FFFFFF80}
+.breath-ramp span.is-done{color:var(--text-2)}
 .breath-ramp i{color:#FFFFFF59;font-style:normal;font-size:15px}
 /* paused: the real pause layer lies over the stage; the pacer steps back behind it */
 .workout-cinema.has-pause-overlay .breath-pacer{opacity:0}
@@ -56,7 +56,7 @@ html:has(.workout-cinema.is-night),body:has(.workout-cinema.is-night),#app:has(.
 .workout-cinema.is-night :is(.workout-cinema-topbar,.workout-cinema-progress,.workout-cinema-heading,.workout-cinema-notice,.workout-cinema-info,.workout-cinema-bottom,.workout-cinema-media,.breath-text,.breath-ring){opacity:0}
 .workout-cinema.is-night .breath-track{opacity:0}
 .workout-cinema.is-night .breath-disc{border-color:#FFFFFF1F;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
-.breath-veil{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;border:0;background:#000;color:#34383F;font-size:17px;font-weight:600}
+.breath-veil{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;border:0;background:#000;color:#FFFFFF38;font-size:17px;font-weight:600}
 .breath-veil small{font-size:13px;font-weight:500}
 
 /* ---------- library page, (i) sheet, editor, safety gate: the app's blue ---------- */
@@ -134,13 +134,14 @@ html:has(.workout-cinema.is-night),body:has(.workout-cinema.is-night),#app:has(.
 html:has(.workout-cinema.is-dim),body:has(.workout-cinema.is-dim),#app:has(.workout-cinema.is-dim){background:#000}
 .workout-cinema.is-dim:not(.is-night) :is(.workout-cinema-topbar,.workout-cinema-progress,.workout-cinema-heading,.workout-cinema-info,.workout-cinema-bottom,.breath-text){opacity:.6}
 .workout-cinema.is-dim .workout-cinema-media{opacity:0}
+.workout-cinema.is-dim :is(.workout-cinema-topbar,.workout-cinema-bottom){background:#000}
 .workout-cinema.is-dim .breath-track{opacity:0}
-.workout-cinema.is-dim .breath-disc{border-color:#FFFFFF33;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.workout-cinema.is-dim .breath-disc{border-color:#FFFFFF38;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 /* the Dnevnik row of a breathing item: one line per set, no kg / reserve columns */
 .breath-journal-rows{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px}
 .breath-journal-row{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 4px;color:var(--text);font-size:15px;font-weight:600}
 .breath-journal-row>span{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #FFFFFF38;color:var(--text-2);font-size:14px}
-.breath-journal-row[data-state=done]>span{background:var(--player-accent);box-shadow:none;color:#0B1A10}
+.breath-journal-row[data-state=done]>span{background:var(--player-accent);box-shadow:none;color:var(--player-on-accent)}
 .breath-journal-row>span svg{width:16px;height:16px}
 .breath-journal-row small{margin-left:auto;color:var(--text-2);font-size:13px;font-weight:500}
 /* the library page uses the exercise page's own header (round back button, title on the left) */
@@ -152,7 +153,7 @@ html:has(.workout-cinema.is-dim),body:has(.workout-cinema.is-dim),#app:has(.work
 .breath-src-more ul{margin:0 0 4px;padding-left:18px;color:var(--text-2);font-size:13px;line-height:1.45}
 .breath-when{margin:8px 0 0;color:var(--text-body);font-size:14px;line-height:1.45}
 .breath-when b{color:var(--text)}
-/* the exercise page's body font is a little wider: the three preset chips keep one row at 375 */
+/* the exercise page's chips: a little tighter; at 375 a long chip ("Prije spavanja") may take a second row */
 .breath-page .breath-field .chips.wrap,.breath-editor .breath-field .chips.wrap{gap:6px}
 .breath-page .breath-field .chip,.breath-editor .breath-field .chip{padding-left:13px;padding-right:13px}
 /* the breath-hold sprints' work step: the how-to on glass in the stage (not paced; the check closes the set) */
