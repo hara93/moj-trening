@@ -200,6 +200,16 @@ async function brightest(p,box){
           return {min:d.width*.5,word:t.width,height:n.bottom-t.top};});
         assert.ok(fit.word<fit.min-8&&fit.height<fit.min-8,'the smallest circle holds the word and seconds '+JSON.stringify(fit));
         await s.shot('circle');await overflow(p,'player 393');
+        // the (i) sheet: rhythm, Kako, Kad, Zašto with the grade in words, Oprez folded; no muscle figure
+        await p.locator('.workout-cinema [data-a="workoutInfo"]').click();const info=p.locator('.breath-info');await info.waitFor();
+        assert.match(await info.innerText(),/Udah 4 s · izdah 6 s · 6 udaha u minuti/);assert.match(await info.innerText(),/Dokazi: ograničeni/);
+        assert.equal(await info.locator('.breath-oprez[open]').count(),0);assert.equal(await p.locator('.workout-exercise-panel svg.fig, .workout-exercise-panel .figs').count(),0);
+        await s.shot('info');await A(p,'workoutPanelBack').click();await info.waitFor({state:'hidden'});
+        // under it, the paused exercise page has no set table: no kg, reserve, equipment or swap
+        const panel=p.locator('.breath-panel');await panel.waitFor();
+        assert.equal(await panel.locator('input').count(),0);assert.doesNotMatch(await panel.innerText(),/Zamjena|SIR|RIR|\bkg\b|Bez opreme/);
+        assert.match(await panel.innerText(),/5:00 · Svaki dan · 4\/6 s/);await s.shot('panel');
+        await panel.locator('[data-a="workoutClose"]').last().click();await panel.waitFor({state:'hidden'});await p.locator('.breath-pacer').waitFor();
         await s.clock(300);await A(p,'finishPlay').waitFor();
         assert.equal(await p.locator('#srpe').count(),0,'no effort slider after calm breathing alone');
         assert.match(await p.locator('.breath-done').innerText(),/Disanje nema opterećenje/);
@@ -287,6 +297,11 @@ async function brightest(p,box){
         assert.match(await p.locator('.breath-howto').innerText(),/Stani odmah kod vrtoglavice/);
         assert.equal(await p.locator('.cinema-weight-unavailable,[data-field="kg"]').count(),0,'no kg on the sprint step');
         await s.shot('sprint-work');await overflow(p,'sprint step 375');
+        await p.locator('.workout-cinema [data-a="workoutInfo"]').click();await p.locator('.breath-info').waitFor();
+        assert.match(await p.locator('.breath-info').innerText(),/2 × 6 sprinteva · 3 min odmora između serija/);
+        await A(p,'workoutPanelBack').click();await p.locator('.breath-info').waitFor({state:'hidden'});
+        assert.equal(await p.locator('.breath-panel input').count(),0,'the sprints\' exercise page has no kg or reserve fields');
+        await p.locator('.breath-panel [data-a="workoutClose"]').last().click();await p.locator('.breath-howto').waitFor();
         await A(p,'cinemaJournal').click();
         const rows=await p.locator('.breath-journal-row').allInnerTexts();
         assert.equal(rows.length,2);assert.match(rows[0],/Serija 1 · 6 sprinteva/);
@@ -317,6 +332,18 @@ async function brightest(p,box){
         assert.match(ring,/^50\.00 100$/,'the ring fills by whole seconds: '+ring);
         await s.shot('reduced');await overflow(p,'reduced 375');
         ok('reduced motion');
+        await openQuit(p);await A(p,'quitDiscard').click();await p.locator('.workout-cinema').waitFor({state:'hidden'});
+
+        // "Uredi" on a shipped breathing exercise: the app's rule (his edit is kept as his own), and its breath data stays
+        const original=(await store(p)).exercises['sporo-disanje'];
+        await s.library('sporo-disanje');await A(p,'editEx').click();await p.locator('#f-feel').waitFor();
+        assert.match(await p.locator('.view').innerText(),/Postavku, ritam i trajanje biraš na stranici vježbe i u treningu/);
+        assert.equal(await p.locator('[data-a="dstep"][data-k="sec"]').count(),0,'no Trajanje stepper for breathing');
+        await p.locator('#f-feel').fill('Mirnije prije spavanja');await A(p,'saveEx').click();await p.locator('.breath-page').waitFor();
+        const edited=(await store(p)).exercises['sporo-disanje'];
+        assert.equal(edited.feel,'Mirnije prije spavanja');assert.deepEqual(edited.breath,original.breath,'the breath data is not lost');
+        assert.equal(edited.cat,'Disanje');assert.equal(await p.locator('.breath-presets .chip').count(),3,'the page still offers the presets');
+        ok('Uredi keeps the breath data');
         assert.deepEqual(s.errors,[]);
       }catch(e){await s.shot('failure-4').catch(()=>{});throw e;}finally{await s.context.close();}
     }
