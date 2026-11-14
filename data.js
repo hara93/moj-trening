@@ -8813,7 +8813,7 @@ window.SEED = {
     "Mirno izdahni, ne do kraja.",
     "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
     "Izdahni, udahni i hodaj natrag dišući slobodno.",
-    "Novi sprint kreće svakih 30 s. Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
+    "Novi sprint kreni čim se vratiš na start (otprilike svakih 30 s). Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
     "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
    ],
    "mistakes": [],
@@ -8843,7 +8843,7 @@ window.SEED = {
      "Mirno izdahni, ne do kraja.",
      "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
      "Izdahni, udahni i hodaj natrag dišući slobodno.",
-     "Novi sprint kreće svakih 30 s. Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
+     "Novi sprint kreni čim se vratiš na start (otprilike svakih 30 s). Kad završiš seriju, označi je kvačicom. Za sprinteve ti mobitel ne treba.",
      "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
     ],
     "why_hr": "Kod treniranih sportaša (10 malih studija, uz trenera) nakon 6–12 treninga brzina je manje padala kroz niz sprinteva; najveća brzina nije porasla. Za utakmicu nema dokaza, a bez trenera nije testirano.",

@@ -33,6 +33,9 @@ test('the five shipped breathing exercises: category, the calm ones paced, the s
   const how=s.breath.steps_hr.join(' ');
   for(const words of ['ne do kraja','samo dok traje sprint','hodaj natrag dišući slobodno','svakih 30 s','70–80 % brzine','vrtoglavice'])assert.ok(how.includes(words),words);
   assert.match(how,/Kad završiš seriju, označi je kvačicom\. Za sprinteve ti mobitel ne treba\./);
+  // no phone to time 30 s: the next sprint starts when he is back at the start (lead's decision, copy finding F3)
+  assert.ok(how.includes('Novi sprint kreni čim se vratiš na start (otprilike svakih 30 s).'));assert.ok(!how.includes('kreće svakih 30 s'));
+  assert.deepEqual(s.steps,s.breath.steps_hr,'the page, the work step and the (i) sheet read the same steps');
   assert.deepEqual(s.breath.always_hr.slice(0,1),['Nikad u vodi.'],'driving does not apply to sprinting');
   // copy rules (katalog §1.1): never a faster top speed, a better match or "tested without a coach"
   assert.match(s.breath.why_hr,/najveća brzina nije porasla/);assert.doesNotMatch(JSON.stringify(s.breath),/brži sprint|bolja utakmica/i);
