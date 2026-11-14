@@ -3116,6 +3116,7 @@ function cinemaExerciseChoices(query) {
 }
 function cinemaAddExerciseHtml(s) {
   const cancel='<button type="button" class="btn sec" data-a="cinemaClose">Odustani</button>';
+  if(s.gate)return breathGateHtml(s.gate,true);
   if(s.item) {
     const load=s.load;
     return '<h3>'+esc(load.name)+'</h3><p>Unesi težinu za ovu izvedbu. Vježba se dodaje na kraj trenutnog treninga.</p>'+
@@ -6945,14 +6946,17 @@ const A = {
   cinemaExercisePick:d=>{
     const s=S.sheet,e=S.ex[d.id];
     if(s?.kind!=='cinemaAddExercise'||s.item||!e||!cinemaCanEditExercises())return;
-    const item=exItem(e),load=StartingLoad.requests([item],startLoadDescription)[0];
+    const item=exItem(e);
+    // the breath-hold sprints' one-time safety gate: adding them to a running training is a way in too
+    if(breathGateLive(s,e,item))return;
+    const load=StartingLoad.requests([item],startLoadDescription)[0];
     if(!load){cinemaCommitExercises(s,item);return;}
     Object.assign(s,{item,load});render();
   },
   cinemaExerciseBack:()=>{
     const s=S.sheet;
     if(s?.kind!=='cinemaAddExercise')return;
-    delete s.item;delete s.load;delete s.kg;delete s.error;
+    delete s.item;delete s.load;delete s.kg;delete s.error;delete s.gate;
     render();
   },
   cinemaRemoveExercise:d=>{
@@ -7517,8 +7521,13 @@ const A = {
   exBreath: d => { const t = top(); if (t.v !== 'ex') return; t.breathSel = Object.assign({}, t.breathSel, { [d.k]: d.k === 'intro' || d.k === 'variant' ? (d.v || null) : d.v }); if (d.k === 'preset') { delete t.breathSel.variant; delete t.breathSel.intro; delete t.breathSel.min; } render(); },
   breathWake: () => { if (!P) return; P._touch = Date.now(); P._night = false; app.querySelector('.workout-cinema')?.classList.remove('is-night'); },
   breathVeil: () => { if (!P) return; P._nightEnd = false; render(); },
-  breathGateToggle: d => { const s = S.sheet; if (s?.kind !== 'breathGate') return; s.ok[+d.i] = !s.ok[+d.i]; render(); },
-  breathGateGo: () => { const s = S.sheet; if (s?.kind !== 'breathGate' || s.ok.some(x => !x)) return; writeSetting('rshGate', Date.now()); S.sheet = null; startPlayer(s.cfg); },
+  breathGateToggle: d => { const g = breathGateOpen(); if (!g) return; g.ok[+d.i] = !g.ok[+d.i]; render(); },
+  breathGateGo: () => {
+    const s = S.sheet, g = breathGateOpen(); if (!g || g.ok.some(x => !x)) return;
+    writeSetting('rshGate', Date.now());
+    if (s.kind === 'cinemaAddExercise') { const item = g.item; delete s.gate; cinemaCommitExercises(s, item); return; }   // added to the running training
+    S.sheet = null; startPlayer(s.cfg);
+  },
   istep: d => {
     const items = S.draft.items, it = items[+d.i], k = d.k, dir = +d.d; if (!it) return;
     if (k === 'kg') { builderWeight(it,kgStep(S.ex[it.exId],it.kg,dir),true);render();return; }
@@ -8703,21 +8712,32 @@ function breathEndsAtNight(){
   const st = [...(P.steps || [])].reverse().find(isWork); return !!(st && breathPlan(st.it || P.items[st.g])?.night);
 }
 
-/* the one-time safety gate before the first breath-hold sprints, for every way in (it lives in startPlayer) */
+/* the one-time safety gate before the first breath-hold sprints, for every way in: startPlayer (Danas, a training, the
+   library) and "Dodaj vježbu" in a running training (breathGateLive, inside its sheet) */
+const breathGated = e => breathSprintEx(e) && e.breath.safety_gate && Array.isArray(e.breath.safety_gate_hr);
 function breathGateNeeded(items, cfg){
   if (S.settings.rshGate) return false;
-  const e = (items || []).map(it => S.ex[it.exId]).find(x => breathSprintEx(x) && x.breath.safety_gate && Array.isArray(x.breath.safety_gate_hr));
+  const e = (items || []).map(it => S.ex[it.exId]).find(breathGated);
   if (!e) return false;
   S.sheet = { kind: 'breathGate', ok: e.breath.safety_gate_hr.map(() => false), exId: e.id, cfg }; render(); return true;
 }
-function breathGateHtml(s){
+function breathGateLive(s, e, item){
+  if (S.settings.rshGate || !breathGated(e)) return false;
+  s.gate = { ok: e.breath.safety_gate_hr.map(() => false), exId: e.id, item }; render(); return true;
+}
+// the gate being answered: its own sheet, or the one inside the running training's "Dodaj vježbu"
+function breathGateOpen(){
+  const s = S.sheet;
+  return s?.kind === 'breathGate' ? s : s?.kind === 'cinemaAddExercise' && s.gate ? s.gate : null;
+}
+function breathGateHtml(s, live){
   const e = S.ex[s.exId], b = e.breath, all = s.ok.every(Boolean);
   return '<div class="breath-gate"><h2 id="sheet-h">Prije prvih sprinteva bez daha</h2><p class="sub">Napredna vježba. Potvrdi svaku stavku; pitamo samo jednom.</p>' +
     '<div class="breath-gate-list" role="group" aria-label="Sigurnosne provjere">' + b.safety_gate_hr.map((t, i) =>
       '<button type="button" role="checkbox" aria-checked="' + !!s.ok[i] + '" data-a="breathGateToggle" data-i="' + i + '"><span class="breath-check">' + (s.ok[i] ? I.checkS : '') + '</span><span>' + esc(t) + '</span></button>').join('') + '</div>' +
     '<p class="breath-gate-rule"><b>Učenje:</b> prva 2 treninga 2 × 6 sprinteva na 70–80 % brzine. Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje.</p>' +
     '<button type="button" class="btn" data-a="breathGateGo"' + (all ? '' : ' disabled') + '>' + (all ? 'Potvrđujem' : 'Potvrdi sve stavke') + '</button>' +
-    '<button type="button" class="txtbtn breath-gate-cancel" data-a="sheetDone">Odustani</button></div>';
+    '<button type="button" class="txtbtn breath-gate-cancel" data-a="' + (live ? 'cinemaExerciseBack' : 'sheetDone') + '">' + (live ? 'Natrag na popis' : 'Odustani') + '</button></div>';
 }
 
 /* Kako, Zašto (the grade in words, short sources), Kad and Oprez: the exercise page and the player's (i) sheet */

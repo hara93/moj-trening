@@ -356,6 +356,22 @@ async function brightest(p,box){
         assert.match(ring,/^50\.00 100$/,'the ring fills by whole seconds: '+ring);
         await s.shot('reduced');await overflow(p,'reduced 375');
         ok('reduced motion');
+
+        // the safety gate also guards "Dodaj vježbu" in a running training (review F2): nothing is added before it is passed
+        await A(p,'cinemaJournal').click();await A(p,'cinemaAddExercise').click();
+        await p.locator('#cinema-exercise-search').fill('sprintevi');
+        await p.locator('[data-a="cinemaExercisePick"][data-id="sprintevi-bez-daha"]').click();
+        await p.locator('.breath-gate').waitFor();
+        assert.equal(await A(p,'breathGateGo').isDisabled(),true);
+        assert.deepEqual((await play(p)).items.map(x=>x.exId),['sporo-disanje'],'not added before the gate');
+        await p.locator('.breath-gate [data-a="cinemaExerciseBack"]').click();await p.locator('.breath-gate').waitFor({state:'hidden'});
+        assert.deepEqual((await play(p)).items.map(x=>x.exId),['sporo-disanje'],'going back adds nothing');
+        await p.locator('[data-a="cinemaExercisePick"][data-id="sprintevi-bez-daha"]').click();await p.locator('.breath-gate').waitFor();
+        for(const b of await A(p,'breathGateToggle').all())await b.click();
+        await A(p,'breathGateGo').click();await p.locator('.breath-gate').waitFor({state:'hidden'});
+        assert.deepEqual((await play(p)).items.map(x=>x.exId),['sporo-disanje','sprintevi-bez-daha'],'added after the gate');
+        assert.ok((await settings(p)).rshGate>0,'the confirmation is kept');
+        ok('safety gate on a live add');
         await openQuit(p);await A(p,'quitDiscard').click();await p.locator('.workout-cinema').waitFor({state:'hidden'});
 
         // "Uredi" on a shipped breathing exercise: the app's rule (his edit is kept as his own), and its breath data stays
