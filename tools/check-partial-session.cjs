@@ -34,3 +34,12 @@ test('the week, strip, day sheet, history and done screen read the same rule',()
   assert.match(source,/countAsDone:P\.countAsDone === true,/,'the choice survives a reload of the done screen');
   assert.match(fs.readFileSync(path.join(__dirname,'../history.js'),'utf8'),/entry\.partial\?' · djelomično':''/);
 });
+test('1.25.0: calm breathing is no work set, so a mixed training fills a plan day as if the breathing were absent (review F5)',()=>{
+  const entry=items=>({kind:'protocol',refId:'p',at:1,items});
+  const calm={exId:'sporo-disanje',measure:'time',sec:600,sets:1,reps:1,done:true,setsDone:1,breath:{kind:'calm',min:10}};
+  // 9 gym sets planned, 4 done, plus the breathing: 4/9, not 5/10
+  assert.equal(ctx.sessionShare(entry([item(9,{setsDone:4}),calm])),4/9);assert.equal(ctx.planCounts(entry([item(9,{setsDone:4}),calm])),false);
+  assert.equal(ctx.sessionShare(entry([item(9,{setsDone:4})])),ctx.sessionShare(entry([item(9,{setsDone:4}),calm])));
+  // the breath-hold sprints are work (no calm breath on their item)
+  assert.equal(ctx.sessionShare(entry([item(2,{setsDone:1}),{exId:'sprintevi-bez-daha',measure:'sets',sets:2,reps:6,done:true,setsDone:2}])),3/4);
+});

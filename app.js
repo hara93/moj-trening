@@ -1293,6 +1293,7 @@ function sessionShare(l){
   let planned = 0, done = 0;
   l.items.forEach(x => {
     if (!x || x.warmup === true) return;
+    if (x.breath && typeof x.breath === 'object' && x.breath.kind === 'calm') return;   // 1.25.0: calm breathing is no work set
     const n = Number.isInteger(x.sets) && x.sets > 0 ? x.sets : 0; if (!n || x.historySetsUnknown === true) return;   // unknown, never zero
     planned += n;
     // an older log item (1.1/1.2) without done or setsDone did its planned sets, as HistoryModel.recordedRows assumes
