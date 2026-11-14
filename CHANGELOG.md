@@ -1,5 +1,17 @@
 # Promjene
 
+## 1.25.0 — 14. 11. 2026.
+
+- **Vježbe disanja, nova kategorija Disanje u knjižnici:**
+  - **Sporo disanje** (udah 4 s, izdah 6 s) s postavkama **Svaki dan**, **Prije utakmice** (uvod 4/4 › 4/5 › 4/6 i brojač vježbanja prije prve utakmice) i **Prije spavanja**. Ritam može biti i Dulji izdah 3/7 ili Lakši 3,5/5, uz uvod ako si zadihan.
+  - **Ciklički uzdah** (3 + 1 + 6 s), **Kvadratno disanje** (4-4-4-4 s ili 3-3-3-3 s) i **Disanje 4-7-8** (i lakši 4-6-8).
+  - **Sprintevi bez daha** (napredno): serije sprinteva koje odradiš bez mobitela i označiš kvačicom, s cijelim uputama i sigurnosnom provjerom prije prvog puta.
+  - Svaka stranica ima Kako, Kad, Zašto s ocjenom dokaza riječima i izvorima, te Oprez. Disanje 4-7-8 ima vrlo slabe dokaze i tako piše.
+- **Pacer u playeru:** krug se širi na udahu i skuplja na izdahu, a dok zadržavaš dah miruje i rub pokazuje vrijeme. Kvadratno disanje je kvadrat koji se puni stranicu po stranicu. Gore piše koliko je još ostalo, a dolje broj udaha. Tonovi označavaju promjenu faze.
+- **Prije spavanja** se ekran nakon 8 s potpuno zatamni, dodir vraća kontrole bez pauze, a zvuk se na kraju polako utiša. Mobitel ne zaključavaj.
+- **U uređivaču treninga** disanje dodaš u bilo koji dio i biraš postavku, ritam i trajanje, uz stvarno trajanje u cijelim udasima.
+- **Mirno disanje ne ulazi u opterećenje,** j.n., tjedan mišića ni Danas. Trening samo s disanjem nije trening u Napretku. Sprintevi bez daha računaju se kao trčanje.
+
 ## 1.24.1 — 10. 11. 2026.
 
 - **Svugdje piše "trening"** umjesto "protokol": Moji treninzi, Novi trening, Dodaj u trening, Uredi trening, Trening je spremljen. Zapis u povijesti je "Trening u teretani".
