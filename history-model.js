@@ -74,6 +74,24 @@
       return sum+(recordedRows(x)||[]).reduce(function(a,r){return a+(finite(r.sec)?r.sec:0)*(finite(r.sides)?r.sides:0);},0);
     },0);
   }
+  // an item nothing was done of: skipped, or no set, no side of a hold and no attempted rep (a quit before it started)
+  function idleItem(x){
+    if(!plain(x))return false;
+    if(x.skipped===true)return true;
+    return x.setsDone===0&&x.done!==true&&!(finite(x.lastReps)&&x.lastReps>0);
+  }
+  // a session in which only calm breathing was DONE (every other item skipped or not started) is not a training;
+  // isCalm tells a calm breathing item (the app asks its library, an edit the stored breath choices)
+  function calmOnlyItems(items,isCalm){
+    return Array.isArray(items)&&items.some(function(x){return isCalm(x);})&&items.every(function(x){return isCalm(x)||idleItem(x);});
+  }
+  // the zero LM1 of a calm-only session (as app.js computeSession stores it: no sets, no gym minutes, 0 points)
+  function calmLoad(entry){
+    var lm=plain(entry.load2)&&entry.load2.v==='LM1'?entry.load2:{v:'LM1'};
+    ['B','band','Bsets','Bfield','min','CE','ECC','spr','m','tap','zad'].forEach(function(k){lm[k]=0;});
+    lm.SL={L:0,U:0,C:0};lm.HS={};lm.ex=entry.items.map(function(){return 0;});
+    return lm;
+  }
   function gymSeconds(entry){
     if(entry.calmOnly===true)return 0;
     return Math.max(0,entry.secs-(finite(entry.calmSecs)&&entry.calmSecs>0?entry.calmSecs:0));
@@ -239,7 +257,7 @@
     if(doseChanged&&Array.isArray(out.items)&&out.items.some(calmPart)){
       var calmS=calmSeconds(out.items);
       if(calmS>0)out.calmSecs=calmS;else delete out.calmSecs;
-      if(out.items.every(calmPart))out.calmOnly=true;else delete out.calmOnly;
+      if(calmOnlyItems(out.items,calmPart))out.calmOnly=true;else delete out.calmOnly;
     }
     var timeChanged=changes.indexOf('secs')!==-1,rpeChanged=changes.indexOf('srpe')!==-1;
     if(kind==='field'&&(fieldChanged||!plain(entry.load)&&changes.length>0)){
@@ -248,7 +266,10 @@
     }
     if(doseChanged||fieldChanged||timeChanged){
       var summary=fieldSummary(out),lm=out.load2;
-      if(kind==='field'&&(!plain(lm)||lm.v==='LM1')&&summary.complete&&finite(out.secs)&&out.secs>=0&&!Array.isArray(out.items)){
+      if(kind!=='field'&&out.calmOnly===true&&Array.isArray(out.items)){
+        // 1.25.0: calm breathing alone has no LM1 by design; an edit keeps its zero score instead of asking for exercise data
+        out.load2=calmLoad(out);delete out.load2Status;
+      }else if(kind==='field'&&(!plain(lm)||lm.v==='LM1')&&summary.complete&&finite(out.secs)&&out.secs>=0&&!Array.isArray(out.items)){
         var B=3.5*summary.min+2*summary.m/100+2*summary.hsr/100+0.5*summary.spr/10;
         lm=plain(lm)&&lm.v==='LM1'?lm:{v:'LM1'};out.load2=lm;
         lm.B=round(B);lm.Bsets=0;lm.Bfield=round(B);lm.band=round(B*0.3);lm.min=round(out.secs/60);lm.m=round(summary.m);
@@ -285,5 +306,5 @@
   function editTeam(entry,patch){return freeze(T.edit(entry,patch));}
   function edit(entry,patch){return entry&&entry.kind==='team'?editTeam(entry,patch):entry&&entry.kind==='field'?editField(entry,patch):editProtocol(entry,patch);}
   return freeze({version:1,edit:edit,editProtocol:editProtocol,editField:editField,editTeam:editTeam,performedSets:performedSets,recordedRows:recordedRows,
-    repetitionTotal:repetitionTotal,timeTotal:timeTotal,fieldSummary:fieldSummary,effortStatus:effortStatus,sessionAU:sessionAU});
+    repetitionTotal:repetitionTotal,timeTotal:timeTotal,calmOnlyItems:calmOnlyItems,fieldSummary:fieldSummary,effortStatus:effortStatus,sessionAU:sessionAU});
 });

@@ -192,3 +192,37 @@ test('1.25.0: a history edit keeps calm breathing out of the LM1 minutes and rec
   const plain=H.edit(entry('p',{secs:900,load2:{v:'LM1',B:40,Bsets:25,Bfield:0,band:12,min:15,ex:[25]}}),{secs:960});
   assert.equal(plain.entry.load2.min,16);assert.equal(plain.entry.load2.B,41);assert.equal(plain.entry.calmSecs,undefined);
 });
+test('1.25.0: editing a calm-only record keeps its zero LM1 and shows no LM1 footnote; it is labelled Disanje (verify V1, F1, F3)',()=>{
+  const calm={exId:'sporo-disanje',measure:'time',sec:600,sets:1,reps:1,kg:0,sides:false,rest:0,breath:{kind:'calm',preset:'spavanje',min:10},done:true,setsDone:1,secList:[600],sideCounts:[1],setNumbers:[1]};
+  const only=entry('calm',{name:'Navečer',secs:640,calmSecs:600,calmOnly:true,srpe:undefined,items:[calm],load2:{v:'LM1',B:0,Bsets:0,Bfield:0,band:0,min:0,ex:[0]}});
+  const text=e=>String(UI.render({mode:'detail',entry:e})).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+  for(const patch of [{items:[{index:0,secList:[420]}]},{items:[{index:0,setsDone:0}]}]){
+    const ed=H.edit(only,patch);assert.equal(ed.ok,true,JSON.stringify(patch));
+    assert.equal(ed.entry.calmOnly,true);assert.equal(ed.entry.load2Status,undefined,'no needsProfile: calm breathing has no LM1 by design');
+    assert.equal(ed.entry.load2.B,0);assert.equal(ed.entry.load2.min,0);assert.deepEqual(ed.entry.load2.ex,[0]);
+    assert.deepEqual(ed.warnings,[],'no "Bodovi napora čekaju izvorne podatke"');assert.equal(H.effortStatus(ed.entry),'recorded');
+    const t=text({...ed.entry,editedAt:at('2026-11-06')});
+    assert.ok(!t.includes('Za LM1'),t);assert.ok(t.includes('Zapis je naknadno uređen.'));
+  }
+  assert.ok(text(only).includes(' Disanje '),'the record kind of calm breathing alone');assert.ok(!text(only).includes('Trening u teretani'));
+  assert.ok(text(entry('g')).includes('Trening u teretani'),'a gym training keeps its label');
+  // an older calm-only record that already carries needsProfile shows no LM1 footnote either
+  assert.ok(!text({...only,load2:undefined,load2Status:'needsProfile'}).includes('Za LM1'));
+});
+test('1.25.0: calm-only follows what was done: a mixed record with only the breathing done is calm-only, a done exercise is not (verify V2)',()=>{
+  const calm={exId:'kvadratno-disanje',measure:'time',sec:304,sets:1,reps:1,kg:0,sides:false,rest:0,breath:{kind:'calm',min:5},done:true,setsDone:1,secList:[304],sideCounts:[1],setNumbers:[1]};
+  const isCalm=x=>!!x&&!!x.breath&&x.breath.kind==='calm';
+  const plank=(extra)=>({exId:'plank',measure:'time',sec:30,sets:3,reps:1,kg:0,sides:false,...extra});
+  assert.equal(H.calmOnlyItems([calm,plank({skipped:true,setsDone:0})],isCalm),true,'quit after the breathing: the plank skipped');
+  assert.equal(H.calmOnlyItems([calm,plank({done:false,setsDone:0})],isCalm),true,'the plank not started');
+  assert.equal(H.calmOnlyItems([calm,plank({done:true,setsDone:0,sideCounts:[1]})],isCalm),false,'one side of a hold is work');
+  assert.equal(H.calmOnlyItems([calm,{...actual(),done:false,setsDone:0,lastReps:4}],isCalm),false,'an attempted set is work');
+  assert.equal(H.calmOnlyItems([calm,plank({done:true,setsDone:1,secList:[30],sideCounts:[1],setNumbers:[1]})],isCalm),false);
+  assert.equal(H.calmOnlyItems([plank({skipped:true,setsDone:0})],isCalm),false,'no breathing: never calm-only (stored trainings unchanged)');
+  assert.equal(H.calmOnlyItems([],isCalm),false);
+  // a history edit that takes the only exercise back to 0 sets makes the record calm-only, and back again
+  const mixed=entry('mx',{secs:700,calmSecs:304,srpe:5,items:[calm,plank({done:true,setsDone:3,secList:[30,30,30],sideCounts:[1,1,1],setNumbers:[1,2,3]})],load2:{v:'LM1',B:12,Bsets:5,Bfield:0,band:3.6,min:6.6,ex:[0,5]}});
+  const zero=H.edit(mixed,{items:[{index:1,setsDone:0}]});assert.equal(zero.ok,true);
+  assert.equal(zero.entry.calmOnly,true);assert.equal(zero.entry.load2.B,0);assert.equal(zero.entry.load2Status,undefined);assert.equal(Load.sessionAU(zero.entry),0);
+  const back=H.edit(zero.entry,{items:[{index:1,setsDone:2}]});assert.equal(back.ok,true);assert.equal(back.entry.calmOnly,undefined);
+});

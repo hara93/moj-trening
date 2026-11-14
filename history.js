@@ -13,7 +13,7 @@
   const plural=(n,one,few,many)=>n%10===1&&n%100!==11?one:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?few:many;
   const inputNumber=v=>number(v)==null?'':String(v).replace('.',',');
   const title=e=>String(e&&(e.title||e.name)||'Trening bez naziva');
-  const kind=e=>e.kind==='team'?Team.label(e.teamType):e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?'Trening u teretani':'Stariji zapis';
+  const kind=e=>e.kind==='team'?Team.label(e.teamType):e.kind==='exercise'?'Vježba iz knjižnice':e.kind==='field'?'Kondicija na terenu':e.kind==='protocol'?(e.calmOnly===true?'Disanje':'Trening u teretani'):'Stariji zapis';
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+({
     back:'<path d="m14 5-7 7 7 7"/>',search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
     clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',arrow:'<path d="m9 5 7 7-7 7"/>',
@@ -118,15 +118,15 @@
       '<p class="hy-footnote">Prikazane su vrijednosti sačuvane uz trening. Nisu ponovno izračunate iz današnje MAS ili današnjeg predloška.</p></section>';
   }
   function metadata(entry) {
-    // 1.25.0: calm breathing alone carries no load, so it shows no effort score or j.n. rows
+    // 1.25.0: calm breathing alone carries no load, so it shows no effort score, j.n. rows or LM1 footnotes
     const calmOnly=entry.calmOnly===true,srpe=number(entry.srpe),lm=!calmOnly&&entry.load2&&typeof entry.load2==='object'?entry.load2:null;
     const computedAu=!calmOnly&&History&&typeof History.sessionAU==='function'?History.sessionAU(entry):null;
     const au=computedAu;
     const score=lm&&!['needsProfile','needsDose','needsFieldData'].includes(entry.load2Status)?number(lm.B):null,band=lm?number(lm.band):null;
     return '<section class="hy-card"><div class="hy-record-kind">'+esc(kind(entry))+'</div><h2 class="hy-record-title">'+esc(title(entry))+'</h2><p class="hy-record-date">'+esc(dayLabel(entry.at))+(timeLabel(entry.at)?' · '+esc(timeLabel(entry.at)):'')+'</p><dl class="hy-metrics">'+metric(entry.kind==='team'&&entry.teamType==='match'?'Odigrano':'Trajanje',duration(entry.secs))+(calmOnly&&srpe==null?'':metric('Ocjena napora',srpe!=null?fmt(srpe)+' / 10':'Nije ocijenjeno'))+
       (score!=null?metric(lm.v==='LM1'?'Procjena napora LM1':'Spremljena procjena napora',fmt(score)+(band!=null?' ± '+fmt(band):'')+' bodova'):'')+(au!=null?metric(computedAu!=null?'Napor × trajanje':'Spremljene jedinice napora',fmt(au)):'')+'</dl>'+
-      (entry.load2Status==='needsProfile'?'<p class="hy-footnote">Za LM1 nedostaju izvorni podaci o vježbama. Bodovi se ne preuzimaju iz današnje knjižnice.</p>':'')+
-      (entry.load2Status==='needsDose'?'<p class="hy-footnote">Za LM1 nije poznata sva stvarno odrađena izvedba. Nedostajuće serije, ponavljanja ili sekunde nisu nula.</p>':'')+
+      (!calmOnly&&entry.load2Status==='needsProfile'?'<p class="hy-footnote">Za LM1 nedostaju izvorni podaci o vježbama. Bodovi se ne preuzimaju iz današnje knjižnice.</p>':'')+
+      (!calmOnly&&entry.load2Status==='needsDose'?'<p class="hy-footnote">Za LM1 nije poznata sva stvarno odrađena izvedba. Nedostajuće serije, ponavljanja ili sekunde nisu nula.</p>':'')+
       (entry.load2Status==='needsFieldData'?'<p class="hy-footnote">LM1 bodovi nisu prikazani jer nisu poznati svi terenski podaci. Nepoznato brzo trčanje i sprint nisu nula.</p>':'')+
       (score!=null&&lm.v==='LM1'?'<p class="hy-footnote">LM1 koristi zadane faktore. Prikazani raspon je zadana procjena modela, ne provjerena osobna pogreška ni mjera oporavka.</p>':'')+
       (computedAu!=null?'<p class="hy-footnote">Jedinice napora: prijavljena ocjena cijelog treninga × stvarno trajanje u minutama (sekunde ÷ 60).</p>':'')+(entry.editedAt?'<p class="hy-footnote">Zapis je naknadno uređen.</p>':'')+'</section>';

@@ -6416,7 +6416,7 @@ VIEWS.play = function(){
     const lm = entry ? computeSession(entry) : null, rks = any ? reserveSteps() : []; P._lm = lm;
     const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex()), calmOnly = breathCalmOnly(entry), allBreath = !!(P.items && P.items.length && P.items.every(it => breathPlan(it))); P._calmSecs = entry?.calmSecs || 0;
     return '<div class="view gut stack">' + breathVeilHtml() + topbar('', '') +
-      '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? (calmOnly ? 'Vježba je prekinuta' : 'Trening je prekinut') : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
+      '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? (allBreath ? 'Vježba je prekinuta' : 'Trening je prekinut') : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
         (partial ? '<div class="partial-count"><span>'+(P.countAsDone ? 'Računa se kao odrađen dan plana.' : 'Odrađeno '+Math.round(share * 100)+' % radnih serija. Za dan plana treba barem pola.')+'</span>'+
           '<button type="button" class="txtbtn" data-a="countAsDone" aria-pressed="'+(P.countAsDone === true)+'">'+(P.countAsDone ? 'Ne računaj' : 'Računaj kao odrađeno')+'</button></div>' : '') +
@@ -8561,8 +8561,9 @@ const breathSprintCount = exId => historyOf(exId).filter(x => HistoryModel.perfo
 function breathCalmSecs(items){
   return (items || []).reduce((s, x) => breathCalmEx(S.ex[x.exId]) && !x.skipped ? s + breathDoneSecs(x) : s, 0);
 }
-// a session of calm breathing only is not training: not for Danas, Početna, the session count or j.n.
-const breathCalmOnly = entry => !!(entry && Array.isArray(entry.items) && entry.items.length && entry.items.every(x => breathCalmEx(S.ex[x.exId])));
+// a session in which only calm breathing was done is not training: not for Danas, Početna, the session count or j.n.
+// What was DONE decides: a mixed training quit after its breathing (the rest skipped or not started) is calm-only too.
+const breathCalmOnly = entry => !!entry && HistoryModel.calmOnlyItems(entry.items, x => !!x && breathCalmEx(S.ex[x.exId]));
 function breathDoneHtml(entry){
   const secs = breathCalmSecs(entry.items);
   return '<section class="lmc breath-done" aria-label="Disanje"><div class="lmh"><span>Disanje</span></div><p class="lmx">' + esc(Breath.fmt(secs)) +
