@@ -8590,8 +8590,11 @@ function breathSprintReadyText(item, step){
   const e = S.ex[item.exId], learning = breathSprintCount(item.exId) < 2;
   return 'Serija ' + (step.set || 1) + ' od ' + item.sets + ' · ' + (learning ? '70–80 % brzine' : e?.breath?.prep_hr || 'na start');
 }
+// bedtime guides by sound; with the player's sound off the screen never goes black (it stays dim, the circle visible)
 function breathNotice(bp){
-  return bp.night ? '<p class="breath-notice">Ekran će se potpuno zatamniti. Ne zaključavaj mobitel; dodir vraća kontrole.</p>' : '';
+  if (!bp.night) return '';
+  return '<p class="breath-notice">' + (S.settings.sound ? 'Ekran će se potpuno zatamniti. Ne zaključavaj mobitel; dodir vraća kontrole.'
+    : 'Zvuk je isključen, pa ekran ostaje prigušen da vidiš krug. Za disanje u mraku uključi zvuk.') + '</p>';
 }
 // the pill's count on the calm breathing step: the breath ("13 od 60"); a breathing item has one set, so the pill counts
 // breaths instead of sets (the sprints keep "1 od 2" sets)
@@ -8679,7 +8682,7 @@ function breathAfterRender(){
 function breathNight(root, bp){
   if (!bp.night) { root.classList.remove('is-night', 'is-dim'); return; }
   if (!P._breathStepAt || P._breathStepAt.i !== P.i) P._breathStepAt = { i: P.i, at: Date.now() };
-  const since = Date.now() - Math.max(P._touch || 0, P._breathStepAt.at), night = !P.paused && !S.sheet && since > 8000;
+  const since = Date.now() - Math.max(P._touch || 0, P._breathStepAt.at), night = !P.paused && !S.sheet && !!S.settings.sound && since > 8000;
   P._night = night; root.classList.toggle('is-night', night); root.classList.add('is-dim');
 }
 // tones (the player's own sound setting, Web Audio with the existing Silent-mode session): a soft sine glide up for the
