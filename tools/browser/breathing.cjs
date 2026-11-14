@@ -107,7 +107,9 @@ async function brightest(p,box){
         // "Dodaj u trening" keeps the preset chosen on the page (review F7)
         await p.locator('.breath-page [data-a="addTo"]').click();await A(p,'addToNew').click();await p.locator('#dose-0').waitFor();
         assert.match(await p.locator('#dose-0').innerText(),/5 min · uvod 34 s \+ 4\/6 s/,'the pre-match preset from the page');
-        await A(p,'back').first().click();await A(p,'leaveDiscard').click();await p.locator('.breath-page').waitFor();
+        // an unchanged new draft leaves without a question; the draft is never saved
+        await A(p,'back').first().click();await p.locator('.breath-page').waitFor();
+        assert.equal(Object.values((await store(p)).protocols).filter(x=>x.items.some(i=>i.exId==='sporo-disanje'&&i.breath&&i.breath.preset==='utakmica')).length,0);
         ok('library and exercise page');
 
         // Disanje 4-7-8: very low evidence in words, Lakši 4-6-8, 5 min = 16 breaths; on the circle the hold keeps it full
