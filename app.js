@@ -3463,7 +3463,7 @@ VIEWS.exEdit = function(t){
       '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div><p class="lnote" style="margin:10px 2px 0">Kilogrami se upisuju za šipku, landmine, bučice ili girju; bez njih vježba se broji u ponavljanjima ili vremenu.</p></div>' +
       musclePickerHtml(d) + muscleCountingEditor(d) +
       // a breathing exercise keeps its catalogue data (breath); its dose is chosen on its page and in the training editor
-      (breathOf(d) ? '<div class="field"><span class="label">Doziranje</span><p class="lnote" style="margin:4px 2px 0">' + (breathSprintEx(d) ? 'Serije i sprinteve biraš na stranici vježbe i u treningu.' : 'Postavku, ritam i trajanje biraš na stranici vježbe i u treningu.') + '</p></div>' :
+      (breathOf(d) ? '<div class="field"><span class="label">Doziranje</span><p class="breath-hint" style="margin:4px 2px 0">' + (breathSprintEx(d) ? 'Serije i sprinteve biraš na stranici vježbe i u treningu.' : 'Postavku, ritam i trajanje biraš na stranici vježbe i u treningu.') + '</p></div>' :
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Na ponavljanja</button></div>' +
         '<div class="panel">' +
