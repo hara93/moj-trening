@@ -832,13 +832,16 @@ async function remove(coll, id){
 const fileDate = t => { const d = new Date(t), p = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
 // "2. 11." this year, "2. 11. 2025." otherwise (or always with the year)
 const shortDate = (t, year) => { const d = new Date(t); return d.getDate() + '. ' + (d.getMonth() + 1) + '.' + (year || d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() + '.' : ''); };
-// trainings in a history: a single exercise tried from the library or a test result is not a training
-const nTrainings = log => (log || []).filter(l => l && l.kind !== 'exercise' && l.kind !== 'test').length;
+// trainings in a history: a single exercise tried from the library, a test result and (1.25.0) a session of calm breathing
+// only are not trainings (isTraining)
+const nTrainings = log => (log || []).filter(l => isTraining(l)).length;
 // what replacing the data would erase from the history: entries of every kind that the incoming data does not have
 const logKey = l => l.historyId || (l.at || 0) + '|' + (l.kind || '') + '|' + (l.refId || l.test || '');
 const lostEntries = (log, incoming) => { const have = new Set((incoming || []).filter(Boolean).map(logKey)); return (log || []).filter(l => l && !have.has(logKey(l))); };
 const lostText = lost => { const t = nTrainings(lost), r = lost.filter(l => l.kind === 'test').length, e = lost.filter(l => l.kind === 'exercise').length;
-  const p = [t ? t + ' ' + plural(t, 'trening', 'treninga', 'treninga') : '', r ? r + ' ' + plural(r, 'rezultat testa', 'rezultata testa', 'rezultata testa') : '', e ? e + ' ' + plural(e, 'vježba iz knjižnice', 'vježbe iz knjižnice', 'vježbi iz knjižnice') : ''].filter(Boolean);
+  const c = lost.filter(l => l.kind !== 'exercise' && l.kind !== 'test' && l.calmOnly).length;   // calm breathing alone: not a training, still lost
+  const p = [t ? t + ' ' + plural(t, 'trening', 'treninga', 'treninga') : '', r ? r + ' ' + plural(r, 'rezultat testa', 'rezultata testa', 'rezultata testa') : '', e ? e + ' ' + plural(e, 'vježba iz knjižnice', 'vježbe iz knjižnice', 'vježbi iz knjižnice') : '',
+    c ? c + ' ' + plural(c, 'vježba disanja', 'vježbe disanja', 'vježbi disanja') : ''].filter(Boolean);
   return p.length > 1 ? p.slice(0, -1).join(', ') + ' i ' + p[p.length - 1] : p[0] || ''; };
 // nothing of yours on the phone yet (a fresh start: no history or programme, nothing created, changed or deleted): an import
 // then keeps no way back, since going back would only empty the app
@@ -6068,7 +6071,8 @@ VIEWS.progress = function(t=top()){
   const trend = (id,since) => ProgressModel.exerciseTrend({...insightInput,from:since,exerciseId:id});
   // "with data": recorded in the chosen period (a lift whose weight rises each week has no same-weight comparison, and then
   // the chart opens on Količina rada)
-  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates,id=>from===null||(hist[id]||[]).some(x=>x.at>=from));
+  // calm breathing is never the chart's default (no load, not training); it shows when he picks or pins it
+  const chartExerciseId = candidates.includes(t.chartExerciseId) ? t.chartExerciseId : chartPinnedIds[0] || defaultChartExercise(candidates.filter(id=>!breathCalmEx(S.ex[id])),id=>from===null||(hist[id]||[]).some(x=>x.at>=from));
   const chartComparison = chartExerciseId ? trend(chartExerciseId,from) : null;
   const chartHasComparison = !!(chartComparison || (from!==null && chartExerciseId && trend(chartExerciseId,null)));
   const chartPinnedTrends = chartPinnedIds.map(id=>id===chartExerciseId?chartComparison:trend(id,from)).filter(Boolean);

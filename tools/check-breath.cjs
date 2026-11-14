@@ -157,3 +157,17 @@ test('Disanje 4-7-8 (added at his request): a circle with one hold after the inh
   near(Breath.at(r,18.999).level,0,'empty at the end of the exhale');
   assert.equal(Breath.at(r,19.05).breath,2);assert.equal(Breath.at(r,303.9).breath,16);assert.equal(walk(r).end,304);
 });
+
+// the app's own rules for calm breathing (app.js slices, as the other source tests do)
+const APP=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8');
+function between(start,end){const a=APP.indexOf(start),b=APP.indexOf(end,a+start.length);assert.ok(a>=0&&b>a,start);return APP.slice(a,b);}
+const plural=(n,one,few,many)=>Breath.plural(n,one,few,many);
+
+test('a session of calm breathing only is not a training anywhere: Napredak totals, data counts, the backup reminder (review F3)',()=>{
+  const f=new Function('plural',between('const nTrainings =','// nothing of yours')+between('const isTraining =','\n// 1.21')+'\nreturn {nTrainings,lostText,isTraining};')(plural);
+  const calm={kind:'protocol',refId:'dis-krug',at:1,calmOnly:true,calmSecs:300},gym={kind:'protocol',refId:'p',at:2},mixed={kind:'protocol',refId:'m',at:3,calmSecs:60};
+  assert.equal(f.nTrainings([calm]),0,'calm breathing alone');assert.equal(f.nTrainings([calm,gym,mixed,{kind:'exercise'},{kind:'test'}]),2);
+  for(const l of [calm,gym,mixed,{kind:'exercise'},{kind:'test'},null])assert.equal(f.nTrainings([l]),f.isTraining(l)?1:0,'nTrainings and isTraining are one rule');
+  assert.equal(f.lostText([calm,gym]),'1 trening i 1 vježba disanja','a lost calm session is still named');
+  assert.equal(f.lostText([gym,{kind:'test'}]),'1 trening i 1 rezultat testa','unchanged without breathing');
+});
