@@ -196,6 +196,7 @@
       (vm.noticeHtml ? '<div class="workout-cinema-notice">' + html(vm.noticeHtml) + '</div>' : '') +
       '<div class="workout-cinema-stage"><div class="workout-cinema-media">' +
       (html(vm.mediaHtml) || '<div class="workout-cinema-media-empty" aria-label="Demonstracija vježbe nije dostupna">' + icon('dumbbell') + '</div>') + '</div>' +
+      html(vm.pacerHtml) +   // the breathing pacer (circle or square) or the sprints' how-to, in the middle of the stage
       (vm.infoHtml ? '<div class="workout-cinema-info">' + html(vm.infoHtml) + '</div>' : '') +
       (vm.nextHtml ? '<div class="workout-cinema-next">' + html(vm.nextHtml) + '</div>' : '') +
       (vm.centerHtml ? '<div class="workout-cinema-center">' + html(vm.centerHtml) + '</div>' : '') + html(vm.pauseHtml) + '</div>' +

@@ -184,8 +184,9 @@ test('app compact rows preserve varying doses, unknown weight and intentional ze
   const body=app.slice(app.indexOf('function workoutCompactHtml(items) {'),app.indexOf('\nfunction workoutCandidates('));
   const StartingLoad=require('../starting-load.js');
   const CinemaModel=require('../cinema-model.js');
-  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc','CinemaModel','workoutPreviousShort',body+';return workoutCompactHtml;')(
-    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x),CinemaModel,()=>'');
+  // 1.25.0: breathing items have their own summary and name; these rows are not breathing
+  const render=new Function('ssLetters','secOf','S','startLoadDescription','StartingLoad','WorkoutView','thumbHtml','esc','CinemaModel','workoutPreviousShort','breathPlan','breathItemSprint','breathDoseText','breathName',body+';return workoutCompactHtml;')(
+    items=>items.map(()=>null),items=>items.map(()=>null),{ex:{bench:{name:'Potisak'},hold:{name:'Upor'}}},id=>id==='bench'?{kind:'bar'}:{kind:null},StartingLoad,View,()=>'',x=>String(x),CinemaModel,()=>'',()=>null,()=>false,()=>'',()=>'');
   let html=render([{exId:'bench',sets:2,measure:'sets',reps:5,repsList:[5,3],kg:20,kgList:[20,30]}]);
   assert.match(html,/5 \/ 3 pon\. · 20 \/ 30 kg/);
   html=render([{exId:'hold',sets:2,measure:'time',sec:12,secList:[12,8],kg:0,sides:true}]);

@@ -8190,6 +8190,731 @@ window.SEED = {
      "front_abs"
     ]
    }
+  },
+  "sporo-disanje": {
+   "name": "Sporo disanje",
+   "alt": "Slow-paced breathing",
+   "cat": "Disanje",
+   "phase": null,
+   "cord": "",
+   "zones": [],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "",
+   "measure": "time",
+   "sets": 1,
+   "reps": 1,
+   "sec": 600,
+   "rest": 0,
+   "kg": 0,
+   "sides": false,
+   "feel": "Manje stresa, svaki dan",
+   "steps": [
+    "Sjedni uspravno ili lezi i stavi jednu ruku na trbuh.",
+    "Udahni na nos 4 s, mirno, tako da se trbuh lagano digne.",
+    "Izdahni 6 s na nos ili kroz lagano stisnute usne.",
+    "Diši nježno, ne do kraja.",
+    "Ako se zavrti u glavi ili osjetiš trnce, diši pliće ili stani."
+   ],
+   "mistakes": [],
+   "note": "Dok ga radiš, pouzdano smiruje živčani sustav (raste HRV); doživljeni stres kroz tjedne smanjuje u prosjeku malo i ne kod svih. Oporavak nakon treninga ne ubrzava.",
+   "source": "",
+   "sourceTitle": "",
+   "order": 900,
+   "fav": false,
+   "media": null,
+   "mediaType": null,
+   "muscles": {
+    "prime": [],
+    "sec": []
+   },
+   "muscleWorkEligible": false,
+   "breath": {
+    "kind": "calm",
+    "technique": "sporo-disanje",
+    "preset_default": "svaki-dan",
+    "presets": {
+     "svaki-dan": {
+      "technique": "sporo-disanje",
+      "name_hr": "Sporo disanje",
+      "goal_hr": "Manje stresa, svaki dan",
+      "phases": [
+       {
+        "k": "in",
+        "s": 4
+       },
+       {
+        "k": "out",
+        "s": 6
+       }
+      ],
+      "intro_options": [
+       {
+        "id": "uvod-zadihan",
+        "label_hr": "Uvod ako si zadihan",
+        "phases": [
+         {
+          "k": "in",
+          "s": 2
+         },
+         {
+          "k": "out",
+          "s": 4
+         }
+        ],
+        "cycles": 15,
+        "note_hr": "Npr. nakon treninga: 1,5 min s izdahom dvostruko dužim od udaha, zatim 4/6. Praktična pomoć; dokazi vrlo slabi."
+       }
+      ],
+      "variants": [
+       {
+        "id": "duzi-izdah",
+        "label_hr": "Dulji izdah",
+        "phases": [
+         {
+          "k": "in",
+          "s": 3
+         },
+         {
+          "k": "out",
+          "s": 7
+         }
+        ],
+        "rate_per_min": 6,
+        "note_hr": "U kratkim pokusima malo više opuštenosti; kroz 12 tjedana nije bio bolji od jednako dugog udaha i izdaha."
+       },
+       {
+        "id": "laksi-ritam",
+        "label_hr": "Lakši ritam",
+        "phases": [
+         {
+          "k": "in",
+          "s": 3.5
+         },
+         {
+          "k": "out",
+          "s": 5
+         }
+        ],
+        "rate_per_min": 7.06,
+        "note_hr": "Ako ti je 6 udaha u minuti presporo. Ritmovi od 5 do 7 u minuti podižu HRV podjednako."
+       }
+      ],
+      "minutes_default": 10,
+      "minutes_options": [
+       5,
+       10,
+       15,
+       20
+      ],
+      "frequency_hr": "Jednom dnevno, barem 4 tjedna.",
+      "nose_mouth_hr": "Udah na nos; izdah na nos ili kroz lagano stisnute usne.",
+      "posture_hr": "Sjedeći uspravno ili ležeći, jedna ruka na trbuhu: trbuh se diže, prsa miruju.",
+      "when_hr": "Bilo kad u danu. Može i nakon treninga: prvo 3–5 min laganog hoda, zatim sjedeći.",
+      "steps_hr": [
+       "Sjedni uspravno ili lezi i stavi jednu ruku na trbuh.",
+       "Udahni na nos 4 s, mirno, tako da se trbuh lagano digne.",
+       "Izdahni 6 s na nos ili kroz lagano stisnute usne.",
+       "Diši nježno, ne do kraja.",
+       "Ako se zavrti u glavi ili osjetiš trnce, diši pliće ili stani."
+      ],
+      "why_hr": "Dok ga radiš, pouzdano smiruje živčani sustav (raste HRV); doživljeni stres kroz tjedne smanjuje u prosjeku malo i ne kod svih. Oporavak nakon treninga ne ubrzava.",
+      "grade": "low",
+      "grade_hr": "ograničeni dokazi",
+      "caution_hr": "Diši nježno, ne do kraja: vrtoglavica ili trnci znače da dišeš previše, pa diši pliće ili stani. Prvih par puta može biti neugodno ili čak napetije; počni s 5 min. Nikad u vožnji ni u vodi. Kod srčane ili plućne bolesti prvo pitaj liječnika. Ako nakon treninga ležiš, prvo sjedni pa polako ustani.",
+      "sources": [
+       "Fincham GW, Strauss C, Montero-Marin J, Cavanagh K. Effect of breathwork on stress and mental health: a meta-analysis of randomised-controlled trials. Sci Rep 2023;13:432. doi:10.1038/s41598-022-27247-y",
+       "Laborde S, Allen MS, Borges U, et al. Effects of voluntary slow breathing on heart rate and heart rate variability: a systematic review and a meta-analysis. Neurosci Biobehav Rev 2022;138:104711. doi:10.1016/j.neubiorev.2022.104711 (abstract only)",
+       "You M, Laborde S, Zammit N, Iskra M, Borges U, Dosseville F. Single slow-paced breathing session at six cycles per minute: investigation of dose-response relationship on cardiac vagal activity. Int J Environ Res Public Health 2021;18(23):12478. doi:10.3390/ijerph182312478",
+       "Sumińska S, Rynkiewicz A, Szulczewski M. Resonance frequency versus fixed 0.1 Hz breathing in HRV biofeedback: a four-week randomized comparison. Sci Rep 2026;16:22630. doi:10.1038/s41598-026-53333-6",
+       "Raidl P, Wessner B, Laister S, Csapo R. No evidence for the efficacy of slow-paced breathing as a recovery strategy after sprint interval training. Int J Sports Physiol Perform 2026;21(2):302-311. doi:10.1123/ijspp.2025-0138 (OSF preprint full text)",
+       "Van Diest I, Verstappen K, Aubert AE, Widjaja D, Vansteenwegen D, Vlemincx E. Inhalation/exhalation ratio modulates the effect of slow breathing on heart rate variability and relaxation. Appl Psychophysiol Biofeedback 2014;39(3-4):171-180. doi:10.1007/s10484-014-9253-x (abstract only; 'Duži izdah' setting)"
+      ],
+      "why_list_hr": [
+       "Dok ga radiš, pouzdano smiruje živčani sustav (raste HRV).",
+       "Kroz tjedne stres smanjuje u prosjeku malo i ne kod svih.",
+       "Oporavak nakon treninga ne ubrzava."
+      ],
+      "src_hr": [
+       "Fincham i sur. 2023, Scientific Reports (meta-analiza 12 studija)",
+       "Laborde i sur. 2022, Neuroscience & Biobehavioral Reviews (223 studije)",
+       "Raidl i sur. 2026, International Journal of Sports Physiology and Performance"
+      ],
+      "oprez_hr": [
+       "Diši nježno, ne do kraja.",
+       "Prvih par puta može biti neugodno, pa počni s 5 min.",
+       "Ako nakon treninga ležiš, prvo sjedni pa polako ustani."
+      ],
+      "label_hr": "Svaki dan",
+      "prep_hr": "Sjedni ili lezi, ruka na trbuhu"
+     },
+     "utakmica": {
+      "technique": "sporo-disanje",
+      "name_hr": "Sporo disanje prije utakmice",
+      "goal_hr": "Manje treme prije utakmice",
+      "phases": [
+       {
+        "k": "in",
+        "s": 4
+       },
+       {
+        "k": "out",
+        "s": 6
+       }
+      ],
+      "intro": [
+       {
+        "phases": [
+         {
+          "k": "in",
+          "s": 4
+         },
+         {
+          "k": "out",
+          "s": 4
+         }
+        ],
+        "cycles": 2
+       },
+       {
+        "phases": [
+         {
+          "k": "in",
+          "s": 4
+         },
+         {
+          "k": "out",
+          "s": 5
+         }
+        ],
+        "cycles": 2
+       }
+      ],
+      "minutes_default": 5,
+      "minutes_options": [
+       5,
+       10
+      ],
+      "frequency_hr": "Prije svake utakmice. Prije prve upotrebe uvježbaj ga barem 6 puta kroz tjedan dana.",
+      "nose_mouth_hr": "Udah na nos, izdah kroz lagano stisnute usne (ili na nos).",
+      "posture_hr": "Sjedeći uspravno, stopala na podu, ruke na bedrima.",
+      "when_hr": "Na dan utakmice u svlačionici, najbolje prije zagrijavanja. Ako ga radiš nakon zagrijavanja, završi s 2–3 kratka ubrzanja.",
+      "steps_hr": [
+       "Prvo ga uvježbaj kod kuće: 5 min dnevno, barem 6 puta kroz tjedan dana.",
+       "Na dan utakmice sjedni, stopala na podu, ruke na bedrima.",
+       "Udahni na nos 4 s, izdahni kroz lagano stisnute usne 6 s. Prvih pola minute izdah se postupno produžuje.",
+       "Diši mirno, ne duboko, 5 min.",
+       "Zatim se zagrij kao inače; ako se osjećaš tromo, dodaj 2–3 kratka ubrzanja."
+      ],
+      "why_hr": "U studiji sa 67 osoba 5 min ovog disanja tik prije zadatka pod pritiskom smanjilo je zabrinutost, ali nije popravilo izvedbu; na utakmici nije testirano. Prvi put može pojačati napetost, zato ga prvo uvježbaj.",
+      "grade": "low",
+      "grade_hr": "ograničeni dokazi",
+      "caution_hr": "Ne isprobavaj ga prvi put na dan utakmice. Diši mirno, ne duboko; kod vrtoglavice diši pliće. Ako te fokus na dah uznemiruje, prekini. Kod astme ili srčane bolesti prvo pitaj liječnika. Nikad u vožnji (u parkiranom autu može) ni u vodi.",
+      "sources": [
+       "Conlon A, Arnold R, Preatoni E, Moore LJ. J Sport Exerc Psychol 2022;44(3):206-219. doi:10.1123/jsep.2021-0213 (RCT of 6/min breathing before a pressure task; abstract only)",
+       "Laborde S, Iskra M, Zammit N, et al. Emotional intelligence training: influence of a brief slow-paced breathing exercise on psychophysiological variables linked to emotion regulation. Int J Environ Res Public Health 2021;18(12):6630. doi:10.3390/ijerph18126630",
+       "Wells R, Outhred T, Heathers JAJ, Quintana DS, Kemp AH. Matter over mind: a randomised-controlled trial of single-session biofeedback training on performance anxiety and heart rate variability in musicians. PLoS One 2012;7(10):e46597. doi:10.1371/journal.pone.0046597",
+       "Bentley TGK, D'Andrea-Penna G, Rakic M, et al. Breathing practices for stress and anxiety reduction: conceptual framework of implementation guidelines based on a systematic review of the published literature. Brain Sci 2023;13(12):1612. doi:10.3390/brainsci13121612",
+       "You M, Laborde S, Ackermann S, Borges U, Dosseville F, Mosley E. Influence of respiratory frequency of slow-paced breathing on vagally-mediated heart rate variability. Appl Psychophysiol Biofeedback 2024;49(1):133-143. doi:10.1007/s10484-023-09605-2 (abstract only)"
+      ],
+      "why_list_hr": [
+       "U studiji sa 67 ljudi 5 min ovog disanja tik prije zadatka pod pritiskom smanjilo je zabrinutost.",
+       "Izvedbu nije popravilo, a na utakmici nije testirano."
+      ],
+      "src_hr": [
+       "Conlon i sur. 2022, Journal of Sport & Exercise Psychology",
+       "Laborde i sur. 2021, International Journal of Environmental Research and Public Health"
+      ],
+      "oprez_hr": [
+       "Ne isprobavaj ga prvi put na dan utakmice, jer prvi put može pojačati napetost.",
+       "Diši mirno, ne duboko.",
+       "Ako te fokus na dah uznemiruje, prekini."
+      ],
+      "label_hr": "Prije utakmice",
+      "practice_min": 6,
+      "prep_hr": "Sjedni uspravno"
+     },
+     "spavanje": {
+      "technique": "sporo-disanje",
+      "name_hr": "Sporo disanje prije spavanja",
+      "goal_hr": "Smirivanje prije spavanja",
+      "phases": [
+       {
+        "k": "in",
+        "s": 4.5
+       },
+       {
+        "k": "out",
+        "s": 5.5
+       }
+      ],
+      "variants": [
+       {
+        "id": "laksi-ritam",
+        "label_hr": "Lakši ritam",
+        "phases": [
+         {
+          "k": "in",
+          "s": 3.5
+         },
+         {
+          "k": "out",
+          "s": 5
+         }
+        ],
+        "rate_per_min": 7.06,
+        "note_hr": "Ako ti je 6 udaha u minuti presporo; kroz dane možeš prijeći na 4,5/5,5."
+       }
+      ],
+      "minutes_default": 15,
+      "minutes_options": [
+       10,
+       15,
+       20
+      ],
+      "frequency_hr": "Svaku večer, barem 4 tjedna.",
+      "nose_mouth_hr": "Udah na nos, izdah polako kroz lagano stisnute usne (ili na nos ako se usta suše).",
+      "posture_hr": "Ležeći na leđima u krevetu (ili polusjedeći), ruke uz tijelo ili jedna na trbuhu.",
+      "when_hr": "U krevetu, neposredno prije gašenja svjetla. Nakon večernjeg treninga ili utakmice tek nakon tuširanja, kad se puls smiri.",
+      "audio_hr": "Vodi zvukom. Ekran je potpuno zatamnjen; ne zaključavaj mobitel, jer tada vodstvo staje. Na kraju se zvuk postupno utiša, bez alarma.",
+      "steps_hr": [
+       "Lezi, ugasi svjetlo i okreni mobitel ekranom prema dolje: pacer vodi zvukom.",
+       "Udahni na nos 4,5 s.",
+       "Izdahni polako kroz lagano stisnute usne 5,5 s.",
+       "Diši nježno; ako zaspiš prije kraja, u redu je.",
+       "Ako ti je ritam prespor, uzmi lakši ritam."
+      ],
+      "why_hr": "Smiruje tijelo prije spavanja. Za bolji san dokazi su slabi: kod mladih ljudi koji inače dobro spavaju malo je popravilo samoprocjenu sna, a dvije druge studije (jedna sa sportašima) nisu našle razliku.",
+      "grade": "low",
+      "grade_hr": "ograničeni dokazi za smirivanje; vrlo slabi do ograničeni za bolji san",
+      "caution_hr": "Nije liječenje nesanice ni apneje: glasno hrkanje s prekidima disanja, jaka dnevna pospanost ili nesanica 3 i više noći tjedno kroz 3 i više mjeseci traže liječnika. Diši nježno; kod vrtoglavice diši pliće. Nikad u vožnji. Kod srčane ili plućne bolesti prvo pitaj liječnika.",
+      "sources": [
+       "Laborde S, Hosang T, Mosley E, Dosseville F. Influence of a 30-day slow-paced breathing intervention compared to social media use on subjective sleep quality and cardiac vagal activity. J Clin Med 2019;8(2):193. doi:10.3390/jcm8020193",
+       "Eide EM, Hernes HM, Grønli J. Slow breathing techniques before bedtime and the effects on sleep: a systematic review. Sleep Med Rev 2026;87:102284. doi:10.1016/j.smrv.2026.102284 (abstract only)",
+       "Raidl P, Wessner B, Laister S, Csapo R. No evidence for the efficacy of slow-paced breathing as a recovery strategy after sprint interval training. Int J Sports Physiol Perform 2026;21(2):302-311. doi:10.1123/ijspp.2025-0138 (OSF preprint full text)",
+       "Little A, et al. [A52 Breath Method RCT in paramedicine students, 2 x 10 min/day for 12 weeks]. Stress Health 2026;42:e70161",
+       "Edinger JD, et al. [AASM systematic review, meta-analysis and GRADE assessment of behavioural treatments for chronic insomnia]. J Clin Sleep Med 2021;17(2):263-298"
+      ],
+      "why_list_hr": [
+       "Smiruje tijelo prije spavanja.",
+       "Za bolji san dokazi su slabi: kod mladih ljudi koji inače dobro spavaju malo je popravilo osjećaj kvalitete sna; dvije druge studije, jedna sa sportašima, nisu našle razliku.",
+       "Brže uspavljivanje nije dokazano."
+      ],
+      "src_hr": [
+       "Laborde i sur. 2019, Journal of Clinical Medicine",
+       "Raidl i sur. 2026, International Journal of Sports Physiology and Performance"
+      ],
+      "oprez_hr": [
+       "Ovo nije liječenje nesanice ni apneje.",
+       "Idi liječniku ako glasno hrčeš s prekidima disanja, ako si danju jako pospan ili ako ne možeš spavati 3 i više noći tjedno kroz 3 mjeseca.",
+       "Ako zaspiš usred vježbe, u redu je."
+      ],
+      "label_hr": "Prije spavanja",
+      "night": true,
+      "prep_hr": "Lezi i ugasi svjetlo"
+     }
+    },
+    "always_hr": [
+     "Nikad u vodi i nikad u vožnji.",
+     "Vrtoglavica ili trnci znače da dišeš previše. Diši pliće i sporije ili stani.",
+     "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
+    ]
+   }
+  },
+  "ciklicki-uzdah": {
+   "name": "Ciklički uzdah",
+   "alt": "Cyclic sighing",
+   "cat": "Disanje",
+   "phase": null,
+   "cord": "",
+   "zones": [],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "",
+   "measure": "time",
+   "sets": 1,
+   "reps": 1,
+   "sec": 300,
+   "rest": 0,
+   "kg": 0,
+   "sides": false,
+   "feel": "Raspoloženje odmah nakon vježbe",
+   "steps": [
+    "Sjedni ili lezi.",
+    "Polako udahni na nos.",
+    "Na vrhu još malo udahni na nos, ugodno, ne na silu.",
+    "Polako i potpuno izdahni na usta.",
+    "Ponavljaj 5 min."
+   ],
+   "mistakes": [],
+   "note": "U maloj studiji (5 min dnevno, 28 dana) raspoloženje se odmah nakon vježbe popravljalo malo više nego nakon meditacije, a tjeskoba se smanjila jednako. Sekunde su naš prijedlog: u studiji je svatko disao svojim tempom.",
+   "source": "",
+   "sourceTitle": "",
+   "order": 901,
+   "fav": false,
+   "media": null,
+   "mediaType": null,
+   "muscles": {
+    "prime": [],
+    "sec": []
+   },
+   "muscleWorkEligible": false,
+   "breath": {
+    "technique": "ciklicki-uzdah",
+    "name_hr": "Ciklički uzdah",
+    "goal_hr": "Raspoloženje odmah nakon vježbe",
+    "phases": [
+     {
+      "k": "in",
+      "s": 3
+     },
+     {
+      "k": "top",
+      "s": 1
+     },
+     {
+      "k": "out",
+      "s": 6
+     }
+    ],
+    "variants": [
+     {
+      "id": "sporiji-izdah",
+      "label_hr": "Sporiji izdah",
+      "phases": [
+       {
+        "k": "in",
+        "s": 3
+       },
+       {
+        "k": "top",
+        "s": 1
+       },
+       {
+        "k": "out",
+        "s": 7
+       }
+      ],
+      "rate_per_min": 5.45,
+      "note_hr": "Oko 5,5 udaha u minuti; jednako opravdano kao 3 + 1 + 6 s."
+     }
+    ],
+    "minutes_default": 5,
+    "minutes_options": [
+     5
+    ],
+    "frequency_hr": "Jednom dnevno (studija: 28 dana).",
+    "nose_mouth_hr": "Oba udaha na nos, izdah polako na usta (može i sve na nos).",
+    "posture_hr": "Sjedeći ili ležeći.",
+    "when_hr": "Bilo kad u danu; ne tik prije nečega što traži brze reakcije.",
+    "steps_hr": [
+     "Sjedni ili lezi.",
+     "Polako udahni na nos.",
+     "Na vrhu još malo udahni na nos, ugodno, ne na silu.",
+     "Polako i potpuno izdahni na usta.",
+     "Ponavljaj 5 min."
+    ],
+    "why_hr": "U maloj studiji (5 min dnevno, 28 dana) raspoloženje se odmah nakon vježbe popravljalo malo više nego nakon meditacije, a tjeskoba se smanjila jednako. Sekunde su naš prijedlog: u studiji je svatko disao svojim tempom.",
+    "grade": "low",
+    "grade_hr": "ograničeni dokazi",
+    "caution_hr": "Drugi udah ugodno, ne na silu; vrtoglavica ili trnci znače previše zraka, pa diši sporije i manje. U studiji je 10 % sudionika prijavilo neugodno iskustvo. Nije ispitano kod srčane bolesti, glaukoma, epilepsije, trudnoće ni teže psihičke bolesti: tada prvo liječnik. Nikad u vožnji ni u vodi.",
+    "sources": [
+     "Balban MY, Neri E, Kogon MM, Weed L, Nouriani B, Jo B, Holl G, Zeitzer JM, Spiegel D, Huberman AD. Brief structured respiration practices enhance mood and reduce physiological arousal. Cell Rep Med 2023;4(1):100895. doi:10.1016/j.xcrm.2022.100895",
+     "Riedl EM, Bracklo T, Wimmer K, Perzl J, Gdynia HJ, Thomas J, Surzykiewicz J. Simply breathing anxiety away? One-minute cyclic sighing versus box breathing for acute anxiety reduction. Anxiety Stress Coping 2026. doi:10.1080/10615806.2026.2659809 (abstract only)",
+     "Hanley AW, Davis A, Worts P, Pratscher S. Cyclic sighing in the clinic waiting room may decrease pain: results from a pilot randomized controlled trial. J Behav Med 2025. doi:10.1007/s10865-024-00548-5 (abstract only)"
+    ],
+    "why_list_hr": [
+     "U jednoj maloj studiji (30 ljudi, 5 min dnevno kroz 28 dana) raspoloženje se odmah nakon vježbe popravljalo malo više nego nakon meditacije. Tjeskoba se smanjila jednako.",
+     "Sekunde su naš prijedlog: u studiji je svatko disao svojim tempom."
+    ],
+    "src_hr": [
+     "Balban i sur. 2023, Cell Reports Medicine"
+    ],
+    "oprez_hr": [
+     "Drugi udah neka bude ugodan, ne na silu.",
+     "U studiji je 10 % sudionika (sve skupine zajedno) prijavilo neugodno iskustvo.",
+     "Kod glaukoma, trudnoće ili teže psihičke bolesti prvo pitaj liječnika."
+    ],
+    "prep_hr": "Sjedni ili lezi",
+    "kind": "calm",
+    "always_hr": [
+     "Nikad u vodi i nikad u vožnji.",
+     "Vrtoglavica ili trnci znače da dišeš previše. Diši pliće i sporije ili stani.",
+     "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
+    ]
+   }
+  },
+  "kvadratno-disanje": {
+   "name": "Kvadratno disanje",
+   "alt": "Box breathing",
+   "cat": "Disanje",
+   "phase": null,
+   "cord": "",
+   "zones": [],
+   "equip": [
+    "Bez opreme"
+   ],
+   "equipment": "",
+   "measure": "time",
+   "sets": 1,
+   "reps": 1,
+   "sec": 304,
+   "rest": 0,
+   "kg": 0,
+   "sides": false,
+   "feel": "Brzo smirivanje u stresnom trenutku",
+   "steps": [
+    "Sjedni uspravno.",
+    "Udahni na nos 4 s.",
+    "Zadrži dah 4 s, opušteno, bez napinjanja.",
+    "Izdahni na nos 4 s.",
+    "Zadrži 4 s pa ponovi.",
+    "Ako je zadržavanje teško, uzmi kraće faze (3 s)."
+   ],
+   "mistakes": [],
+   "note": "Prije stresnog zadatka ublažilo je skok pulsa, a 1 min u stvarnom stresu smanjio je tjeskobu više nego ništa; tjeskoba nakon stresa nije bila manja nego uz normalno disanje. Kao svakodnevna vježba za stres u prosjeku nije djelovalo.",
+   "source": "",
+   "sourceTitle": "",
+   "order": 902,
+   "fav": false,
+   "media": null,
+   "mediaType": null,
+   "muscles": {
+    "prime": [],
+    "sec": []
+   },
+   "muscleWorkEligible": false,
+   "breath": {
+    "technique": "kvadratno-disanje",
+    "name_hr": "Kvadratno disanje",
+    "goal_hr": "Brzo smirivanje u stresnom trenutku",
+    "phases": [
+     {
+      "k": "in",
+      "s": 4
+     },
+     {
+      "k": "hold_in",
+      "s": 4
+     },
+     {
+      "k": "out",
+      "s": 4
+     },
+     {
+      "k": "hold_out",
+      "s": 4
+     }
+    ],
+    "variants": [
+     {
+      "id": "krace-faze",
+      "label_hr": "Kraće faze",
+      "phases": [
+       {
+        "k": "in",
+        "s": 3
+       },
+       {
+        "k": "hold_in",
+        "s": 3
+       },
+       {
+        "k": "out",
+        "s": 3
+       },
+       {
+        "k": "hold_out",
+        "s": 3
+       }
+      ],
+      "rate_per_min": 5,
+      "note_hr": "Ako se 4 s zadržavanja muči. U Balbanovoj studiji duljinu faze svatko je odredio testom izdaha (3–10 s); ako se muči, skrati."
+     }
+    ],
+    "minutes_default": 5,
+    "minutes_options": [
+     1,
+     5
+    ],
+    "frequency_hr": "Po potrebi; nije svakodnevna vježba za stres.",
+    "nose_mouth_hr": "Sve na nos.",
+    "posture_hr": "Sjedeći uspravno.",
+    "when_hr": "Kad osjetiš stres ili prije stresnog trenutka (ispit, važan razgovor, put na utakmicu). Ne dok si zadihan i ne tik prije igre.",
+    "steps_hr": [
+     "Sjedni uspravno.",
+     "Udahni na nos 4 s.",
+     "Zadrži dah 4 s, opušteno, bez napinjanja.",
+     "Izdahni na nos 4 s.",
+     "Zadrži 4 s pa ponovi.",
+     "Ako je zadržavanje teško, uzmi kraće faze (3 s)."
+    ],
+    "why_hr": "Prije stresnog zadatka ublažilo je skok pulsa, a 1 min u stvarnom stresu smanjio je tjeskobu više nego ništa; tjeskoba nakon stresa nije bila manja nego uz normalno disanje. Kao svakodnevna vježba za stres u prosjeku nije djelovalo.",
+    "grade": "low",
+    "grade_hr": "ograničeni do vrlo slabi dokazi",
+    "caution_hr": "Zadržavaj opušteno, nikad na silu (bez upiranja). Ne dok si zadihan: u pauzama intervalnog treninga podiglo je puls i osjećaj napora. Odmah nakon vježbe reakcije mogu biti malo sporije. Ako te zadržavanje uznemiruje, prekini. Nije ispitano kod srčane bolesti, glaukoma, epilepsije, trudnoće ni teže psihičke bolesti: tada prvo liječnik. Nikad u vožnji ni u vodi.",
+    "sources": [
+     "McAllister MJ, Martaindale MH, Sutton N, Andersen JP. Box breathing and prolonged exhalation reduces markers of physiological stress reactivity in response to a virtual Trier social stress test. Compr Psychoneuroendocrinol 2026;27:100360. doi:10.1016/j.cpnec.2026.100360",
+     "Riedl EM, Bracklo T, Wimmer K, Perzl J, Gdynia HJ, Thomas J, Surzykiewicz J. Simply breathing anxiety away? One-minute cyclic sighing versus box breathing for acute anxiety reduction. Anxiety Stress Coping 2026. doi:10.1080/10615806.2026.2659809 (abstract only)",
+     "Vetter VM, Kurth T, Konigorski S. Evaluation of two easy-to-implement digital breathing interventions in the context of daily stress levels in a series of N-of-1 trials (ASIP). NPJ Digit Med 2026;9:135. doi:10.1038/s41746-025-02317-3",
+     "Kasap M, Aydin GR. Box breathing or six breaths per minute: which strategy improves athletes' post-HIIT cardiovascular recovery? PLoS One 2025;20(11):e0336615. doi:10.1371/journal.pone.0336615",
+     "Balban MY, Neri E, Kogon MM, et al. Brief structured respiration practices enhance mood and reduce physiological arousal. Cell Rep Med 2023;4(1):100895. doi:10.1016/j.xcrm.2022.100895 (box arm)"
+    ],
+    "why_list_hr": [
+     "Prije stresnog zadatka ublažilo je skok pulsa. U stvarnom stresu 1 min ovog disanja smanjio je tjeskobu više nego ništa.",
+     "Tjeskoba nakon stresa nije bila manja nego uz normalno disanje.",
+     "Kao svakodnevna vježba za stres u prosjeku nije djelovalo."
+    ],
+    "src_hr": [
+     "McAllister i sur. 2026, Comprehensive Psychoneuroendocrinology",
+     "Riedl i sur. 2026, Anxiety, Stress & Coping",
+     "Vetter i sur. 2026, npj Digital Medicine"
+    ],
+    "oprez_hr": [
+     "Zadržavaj opušteno, nikad na silu.",
+     "Ne dok si zadihan: tada podiže puls i osjećaj napora.",
+     "Odmah nakon vježbe reakcije mogu biti malo sporije.",
+     "Ako te zadržavanje uznemiruje, prekini.",
+     "Kod glaukoma ili trudnoće prvo pitaj liječnika."
+    ],
+    "prep_hr": "Sjedni uspravno",
+    "kind": "calm",
+    "always_hr": [
+     "Nikad u vodi i nikad u vožnji.",
+     "Vrtoglavica ili trnci znače da dišeš previše. Diši pliće i sporije ili stani.",
+     "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
+    ]
+   }
+  },
+  "sprintevi-bez-daha": {
+   "name": "Sprintevi bez daha",
+   "alt": "Repeated sprints with breath holds (RSH-VHL)",
+   "cat": "Disanje",
+   "phase": null,
+   "cord": "",
+   "zones": [],
+   "equip": [
+    "Čunjevi"
+   ],
+   "equipment": "Čunjevi na 30–40 m",
+   "measure": "sets",
+   "sets": 2,
+   "reps": 6,
+   "sec": 30,
+   "rest": 180,
+   "kg": 0,
+   "sides": false,
+   "feel": "Manji pad brzine u nizu sprinteva",
+   "steps": [
+    "Prva 2 treninga uči tehniku na 70–80 % brzine.",
+    "Postavi čunjeve na 30–40 m i zagrij se.",
+    "Mirno izdahni, ne do kraja.",
+    "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
+    "Izdahni, udahni i hodaj natrag dišući slobodno.",
+    "Novi sprint kreće svakih 30 s. Nakon serije je označi kvačicom; mobitel ti za sprinteve ne treba.",
+    "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
+   ],
+   "mistakes": [],
+   "note": "Kod treniranih sportaša (10 malih studija, uz trenera) nakon 6–12 treninga brzina je manje padala kroz niz sprinteva; najveća brzina nije porasla. Za utakmicu nema dokaza, a bez trenera nije testirano.",
+   "source": "",
+   "sourceTitle": "",
+   "order": 903,
+   "fav": false,
+   "media": null,
+   "mediaType": null,
+   "muscles": {
+    "prime": [],
+    "sec": []
+   },
+   "muscleWorkEligible": false,
+   "breath": {
+    "technique": "rsh-vhl",
+    "name_hr": "Sprintevi bez daha",
+    "goal_hr": "Manji pad brzine u nizu sprinteva",
+    "frequency_hr": "2× tjedno (barem 2 dana razmaka) kroz 4–6 tjedana, ukupno 6–12 treninga; ne zadnjih 48 h prije utakmice.",
+    "nose_mouth_hr": "Izdahni mirno na usta, kao inače (ne do kraja), zatvori usta i zadrži dah; nakon sprinta izdahni pa diši slobodno.",
+    "posture_hr": "Na terenu: čunjevi na 30–40 m; sprint, zatim hod natrag.",
+    "when_hr": "Na treningu na terenu, nakon zagrijavanja, umjesto uobičajenih ponovljenih sprinteva.",
+    "steps_hr": [
+     "Prva 2 treninga uči tehniku na 70–80 % brzine.",
+     "Postavi čunjeve na 30–40 m i zagrij se.",
+     "Mirno izdahni, ne do kraja.",
+     "Zadrži dah i sprintaj do čunja, oko 6 s. Dah zadržavaj samo dok traje sprint.",
+     "Izdahni, udahni i hodaj natrag dišući slobodno.",
+     "Novi sprint kreće svakih 30 s. Nakon serije je označi kvačicom; mobitel ti za sprinteve ne treba.",
+     "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje."
+    ],
+    "why_hr": "Kod treniranih sportaša (10 malih studija, uz trenera) nakon 6–12 treninga brzina je manje padala kroz niz sprinteva; najveća brzina nije porasla. Za utakmicu nema dokaza, a bez trenera nije testirano.",
+    "grade": "low",
+    "grade_hr": "ograničeni dokazi",
+    "caution_hr": "Napredna vježba, samo ako si zdrav. Dah zadržavaj samo dok traje sprint (najviše oko 8 s), nikad do krajnje granice i nikad dulje nakon sprinta; prije toga nikad ne diši ubrzano. Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje. Nikad u vodi, nikad kad si bolestan. Kod srčane bolesti, visokog tlaka, nesvjestica ili napadaja u prošlosti, astme ili anemije prvo pitaj liječnika. Trči po neskliskoj podlozi.",
+    "advanced": true,
+    "safety_gate": true,
+    "safety_gate_hr": [
+     "Ne radim ovo kad sam bolestan ili prehlađen.",
+     "Nemam srčanu bolest, visok tlak, anemiju ni astmu, ili mi je liječnik to dopustio.",
+     "Nikad se nisam onesvijestio niti imao epileptički napadaj.",
+     "Trčim po neskliskoj podlozi, ne u vodi.",
+     "Dah zadržavam samo dok traje sprint i stajem kod vrtoglavice."
+    ],
+    "sources": [
+     "Précart C, Bouten J, Woorons X, Fornasier-Santos C, Millet GP, Brocherie F. Repeated-sprint training in hypoxia induced by voluntary hypoventilation at low lung volume: a meta-analysis. Sports Med Open 2025;11:55. doi:10.1186/s40798-025-00853-6",
+     "Lapointe J, Paradis-Deschênes P, Woorons X, Lemaître F, Billaut F. [RCT of repeated sprints with voluntary hypoventilation at low lung volume in basketball players]. Front Sports Act Living 2020;2:29. doi:10.3389/fspor.2020.00029",
+     "Ait Ali Braham M, Ouchen Y, Woorons X. [RCT of end-expiratory vs end-inspiratory breath holds during repeated sprints in female soccer players]. Int J Sports Physiol Perform 2024;19(5):463-470. doi:10.1123/ijspp.2023-0392 (abstract only)",
+     "Fornasier-Santos C, Millet GP, Woorons X. [Repeated-sprint training with voluntary hypoventilation in rugby players]. Eur J Sport Sci 2018;18(4):504-512. doi:10.1080/17461391.2018.1431312 (abstract only)",
+     "Woorons X, Daussin F, Combes A, Mucci P. [Breath holds to the breaking point during running: SpO2 nadir 74.9%]. J Hum Kinet 2024;90:111-123. doi:10.5114/jhk/174465 (abstract only; safety)"
+    ],
+    "why_list_hr": [
+     "Kod treniranih sportaša (10 malih studija, uz trenera) brzina je nakon 6–12 treninga manje padala kroz niz sprinteva.",
+     "Najveća brzina nije porasla.",
+     "Za utakmicu nema dokaza, a bez trenera vježba nije testirana."
+    ],
+    "src_hr": [
+     "Précart i sur. 2025, Sports Medicine – Open (meta-analiza)",
+     "Lapointe i sur. 2020, Frontiers in Sports and Active Living"
+    ],
+    "oprez_hr": [
+     "Samo ako si zdrav.",
+     "Dah zadržavaj samo dok traje sprint (najviše oko 8 s). Nikad do krajnje granice i nikad dulje nakon sprinta.",
+     "Prije zadržavanja nikad ne diši ubrzano.",
+     "Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje.",
+     "Ne kad si bolestan ili prehlađen.",
+     "Kod visokog tlaka ili anemije prvo pitaj liječnika.",
+     "Trči po neskliskoj podlozi."
+    ],
+    "prep_hr": "Na start, čunj na 30–40 m",
+    "structure": {
+     "reps_per_set_default": 6,
+     "reps_per_set_options": [
+      6,
+      7,
+      8
+     ],
+     "sets_default": 2,
+     "sets_options": [
+      2,
+      3
+     ],
+     "set_rest_s": 180,
+     "progression_hr": [
+      "Treninzi 1–2: 2 × 6 sprinteva od 30 m na 70–80 % brzine (učenje tehnike).",
+      "Treninzi 3–6: 3 × 6–8 sprinteva od 30–40 m punom brzinom.",
+      "Treninzi 7–12: 3 × 8 sprinteva od 40 m.",
+      "Progresija je izvedena iz raspona u studijama; sama nije testirana."
+     ],
+     "distance_m_range": [
+      30,
+      40
+     ]
+    },
+    "kind": "sprint",
+    "always_hr": [
+     "Nikad u vodi i nikad u vožnji.",
+     "Ako imaš bolest srca ili pluća, astmu ili epilepsiju, ili si se nekad onesvijestio, prvo pitaj liječnika."
+    ]
+   }
   }
  },
  "protocols": {

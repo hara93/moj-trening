@@ -82,10 +82,24 @@
     const oneSide=item.sides && Array.isArray(item.sideCounts) && item.sideCounts[i]===1;
     return (Number.isInteger(ordinal)?String(ordinal):'—')+(oneSide?' · jedna strana':'');
   }
+  // 1.25.0: a breathing item (item.breathView from the app): calm breathing shows its time and rhythm, the breath-hold sprints
+  // their sets of sprints; neither has kilograms or a reserve
+  function breathDetails(item,index,state,n) {
+    const v=item.breathView,calm=v.kind==='calm',count=rowsCount(item);
+    const secs=calm?(History.recordedRows(item)||[]).reduce((a,r)=>a+(number(r.sec)||0)*(number(r.sides)||0),0):null;
+    const clock=s=>Math.floor(Math.round(s)/60)+':'+String(Math.round(s)%60).padStart(2,'0');
+    const rows=calm?'':Array.from({length:count},(_,i)=>'<tr><th scope="row">'+rowLabel(item,i)+'</th><td>'+esc(fmt(rowReps(item,i)))+'</td></tr>').join('');
+    return '<article class="hy-card hy-exercise"><div class="hy-exercise-title"><span>'+String(index+1).padStart(2,'0')+'</span><div><h2>'+esc(itemName(item))+'</h2>'+(itemNameSource(item)?'<p>'+esc(itemNameSource(item))+'</p>':'')+'</div></div><p class="hy-status">'+esc(state)+'</p>'+
+      '<dl class="hy-metrics hy-item-count">'+(calm?metric('Vrijeme disanja',secs!=null&&count?clock(secs):'Nije zabilježeno'):metric('Odrađene serije',fmt(n,0))+metric('Serije u zapisu',fmt(item.sets,0)))+'</dl>'+
+      (rows?'<div class="hy-table-wrap"><table class="hy-sets"><caption>Sprintevi po seriji</caption><thead><tr><th scope="col">Serija</th><th scope="col">Sprintevi</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'')+
+      (typeof item.note==='string'&&item.note.trim()?'<p class="hy-copy hy-session-note"><b>Bilješka</b><br>'+esc(item.note)+'</p>':'')+
+      '<p class="hy-footnote">'+esc(v.text)+'</p></article>';
+  }
   function itemDetails(item,index) {
     if(!item||typeof item!=='object')return note('Podaci ove vježbe nisu čitljivi; ostali poznati dijelovi zapisa ostaju dostupni.');
     const timed=item.measure==='time',n=completed(item),count=rowsCount(item),reserve=timed?'sirList':'rirList';
     const state=item.skipped?'Preskočeno':item.done===false?'Nedovršeno':n==null?'Izvedba nije potpuno zabilježena':number(item.sets)!=null&&n<item.sets?'Djelomično odrađeno':'Spremljena izvedba';
+    if(item.breathView&&typeof item.breathView==='object')return breathDetails(item,index,state,n);
     const row=Array.from({length:count},(_,i)=>'<tr><th scope="row">'+rowLabel(item,i)+'</th><td>'+esc(fmt(timed?rowDose(item,'sec',i):rowReps(item,i)))+'</td><td>'+esc(fmt(rowDose(item,'kg',i)))+'</td><td>'+esc(fmt(array(item[reserve])[i]))+'</td></tr>').join('');
     return '<article class="hy-card hy-exercise"><div class="hy-exercise-title"><span>'+String(index+1).padStart(2,'0')+'</span><div><h2>'+esc(itemName(item))+'</h2>'+(itemNameSource(item)?'<p>'+esc(itemNameSource(item))+'</p>':'')+'</div></div><p class="hy-status">'+esc(state)+(item.sides?' · Po strani':'')+'</p><dl class="hy-metrics hy-item-count">'+metric('Odrađene serije',fmt(n,0))+(attempted(item)!==n?metric('Pokušane serije',fmt(attempted(item),0)):'')+metric('Serije u zapisu',fmt(item.sets,0))+'</dl>'+
       (count?'<div class="hy-table-wrap"><table class="hy-sets"><caption>Podaci po spremljenim serijama</caption><thead><tr><th scope="col">Serija</th><th scope="col">'+(timed?(item.sides?'Prosjek po strani (s)':'Vrijeme (s)'):'Ponavljanja')+'</th><th scope="col">Teret (kg)</th><th scope="col">'+(timed?'Rezerva (s)':'RIR')+'</th></tr></thead><tbody>'+row+'</tbody></table></div>':'<p class="hy-muted">'+(n===0?'Nema dovršenih serija.':'Nije sačuvan dovoljan zapis za prikaz izvedbe po serijama.')+'</p>')+
@@ -133,19 +147,19 @@
   function numericField(label,value,attrs,help='') {return field(label,inputNumber(value),'type="text" inputmode="decimal" '+attrs,help);}
   function editItem(item,index) {
     if(!item||typeof item!=='object')return note('Detalji ove vježbe nisu dostupni za uređivanje.');
-    const timed=item.measure==='time',count=rowsCount(item),bySet=own(item,'repsList'),prefix='data-history-item="'+index+'" ';
+    const timed=item.measure==='time',count=rowsCount(item),bySet=own(item,'repsList'),prefix='data-history-item="'+index+'" ',breath=!!item.breathView;
     const rowFields=Array.from({length:count},(_,i)=>{
       const common=prefix+'data-history-set="'+i+'" ';
       const failedLast=item.done===false&&number(item.lastReps)!=null&&i===attempted(item)-1;
       return '<div class="hy-set-edit"><b>Serija '+rowLabel(item,i)+(failedLast?' · zadnja pokušana':'')+'</b><div class="hy-form-grid">'+(!timed?(failedLast?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):numericField('Ponavljanja',rowReps(item,i),common+'data-history-field="reps"')):'')+
-        (own(item,'kgList')?numericField('Teret serije (kg)',rowDose(item,'kg',i),common+'data-history-field="kg"'):'')+
+        (own(item,'kgList')&&!breath?numericField('Teret serije (kg)',rowDose(item,'kg',i),common+'data-history-field="kg"'):'')+
         (timed&&own(item,'secList')?numericField('Vrijeme serije (s)',rowDose(item,'sec',i),common+'data-history-field="sec"'):'')+
-        numericField(timed?'Rezerva u sekundama':'RIR',array(item[timed?'sirList':'rirList'])[i],common+'data-history-field="'+(timed?'sir':'rir')+'"','Prazno znači da nije zabilježeno.')+'</div></div>';
+        (breath?'':numericField(timed?'Rezerva u sekundama':'RIR',array(item[timed?'sirList':'rirList'])[i],common+'data-history-field="'+(timed?'sir':'rir')+'"','Prazno znači da nije zabilježeno.'))+'</div></div>';
     }).join('');
     return '<fieldset class="hy-card hy-edit-item"><legend>'+esc(itemName(item))+'</legend>'+(itemNameSource(item)?'<p class="hy-footnote">'+esc(itemNameSource(item))+'</p>':'')+'<p class="hy-muted">Serije u izvornom zapisu: '+fmt(item.sets,0)+(item.sides?' · po strani':'')+'</p><div class="hy-form-grid">'+
       numericField('Odrađene serije',completed(item),prefix+'data-history-field="setsDone"','Cijeli broj; 0 znači preskočeno.')+
       (timed?(own(item,'secList')?'':numericField('Vrijeme po seriji (s)',item.sec,prefix+'data-history-field="sec"')):!bySet?numericField('Ponavljanja po seriji',item.reps,prefix+'data-history-field="reps"'):'')+
-      (own(item,'kgList')?'':numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.'))+
+      (own(item,'kgList')||breath?'':numericField('Teret u zapisu (kg)',item.kg,prefix+'data-history-field="kg"','Nula je valjana vrijednost; prazno je nepoznato.'))+
       (item.done===false&&!timed&&!count?numericField('Ponavljanja zadnje pokušane serije',item.lastReps,prefix+'data-history-field="lastReps"'):'')+'</div>'+
       (rowFields?'<details class="hy-details"><summary>Podaci po serijama</summary>'+rowFields+(count===64?'<p class="hy-muted">Uređivanje prikazuje prvih 64 serije. Ostale se čuvaju.</p>':'')+'</details>':'')+'</fieldset>';
   }

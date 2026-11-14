@@ -52,7 +52,7 @@ test('small text on the player screen is at least 13 px, the last rule for each 
 test('no stylesheet loaded after workout.css lowers the small player text again (index.html link order)',()=>{
   const links=[...read('index.html').matchAll(/<link rel="stylesheet" href="([a-z-]+\.css)">/g)].map(m=>m[1]);
   const later=links.slice(links.indexOf('workout.css')+1);
-  assert.deepEqual(later,['training-load.css','app-layout.css']);
+  assert.deepEqual(later,['training-load.css','app-layout.css','breath.css']);   // 1.25.0: breath.css (the breathing pacer) comes last
   const selectors=['.workout-cinema .cinema-next','.workout-cinema .cinema-next small','.workout-cinema-next small','.cinema-weight-value small','.workout-cinema-heading p'];
   for(const file of later)for(const [,list,body] of read(file).matchAll(/([^{}]+)\{([^{}]*)\}/g)){
     const size=body.match(/font-size:(\d+(?:\.\d+)?)px/);

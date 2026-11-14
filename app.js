@@ -45,7 +45,8 @@ const I = {
   book:'M4 5h16M4 12h16M4 19h10',
   dumb:'M3 12h18M6 8v8M18 8v8M3 10v4M21 10v4',
   leaf:'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4',
-  rope:'M5 20c0-5 3-7 7-7s7-2 7-7M5 20l2-2M19 6l-2 2M12 13a2 2 0 1 0 0-.01'
+  rope:'M5 20c0-5 3-7 7-7s7-2 7-7M5 20l2-2M19 6l-2 2M12 13a2 2 0 1 0 0-.01',
+  wind:'M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h7'   // Disanje: the breathing category icon
 };
 const pathIcon = (d, w) => '<svg viewBox="0 0 24 24" width="'+(w||24)+'" height="'+(w||24)+'" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="'+d+'"/></svg>';
 
@@ -61,11 +62,11 @@ const fmt = s => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s/60), r 
 const MEDIA_URLS = {}, mediaTried = {};
 const MEDIA = new Proxy(MEDIA_URLS, { get(t, k){ if (typeof k === 'string' && !(k in t) && !mediaTried[k] && k.indexOf('pack:') !== 0) loadOwnMedia(k); return t[k]; } });
 const mediaUrl = id => MEDIA[id] || '';
-const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Eksplozivnost', 'Trup', 'Kondicija'];
+const CATS = ['Rehab', 'Aktivacija', 'Mobilnost', 'Snaga', 'Eksplozivnost', 'Trup', 'Kondicija', 'Disanje'];
 const ZONES = ['Kuk','Gluteus','Gluteus medius','Aduktori','Fleksori kuka','Stražnja loža','Kvadriceps','Lisni mišić','Prednja potkoljenica','Core','Koljeno','Gležanj','Leđa','Prsa','Ramena','Ruke','Cijelo tijelo','Vrat'];
 // the data keeps 'Core' (also in exercises you edited); on screen it is "Trup", like the library category
 const exZoneLabel = z => z === 'Core' ? 'Trup' : z;
-const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
+const LIBCATS = ['Sve','Favoriti','TRX','Rehab kuka','Uže i kolotur','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija','Disanje'];
 const EQUIP = ['Šipka','Kavez','Klupa','Bučice','Girja','Landmine','TRX','Medicinka','Plyo box','Švedske ljestve','Elastično uže','Kolotur','Mini guma','Velika pilates lopta','Mala pilates lopta','Kotač','Bugarsko postolje','Strunjača','Čunjevi','Sobni bicikl','Bez opreme'];
 // The front/back figure preserves stored region IDs. Exercise zones follow its selected regions;
 // 'Cijelo tijelo' has no region of its own, while hip_joints marks both hip joints, not a muscle.
@@ -168,7 +169,7 @@ const sheetFilters = () => EQ_TILES.filter(tileOn).length + (S.lib.cats || []).l
 const DAYS = ['P','U','S','Č','P','S','N'];
 const DAYNAMES = ['ponedjeljak','utorak','srijeda','četvrtak','petak','subota','nedjelja'];
 const daysText = ds => (ds||[]).slice().sort().map(i => DAYNAMES[i].slice(0,3)).join(', ');
-const catIcon = c => ({Rehab:I.pulse, Aktivacija:I.bolt, Mobilnost:I.leaf, Snaga:I.dumb, Eksplozivnost:I.jump, Trup:I.core, Kondicija:I.run}[c] || I.pulse);
+const catIcon = c => ({Rehab:I.pulse, Aktivacija:I.bolt, Mobilnost:I.leaf, Snaga:I.dumb, Eksplozivnost:I.jump, Trup:I.core, Kondicija:I.run, Disanje:I.wind}[c] || I.pulse);
 // diacritic-insensitive text for search: "cucanj" finds "čučanj"
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
 // equipment tags: explicit on newer exercises, otherwise read from the free-text "Oprema" field
@@ -246,6 +247,7 @@ function repsOf(it, set){ return (it.repsList && it.repsList[set - 1]) || it.rep
 function dose(it){ return doseBase(it) + (it.note ? ' · ' + it.note : ''); }
 // the dose without the note; different reps per set are shown as they are trained (4 × 6/5/5/4), also in the progression texts
 function doseBase(it){
+  if (breathPlan(it) || breathItemSprint(it)) return breathDoseText(it);   // Disanje: "10 min · 4/6 s", "2 × 6 sprinteva"
   if (it.measure === 'time') return ((it.sets||1) > 1 ? it.sets + ' × ' : '') + (it.sec||30) + ' s' + (it.sides ? ' po strani' : '');
   if (Array.isArray(it.repsList) && it.repsList.some(r => r !== it.repsList[0])) return it.repsList.length + ' × ' + it.repsList.join('/') + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
   return (it.sets||1) + ' × ' + (it.reps||10) + (it.sides ? ' po strani' : '') + (it.kg ? ' · ' + fmtKg(it.kg) : '');
@@ -261,9 +263,11 @@ function recordedDoseLabel(x) {
   if (rows.length>3) shown.push('još '+(rows.length-3));
   return shown.join(' · ');
 }
-function exItem(e){ const m = e.measure||'sets'; return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0, ...(e.startingKgKnown===true?{startingKgKnown:true}:{}) }; }
+function exItem(e){ const m = e.measure||'sets'; if (breathOf(e)) return breathItem(e, {});
+  return { exId: e.id, measure: m, sec: e.sec||30, sets: e.sets || (m === 'time' ? 1 : 3), reps: e.reps||10, rest: e.rest != null ? e.rest : (m === 'time' ? 15 : 45), sides: !!e.sides, kg: e.kg||0, ...(e.startingKgKnown===true?{startingKgKnown:true}:{}) }; }
 function exBadge(e){ if (e.phase) return 'Faza ' + e.phase; if (e.cord) return 'Uže ' + e.cord; return ''; }
-function exMeta(e){ return (e.zones && e.zones.length ? e.zones.slice(0,2).map(exZoneLabel).join(' • ') : e.cat) ; }
+function exMeta(e){ if (breathOf(e)) return breathMeta(e);
+  return (e.zones && e.zones.length ? e.zones.slice(0,2).map(exZoneLabel).join(' • ') : e.cat) ; }
 // Sources hidden for now (Tomislav asked on 4 Nov 2026): with false the app shows no source, author or licence anywhere (the
 // "Izvor" lines of exercises and field sessions, the programme's "Izvori", the credit chip and its "Izvor i licenca" sheet, the
 // pack's name on its photos), no licensed demo video or photo and no outside video link ("Pogledaj demonstraciju", "Pogledaj kod
@@ -296,7 +300,7 @@ function thumbHtml(e){
 }
 // A picture that cannot load (offline, missing file) becomes the category icon, like the home covers, so its alt
 // text never prints over the player's labels.
-const MEDIA_CATS = ['Rehab','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija'];
+const MEDIA_CATS = ['Rehab','Aktivacija','Mobilnost','Snaga','Eksplozivnost','Trup','Kondicija','Disanje'];
 function mediaFailAttr(e, size){
   const cat = e && MEDIA_CATS.includes(e.cat) ? e.cat : '';
   return ' data-fallback-cat="'+cat+'" data-fallback-size="'+size+'" onerror="mediaFail(this)"';
@@ -1276,7 +1280,8 @@ function calDay(t, n){ const d = new Date(t); d.setHours(0,0,0,0); if (n) d.setD
 function weekStart(t){ const d = new Date(t); d.setHours(0,0,0,0); d.setDate(d.getDate() - dayIdx(d)); return d.getTime(); }
 // a training: a session of a protocol, a programme or a field plan. A single exercise tried from the library and a test
 // result are not trainings (the same rule as nTrainings); they still count in the exercise's own history and your kilograms.
-const isTraining = l => !!l && l.kind !== 'exercise' && l.kind !== 'test';
+// 1.25.0: a session of calm breathing only (calmOnly) is not a training either
+const isTraining = l => !!l && l.kind !== 'exercise' && l.kind !== 'test' && !l.calmOnly;
 // 1.21: the share of its planned work sets a protocol session did. A session fills a plan day from half of them, or when
 // you tap "Računaj kao odrađeno" on the done screen (countsAsDone); otherwise it is shown as "djelomično". Field and team
 // sessions and logs without set counts count whole.
@@ -1808,8 +1813,9 @@ function historyDisplay(l) {
     const snap = MuscleWork.sanitize(l.muscleWork && l.muscleWork[i]);
     const saved = snap && snap.exerciseId === x.exId && snap.name !== x.exId ? snap.name : x.name;
     const current = S.ex[x.exId];
+    const breathView = breathHistoryLine(x);   // 1.25.0: breathing is drawn without kilograms or reserve
     return { ...x, name:saved || (current && current.name) || x.exId,
-      nameSource:saved ? 'snapshot' : current ? 'library' : 'id' };
+      nameSource:saved ? 'snapshot' : current ? 'library' : 'id', ...(breathView ? { breathView } : {}) };
   });
   return { ...l, id:l.historyId, title:l.name, items:items || undefined,
     archived:l.kind !== 'field' && l.kind !== 'team' && !items,
@@ -2114,6 +2120,7 @@ const SET_STATUS = {
 function viewDoseSource(t) {
   if (t.v === 'pr') return S.pr[t.id]?.items || [];
   const exercise = S.ex[t.id];
+  if (breathOf(exercise)) return [breathItem(exercise, t.breathSel || {})];   // the choices on the breathing page
   return exercise ? [doseOptions(exercise)[t.dose || 0]?.it || exItem(exercise)] : [];
 }
 function viewDoseItems(t, original = viewDoseSource(t)) {
@@ -2275,6 +2282,7 @@ function workoutCompactHtml(items) {
     return (known.length?format(Math.min(...known))+'–'+format(Math.max(...known)):'—')+(known.length<values.length?' · dio nije upisan':'');
   };
   const summary=item=>{
+    if(breathPlan(item)||breathItemSprint(item))return breathDoseText(item);
     const n=Number.isInteger(item.sets)&&item.sets>0?item.sets:1,timed=item.measure==='time',field=timed?'sec':'reps',list=item[field+'List'];
     const values=Array.from({length:n},(_,i)=>Array.isArray(list)?Number.isFinite(list[i])?list[i]:null:Number.isFinite(item[field])?item[field]:timed?30:10);
     const kind=startLoadDescription(item.exId)?.kind,weights=Array.from({length:n},(_,i)=>StartingLoad.missingSet(item,i,kind)?null:Array.isArray(item.kgList)?Number.isFinite(item.kgList[i])?item.kgList[i]:null:Number.isFinite(item.kg)?item.kg:0);
@@ -2287,7 +2295,7 @@ function workoutCompactHtml(items) {
   const parts=CinemaModel.groupSections(items);
   return '<div class="workout-compact-list" aria-label="Vježbe u treningu">'+items.map((item,j)=>{
     const e=S.ex[item.exId],group=rounds[j],gr=group?ssGroup(items,j):null;
-    const previous=j?parts[j-1]:null,section=parts[j],name=e?.name||'Obrisana vježba';
+    const previous=j?parts[j-1]:null,section=parts[j],name=breathPlan(item)?breathName(item):e?.name||'Obrisana vježba';
     const row=WorkoutView.compactExercise({index:j,name,tagHtml:group?ssTagHtml(group.L+group.k):'',label:group?group.L+group.k+' · '+name+', '+gr.title+', '+group.k+'. od '+nVj(gr.size):'',thumbHtml:e?thumbHtml(e):'',summary:summary(item),previous:workoutPreviousShort(item)});
     return (section&&section!==previous?'<h2 class="workout-list-section">'+esc(section)+'</h2>':'')+(gr&&group.k===1?ssOpenHtml(gr):'')+row+(gr&&group.k===gr.size?ssCloseHtml():'');
   }).join('')+'</div>';
@@ -2333,7 +2341,8 @@ function workoutRestWords(items,j){
   if(l.k<l.size)return (item.rest?'Odmor '+item.rest+' s do ':'Bez odmora do ')+l.L+(l.k+1);
   return item.rest?'Odmor '+item.rest+' s nakon kruga':'Bez odmora nakon kruga';
 }
-function workoutInstructionsHtml(e) {
+function workoutInstructionsHtml(e,item) {
+  if(breathOf(e))return breathInfoHtml(e,item);
   const muscles=exMuscles(e);
   const selected=S.sheet?.muscleRegion,region=window.BODY?.regions[selected],isJoint=id=>window.BODY?.regions[id]?.kind==='joint';
   const role=isJoint(selected)?'Zglobno područje · ne daje zasebne mišićne bodove.':muscles.prime.includes(selected)?'Glavni mišić u ovoj vježbi.':muscles.sec.includes(selected)?'Pomoćni mišić u ovoj vježbi.':'Nije označen u ovoj vježbi.';
@@ -2363,13 +2372,14 @@ function workoutPanelHtml(s) {
   if(!e)return '<p>Vježba nije dostupna.</p><button data-a="workoutClose">Zatvori</button>';
   if(s.panel){
     const title={instructions:'O vježbi',history:'Povijest',trends:'Napredak'}[s.panel];
-    return '<div class="view workout-exercise-panel"><header class="workout-panel-bar"><strong>'+title+'</strong><button class="ib" data-a="workoutPanelBack" aria-label="Zatvori '+title.toLowerCase()+'">'+I.close+'</button></header><div class="workout-panel-body">'+(s.panel==='instructions'?workoutInstructionsHtml(e):s.panel==='history'?'<h1>'+esc(e.name)+'</h1>'+workoutPreviousHtml(item)+exHistHtml(e,historyOf(e.id)):workoutTrendsHtml(item))+'</div></div>';
+    return '<div class="view workout-exercise-panel"><header class="workout-panel-bar"><strong>'+title+'</strong><button class="ib" data-a="workoutPanelBack" aria-label="Zatvori '+title.toLowerCase()+'">'+I.close+'</button></header><div class="workout-panel-body">'+(s.panel==='instructions'?workoutInstructionsHtml(e,item):s.panel==='history'?'<h1>'+esc(e.name)+'</h1>'+workoutPreviousHtml(item)+exHistHtml(e,historyOf(e.id)):workoutTrendsHtml(item))+'</div></div>';
   }
   const footer='<button class="btn" data-a="'+(c.live?'workoutClose':top().v==='pr'?'workoutStart':'playEx')+'"'+(top().v==='ex'?' data-id="'+esc(top().id)+'"':'')+'>'+WorkoutView.icon('play')+ (c.live?'Natrag u trening':'Pokreni '+(top().v==='ex'?'vježbu':'trening'))+'</button>';
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="workoutClose" aria-label="Natrag na trening">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button type="button" class="ib" data-a="workoutInfo" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:c.live?'Trening je pauziran':'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(s,c),targetHtml:workoutPrescriptionHtml(s,c),rowsHtml:workoutTableHtml(c,s.j,s)+workoutAddSetHtml(s,c),note:s.error||'',footerHtml:'<div class="footer gut">'+(s.pendingReplacement?'<button class="txtbtn" data-a="workoutCancelPending">Vrati prethodnu vježbu</button>':'')+footer+'</div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="'+(c.live?'live':top().v==='ex'?'library':'preview')+'"');
 }
 // one line for the protocol list: "Prethodno 95 kg · 5 / 5 / 5 / 5 pon." from the last recorded dose ('' when unknown or mixed)
 function workoutPreviousShort(item) {
+  if(item.breath&&item.breath.kind==='calm')return '';   // calm breathing: its time is in the summary; "Prethodno" is in Dnevnik (same preset only)
   const previous=WorkoutModel.previous({item,log:S.log,now:Date.now()});
   const rows=previous?previous.rows.filter(row=>row.measure===item.measure):[];
   if(!rows.length||rows.some(row=>row.failed||row.sides==null||row.perSide==null||row.perSide!==!!item.sides))return '';
@@ -2754,7 +2764,7 @@ function cinemaCountsUp(step){
 function cinemaFooter(v, step, item, name, preparing){
   const recorded=cinemaRecordedStep();
   if (isWork(v.st) || preparing) {
-    const canMark=isWork(v.st)&&!recorded&&!P.paused,target=cinemaTargetText(item),count=(step.set||1)+' od '+item.sets;
+    const canMark=isWork(v.st)&&!recorded&&!P.paused,target=cinemaTargetText(item),count=breathPlan(item)?breathPillCount(breathPlan(item),null):(step.set||1)+' od '+item.sets;
     const mark=canMark?'<button type="button" class="cinema-work-mark" data-a="workoutSetDone" data-j="'+step.g+'" data-set="'+step.set+'" data-step="'+P.i+'" aria-label="'+workoutCompletionLabel(v.st)+'"><span>'+I.checkS+'</span></button>':
       '<span class="cinema-work-mark" aria-hidden="true"><span>'+I.checkS+'</span></span>';
     return '<div class="cinema-work-set'+(recorded?' is-recorded':'')+'">'+mark+
@@ -2815,6 +2825,7 @@ function cinemaJumpLabel(dir){ return cinemaJumpWords(dir).join(' '); }
 // Ponovi starts the current step again (cinemaReplay): its caption names that step the way the screen does
 // (cinemaPrepHtml's "Promjena strane" / "Priprema", the rest's "Odmor"; a side of a set played as two steps is a side).
 function cinemaReplayCaption(step){
+  if (isWork(step) && breathPlan(step.it||P.items[step.g])) return 'vježbu od početka';   // calm breathing: one step
   if (isWork(step)) return PlayerDose.splitSide(step) ? 'stranu od početka' : 'seriju od početka';
   if (step.kind === 'rest' && !step.trans) return 'odmor od početka';
   if (step.kind === 'switch' && !step.go && !step.nextEx) return 'promjenu strane';   // a 10 s countdown: "od početka" adds little
@@ -2844,7 +2855,8 @@ function cinemaTargetText(item){
   const timed=item.measure==='time',value=item[timed?'targetSir':'targetRir'];
   return Number.isFinite(value)?(timed?'rez. '+value+' s':'RIR '+value):'';
 }
-function cinemaQuantity(item,dose){return item.measure==='time'?dose.sec+' s':dose.reps+'×';}
+function cinemaQuantity(item,dose){const bp=breathPlan(item);if(bp)return bp.min+' min';
+  return item.measure==='time'?dose.sec+' s':dose.reps+'×';}
 function cinemaUpcomingHtml(step){
   if(!step||!isWork(step))return '';
   const item=step.it||P.items[step.g],e=S.ex[item.exId],dose=PlayerDose.at(item,step.set),target=cinemaTargetText(item);
@@ -2893,6 +2905,8 @@ function cinemaEquipmentLabel(e){
 // the plan's first set, from the workout itself: "5 pon. · 100 kg"; no weight where the player shows none (bodyweight,
 // a starting load still unknown, zero)
 function cinemaDoseLine(item){
+  const bp=breathPlan(item);if(bp)return breathLine(bp);
+  if(breathItemSprint(item))return item.reps+' '+plural(item.reps,'sprint','sprinta','sprinteva')+' u seriji · '+Math.round((item.rest||0)/60)+' min odmora';
   const dose=PlayerDose.at(item,1),timed=item.measure==='time',kind=startLoadDescription(item.exId)?.kind;
   const weight=kind&&dose.kg>0&&!StartingLoad.missingSet(item,0,kind)?' · '+fmtKg(dose.kg):'';
   return (timed?dose.sec+' s':dose.reps+' pon.')+(item.sides?' po strani':'')+weight;
@@ -2950,7 +2964,8 @@ function cinemaOverviewRow(item,j,current,gr,bracket){
   const e=S.ex[item.exId],at=gr?gr.idx.indexOf(j)+1:0,sets=item.sets||1;
   const cls=[current?'is-current':'',gr&&bracket?'ss-m':'',gr&&bracket&&at===1?'ss-first':'',gr&&bracket&&at===gr.size?'ss-last':''].filter(Boolean).join(' ');
   const sr=gr&&bracket?'<span class="workout-sr">, '+esc(gr.title)+', '+at+'. od '+esc(nVj(gr.size))+(at===1?', '+esc(gr.rounds+', '+gr.restText):'')+'</span>':'';
-  return '<li'+(cls?' class="'+cls+'"':'')+(current?' aria-current="step"':'')+'><strong>'+(gr?'<b class="ss-label">'+esc(gr.L+at)+'</b>':'<b>'+sets+'×</b>')+' '+esc(e?.name||'Vježba')+sr+
+  const bp=breathPlan(item);   // calm breathing: "10 min Sporo disanje prije utakmice", the preset's own name
+  return '<li'+(cls?' class="'+cls+'"':'')+(current?' aria-current="step"':'')+'><strong>'+(gr?'<b class="ss-label">'+esc(gr.L+at)+'</b>':'<b>'+(bp?bp.min+' min':sets+'×')+'</b>')+' '+esc(bp?breathName(item):e?.name||'Vježba')+sr+
     '</strong><small>'+esc(cinemaDoseLine(item))+(gr&&sets<gr.R?' · '+sets+' '+plural(sets,'krug','kruga','krugova'):'')+'</small></li>';
 }
 // Rest: phase 1 is the time alone for 3 s; a tap on the stage, a pause or an opened sheet reveals phase 2 for this rest.
@@ -2973,22 +2988,25 @@ function workoutCinemaHtml() {
   const preparing=!section&&!rest&&(editingPrep||['prep','ready','switch'].includes(st.kind)||st.kind==='rest');
   const phase=section?'section':rest?'rest':preparing?'ready':'work';
   const metrics=cinemaMetricHtml(timed?'sec':'reps',step,item,dose)+cinemaClockHtml(st,recorded)+cinemaMetricHtml('kg',step,item,dose);
-  const pause=P.paused&&!S.sheet,name=e?.name||P.title;
+  // Disanje: the calm breathing work step draws the pacer; the sprints' work step keeps the how-to on screen
+  const bp=breathPlan(item),breathWork=!!bp&&phase==='work'&&isWork(st),sprint=breathItemSprint(item),sprintWork=sprint&&phase==='work'&&isWork(st);
+  const pause=P.paused&&!S.sheet,name=bp?breathName(item):e?.name||P.title;
   const side=PlayerDose.splitSide(step)?step.side:'';
-  const footer=cinemaFooter({st:rest||section?st:isWork(st)?st:{...st,kind:'prep'}},step,item,name,preparing&&!rest);
+  const footer=cinemaFooter({st:rest||section?st:isWork(st)?st:{...st,kind:'prep'}},step,item,bp?(e?.name||name):name,preparing&&!rest);   // the pill names the exercise, the title the preset
   const restClock=restPhase===1?'<div class="cinema-rest-stack"><p class="cinema-phase-word">Odmor</p>'+cinemaBigClock(st,'is-rest',true)+'</div>':'';
   // 1.23.0: inside a group the heading says where the set stands in it ("A1 · krug 1 od 3"), and the work screen one
   // line with what follows
   const where=ssWhere(step),nextText=phase==='work'&&where&&!pause?cinemaNextText(P.i):'';
   // the reserve (RIR) rows of the sets just closed: rest phase 2, and the pause before the next exercise or part
   const reserveAt=!editingPrep&&!pause&&st.kind==='rest'&&restPhase!==1?cinemaReserveSteps():[];
-  return WorkoutView.cinema({phase,phaseClass:rest?'is-rest-'+restPhase:'',paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
-    subtitle:section||rest?'':(where?where.head:'Serija '+(step.set||1)+' od '+item.sets)+(side?' · '+side:''),subtitleSr:section||rest||!where?'':where.aria+(side?', '+side:''),
-    prepQuantity:section||rest?'':cinemaQuantity(item,dose),noticeHtml:nextText?'<p class="ss-next">'+esc(nextText)+'</p>':'',
+  const breathA=breathWork?Breath.at(bp,(st.dur||0)-remaining()):null,breathNote=bp&&phase==='ready'?breathNotice(bp):'';
+  return WorkoutView.cinema({phase,phaseClass:(rest?'is-rest-'+restPhase:'')+(breathWork?' is-breath'+(P._night?' is-night':'')+(bp.night?' is-dim':''):'')+(sprintWork?' is-breath-sprint':''),paused:P.paused&&!editingPrep,exerciseId:item.exId,name,
+    subtitle:section||rest?'':breathWork?breathStateText(breathA):bp&&phase==='ready'?breathReadyText(bp):sprint&&phase==='ready'?breathSprintReadyText(item,step):(where?where.head:'Serija '+(step.set||1)+' od '+item.sets)+(side?' · '+side:''),subtitleSr:section||rest||!where?'':where.aria+(side?', '+side:''),
+    prepQuantity:section||rest?'':cinemaQuantity(item,dose),noticeHtml:nextText?'<p class="ss-next">'+esc(nextText)+'</p>':breathNote,pacerHtml:breathWork?breathHtml(bp,breathA):sprintWork?breathSprintHowtoHtml(e):'',
     overviewHtml:!overview?'':overview.kind==='part'?cinemaSectionHtml(overview.j,parts):cinemaGroupHtml(overview.j),
     mediaHtml:cinemaMediaHtml(e),topbarHtml:topbar,progressHtml:cinemaProgressHtml(frac),
     infoHtml:section||rest?'':'<button type="button" class="cinema-glass" data-a="workoutInfo" data-j="'+active+'" aria-label="Upute za '+esc(e?.name||'vježbu')+'">'+I.info+'</button>',
-    metricsHtml:phase==='work'?metrics:'',
+    metricsHtml:phase!=='work'||breathWork?'':sprintWork?cinemaMetricHtml('reps',step,item,dose)+cinemaClockHtml(st,recorded):metrics,   // no arc or kg on breathing
     reserveHtml:cinemaReserveHtml(reserveAt,active),
     restAdjustHtml:restPhase===2?'<div class="cinema-rest-buttons"><button type="button" data-a="cinemaRest" data-d="-15" aria-label="Skrati odmor za 15 sekundi">−</button><span>Odmor</span><button type="button" data-a="cinemaRest" data-d="15" aria-label="Produlji odmor za 15 sekundi">+</button></div>':'',
     nextHtml:restPhase===2?cinemaUpcomingHtml(CinemaModel.upcoming(P)):'',
@@ -3057,6 +3075,7 @@ function workoutJournalHtml() {
     const sets=PlayerDose.checklist(item,P,j).map(row=>'<span data-state="'+row.state+'">'+(row.state==='done'?WorkoutView.icon('check'):row.set)+'</span>').join('');
     const wrap=body=>section+(gr&&lab[j].k===1?ssOpenHtml(gr):'')+'<div class="workout-player-exercise'+(open?'':' is-collapsed')+'" data-current="'+(j===state.active)+'" data-expanded="'+open+'">'+body+'</div>'+(gr&&lab[j].k===gr.size?ssCloseHtml():'');
     if(!open)return wrap(WorkoutView.journalRow({index:j,name,swapped,thumbHtml:thumb,badgeHtml:badge,setsHtml:sets,tagHtml:tag,group}));
+    if(breathPlan(item)||breathItemSprint(item))return wrap(breathJournalCard(item,j,{name,swapped,thumb,badge,tag,group,state}));   // no kg, reserve, equipment or swap
     const undo=swapped,canSwap=workoutCanSwap(c,j),target=cinemaTargetText(item),e1=cinemaE1Html(item);
     // the previous dose keeps its last number and unit on one line; both lines describe the card's open button
     const previous=workoutPreviousCompact(item).replace(/<\/?span>/g,'').replace(/ (pon\.|s)(?=$| )/g,'\u00a0$1').replace(/ ((?:prosječno )?po strani)/g,'\u00a0$1');
@@ -3364,6 +3383,7 @@ const swIdx = r => { let b = 0; for (let i = 1; i < r.children.length; i++) if (
 let swMem = { id: null, tops: [] };
 VIEWS.ex = function(t){
   const item=viewDoseItems(t)[0],e=item&&S.ex[item.exId];
+  if(breathOf(e))return breathPageHtml(e,item,t);
   if(!e)return '<div class="view gut">'+topbar(backBtn())+'<p class="empty">Ova vježba više nije u knjižnici.</p></div>';
   const state={kind:'workoutExercise',j:0,live:false,base:mtCanon(viewDoseSource(t))},c=workoutContext(state);
   return WorkoutView.exercisePage({topbarHtml:topbar('<button class="ib" data-a="back" aria-label="Natrag">'+WorkoutView.icon('chevron-left')+'</button>','','MOJ TRENING'),mediaHtml:mediaHtml(e),infoHtml:'<button class="ib" data-a="workoutInfo" data-j="0" aria-label="Upute za '+esc(e.name)+'">'+WorkoutView.icon('info')+'</button>',name:e.name,eyebrow:'Plan serija',previousHtml:workoutPreviousCompact(item),toolsHtml:workoutToolbarHtml(state,c),targetHtml:workoutPrescriptionHtml(state,c),rowsHtml:workoutTableHtml(c,0,state)+workoutAddSetHtml(state,c),footerHtml:'<div class="footer gut"><button class="btn" data-a="playEx" data-id="'+esc(t.id)+'">'+WorkoutView.icon('play')+'Pokreni vježbu</button><div class="workout-library-secondary"><button class="txtbtn" data-a="fav" data-id="'+esc(e.id)+'" aria-label="Favorit" aria-pressed="'+!!e.fav+'">'+(e.fav?I.heartF:I.heart)+'Favorit</button><button class="txtbtn" data-a="editEx" data-id="'+esc(e.id)+'" aria-label="Uredi vježbu">'+I.edit+'Uredi</button><button class="txtbtn" data-a="addTo" data-id="'+esc(e.id)+'">Dodaj u trening</button></div></div>'}).replace('class="view workout-exercise-page"','class="view workout-exercise-page" data-context="library"');
@@ -3436,12 +3456,14 @@ VIEWS.exEdit = function(t){
       '<div class="field"><span class="label">Elastično uže</span><div class="chips wrap">' + [['','Bez užeta'],['Ø6','Ø6'],['Ø8','Ø8'],['Ø6/Ø8','Ø6 ili Ø8'],['Ø10','Ø10'],['Ø12','Ø12'],['Ø16','Ø16']].map(o => '<button class="chip" data-a="dset" data-k="cord" data-v="'+o[0]+'" aria-pressed="'+((d.cord||'')===o[0])+'">'+o[1]+'</button>').join('') + '</div></div>' +
       '<div class="field"><span class="label">Oprema</span><div class="chips wrap">' + EQUIP.map(z => '<button class="tagbtn" data-a="dequip" data-v="'+esc(z)+'" aria-pressed="'+((d.equip||[]).indexOf(z)!==-1)+'">'+esc(z)+'</button>').join('') + '</div><p class="lnote" style="margin:10px 2px 0">Kilogrami se upisuju za šipku, landmine, bučice ili girju; bez njih vježba se broji u ponavljanjima ili vremenu.</p></div>' +
       musclePickerHtml(d) + muscleCountingEditor(d) +
+      // a breathing exercise keeps its catalogue data (breath); its dose is chosen on its page and in the training editor
+      (breathOf(d) ? '<div class="field"><span class="label">Doziranje</span><p class="lnote" style="margin:4px 2px 0">' + (breathSprintEx(d) ? 'Serije i sprinteve biraš na stranici vježbe i u treningu.' : 'Postavku, ritam i trajanje biraš na stranici vježbe i u treningu.') + '</p></div>' :
       '<div class="field"><span class="label">Doziranje</span>' +
         '<div class="seg"><button class="chip" data-a="dset" data-k="measure" data-v="time" aria-pressed="'+(d.measure==='time')+'" style="height:44px">Na vrijeme</button><button class="chip" data-a="dset" data-k="measure" data-v="sets" aria-pressed="'+(d.measure!=='time')+'" style="height:44px">Na ponavljanja</button></div>' +
         '<div class="panel">' +
           (d.measure === 'time' ? stepper('Trajanje','sec',d.sec, d.sec+' s') + stepper('Serije','sets',d.sets, d.sets) + stepper('Odmor','rest',d.rest, d.rest+' s') : stepper('Serije','sets',d.sets, d.sets) + stepper('Ponavljanja','reps',d.reps, d.reps) + stepper('Odmor','rest',d.rest, d.rest+' s') + stepper('Težina','kg',d.kg, '', { hint: KG_HINT[kk], aria: kgAria, box: kgBox('data-dkg="1"', d.kg, kgAria + ' u kg') })) +
           '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="dflag" data-k="sides" aria-checked="'+(!!d.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>' +
-        '</div><p class="lnote" style="margin:10px 2px 0">' + esc(editLoadText(d)) + '</p></div>' +
+        '</div><p class="lnote" style="margin:10px 2px 0">' + esc(editLoadText(d)) + '</p></div>') +
       // an own running drill: its metres count in the field load and the weekly field chart
       (d.cat === 'Kondicija' && !seedEx(d.id) && !d.pack ? '<div class="field"><label class="label" for="f-runm">Udaljenost po ponavljanju (m)</label><input id="f-runm" class="input" type="text" inputmode="decimal" autocomplete="off" data-bind="runMText" value="'+esc(d.runMText || '')+'" placeholder="npr. 30 (po želji)">' +
         '<span class="label" style="display:block;margin-top:14px">Intenzitet</span><div class="chips wrap">' + RUN_INT.map(z => '<button class="chip" data-a="dset" data-k="runInt" data-v="'+z+'" aria-pressed="'+((d.runInt || 'umjereno') === z)+'">'+z[0].toUpperCase() + z.slice(1)+'</button>').join('') + '</div>' +
@@ -3715,13 +3737,16 @@ VIEWS.build = function(){
         const inGroup = !!l, lastInGroup = inGroup && !linked;
         const restHint = !inGroup ? 'između serija' : lastInGroup ? 'nakon kruga' : 'prije sljedeće vježbe', rest = istep('Odmor','rest',i,(it.rest||0)+' s',{ hint: restHint, aria: 'Odmor ' + restHint });
         const kk = kgKind(e), kgAria = kk === 'db' ? 'Težina jedne bučice' : 'Težina', split = Array.isArray(it.repsList), n = it.sets || 1, unit = inGroup ? 'krug' : 'serija';
+        const breathed = !!breathPlan(it) || breathItemSprint(it);
         return '<div style="border-radius:20px;background:var(--surface);border:1px solid '+(open?'var(--accent)':'var(--border)')+'">' +
           '<button class="row" data-a="itOpen" data-i="'+i+'" aria-expanded="'+open+'" style="border:0;background:transparent">' +
-            '<span class="thumb">'+(exMedia(e) ? thumbHtml(e) : (l ? l.L + l.k : i+1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span id="dose-'+i+'">'+esc(dose(it))+'</span></span></span>' +
+            '<span class="thumb">'+(exMedia(e) || breathOf(e) ? thumbHtml(e) : (l ? l.L + l.k : i+1))+'</span><span class="tx"><span class="t">'+(l ? '<span class="sslab">'+l.L+l.k+'</span> ' : '')+esc(e ? e.name : 'Obrisana vježba')+'</span><span class="m"><span id="dose-'+i+'">'+esc(dose(it))+'</span></span></span>' +
             '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate('+(open?'-90':'90')+'deg)"><path d="M9 4.5l7.5 7.5L9 19.5"/></svg>' +
           '</button>' +
           (open ? '<div style="padding:0 16px 16px;border-top:1px solid var(--border)">' +
             (!l || l.k === 1 ? secField(i) : '<p class="builder-part-inherited">'+esc(eff[i])+'</p>') +
+            // breathing: its own choices instead of Trajanje (≤ 600 s), measure and sides; the sprints keep their rest
+            (breathed ? breathEditorHtml(it, i) + (breathSprintEx(e) ? rest : '') :
             '<div class="seg" style="margin-top:12px"><button class="chip" data-a="iset" data-k="measure" data-v="time" aria-pressed="'+(it.measure==='time')+'">Na vrijeme</button><button class="chip" data-a="iset" data-k="measure" data-v="sets" aria-pressed="'+(it.measure!=='time')+'">Na ponavljanja</button></div>' +
             (it.measure === 'time'
               ? istep('Trajanje','sec',i,it.sec+' s') + istep(inGroup ? 'Krugovi' : 'Serije','sets',i,n) + rest
@@ -3731,8 +3756,8 @@ VIEWS.build = function(){
                 istep('Težina','kg',i,'',{ hint: KG_HINT[kk], aria: kgAria, box: kgBox('data-ikg="'+i+'"', it.kg, kgAria + ' u kg') }) +
                 '<label class="prow builder-rep-timer"><span class="k">Vrijeme serije (s)<small>Prazno za automatsku procjenu</small></span><input class="input" type="text" inputmode="numeric" data-rep-set-sec="'+i+'" value="'+esc(it.repSetSec??'')+'" placeholder="Automatski"></label>'+
                 rest) +
-            '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="iflag" data-i="'+i+'" aria-checked="'+(!!it.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>' +
-            (i < N - 1 && (linked || eff[i] === eff[i + 1]) ? '<div class="prow"><span class="k">Superset sa sljedećom vježbom<br><span style="font-size:13px;color:var(--text-2)">Radiš ih naizmjence, odmor tek nakon kruga</span></span><button class="switch" role="switch" data-a="ilink" data-i="'+i+'" aria-checked="'+linked+'" aria-label="Superset sa sljedećom vježbom"></button></div>' : '') +
+            '<div class="prow"><span class="k">Lijeva i desna strana posebno</span><button class="switch" role="switch" data-a="iflag" data-i="'+i+'" aria-checked="'+(!!it.sides)+'" aria-label="Lijeva i desna strana posebno"></button></div>') +
+            (i < N - 1 && !breathed && !breathOf(S.ex[d.items[i + 1].exId]) && (linked || eff[i] === eff[i + 1]) ? '<div class="prow"><span class="k">Superset sa sljedećom vježbom<br><span style="font-size:13px;color:var(--text-2)">Radiš ih naizmjence, odmor tek nakon kruga</span></span><button class="switch" role="switch" data-a="ilink" data-i="'+i+'" aria-checked="'+linked+'" aria-label="Superset sa sljedećom vježbom"></button></div>' : '') +
             '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">' +
               '<button class="chip" data-a="imove" data-i="'+i+'" data-d="-1"'+(i===0?' disabled style="opacity:.35"':'')+'>↑ Gore</button>' +
               '<button class="chip" data-a="imove" data-i="'+i+'" data-d="1"'+(i===N-1?' disabled style="opacity:.35"':'')+'>↓ Dolje</button>' +
@@ -4478,6 +4503,7 @@ function startPlayer(cfg, repeating=false){
     playResume();
     if (S.sheet?.kind==='resume') return;
   }
+  if (!repeating && cfg.mode==='ex' && breathGateNeeded(cfg.items, cfg)) return false;   // the one-time safety gate of the breath-hold sprints, for every way in
   if (cfg.mode==='ex' && openStartingLoad(cfg,repeating)) return;
   audioMode(true); ensureAudio();
   S.workoutRaw={};
@@ -4515,6 +4541,9 @@ function positionStep(i, t0){
   return step;
 }
 function signalStep(st){
+  // calm breathing: the pacer plays its own phase tones, and bedtime has no prep signal in the dark
+  const calm = P.mode === 'ex' && P.items && (st.it || P.items[st.g]), plan = calm && calm.breath && calm.breath.kind === 'calm' ? breathPlan(calm) : null;
+  if (plan && (st.kind === 'work' || plan.night)) return;
   if (P.mode === 'ex') {
     // The legacy ready marker has no duration. The preparation that follows it has its own cue.
     if (st.kind === 'ready' || st.dur === 0 && !isWork(st)) return;
@@ -4541,7 +4570,7 @@ function tick(){
     // a rep set ends on its own only with a set timer (Tajmer serije); otherwise it counts up and waits for the tap
     // (the same rule as cinemaCountsUp: no countdown cues for it)
     const manual=st.kind==='manual', timer=!manual||repSetSeconds(st.it||{})!==null, whole=Math.ceil(manual?cinemaManualRemaining(st):remaining());
-    if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole) {
+    if (timer && whole <= 3 && whole >= 1 && P.lastBeep !== whole && !(isWork(st) && breathPlan(st.it||P.items[st.g])) && !breathPlan(st.it||P.items[st.g])?.night) {   // no 3-2-1 on calm breathing, none before bedtime breathing
       P.lastBeep = whole;
       if (P.mode === 'ex') workoutSignal('countdown');
       else beep(740, 120, 0.14);
@@ -4641,7 +4670,9 @@ function prepareFinish(){
 }
 function presentFinish(){
   clearInterval(ticker); keepAwake(false);
-  if (!P.quit) {
+  P._nightEnd = !!P._night || breathEndsAtNight();   // bedtime: the screen stays black, no finish tone (the wake lock is released, so the phone locks itself)
+  if (P._nightEnd && !P.quit && breathCalmOnly({ items: P.items }) && anyCredit()) { try { if (logSession().saved) P._autoSaved = true; } catch (e) {} }   // nothing to decide: saved even if he falls asleep
+  if (!P.quit && !P._nightEnd) {
     if (P.mode === 'ex') workoutSignal('finish');
     else { beep(988, 420, 0.22); buzz([120,80,120]); }
   }
@@ -4886,6 +4917,7 @@ function sessionEntry(){
     for(const key of ['targetRir','targetSir'])if(Number.isFinite(it[key]))x[key]=it[key];
     if(typeof P.notes?.[j]==='string'&&P.notes[j].trim())x.note=P.notes[j].trim().slice(0,2000);
     if (Array.isArray(it.repsList)) x.repsList = it.repsList.slice();
+    if (isPlainObj(it.breath)) x.breath = Object.assign({}, it.breath);   // the breathing choices ("Prethodno" compares the same preset)
     if (a === 'skip') { x.skipped = true; x.setsDone = 0; }
     else if (a !== true && did < n) x.setsDone = did;
     if (a === false && it.measure !== 'time') x.lastReps = lastRepsOf(j);
@@ -4897,6 +4929,7 @@ function sessionEntry(){
     entry.load = fieldDoneLoad();
     if (!HistoryModel.fieldSummary(entry).complete) entry.fieldLoadStatus = 'partial';
   }
+  if (entry.items) { const calm = breathCalmSecs(entry.items); if (calm) entry.calmSecs = calm; if (breathCalmOnly(entry)) entry.calmOnly = true; }   // calm breathing: not training minutes; calmOnly = not a training for Danas, Početna, j.n.
   if (entry.kind === 'protocol' && entry.items) {
     entry.muscleWork = entry.items.map((item,index) => MuscleWork.pack(MuscleWork.completedFromPlan(P.musclePlan && P.musclePlan[index], item)));
   }
@@ -5333,6 +5366,9 @@ function itemLoad(x){
     if (timed) o.secs+=(r.sec||0)*r.sides;
     else { const reps=(r.reps||0)*r.sides; o.reps+=reps; o.kg+=reps*(r.kg||0); }
   }
+  // the breath-hold sprints (1.25.0): every sprint done is one maximal run from a standstill, split like maxRun
+  if (e && e.cat === 'Disanje' && e.breath && e.breath.kind === 'sprint') { const r = maxRun((typeof loadFx === 'function' && loadFx(e).runM) || 35, false), n = o.reps;
+    Object.assign(o, { m: n * r.m, hsr: n * r.hsr, spr: n * r.spr, z: r.z.map(v => v * n) }); return o; }
   if (runDrill(e)) {
     const zi = Math.max(0, RUN_INT.indexOf(e.runInt));
     o.m = (timed ? rows.reduce((n,r)=>n+(r.sides||0),0) : o.reps)*e.runM; o.z[zi] = o.m;
@@ -5587,10 +5623,10 @@ const LM = {
   JOINT: ['Kuk','Koljeno','Gležanj'],
   TREG: { 'Kvadriceps':['Kvadriceps'], 'Stražnji lanac':['Gluteus','Stražnja loža'], 'Aduktori':['Aduktori'], 'Gluteus medius':['Gluteus medius'],
     'Fleksori kuka':['Fleksori kuka'], 'Lisni mišić':['Lisni mišić'], 'Trup':['Core'], 'Potisak':['Prsa','Ramena'], 'Povlačenje':['Leđa'], 'Ruke':['Ruke'] },
-  PAT: { L1:1.0, L2:0.6, HJ:0.5, U1:0.6, S:0.3, C:0.3, K:0.6, B:0.6, A:0.1, P:0, R:0 },
+  PAT: { L1:1.0, L2:0.6, HJ:0.5, U1:0.6, S:0.3, C:0.3, K:0.6, B:0.6, A:0.1, P:0, R:0, D:0 },   // D = calm breathing (1.25.0): no load
   ECC: [1, 1.25, 1.5], NOV: [0.2, 0.35, 0.5],
   TIER: { nisko:0.6, kutija:0.8, srednje:1.0, visoko:1.25, 'vrlo visoko':1.5 },
-  RIR_DEF: { L1:2, L2:2, HJ:2, U1:2, S:3, C:3, K:3, B:5, A:6, P:6, R:6 },
+  RIR_DEF: { L1:2, L2:2, HJ:2, U1:2, S:3, C:3, K:3, B:5, A:6, P:6, R:6, D:6 },
   POW: 2, NCAP: 12, HOLD_S: 6, UNI: 0.55,   // per-rep non-linearity, reps above 12 count half, a 6-s hold = 1 rep, one side of non-L2 work
   K: { L:2.7, U:2.7, C:2.7, imp:1.0, gmin:1.0, fmin:3.5, m:2.0, hsr:2.0, spr:0.5 },   // priors: B per SL, per CE, per gym minute, field
   UPPER: ['Leđa','Prsa','Ramena','Ruke'],
@@ -5609,6 +5645,7 @@ const lmZones = e => (e && Array.isArray(e.zones) ? e.zones : []).filter(z => ty
 function lmPattern(e){
   const zs = lmZones(e), z = zs.filter(x => LM.MUSCLE.indexOf(x) !== -1), z0 = z[0] || '', eq = Array.isArray(e.equip) ? e.equip : [];
   const nm = ((typeof e.name === 'string' ? e.name : '') + ' ' + (typeof e.alt === 'string' ? e.alt : '')).toLowerCase();
+  if (e.cat === 'Disanje') return e.breath && e.breath.kind === 'sprint' ? 'R' : 'D';   // breathing: the sprints run, the rest is calm
   if (e.cat === 'Kondicija') return /climber|plank/.test(nm) ? 'C' : 'R';
   if (e.cat === 'Aktivacija' || e.cat === 'Mobilnost') return /trx (squat|reverse|lateral)/.test(nm) ? (e.sides ? 'L2' : 'L1') : (/trčanj|ubrzanj/.test(nm) ? 'R' : 'A');
   if (e.cat === 'Eksplozivnost') return /med ball|medicink|slam|bacanj|throw|swing|pass|power pull|sprinter/.test(nm) || eq.indexOf('Medicinka') !== -1 || eq.indexOf('Girja') !== -1 || /barbell/.test(nm) ? 'B' : 'P';
@@ -5699,6 +5736,7 @@ function setLoad(e, fx, s, ctx){
     out.imp = contacts * t * nov * c; out.B = LM.K.imp * out.imp; out.ch = 'imp'; return out;
   }
   if (fx.pat === 'R') { out.ch = 'R'; return out; }   // running drills: metres go to the field channel (lmRun)
+  if (fx.pat === 'D') { out.ch = 'D'; return out; }   // calm breathing: no load, no reserve question
   let n = s.n || 0, r = s.rir == null ? fx.rir : s.rir;
   if (s.t != null) { n = s.t / LM.HOLD_S; r = (s.sir == null ? fx.rir * LM.HOLD_S : s.sir) / LM.HOLD_S; }
   r = Math.max(0, r + bias);
@@ -5727,12 +5765,17 @@ function lmNovelty(exId, at, log){
   (log || []).forEach(l => { if (l && l.at < at && l.at >= from && Array.isArray(l.items) && l.items.some(x => x && x.exId === exId && !x.skipped)) k++; });
   return k;
 }
-// running drills (field channel): metres from the factors' metres per rep, minutes for timed work (the bike)
-function lmRun(x, fx, sets){
+// running drills (field channel): metres from the factors' metres per rep, minutes for timed work (the bike). maxSplit (the
+// breath-hold sprints, 1.25.0): every rep is a maximal run from a standstill, split like the field model's maxRun: its
+// first 10 m stay under fast running and its first 20 m under sprint (no sprint metres with a top speed under 25,2 km/h)
+function lmRun(x, fx, sets, maxSplit){
   const o = { m:0, hsr:0, spr:0, min:0, ex:0, B:0 };
   if (x.measure === 'time') { o.min = sets.reduce((a,s)=>a+s.t*s.sides,0)/60; if (fx.runM) o.m = sets.reduce((a,s)=>a+s.sides,0)*fx.runM; }
   else if (fx.runM) { const reps = sets.reduce((a,s)=>a+s.n*s.sides,0); o.m = reps * fx.runM; if (fx.runInt === 'sprint') o.ex = reps; }
-  if (fx.runInt === 'visoko' || fx.runInt === 'sprint') o.hsr = o.m; if (fx.runInt === 'sprint') o.spr = o.m;
+  if (maxSplit && x.measure !== 'time' && fx.runM) {
+    const reps = o.m / fx.runM, top = typeof topKmh === 'function' ? topKmh() : 28.8;
+    o.hsr = reps * Math.max(0, fx.runM - 10); o.spr = top / 3.6 >= 7 ? reps * Math.max(0, fx.runM - 20) : 0;
+  } else { if (fx.runInt === 'visoko' || fx.runInt === 'sprint') o.hsr = o.m; if (fx.runInt === 'sprint') o.spr = o.m; }
   o.B = LM.K.fmin * o.min + LM.K.m * o.m / 100 + LM.K.hsr * o.hsr / 100 + LM.K.spr * o.spr / 10;
   return o;
 }
@@ -5744,7 +5787,7 @@ function itemPts(x, o){
   const ex = (S.ex && S.ex[x.exId]) || { id: x.exId };
   const fx = Object.assign({}, o.fx || loadFx(ex)); if (x.sides != null) fx.uni = !!x.sides;
   const sets = lmSets(x), k = o.k != null ? o.k : lmNovelty(x.exId, o.at != null ? o.at : Date.now(), o.log || S.log || []);
-  if (fx.pat === 'R') { const q = lmRun(x, fx, sets); r.B = q.B; r.m = q.m; r.spr = q.ex; return r; }
+  if (fx.pat === 'R') { const q = lmRun(x, fx, sets, !!(ex.breath && ex.breath.kind === 'sprint')); r.B = q.B; r.m = q.m; r.spr = q.ex; return r; }
   sets.forEach(s => {
     const q = setLoad(ex, fx, s, { k }); r.sets.push(q); r.B += q.B; r.ECC += q.ecc; r.CE += q.imp;
     if (q.ch === 'L' || q.ch === 'U' || q.ch === 'C') r.SL[q.ch] += q.SL;
@@ -5767,7 +5810,7 @@ function computeSession(entry, o){
     ['L', 'U', 'C'].forEach(c => r.SL[c] += q.SL[c]);
     Object.keys(q.HS).forEach(T => r.HS[T] = (r.HS[T] || 0) + q.HS[T]);
   });
-  r.min = Math.max(0, +entry.secs || 0) / 60;
+  r.min = Math.max(0, (+entry.secs || 0) - (+entry.calmSecs || 0)) / 60;   // calm breathing minutes are not training minutes
   const fl = entry.load;
   if (entry.kind === 'field' && (!lmObj(fl) || ['m','hsr','spr','min'].some(k => !lmNum(fl[k]) || fl[k] < 0))) {
     r.incomplete = true; r.incompleteReason = 'field';
@@ -6247,17 +6290,17 @@ function rpeSet(t){
   const v=rpeKnown(P.srpe)?P.srpe:null;
   t.value=String(v??5);t.classList.toggle('set',v!==null);t.style.setProperty('--p',rpePct(v??5));t.setAttribute('aria-valuetext',v!==null?rpeTxt(v):'nije ocijenjeno');
   const l=document.getElementById('rpelab');if(l)l.textContent=v!==null?rpeTxt(v):'povuci za ocjenu';
-  const a=document.getElementById('lmau');if(a)a.innerHTML=auHtml(v,Math.max(0,+P.secs||0)/60);
+  const a=document.getElementById('lmau');if(a)a.innerHTML=auHtml(v,Math.max(0,(+P.secs||0)-(P._calmSecs||0))/60);   // j.n. without the calm breathing minutes
 }
 // the done screen's load card: ≈ points ± band, hard sets per region, landings and metres
 function lmCardHtml(o){
-  const minutes=Math.max(0,+P.secs || 0)/60;
+  const minutes=Math.max(0,(+P.secs || 0)-(P._calmSecs||0))/60;   // the working minutes (calm breathing is not training time)
   if (o.incomplete) return '<section class="lmc" aria-label="Procjena napora nije dostupna"><div class="lmh"><span>Procjena napora LM1</span></div><p class="lmx">' + (o.incompleteReason === 'field' ? 'Za bodove nisu poznati svi terenski podaci. Nepoznato brzo trčanje i sprint nisu nula.' : 'Za bodove nisu poznate sve stvarno odrađene serije, ponavljanja ili sekunde. Nedostajući rad nije nula.') + '</p><p class="lmau" id="lmau">' + auHtml(P.srpe,minutes) + '</p></section>';
   const hs = Object.keys(LM.TREG).filter(T => o.HS[T] > 0).map(T => '<span><i>' + esc(T) + '</i><b>' + lmHs(o.HS[T]) + '</b></span>');
   const more = [o.CE > 0 ? 'Doskoci <b>≈ ' + thou(o.CE) + '</b>' : '', o.m > 0 ? 'Trčanje <b>' + esc(loadFmt('m', o.m)) + '</b>' : ''].filter(Boolean);
   const dur = lmR(o.B - o.Bsets - o.Bfield);   // the gym minutes' part of B: said, so the sets' points add up
   return '<section class="lmc" aria-label="Procjena napora treninga LM1"><div class="lmh"><span>Procjena napora LM1</span><span class="tag">Zadani model</span></div>' +
-    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">' + Math.round(minutes) + ' min' + (dur >= 0.5 ? ' · +' + lmPts(dur) + ' za trajanje' : '') + '</span></div>' +
+    '<div class="lmv"><b>≈ ' + lmPts(o.B) + '</b><span class="pm">± ' + lmPts(o.band) + '</span><span class="vs">' + Math.round(minutes) + ' min' + (P._calmSecs ? ' bez disanja' : '') + (dur >= 0.5 ? ' · +' + lmPts(dur) + ' za trajanje' : '') + '</span></div>' +
     '<p class="lmau" id="lmau">' + auHtml(P.srpe, minutes) + '</p>' +
     '<p class="lmx">±30 % je zadani raspon procjene, ne provjerena osobna pogreška. Bodovi ne mjere točan umor ni oporavak.</p>' +
     (hs.length ? '<div class="lmt">Procjena težih serija</div><div class="lmhs">' + hs.join('') + '</div>' : '') +
@@ -6341,15 +6384,16 @@ VIEWS.play = function(){
     const wk = willCount ? weekAfter(entry) : { planned: 0 };
     const share = entry ? sessionShare(entry) : 1, partial = willCount && (share < 0.5 || P.countAsDone === true);
     const lm = entry ? computeSession(entry) : null, rks = any ? reserveSteps() : []; P._lm = lm;
-    const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex());
-    return '<div class="view gut stack">' + topbar('', '') +
+    const editLast = cinemaReviewResultButton(cinemaLastRecordedIndex()), calmOnly = breathCalmOnly(entry), allBreath = P.items.every(it => breathPlan(it)); P._calmSecs = entry?.calmSecs || 0;
+    return '<div class="view gut stack">' + breathVeilHtml() + topbar('', '') +
       '<div class="done'+(cands.length || lm ? ' compact' : '')+'">'+(any && !lm ? '<span class="ck">'+I.check+'</span>' : '')+'<h1 class="'+(lm ? 'dh' : '')+'" style="margin:10px 0 0;font-size:30px;font-weight:600">'+(lm ? '<span class="ck">'+I.check+'</span>' : '')+(!any ? 'Ništa nije odrađeno' : P.quit ? 'Trening je prekinut' : 'Bravo!')+'</h1><span style="font-size:16px;color:var(--text-body)">' + esc(P.title) + ' • ' + fmtDur(P.secs) + '</span>' +
         (wk.planned ? '<span class="sub" style="margin:0">Ovaj tjedan ' + wk.done + '/' + wk.planned + ' po planu</span>' : '') +
         (partial ? '<div class="partial-count"><span>'+(P.countAsDone ? 'Računa se kao odrađen dan plana.' : 'Odrađeno '+Math.round(share * 100)+' % radnih serija. Za dan plana treba barem pola.')+'</span>'+
           '<button type="button" class="txtbtn" data-a="countAsDone" aria-pressed="'+(P.countAsDone === true)+'">'+(P.countAsDone ? 'Ne računaj' : 'Računaj kao odrađeno')+'</button></div>' : '') +
         (!any ? '<span class="sub" style="margin:0;line-height:19px">Trening se ne sprema dok nijedna serija nije odrađena.' + (cands.length ? ' Ako si vježbe napravio bez playera, označi ih „Sve odrađeno”.' : '') + '</span>' : '') + '</div>' +
       // the decisions first (fits a 375 × 812 iPhone): the session rating, the last set, "Kako je išlo?"; the load card after them
-      editLast + (lm ? rpeHtml() : '') + (rks.length ? '<div class="rirlast">' + rks.map(k => rirRowHtml(k, true)).join('') + '</div>' : '') +
+      editLast + (lm && !calmOnly ? rpeHtml() + (P._calmSecs ? '<p class="breath-hint breath-rpe-note">Ocijeni trening bez disanja.</p>' : '') : '') +   // no effort slider after calm breathing alone
+      (rks.length ? '<div class="rirlast">' + rks.map(k => rirRowHtml(k, true)).join('') + '</div>' : '') +
       (cands.length ? '<h2 class="h2" style="margin-top:22px">Kako je išlo?</h2>' +
         '<div class="list" style="margin-top:10px;gap:0">' + cands.map(c => {
           // pre-marked from what the player saw: all sets, some sets ('partial') or none ('skip'); the last two don't count
@@ -6362,9 +6406,9 @@ VIEWS.play = function(){
             '<div class="seg2"><button data-a="answer" data-j="'+c.k+'" data-v="1" aria-pressed="'+ok+'" class="'+(ok ? 'on' : '')+'">Sve odrađeno</button><button data-a="answer" data-j="'+c.k+'" data-v="0" aria-pressed="'+failed+'" class="'+(failed ? 'onA' : '')+'">Nisam uspio</button></div>' +
             (failed && c.it.measure !== 'time' ? '<div class="mini">Zadnja serija: <button class="sbtn" data-a="lrep" data-j="'+c.k+'" data-d="-1" aria-label="Ponavljanja u zadnjoj seriji: smanji">−</button><b>'+esc(lr)+'</b><button class="sbtn" data-a="lrep" data-j="'+c.k+'" data-d="1" aria-label="Ponavljanja u zadnjoj seriji: povećaj">+</button> '+plural(lr, 'ponavljanje', 'ponavljanja', 'ponavljanja')+'</div>' : '') +
             (msg ? '<em class="'+(failed ? 'a' : (ok && !c.prog && (c.it.ok || 0) + 1 >= progN()) ? 'g' : '')+'"'+(ok || failed ? '' : ' style="color:var(--text-2)"')+'>' + esc(msg) + '</em>' : '') + '</div></div>';
-        }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.originalMusclePlan || P.musclePlan) + (lm ? lmCardHtml(lm) : '') +
+        }).join('') + '</div>' : '') + sessionMuscleComparison(entry,P.originalMusclePlan || P.musclePlan) + (lm ? (calmOnly ? breathDoneHtml(entry) : lmCardHtml(lm)) : '') +   // calm breathing alone carries no load
       masDoneHtml() + '<div style="height:12px"></div></div>' +
-      '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">'+(!any ? 'Izađi' : P.quit ? 'Spremi i izađi' : 'Završi')+'</button>' + cinemaRedoButton('Ponovi zadnju seriju') + (P.quit || !any ? '' : '<button class="txtbtn" data-a="restartPlay" style="align-self:center">Spremi i ponovi</button>') + '</div>';
+      '<div class="footer gut stack" style="gap:10px"><button class="btn" data-a="finishPlay">'+(!any ? 'Izađi' : P.quit ? 'Spremi i izađi' : 'Završi')+'</button>' + cinemaRedoButton(allBreath ? 'Ponovi vježbu' : 'Ponovi zadnju seriju') + (P.quit || !any ? '' : '<button class="txtbtn" data-a="restartPlay" style="align-self:center">Spremi i ponovi</button>') + '</div>';
   }
   if(P.mode==='ex')return workoutCinemaHtml();
   // the demo video of the screen being replaced; after() puts it back when the exercise stays the same
@@ -6420,6 +6464,7 @@ function paintPlayer(full){
   const arc = document.getElementById('ringArc'); if (arc) { const C = 2*Math.PI*35; arc.setAttribute('stroke-dasharray', (C*Math.max(0,Math.min(1,v.ringFrac))).toFixed(1)+' '+C.toFixed(1)); }
   const pb = document.getElementById('progbar'); if (pb) { const prog = (P.i + (v.st.dur ? 1 - remaining()/v.st.dur : 0)) / P.steps.length; pb.style.width = (prog*100).toFixed(1) + '%'; pb.parentElement.setAttribute('aria-valuenow',String(Math.round(prog*100))); }
   if(P.mode==='ex'&&!P.done)cinemaProgressPaint();
+  if(P.mode==='ex'&&!P.done)breathPaint();
   if(P.mode==='ex'&&!P.done&&app.querySelector('.workout-cinema.is-rest-1')&&cinemaRestPhase(v.st)===2){render();return;}
   if (P._lastI !== P.i) { P._lastI = P.i; render(); }
 }
@@ -6575,6 +6620,7 @@ function playAfter(){
     cinemaOpenSheet({kind:'cinemaGuide'});
   },0);
   setupCinemaPicker();
+  breathAfterRender();
   const slot = document.getElementById('keepmedia');
   if (slot && keepMedia) slot.replaceWith(keepMedia); else if (slot) slot.remove();
   keepMedia = null;
@@ -6657,6 +6703,8 @@ function sheetHtml(){
       '<input id="importWorkoutFile" type="file" hidden>' +
       (s.loading ? '<p class="sub" role="status">Otvaram trening…</p>' : '') +
       '<button type="button" class="btn sec" data-a="sheetDone" style="margin-top:12px">Zatvori</button>';
+  } else if (s.kind === 'breathGate') {
+    body = breathGateHtml(s);
   } else if (s.kind === 'addTo') {
     // your own protocols only: sessions of a programme (e.g. a 6-week plan) keep the programme's doses
     const list = Object.values(S.pr).filter(p => !p.program).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
@@ -6828,7 +6876,7 @@ function cinemaSheetHtml(s){
     '<button type="button" class="opt" data-a="cinemaSettings">'+WorkoutView.icon('settings-2')+'<span>Postavke playera</span></button>'+close;
   if(s.kind==='cinemaReserve')return P.steps[s.k]?.kind==='manual' ? workoutResultForm(s.k) : '<h3>Rezerva nakon serije</h3>'+rirRowHtml(s.k,true)+close;
   if(s.kind==='cinemaNotes')return '<h3>Bilješke · '+esc(S.ex[P.items[s.j].exId]?.name||'Vježba')+'</h3><label class="label" for="cinema-note">Kako je išlo?</label><textarea id="cinema-note" class="input" maxlength="2000" rows="5" placeholder="Izvedba, osjećaj, što zapamtiti za sljedeći put…">'+esc(s.text)+'</textarea><button type="button" class="btn" data-a="cinemaNotesSave">Spremi bilješku</button>'+close;
-  if(s.kind==='cinemaAudio')return '<h3>Zvuk i vibracija</h3>'+playerSignalSettings()+'<p>Različiti signali označavaju pripremu, početak serije, odmor, promjenu strane i kraj treninga. Kratki signal odbrojava zadnje tri sekunde.</p>'+close;
+  if(s.kind==='cinemaAudio')return '<h3>Zvuk i vibracija</h3>'+playerSignalSettings()+'<p>Različiti signali označavaju pripremu, početak serije, odmor, promjenu strane i kraj treninga. Kratki signal odbrojava zadnje tri sekunde (osim kod disanja, koje ima svoj ton za svaku fazu).</p>'+close;
   if(s.kind==='cinemaPace')return '<h3>Tempo i prijelazi</h3><p class="label">Priprema pri promjeni strane</p>'+playerTimingChoices('switchSec',SIDE_PREP_CHOICES)+
     '<p>Odabrano vrijeme vrijedi od sljedećeg treninga.</p><div class="prow"><span>Između vježbi</span><strong>'+S.settings.transSec+' s</strong></div><button type="button" class="btn" data-a="cinemaSettings">Postavke playera</button>'+close;
   if(s.kind==='cinemaPlan'){
@@ -7463,6 +7511,12 @@ const A = {
   builderSectionApply: d => { const name=String(S.draft?._sectionName||'').trim();if(!name){toast('Upiši naziv dijela.');document.getElementById('builder-section-name')?.focus();return;}if(builderSetSection(+d.i,name.slice(0,80)))render(); },
   itOpen: d => { builderCommitSection(); const i = +d.i; S.draft._open = S.draft._open === i ? null : i; render(); },
   iset: d => { const it = S.draft.items[S.draft._open]; it[d.k] = d.v; render(); },
+  ibreath: d => { const it = S.draft.items[+d.i]; if (!it) return; breathSetItem(it, d.k, d.v); render(); },
+  exBreath: d => { const t = top(); if (t.v !== 'ex') return; t.breathSel = Object.assign({}, t.breathSel, { [d.k]: d.k === 'intro' || d.k === 'variant' ? (d.v || null) : d.v }); if (d.k === 'preset') { delete t.breathSel.variant; delete t.breathSel.intro; delete t.breathSel.min; } render(); },
+  breathWake: () => { if (!P) return; P._touch = Date.now(); P._night = false; app.querySelector('.workout-cinema')?.classList.remove('is-night'); },
+  breathVeil: () => { if (!P) return; P._nightEnd = false; render(); },
+  breathGateToggle: d => { const s = S.sheet; if (s?.kind !== 'breathGate') return; s.ok[+d.i] = !s.ok[+d.i]; render(); },
+  breathGateGo: () => { const s = S.sheet; if (s?.kind !== 'breathGate' || s.ok.some(x => !x)) return; writeSetting('rshGate', Date.now()); S.sheet = null; startPlayer(s.cfg); },
   istep: d => {
     const items = S.draft.items, it = items[+d.i], k = d.k, dir = +d.d; if (!it) return;
     if (k === 'kg') { builderWeight(it,kgStep(S.ex[it.exId],it.kg,dir),true);render();return; }
@@ -7547,7 +7601,7 @@ const A = {
     // a new protocol (also a copy) and every dose you changed by hand start counting "sessions in a row" from zero
     const fresh = (o, it) => { if (isNew || it._d0 !== doseSig(it)) PROG_STATE.forEach(k => { delete o[k]; }); return o; };
     const body = { name, desc: (dr.desc||'').trim(), items: normGroups(dr.items).map(it => fresh(keepIf({ exId: it.exId, measure: it.measure, sec: it.sec, sets: it.sets, reps: it.reps, rest: it.rest, sides: !!it.sides, kg: it.kg||0,
-      ...(it.measure!=='time'&&repSetSeconds(it)!==null?{repSetSec:repSetSeconds(it)}:{}) }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','kgList','secList','startingKgKnown','targetRir','targetSir','repSec','ok','fail','prev','snoozeOk']), it)), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
+      ...(it.measure!=='time'&&repSetSeconds(it)!==null?{repSetSec:repSetSeconds(it)}:{}) }, it, ['ss','easy','up','r0','r1','cap','section','note','repsList','kgList','secList','startingKgKnown','targetRir','targetSir','repSec','ok','fail','prev','snoozeOk','breath']), it)), updatedAt: Date.now(), home: dr.home || null, tag: dr.tag || null, days: dr.days || [] };
     ['program','week','slot','pack','goal','goalSkip','kgSkip'].forEach(k => { if (dr[k] != null) body[k] = dr[k]; });
     if (body.program) delete body.days;   // a programme session is planned by the programme's days
     const ok = await save('protocols', dr.id, body); if (!ok) return;
@@ -7569,8 +7623,8 @@ const A = {
   },
   playEx: d => {
     const e=S.ex[d.id], t=top(); if (!e || t.v!=='ex' || t.id!==e.id) return;
-    const originalItems=viewDoseSource(t);
-    startPlayer({mode:'ex',title:e.name,items:viewDoseItems(t,originalItems),originalItems,sessionOnly:t.runDose?.base===mtCanon(originalItems)&&!!t.runDose.sessionOnly,ref:{kind:'exercise',id:e.id}});
+    const originalItems=viewDoseSource(t),runItems=viewDoseItems(t,originalItems);
+    startPlayer({mode:'ex',title:breathPlan(runItems[0])?breathName(runItems[0]):e.name,items:runItems,originalItems,sessionOnly:t.runDose?.base===mtCanon(originalItems)&&!!t.runDose.sessionOnly,ref:{kind:'exercise',id:e.id}});
   },
   // dose 'season': about 2/3 of the sets (fieldDose), the steps built the same way
   startField: d => { const f = S.field[d.id]; if (!f) return; const sz = d.dose === 'season' && fieldLoad(f).type !== 'test';
@@ -7718,7 +7772,7 @@ const A = {
     if (!S.settings.vibration) buzz(0);
     render();
   },
-  previewPlayerSignal: () => { ensureAudio(); workoutSignal('work'); },
+  previewPlayerSignal: () => { ensureAudio(); workoutSignal('work'); breathPreviewTones(); },   // then a breathing inhale and exhale
   toggleSilent: () => { if (!writeSetting('silentOk',S.settings.silentOk !== true)) return; if (P && !P.done) { audioMode(true); ensureAudio(); } render(); },
   // the arrow asks first (an in-page sheet: confirm() does not work in every view); a timed step waits meanwhile
   quitPlay: () => { if (!P || P.done) return; if (!P.paused) { P.left = remaining(); P.paused = true; P.sheetPause = true; } savePlay(); S.sheet = { kind:'quit' }; render(); },
@@ -8374,6 +8428,401 @@ Object.assign(A,{
     monthChoose(t,undo.date); t.undo=null; t.message='Promjena poništena.'; render();
   }
 });
+
+/* ---------- Disanje (1.25.0): breathing exercises, the breathing pacer and the breath-hold sprints ----------
+   A breathing exercise is a library exercise in the category "Disanje" with a `breath` object (the catalogue's fields).
+   Calm exercises (kind 'calm') are paced: a training item carries `breath` with the choices (preset, variant, intro,
+   minutes) and `sec` = the real total of whole breaths (Breath.resolve), so the player runs it as ONE timed work step
+   and every screen around it (prep, overview, pause, Dnevnik, done, history) keeps working. The pacer draws inside that
+   step from the session clock: t = dur − remaining(), so a pause and time with the screen off are already counted.
+   "Sprintevi bez daha" (kind 'sprint') is NOT paced (Tomislav does not carry the phone while sprinting): a plain
+   sets × reps item, checked off set by set, with the player's normal rest between sets. It carries the how-to, the
+   one-time safety gate and the cautions, and counts as running (~35 m per sprint, split like maxRun). */
+const breathOf = e => !!(e && e.cat === 'Disanje' && isPlainObj(e.breath));
+const breathCalmEx = e => breathOf(e) && e.breath.kind !== 'sprint';
+const breathSprintEx = e => breathOf(e) && e.breath.kind === 'sprint';
+const breathItemSprint = item => !!item && breathSprintEx(S.ex[item.exId]);
+const breathCache = new Map();
+// the plan of a calm breathing item (null for anything else, the sprints included)
+function breathPlan(item){
+  if (!item || item.measure !== 'time') return null;
+  const e = S.ex[item.exId]; if (!breathCalmEx(e)) return null;
+  const sel = isPlainObj(item.breath) ? item.breath : {}, key = item.exId + '|' + JSON.stringify(sel) + '|' + contentHash(e);
+  let r = breathCache.get(key);
+  if (!r) { r = Object.assign(Breath.resolve(e.breath, sel), { exId: e.id }); if (breathCache.size > 60) breathCache.clear(); breathCache.set(key, r); }
+  return r;
+}
+// the sprint's sets and sprints per set from the catalogue's options (2 × 6 by default)
+function breathSprintDose(e, sel){
+  const st = (e.breath && e.breath.structure) || {}, so = st.sets_options || [2, 3], ro = st.reps_per_set_options || [6, 7, 8];
+  const sets = so.indexOf(+sel.sets) !== -1 ? +sel.sets : so.indexOf(st.sets_default) !== -1 ? st.sets_default : so[0];
+  const reps = ro.indexOf(+sel.reps) !== -1 ? +sel.reps : ro.indexOf(st.reps_per_set_default) !== -1 ? st.reps_per_set_default : ro[0];
+  return { sets, reps, rest: Number.isInteger(st.set_rest_s) ? st.set_rest_s : 180, options: { sets: so, reps: ro } };
+}
+// the training item for a choice on the exercise page or in the editor
+function breathItem(e, sel){
+  sel = isPlainObj(sel) ? sel : {};
+  if (breathSprintEx(e)) { const d = breathSprintDose(e, sel); return { exId: e.id, measure: 'sets', sec: 30, sets: d.sets, reps: d.reps, rest: d.rest, sides: false, kg: 0 }; }
+  const r = Breath.resolve(e.breath, sel), b = { kind: 'calm' };
+  if (isPlainObj(e.breath.presets)) b.preset = r.key;
+  if (r.variant) b.variant = r.variant.id;
+  if (r.introOption) b.intro = r.introOption.id;
+  b.min = r.min;
+  return { exId: e.id, measure: 'time', sec: Math.ceil(r.total - 1e-9), sets: 1, reps: 1, rest: 0, sides: false, kg: 0, breath: b };
+}
+// one choice in the training editor (the item keeps its place, its part and its superset-free links)
+function breathSetItem(it, k, v){
+  const e = S.ex[it.exId]; if (!breathOf(e)) return;
+  let n;
+  if (breathSprintEx(e)) n = breathItem(e, { sets: it.sets, reps: it.reps, [k]: +v });
+  else {
+    const sel = Object.assign({}, it.breath);
+    if (k === 'preset') { sel.preset = v; delete sel.variant; delete sel.intro; delete sel.min; }
+    else if (k === 'intro') sel.intro = v || null;
+    else if (k === 'variant') sel.variant = v || null;
+    else if (k === 'min') sel.min = +v;
+    n = breathItem(e, sel);
+  }
+  ['measure', 'sec', 'sets', 'reps', 'rest', 'kg'].forEach(q => { it[q] = n[q]; });
+  it.sides = false;
+  if (n.breath) it.breath = n.breath; else delete it.breath;
+  ['secList', 'repsList', 'kgList', 'repSetSec', 'targetRir', 'targetSir', 'ss'].forEach(q => { delete it[q]; });
+}
+function breathRhythmText(bp){ return (bp.intro.length ? 'uvod ' + Math.round(bp.introS) + ' s + ' : '') + Breath.rhythm(bp.phases, true); }
+const breathCountText = n => n + ' ' + Breath.breathWord(n);
+// "10 min · 4/6 s"; the sprints "2 × 6 sprinteva"
+function breathDoseText(it){
+  const bp = breathPlan(it);
+  if (bp) return bp.min + ' min · ' + breathRhythmText(bp);
+  return it.sets + ' × ' + it.reps + ' ' + plural(it.reps, 'sprint', 'sprinta', 'sprinteva');
+}
+// the line under the name in overviews: the preset, the rhythm and the REAL length of whole breaths
+function breathLine(bp){
+  const e = S.ex[bp.exId], label = bp.name && e && bp.name !== e.name ? '' : bp.label;
+  return [label, bp.variant ? bp.variant.label_hr : '', breathRhythmText(bp), Breath.fmt(bp.total)].filter(Boolean).join(' · ');
+}
+function breathName(item){ const bp = breathPlan(item); return (bp && bp.name) || S.ex[item.exId]?.name || 'Disanje'; }
+function breathMeta(e){
+  const b = e.breath, ps = Breath.presets(b), n = Object.keys(ps).length, p = ps[Breath.presetKey(b)] || {};
+  if (breathSprintEx(e)) { const d = breathSprintDose(e, {}); return 'Napredno · ' + d.sets + ' × ' + d.reps + ' sprinteva'; }
+  return (n > 1 ? n + ' postavke' : p.goal_hr || 'Disanje') + ' · ' + Breath.rhythm(Breath.resolve(b, {}).phases, true).replace(/ /g, '\u00a0');   // the rhythm never breaks
+}
+// the seconds actually breathed in a stored item
+function breathDoneSecs(x){ return (HistoryModel.recordedRows(x) || []).reduce((a, r) => a + (r.sec || 0) * (r.sides || 0), 0); }
+// sessions of the pre-match preset done with at least 80 % of their breaths (any context)
+function breathPracticeCount(exId){
+  return historyOf(exId).filter(x => x.breath && x.breath.preset === 'utakmica' && breathDoneSecs(x) >= 0.8 * (+x.sec || 0)).length;
+}
+const breathSprintCount = exId => historyOf(exId).filter(x => HistoryModel.performedSets(x) > 0).length;
+// seconds of calm breathing done in a finished session (they are not training minutes)
+function breathCalmSecs(items){
+  return (items || []).reduce((s, x) => breathCalmEx(S.ex[x.exId]) && !x.skipped ? s + breathDoneSecs(x) : s, 0);
+}
+// a session of calm breathing only is not training: not for Danas, Početna, the session count or j.n.
+const breathCalmOnly = entry => !!(entry && Array.isArray(entry.items) && entry.items.length && entry.items.every(x => breathCalmEx(S.ex[x.exId])));
+function breathDoneHtml(entry){
+  const secs = breathCalmSecs(entry.items);
+  return '<section class="lmc breath-done" aria-label="Disanje"><div class="lmh"><span>Disanje</span></div><p class="lmx">' + esc(Breath.fmt(secs)) +
+    ' mirnog disanja. Disanje nema opterećenje: ne ulazi u j.n., tjedan mišića ni Danas.</p></section>';
+}
+
+/* the pacer: a circle (patterns without two holds) or a square (box breathing) */
+const BREATH_SQ = 'M 22.1 177.9 A 14 14 0 0 1 18 168 L 18 32 A 14 14 0 0 1 32 18 L 168 18 A 14 14 0 0 1 182 32 L 182 168 A 14 14 0 0 1 168 182 L 32 182 A 14 14 0 0 1 22.1 177.9';
+function breathHtml(bp, a){
+  if (!a) return '';
+  const ramp = bp.intro.length ? '<div class="breath-ramp" aria-hidden="true">' + bp.intro.concat([{ phases: bp.phases }]).map((b, i) =>
+    '<span' + (i === a.block ? ' class="is-on"' : i < a.block ? ' class="is-done"' : '') + '>' + esc(Breath.rhythm(b.phases, true).replace(' s', '')) + '</span>').join('<i>›</i>') + '</div>' : '';
+  const text = '<div class="breath-text"><b class="breath-word"></b><strong class="breath-sec"></strong></div>';
+  // the square's edge: four equal quarters, one per phase, from the bottom-left corner: up the left side (udah), along the
+  // top (zadrži), down the right (izdah), along the bottom (zadrži)
+  const shape = bp.shape === 'square'
+    ? '<div class="breath-shape breath-square"><svg viewBox="0 0 200 200" aria-hidden="true"><path class="breath-sq-track" d="' + BREATH_SQ + '"/><path class="breath-sq-done" pathLength="400" stroke-dasharray="0 400" d="' + BREATH_SQ + '"/><path class="breath-sq-lit" pathLength="400" stroke-dasharray="0 400" d="' + BREATH_SQ + '"/><circle class="breath-sq-dot" r="5" cx="22.1" cy="177.9"/></svg>' + text + '</div>'
+    : '<div class="breath-shape breath-circle"><i class="breath-track"></i><i class="breath-disc"></i><svg class="breath-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="breath-ring-fill" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="0 100" style="opacity:0"/></svg>' + text + '</div>';
+  return '<div class="breath-pacer is-' + bp.shape + '" role="img" aria-label="' + esc('Pacer disanja: ' + Breath.rhythm(bp.phases).toLowerCase()) + '">' + shape + ramp + '</div>';
+}
+// the sprints' work step: the how-to stays on screen while the set runs (he may not look at it; the check closes the set)
+function breathSprintHowtoHtml(e){
+  const steps = (e.breath.steps_hr || e.steps || []).filter(s => !/^Prva 2 treninga|^Postavi čunjeve/.test(s));
+  return '<div class="breath-howto"><ol>' + steps.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>';
+}
+// the header's green line on the breathing work step: the remaining time and the rhythm (the bottom clock row is gone)
+function breathStateText(a){
+  return a ? 'Još ' + Breath.fmt(a.totalLeft) + ' · ' + (a.intro ? 'uvod ' : '') + Breath.rhythm(a.blockPhases, true) : '';
+}
+// prep: how to sit or lie (the catalogue's position, short); the pre-match preset says how often it was practised
+function breathReadyText(bp){
+  const p = bp.preset || {}, n = p.practice_min ? breathPracticeCount(bp.exId) : 0;
+  return (p.prep_hr || 'Priprema') + (p.practice_min && n < p.practice_min ? ' · uvježbano ' + n + ' od ' + p.practice_min : '');
+}
+function breathSprintReadyText(item, step){
+  const e = S.ex[item.exId], learning = breathSprintCount(item.exId) < 2;
+  return 'Serija ' + (step.set || 1) + ' od ' + item.sets + ' · ' + (learning ? '70–80 % brzine' : e?.breath?.prep_hr || 'na start');
+}
+function breathNotice(bp){
+  return bp.night ? '<p class="breath-notice">Ekran će se potpuno zatamniti. Ne zaključavaj mobitel; dodir vraća kontrole.</p>' : '';
+}
+// the pill's count on the calm breathing step: the breath ("13 od 60"); a breathing item has one set, so the pill counts
+// breaths instead of sets (the sprints keep "1 od 2" sets)
+function breathPillCount(bp, a){ return (a ? a.breath : 1) + ' od ' + (bp.introCycles + bp.cycles); }
+
+/* per frame and per tick: shape, word, seconds, header, pill, tones, the live region and the night display */
+const breathRT = { raf: 0, key: null, toneKey: null, osc: null, lastText: {} };
+function breathNow(){
+  if (!P || P.mode !== 'ex' || P.done) return null;
+  const st = P.steps[P.i]; if (!isWork(st)) return null;
+  const item = st.it || P.items[st.g], bp = breathPlan(item); if (!bp) return null;
+  return { st, item, bp, a: Breath.at(bp, (st.dur || 0) - remaining()) };
+}
+function breathSet(el, prop, v){ if (el && breathRT.lastText[prop] !== v) { breathRT.lastText[prop] = v; el.textContent = v; } }
+function breathPaint(){
+  const root = app.querySelector('.workout-cinema'), pacer = root && root.querySelector('.breath-pacer');
+  const n = pacer && breathNow(); if (!n) return;
+  const { a, bp, item } = n, still = stillMotion();
+  // reduced motion: no scaling; the ring shows the phase's progress in whole-second steps and the dot jumps by seconds
+  const frac = still ? Math.min(1, Math.floor(a.into + 1e-6) / a.len) : a.frac;
+  pacer.classList.toggle('is-hold', a.hold); pacer.classList.toggle('is-still', still);
+  pacer.dataset.k = a.k;
+  if (bp.shape === 'square') {
+    const lit = pacer.querySelector('.breath-sq-lit'), done = pacer.querySelector('.breath-sq-done'), dot = pacer.querySelector('.breath-sq-dot');
+    const side = a.square.side, f = frac;
+    // done sides: a faint trail; at the start of a breath the last trail fades out over 0.6 s instead of vanishing
+    if (done) { let len = side * 100, op = side ? 1 : 0;
+      if (!side && a.breath > 1 && !still && a.into < 0.6) { len = 300; op = 1 - a.into / 0.6; }
+      done.setAttribute('stroke-dasharray', len + ' 400'); done.style.opacity = op.toFixed(3); }
+    // a zero-length dash with round caps draws a dot, so an empty part is hidden instead
+    if (lit) { lit.setAttribute('stroke-dasharray', (f * 100).toFixed(2) + ' 400'); lit.setAttribute('stroke-dashoffset', String(-side * 100)); lit.style.opacity = f > 0.005 ? '1' : '0'; }
+    if (lit && dot && lit.getTotalLength) { const L = lit.getTotalLength(), p = lit.getPointAtLength(L * (side + f) / 4); dot.setAttribute('cx', p.x.toFixed(2)); dot.setAttribute('cy', p.y.toFixed(2)); }
+  } else {
+    pacer.style.setProperty('--lv', (still ? 0.8 : a.level).toFixed(4));
+    const ring = pacer.querySelector('.breath-ring-fill');
+    // reduced motion: the inhale fills the ring and the exhale empties it, in whole seconds; a hold fills it
+    const rv = still ? (a.k === 'out' ? (1 - frac) * 100 : frac * 100) : a.hold ? frac * 100 : 0;
+    if (ring) { ring.setAttribute('stroke-dasharray', rv.toFixed(2) + ' 100'); ring.style.opacity = rv > 0.5 ? '1' : '0'; }
+  }
+  breathSet(pacer.querySelector('.breath-word'), 'w', a.word);
+  breathSet(pacer.querySelector('.breath-sec'), 'n', String(Math.max(1, Math.ceil(a.left - 1e-6))));
+  breathSet(root.querySelector('.workout-cinema-heading p'), 'h', breathStateText(a));
+  const cnt = breathPillCount(bp, a);
+  breathSet(root.querySelector('.cinema-work-journal>span'), 'c', cnt);
+  const pill = root.querySelector('.cinema-work-journal');
+  if (pill && breathRT.lastText.cl !== cnt) { breathRT.lastText.cl = cnt; pill.setAttribute('aria-label', 'Dnevnik treninga · ' + breathName(item) + ' · udah ' + cnt); }
+  if (bp.intro.length) pacer.querySelectorAll('.breath-ramp span').forEach((s, i) => { s.classList.toggle('is-on', i === a.block); s.classList.toggle('is-done', i < a.block); });
+  breathNight(root, bp);
+  if (P.paused) return;
+  // sound: the next phase's tone is scheduled ahead on the audio clock, so it lands on the boundary, not on a frame or tick
+  const stepKey = P.i + ':' + a.key;
+  if (breathRT.key !== stepKey) {
+    const first = breathRT.key == null || breathRT.key.split(':')[0] !== String(P.i);
+    breathRT.key = stepKey;
+    // back from a pause or the background in the middle of a phase: silent until the next boundary
+    const start = first && a.t < 0.6, fresh = a.into < 0.3;
+    if ((start || fresh) && breathRT.toneKey !== stepKey) breathCue(a.k, 0, a.totalLeft, bp);
+    breathRT.toneKey = stepKey;
+    breathAnnounce(a, bp, start ? breathStartText(bp) : '');
+  }
+  if (a.next && a.left < 0.25 && breathRT.toneKey !== P.i + ':' + a.nextKey) { breathRT.toneKey = P.i + ':' + a.nextKey; breathCue(a.next.k, a.left, a.totalLeft - a.left, bp); }
+}
+function breathLoop(){
+  cancelAnimationFrame(breathRT.raf); breathRT.raf = 0;
+  if (stillMotion()) return;   // reduced motion: the 200-ms tick paints whole seconds; nothing glides
+  const step = () => { if (!app.querySelector('.breath-pacer') || !P || P.paused || P.done) { breathRT.raf = 0; return; } breathPaint(); breathRT.raf = requestAnimationFrame(step); };
+  breathRT.raf = requestAnimationFrame(step);
+}
+function breathStopTone(){ if (breathRT.osc) { try { breathRT.osc.stop(); } catch (e) {} breathRT.osc = null; } breathRT.toneKey = null; }
+// after every render of the player (playAfter)
+function breathAfterRender(){
+  breathRT.lastText = {};
+  const root = app.querySelector('.workout-cinema');
+  if (P && P.paused) breathStopTone();
+  if (!root || !root.querySelector('.breath-pacer')) { cancelAnimationFrame(breathRT.raf); breathRT.raf = 0; if (!P || P.done || !root) breathRT.key = null; return; }
+  if (!root.dataset.breathTouch) {
+    root.dataset.breathTouch = '1';
+    // the night display takes the first tap (it shows the controls) before the stage's tap-to-pause sees it
+    root.addEventListener('pointerup', ev => { if (root.classList.contains('is-night')) { ev.stopPropagation(); cinemaSwallowClick(); A.breathWake(); } else if (P) P._touch = Date.now(); }, true);
+    root.addEventListener('pointerdown', ev => { if (root.classList.contains('is-night')) ev.stopPropagation(); }, true);
+  }
+  breathPaint(); breathLoop();
+}
+// bedtime: the stage goes black 8 s after the last touch while it runs; a tap brings the controls back at 60 %
+function breathNight(root, bp){
+  if (!bp.night) { root.classList.remove('is-night', 'is-dim'); return; }
+  if (!P._breathStepAt || P._breathStepAt.i !== P.i) P._breathStepAt = { i: P.i, at: Date.now() };
+  const since = Date.now() - Math.max(P._touch || 0, P._breathStepAt.at), night = !P.paused && !S.sheet && since > 8000;
+  P._night = night; root.classList.toggle('is-night', night); root.classList.add('is-dim');
+}
+// tones (the player's own sound setting, Web Audio with the existing Silent-mode session): a soft sine glide up for the
+// inhale, down for the exhale, one short tone for a hold. Bedtime is quieter and fades out over the last 30 s (no alarm).
+const BREATH_TONES = { in: [392, 523, 0.5, 0.11], top: [523, 659, 0.25, 0.10], out: [523, 349, 0.7, 0.10], hold_in: [440, 440, 0.18, 0.08], hold_out: [440, 440, 0.18, 0.08] };
+function breathTone(spec, delay, vol, preview){
+  // a tone is never queued on a stopped context (it would sound late, after a resume); the preview runs inside its tap
+  if (!S.settings.sound || !audioCtx || !spec || vol <= 0.002 || (audioCtx.state !== 'running' && !(preview && audioCtx.state !== 'closed'))) return null;
+  try {
+    const ctx = audioCtx, t0 = ctx.currentTime + Math.max(0, delay || 0), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(spec[0], t0); o.frequency.linearRampToValueAtTime(spec[1], t0 + spec[2]);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t0 + spec[2] + 0.12);
+    o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + spec[2] + 0.15); return o;
+  } catch (e) { return null; }
+}
+function breathCue(k, delay, totalLeft, bp){
+  const spec = BREATH_TONES[k]; if (!spec) return;
+  const fade = bp.night ? Math.max(0, Math.min(1, (totalLeft - 2) / 30)) * 0.5 : 1;
+  const o = breathTone(spec, delay, spec[3] * fade); if (o) breathRT.osc = o;
+}
+// "Isprobaj signal" plays the breathing tones too: an inhale, then an exhale
+function breathPreviewTones(){ breathTone(BREATH_TONES.in, 0.5, BREATH_TONES.in[3], true); breathTone(BREATH_TONES.out, 1.15, BREATH_TONES.out[3], true); }
+// VoiceOver: ONE persistent polite live region outside #app (a re-render never touches it); never the seconds
+function breathLive(text){
+  let el = document.getElementById('breath-live');
+  if (!el) { el = document.createElement('div'); el.id = 'breath-live'; el.className = 'workout-sr'; el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'true'); document.body.appendChild(el); }
+  if (el.textContent !== text) el.textContent = text;
+}
+function breathStartText(bp){
+  return bp.name + ', ' + bp.min + ' ' + Breath.minWord(bp.min) + '. ' + Breath.spoken(bp.intro.length ? bp.intro[0].phases : bp.phases) + '.';
+}
+// at most one announcement per phase change, and only where it helps: the start (with the first phase), the first two
+// breaths, the end of the intro; the tones carry the rest
+function breathAnnounce(a, bp, start){
+  const introEnd = !a.intro && a.block > 0 && a.cycle === 1 && a.pi === 0;
+  if (start) breathLive(start + ' ' + a.word + '.');
+  else if (introEnd) breathLive('Uvod je gotov. Sada ' + Breath.spoken(a.blockPhases).toLowerCase() + '.');
+  else if (a.breath <= 2) breathLive(a.word + '.');
+}
+// bedtime: the done screen waits under a black veil (the wake lock is already released, so the phone locks itself)
+function breathVeilHtml(){
+  return P && P._nightEnd ? '<button type="button" class="breath-veil" data-a="breathVeil"><span>' + (P._autoSaved ? 'Spremljeno. Laku noć.' : 'Gotovo. Laku noć.') + '</span><small>Dodir za sažetak</small></button>' : '';
+}
+function breathEndsAtNight(){
+  const st = [...(P.steps || [])].reverse().find(isWork); return !!(st && breathPlan(st.it || P.items[st.g])?.night);
+}
+
+/* the one-time safety gate before the first breath-hold sprints, for every way in (it lives in startPlayer) */
+function breathGateNeeded(items, cfg){
+  if (S.settings.rshGate) return false;
+  const e = (items || []).map(it => S.ex[it.exId]).find(x => breathSprintEx(x) && x.breath.safety_gate && Array.isArray(x.breath.safety_gate_hr));
+  if (!e) return false;
+  S.sheet = { kind: 'breathGate', ok: e.breath.safety_gate_hr.map(() => false), exId: e.id, cfg }; render(); return true;
+}
+function breathGateHtml(s){
+  const e = S.ex[s.exId], b = e.breath, all = s.ok.every(Boolean);
+  return '<div class="breath-gate"><h2 id="sheet-h">Prije prvih sprinteva bez daha</h2><p class="sub">Napredna vježba. Potvrdi svaku stavku; pitamo samo jednom.</p>' +
+    '<div class="breath-gate-list" role="group" aria-label="Sigurnosne provjere">' + b.safety_gate_hr.map((t, i) =>
+      '<button type="button" role="checkbox" aria-checked="' + !!s.ok[i] + '" data-a="breathGateToggle" data-i="' + i + '"><span class="breath-check">' + (s.ok[i] ? I.checkS : '') + '</span><span>' + esc(t) + '</span></button>').join('') + '</div>' +
+    '<p class="breath-gate-rule"><b>Učenje:</b> prva 2 treninga 2 × 6 sprinteva na 70–80 % brzine. Stani odmah kod vrtoglavice, smetnji vida, boli u prsima, lupanja srca ili jake glavobolje.</p>' +
+    '<button type="button" class="btn" data-a="breathGateGo"' + (all ? '' : ' disabled') + '>' + (all ? 'Potvrđujem' : 'Potvrdi sve stavke') + '</button>' +
+    '<button type="button" class="txtbtn breath-gate-cancel" data-a="sheetDone">Odustani</button></div>';
+}
+
+/* Kako, Zašto (the grade in words, short sources), Kad and Oprez: the exercise page and the player's (i) sheet */
+function breathWhyHtml(p){
+  const src = p.src_hr || [];
+  return '<ul class="breath-why">' + (p.why_list_hr || [p.why_hr]).filter(Boolean).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+    '<p class="breath-grade"><b>Dokazi:</b> ' + esc(String(p.grade_hr || '').replace(/ dokazi\b/, '')) + '</p>' +
+    (src.length ? '<details class="breath-src-more"><summary><b>Izvor:</b> ' + esc(src.map(t => String(t).split(',').slice(0, 1).join('')).join(' · ')) + '</summary><ul>' + src.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></details>' : '');
+}
+const breathWhenHtml = p => p.when_hr ? '<p class="breath-when"><b>Kad:</b> ' + esc(p.when_hr) + '</p>' : '';
+function breathCautionHtml(p, b){
+  const list = (p.oprez_hr || []).concat(b.always_hr || []);
+  return list.length ? '<details class="breath-oprez"><summary><span>Oprez</span><small>' + list.length + ' ' + plural(list.length, 'stavka', 'stavke', 'stavki') + '</small></summary><ul>' + list.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></details>' : '';
+}
+function breathPresetOf(e, item){
+  if (breathSprintEx(e)) return e.breath;
+  return (breathPlan(item) || Breath.resolve(e.breath, {})).preset || {};
+}
+function breathInfoHtml(e, item){
+  const p = breathPresetOf(e, item), bp = breathPlan(item), sprint = breathSprintEx(e);
+  return '<div class="workout-instructions-body breath-info"><h1>' + esc((bp && bp.name) || e.name) + '</h1>' +
+    '<p class="breath-info-rhythm">' + esc(sprint ? breathDoseText(item) + ' · ' + breathSprintDose(e, {}).rest / 60 + ' min odmora između serija' : Breath.rhythm(bp.phases) + ' · ' + Breath.num(Breath.perMin(bp)) + ' udaha u minuti') + '</p>' +
+    '<section><h2>Kako</h2><ol>' + (p.steps_hr || e.steps || []).map(t => '<li>' + esc(t) + '</li>').join('') + '</ol>' + breathWhenHtml(p) + '</section>' +
+    '<section><h2>Zašto</h2>' + breathWhyHtml(p) + '</section>' + breathCautionHtml(p, e.breath) + '</div>';
+}
+
+/* the library page (the app's blue): presets, rhythm, settings, minutes, Kako, Zašto, Oprez */
+function breathPatternHtml(bp){
+  // a thin strip, proportional to the seconds (holds outlined), with the phase words and seconds under it
+  const word = ph => ph.k === 'top' ? 'Još malo' : Breath.WORD[ph.k] || '';
+  const segs = bp.phases.map(ph => '<span class="k-' + esc(ph.k) + '" style="flex:' + Math.max(ph.s, 2.6) + '"><i></i><b>' + esc(word(ph)) + '</b><small>' + esc(Breath.num(ph.s)) + ' s</small></span>').join('');
+  const ramp = bp.intro.length ? '<p class="breath-pattern-ramp">Uvod ' + bp.intro.concat([{ phases: bp.phases }]).map(b => '<span>' + esc(Breath.rhythm(b.phases, true).replace(' s', '')) + '</span>').join('›') + '</p>' : '';
+  return '<div class="breath-pattern" role="img" aria-label="' + esc(Breath.spoken(bp.phases)) + '">' + segs + '</div>' + ramp;
+}
+function breathChoicesHtml(e, it, act, extra){
+  const data = extra ? extra + ' ' : '', a = act || 'exBreath';
+  const ch = (l, k, v, on) => '<button type="button" class="chip" ' + data + 'data-a="' + a + '" data-k="' + k + '" data-v="' + esc(v) + '" aria-pressed="' + !!on + '">' + esc(l) + '</button>';
+  if (breathSprintEx(e)) {
+    const d = breathSprintDose(e, it);
+    return '<div class="breath-field"><span class="breath-label">Serije</span><div class="chips wrap">' + d.options.sets.map(n => ch(n + ' ' + plural(n, 'serija', 'serije', 'serija'), 'sets', n, it.sets === n)).join('') + '</div></div>' +
+      '<div class="breath-field"><span class="breath-label">Sprintevi u seriji</span><div class="chips wrap">' + d.options.reps.map(n => ch(String(n), 'reps', n, it.reps === n)).join('') + '</div>' +
+      '<p class="breath-hint">Sprint svakih 30 s · ' + d.rest / 60 + ' min odmora između serija · seriju označiš kvačicom</p></div>';
+  }
+  const bp = breathPlan(it), b = e.breath, ps = Breath.presets(b), keys = Object.keys(ps), p = bp.preset || {};
+  let h = '';
+  if (keys.length > 1) h += '<div class="breath-field"><span class="breath-label">Postavka</span><div class="chips wrap breath-presets">' + keys.map(k => ch(ps[k].label_hr || ps[k].name_hr, 'preset', k, bp.key === k)).join('') + '</div>' +
+    '<p class="breath-hint">Isti način disanja; razlikuju se trajanje, položaj i vrijeme.</p></div>';
+  if ((p.variants || []).length) h += '<div class="breath-field"><span class="breath-label">Ritam</span><div class="chips wrap">' + ch(Breath.rhythm(p.phases, true), 'variant', '', !bp.variant) +
+    p.variants.map(v => ch(v.label_hr + ' ' + Breath.rhythm(v.phases, true).replace(/ s$/, ''), 'variant', v.id, bp.variant && bp.variant.id === v.id)).join('') + '</div>' +
+    (bp.variant && bp.variant.note_hr ? '<p class="breath-hint">' + esc(bp.variant.note_hr) + '</p>' : '') + '</div>';
+  (p.intro_options || []).forEach(io => {
+    h += '<div class="prow breath-intro"><span class="k">' + esc(io.label_hr) + '<small>' + esc(Breath.rhythm(io.phases, true) + ' kroz ' + Breath.num(Breath.blocksS([io]) / 60) + ' min, zatim ' + Breath.rhythm(bp.phases, true)) + '</small></span>' +
+      '<button type="button" class="switch" role="switch" ' + data + 'data-a="' + a + '" data-k="intro" data-v="' + (bp.introOption ? '' : esc(io.id)) + '" aria-checked="' + !!bp.introOption + '" aria-label="' + esc(io.label_hr) + '"></button></div>' +
+      (bp.introOption && io.note_hr ? '<p class="breath-hint">' + esc(io.note_hr) + '</p>' : '');
+  });
+  const total = (Math.abs(bp.total - bp.min * 60) < 0.5 ? 'Točno ' : 'Stvarno ') + Breath.fmt(bp.total) + ' · ' + (bp.introCycles ? 'uvod ' + Math.round(bp.introS) + ' s + ' : '') + breathCountText(bp.cycles);
+  if ((p.minutes_options || []).length > 1) h += '<div class="breath-field"><span class="breath-label">Trajanje</span><div class="chips wrap">' + p.minutes_options.map(m => ch(m + ' min', 'min', m, bp.min === m)).join('') + '</div>' +
+    '<p class="breath-hint">' + esc(total) + '</p></div>';
+  else h += '<p class="breath-hint">' + esc(bp.min + ' min · ' + total.charAt(0).toLowerCase() + total.slice(1)) + '</p>';
+  return h;
+}
+function breathPageHtml(e, item, t){
+  const sprint = breathSprintEx(e), bp = sprint ? null : breathPlan(item), p = breathPresetOf(e, item), b = e.breath;
+  const done = p.practice_min ? Math.min(breathPracticeCount(e.id), p.practice_min) : 0;
+  const practice = p.practice_min ? '<div class="breath-practice"><div class="breath-dots" aria-hidden="true">' + Array.from({ length: p.practice_min }, (_, i) => '<i' + (i < done ? ' class="on"' : '') + '></i>').join('') + '</div>' +
+    '<p><b>Uvježbano ' + done + ' od ' + p.practice_min + '.</b> Prije prve utakmice napravi ga barem ' + p.practice_min + ' puta kroz tjedan dana. Prvi put može pojačati napetost.</p></div>' : '';
+  const night = bp && bp.night && p.audio_hr ? '<p class="breath-note">' + esc(p.audio_hr) + '</p>' : '';
+  const prog = sprint ? (b.structure && b.structure.progression_hr) || [] : [];
+  const advanced = sprint ? '<p class="breath-note"><b>Napredno.</b> ' + esc([prog[0], prog[prog.length - 1]].filter(Boolean).join(' ')) + ' Prije prvog treninga pitat ćemo te za zdravlje.</p>' : '';
+  const freq = p.frequency_hr ? '<p class="breath-meta-line">' + esc(p.frequency_hr) + '</p>' : '';
+  const top = sprint ? '<p class="breath-meta-line">' + esc('Svakih 30 s jedan sprint od 30–40 m bez daha, zatim hod natrag dišući slobodno. Mobitel ti za sprinteve ne treba.') + '</p>'
+    : breathPatternHtml(bp) + '<p class="breath-meta-line">' + esc(Breath.num(Breath.perMin(bp)) + ' udaha u minuti. ' + (p.nose_mouth_hr || '')) + '</p>';
+  return '<div class="view workout-exercise-page breath-page" data-context="library"><div class="workout-cover-bar">' + topbar('<button class="ib" data-a="back" aria-label="Natrag">' + WorkoutView.icon('chevron-left') + '</button>', '', 'MOJ TRENING') + '</div>' +
+    '<div class="gut breath-main"><p class="breath-eyebrow">Disanje</p><h1>' + esc(e.name) + '</h1><p class="breath-goal">' + esc(p.goal_hr || '') + '</p>' +
+    top + breathChoicesHtml(e, item) + practice + night + advanced +
+    '<h2 class="breath-h2">Kako</h2><ol class="breath-steps">' + (p.steps_hr || e.steps || []).map(s => '<li>' + esc(s) + '</li>').join('') + '</ol>' + breathWhenHtml(p) + freq +
+    '<h2 class="breath-h2">Zašto</h2>' + breathWhyHtml(p) + breathCautionHtml(p, b) + '</div>' +
+    '<div class="workout-footer"><div class="footer gut"><button class="btn" data-a="playEx" data-id="' + esc(t.id) + '">' + WorkoutView.icon('play') + 'Pokreni vježbu</button><div class="workout-library-secondary"><button class="txtbtn" data-a="fav" data-id="' + esc(e.id) + '" aria-label="Favorit" aria-pressed="' + !!e.fav + '">' + (e.fav ? I.heartF : I.heart) + 'Favorit</button><button class="txtbtn" data-a="editEx" data-id="' + esc(e.id) + '" aria-label="Uredi vježbu">' + I.edit + 'Uredi</button><button class="txtbtn" data-a="addTo" data-id="' + esc(e.id) + '">Dodaj u trening</button></div></div></div></div>';
+}
+// Dnevnik: one row per set with its check; no kg, reserve, equipment or swap. "Prethodno": the same preset only.
+function breathPrevious(item){
+  const e = S.ex[item.exId], sprint = breathSprintEx(e), preset = (item.breath || {}).preset;
+  const prev = historyOf(item.exId).find(x => !x.skipped && HistoryModel.performedSets(x) > 0 && (sprint || ((x.breath || {}).preset === preset)));
+  if (!prev) return 'Još nema prethodne izvedbe.';
+  const when = shortDate(prev.at);
+  if (sprint) { const n = HistoryModel.performedSets(prev); return 'Prethodno ' + n + ' × ' + (prev.reps || item.reps) + ' sprinteva · ' + when; }
+  return 'Prethodno ' + Breath.fmt(breathDoneSecs(prev)) + ' · ' + when;
+}
+function breathJournalCard(item, j, o){
+  const bp = breathPlan(item), active = j === o.state.active;
+  const meta = '<small class="cj-meta" id="cj-meta-' + j + '">' + esc(breathPrevious(item)) + '</small>';
+  const rows = PlayerDose.checklist(item, P, j).map(row => '<div class="breath-journal-row" data-state="' + row.state + '"><span>' + (row.state === 'done' ? WorkoutView.icon('check') : row.set) + '</span>' +
+    esc(bp ? Breath.fmt(bp.total) + ' · ' + [bp.label, Breath.rhythm(bp.phases, true)].filter(Boolean).join(' · ') : 'Serija ' + row.set + ' · ' + item.reps + ' ' + plural(item.reps, 'sprint', 'sprinta', 'sprinteva')) +
+    '<small>' + (row.state === 'done' ? 'odrađeno' : row.state === 'current' ? 'u tijeku' : '') + '</small></div>').join('');
+  const chips = '<button type="button" data-a="workoutHistory" data-j="' + j + '">' + WorkoutView.icon('notebook-text') + 'Povijest</button>' +
+    '<button type="button" data-a="cinemaNotes" data-j="' + j + '">' + WorkoutView.icon('notebook-pen') + 'Bilješke</button>' +
+    (!active ? '<button type="button" data-a="cinemaGoSet" data-j="' + j + '">' + I.next + 'Prijeđi na vježbu</button>' : '');
+  return WorkoutView.journalCard({ index: j, name: breathName(item), swapped: o.swapped, thumbHtml: o.thumb, badgeHtml: o.badge, metaHtml: meta, tagHtml: o.tag, group: o.group, describedBy: 'cj-meta-' + j,
+    collapseHtml: '<button type="button" class="ib cj-collapse" data-a="cinemaJournalGroup" data-j="' + j + '" aria-expanded="true" aria-label="Sažmi · ' + esc(o.name) + '">' + WorkoutView.icon('chevron-up') + '</button>',
+    chipsHtml: chips, menuHtml: '', rowsHtml: '<div class="breath-journal-rows">' + rows + '</div>', footHtml: '' });
+}
+// the item card in the training editor: preset, rhythm and minute chips instead of Trajanje (≤ 600 s); the sprints sets × reps
+function breathEditorHtml(it, i){
+  const e = S.ex[it.exId]; if (!breathOf(e) || (!breathPlan(it) && !breathSprintEx(e))) return '';
+  return '<div class="breath-editor">' + breathChoicesHtml(e, it, 'ibreath', 'data-i="' + i + '"') + '<p class="breath-hint">' + (breathSprintEx(e) ? 'Broji se kao trčanje: oko 35 m sprinta po ponavljanju.' : 'Disanje nema opterećenje i ne ulazi u tjedan mišića.') + '</p></div>';
+}
+// the history detail of a breathing item (history.js draws it): what was done, in words
+function breathHistoryLine(x){
+  const e = S.ex[x.exId]; if (!breathOf(e)) return null;
+  if (breathSprintEx(e)) return { kind: 'sprint', text: 'Broji se kao trčanje (oko ' + ((loadFx(e) || {}).runM || 35) + ' m po sprintu).' };
+  const r = Breath.resolve(e.breath, isPlainObj(x.breath) ? x.breath : {});
+  return { kind: 'calm', text: [r.name !== e.name ? r.label : '', r.variant ? r.variant.label_hr : '', breathRhythmText(r)].filter(Boolean).join(' · ') + '. Disanje nema opterećenje.' };
+}
 
 init();
 playResume();   // waits until the data is loaded

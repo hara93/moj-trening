@@ -1,0 +1,165 @@
+/* Disanje (1.25.0): the breathing pacer, the breathing pages and the sprints' how-to. Only existing colours: the player green (--player-accent) inside the player,
+   the app blue (--accent, --accent-text, --tag-bg) outside it, the player's glass values (#1A1E25 with alpha, white lines
+   #FFFFFF38 / 2E like the dashes and pills) and pure black only for the bedtime night display (OLED pixels off). */
+
+/* ---------- the pacer in the player's stage ---------- */
+.workout-cinema.is-breath .workout-cinema-stage{display:flex}
+/* without a photo the stage shows the category icon as a placeholder; the pacer takes that place (a photo stays behind the glass) */
+.workout-cinema.is-breath .workout-cinema-media .ph{visibility:hidden}
+.breath-pacer{position:relative;z-index:1;flex:1;align-self:stretch;min-height:0;display:grid;place-items:center;container-type:size;pointer-events:none;--lv:.5}
+.breath-shape{position:relative;width:min(80cqw,84cqh,320px);aspect-ratio:1}
+.breath-pacer:has(.breath-ramp) .breath-shape{width:min(78cqw,72cqh,310px);margin-bottom:12cqh}
+/* circle: a faint outer ring (where a full inhale ends), the breathing disc (glass, thin green rim), a hold ring */
+.breath-track{position:absolute;inset:0;border-radius:50%;border:1.5px solid #FFFFFF38}
+.breath-disc,.breath-ring{position:absolute;inset:0;border-radius:50%;transform:scale(calc(.5 + .5 * var(--lv)));transform-origin:50% 50%;will-change:transform}
+.breath-disc{border:2.5px solid var(--player-accent);background:#1A1E2599;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 0 28px color-mix(in srgb,var(--player-accent) 18%,transparent)}
+.breath-ring{width:100%;height:100%;overflow:visible;fill:none;transform:scale(calc(.5 + .5 * var(--lv))) rotate(-90deg)}
+.breath-ring-fill{stroke:var(--player-accent);stroke-width:2.2;stroke-linecap:round}
+/* a hold: the disc stands still, its rim goes neutral and the green ring fills over the hold */
+.breath-pacer.is-hold .breath-disc{border-color:#FFFFFF59;box-shadow:none}
+/* reduced motion: one size; the ring shows the phase's progress in whole seconds; the word and seconds carry the phase */
+.breath-pacer.is-still .breath-disc{border-color:#FFFFFF59;box-shadow:none}
+@media(prefers-reduced-motion:reduce){.breath-disc,.breath-ring{will-change:auto}}
+/* the words and seconds stay full size in the middle, whatever the disc's size */
+.breath-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;color:#fff}
+.breath-word{font-size:clamp(22px,7vw,28px);font-weight:850;line-height:1;letter-spacing:-.02em;text-transform:uppercase;text-shadow:0 2px 14px #0007}
+.breath-sec{font-family:system-ui,-apple-system,sans-serif;font-stretch:40%;font-weight:900;font-size:clamp(64px,21vw,88px);line-height:.95;letter-spacing:0;font-variant-numeric:tabular-nums}
+.no-font-width .breath-sec{font-stretch:100%;letter-spacing:-.055em;transform:scaleX(.72)}
+/* square (box breathing): one side per phase, the travelled part green, a dot on the edge, earlier sides white */
+.breath-square::before{content:"";position:absolute;inset:9.5%;border-radius:7%;background:#1A1E2599;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.breath-square svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.breath-shape.breath-square{width:min(87cqw,91cqh,347px)}
+/* stroke widths in the 200-unit viewBox: the box is ~342 px wide at 393, so 0.88 / 1.17 / 1.75 units = 1.5 / 2 / 3 px
+   (vector-effect:non-scaling-stroke would break the pathLength dashes in WebKit) */
+.breath-sq-track{stroke:#FFFFFF38;stroke-width:.88}
+/* done sides are a faint trail (40 % white), faded out over the first 0.6 s of the next inhale (breathPaint) */
+.breath-sq-done{stroke:#FFFFFF66;stroke-width:1.17}
+.breath-sq-lit{stroke:var(--player-accent);stroke-width:1.75}
+.breath-sq-dot{fill:var(--player-accent);stroke:none;filter:drop-shadow(0 0 6px var(--player-accent))}
+/* the pre-match ramp: the exhale gets longer, 4/4 › 4/5 › 4/6 */
+.breath-ramp{position:absolute;left:0;right:0;bottom:3cqh;display:flex;justify-content:center;align-items:center;gap:6px}
+.breath-ramp span{padding:4px 11px;border-radius:12px;background:#1A1E25CC;box-shadow:inset 0 0 0 1px #FFFFFF2E;color:#C2CACE;font-size:15px;font-weight:650;line-height:20px;font-variant-numeric:tabular-nums}
+.breath-ramp span.is-on{color:#fff;box-shadow:inset 0 0 0 2px var(--player-accent)}
+.breath-ramp span.is-done{color:#FFFFFF80}
+.breath-ramp i{color:#FFFFFF59;font-style:normal;font-size:15px}
+/* paused: the real pause layer lies over the stage; the pacer steps back behind it */
+.workout-cinema.has-pause-overlay .breath-pacer{opacity:0}
+/* the prep line under the heading */
+.workout-cinema-notice .breath-notice{margin:0;max-width:100%;color:#C2CACE;font-size:13px;font-weight:600;line-height:18px}
+
+/* ---------- bedtime: the night display (pure black, chrome hidden, the circle barely visible; a tap brings it back) ---------- */
+.workout-cinema.is-night{background:#000}
+/* the safe area under the player (the home-indicator strip) goes black too */
+html:has(.workout-cinema.is-night),body:has(.workout-cinema.is-night),#app:has(.workout-cinema.is-night){background:#000}
+.workout-cinema.is-night>*{pointer-events:none}
+.workout-cinema :is(.workout-cinema-topbar,.workout-cinema-progress,.workout-cinema-heading,.workout-cinema-notice,.workout-cinema-info,.workout-cinema-bottom,.workout-cinema-media,.breath-text,.breath-track){transition:opacity 1.2s ease}
+.workout-cinema.is-night :is(.workout-cinema-topbar,.workout-cinema-progress,.workout-cinema-heading,.workout-cinema-notice,.workout-cinema-info,.workout-cinema-bottom,.workout-cinema-media,.breath-text,.breath-ring){opacity:0}
+.workout-cinema.is-night .breath-track{opacity:0}
+.workout-cinema.is-night .breath-disc{border-color:#FFFFFF1F;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.breath-veil{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;border:0;background:#000;color:#34383F;font-size:17px;font-weight:600}
+.breath-veil small{font-size:13px;font-weight:500}
+
+/* ---------- library page, (i) sheet, editor, safety gate: the app's blue ---------- */
+.breath-page{display:flex;flex-direction:column}
+.breath-page>*{flex:none}
+.breath-main{padding-top:4px;padding-bottom:22px}
+.breath-eyebrow{margin:6px 0 6px;color:#6BC3E6;font-size:13px;font-weight:600;line-height:1.4;letter-spacing:.1em;text-transform:uppercase}
+.breath-page h1{margin:0;font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.03em}
+.breath-goal{margin:4px 0 14px;color:var(--text-2);font-size:15px;line-height:1.35}
+.breath-pattern{display:flex;gap:3px}
+.breath-pattern span{display:flex;flex-direction:column;gap:5px;min-width:0}
+.breath-pattern i{display:block;height:10px;border-radius:5px;background:#FFFFFF2E}
+.breath-pattern span.k-in i{background:var(--accent)}
+.breath-pattern span.k-top i{background:color-mix(in srgb,var(--accent) 60%,transparent)}
+.breath-pattern span:is(.k-hold_in,.k-hold_out) i{background:transparent;box-shadow:inset 0 0 0 1.5px #FFFFFF59}
+.breath-pattern b{overflow:hidden;color:var(--text);font-size:13px;font-weight:650;line-height:1.25;white-space:nowrap;text-overflow:ellipsis}
+.breath-pattern span.k-in b,.breath-pattern span.k-top b{color:var(--accent-text)}
+.breath-pattern small{margin-top:-4px;color:var(--text-2);font-size:13px;line-height:1.25;white-space:nowrap}
+.breath-pattern-ramp{display:flex;align-items:center;gap:6px;margin:10px 0 0;color:var(--text-2);font-size:13px}
+.breath-pattern-ramp span{padding:2px 9px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--border);color:var(--text-body);font-variant-numeric:tabular-nums}
+.breath-pattern-ramp span:last-child{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--text)}
+.breath-meta-line{margin:8px 0 0;color:var(--text-2);font-size:13px;line-height:1.45}
+.breath-field{margin-top:16px}
+.breath-label{display:block;margin-bottom:8px;color:var(--text-2);font-size:13px;font-weight:600}
+.breath-field .chips.wrap{gap:8px}
+.breath-hint{margin:8px 0 0;color:var(--text-2);font-size:13px;line-height:1.45}
+.breath-intro{margin-top:12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.breath-practice{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.breath-practice p{margin:0;font-size:14px;line-height:1.45;color:var(--text-body)}
+.breath-dots{display:grid;grid-template-columns:repeat(3,12px);gap:5px;flex:none}
+.breath-dots i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--accent)}
+.breath-dots i.on{background:var(--accent)}
+.breath-note{margin:16px 0 0;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text-body);font-size:14px;line-height:1.45}
+.breath-h2{margin:24px 0 8px;font-size:17px;font-weight:600}
+.breath-steps,.breath-why{margin:0;padding-left:22px;color:var(--text-body);font-size:15px;line-height:1.5}
+.breath-steps li+li,.breath-why li+li{margin-top:4px}
+.breath-grade{margin:10px 0 0;color:var(--text-body);font-size:14px;line-height:1.45}
+.breath-grade b,.breath-src b{color:var(--text)}
+.breath-src{margin:4px 0 0;color:var(--text-2);font-size:13px;line-height:1.45}
+.breath-oprez{margin-top:18px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.breath-oprez summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:0 14px;font-size:15px;font-weight:600;list-style:none;cursor:pointer}
+.breath-oprez summary::-webkit-details-marker{display:none}
+.breath-oprez summary small{color:var(--text-2);font-size:13px;font-weight:500}
+.breath-oprez summary::after{content:"";width:8px;height:8px;margin-left:8px;border-right:2px solid var(--text-2);border-bottom:2px solid var(--text-2);transform:rotate(45deg) translateY(-2px)}
+.breath-oprez[open] summary::after{transform:rotate(-135deg)}
+.breath-oprez summary small{margin-left:auto}
+.breath-oprez ul{margin:0;padding:0 14px 12px 32px;color:var(--text-body);font-size:14px;line-height:1.5}
+.breath-page .workout-footer{position:sticky;bottom:0;z-index:6;border-top:1px solid var(--border)}
+/* the (i) sheet in the player */
+.breath-info .breath-info-rhythm{margin:-6px 0 16px;color:var(--text-2);font-size:14px}
+.breath-info .breath-oprez{margin-top:16px}
+.breath-info :is(li,p){font-size:15px;line-height:1.5}
+.breath-info :is(.breath-grade,.breath-src,.breath-oprez li){font-size:14px}
+/* the training editor */
+.breath-editor{margin-top:4px}
+.breath-editor .breath-field:first-child{margin-top:12px}
+/* the safety gate */
+.breath-gate h2{margin:2px 0 4px;font-size:21px;line-height:1.2}
+.breath-gate>.sub{margin:0 0 10px}
+.breath-gate-list{display:flex;flex-direction:column}
+.breath-gate-list button{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 0;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text-body);font-size:15px;line-height:1.35;text-align:left}
+.breath-check{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:8px;box-shadow:inset 0 0 0 2px var(--border)}
+.breath-gate-list button[aria-checked=true] .breath-check{background:var(--accent-fill);box-shadow:none;color:#fff}
+.breath-check svg{width:16px;height:16px}
+.breath-gate-rule{margin:12px 0;padding:10px 12px;border-radius:14px;background:var(--surface-2);color:var(--text-body);font-size:13px;line-height:1.45}
+.breath-gate .btn:disabled{opacity:.45;cursor:default}
+.breath-gate-cancel{display:block;margin:6px auto 0}
+/* the page's own minimums: text 13 px, taps 44 px (the shared footer row is 11 px elsewhere) */
+.breath-page .workout-library-secondary .txtbtn{font-size:13px}
+.breath-page .chip,.breath-editor .chip{min-width:44px}
+.breath-done .lmh span{font-size:13px}
+.breath-done .lmx{font-size:14px;line-height:1.45}
+/* bedtime after a tap: black stays black, the controls come back at 60 % with no glow and no outer ring */
+.workout-cinema.is-dim{background:#000}
+html:has(.workout-cinema.is-dim),body:has(.workout-cinema.is-dim),#app:has(.workout-cinema.is-dim){background:#000}
+.workout-cinema.is-dim:not(.is-night) :is(.workout-cinema-topbar,.workout-cinema-progress,.workout-cinema-heading,.workout-cinema-info,.workout-cinema-bottom,.breath-text){opacity:.6}
+.workout-cinema.is-dim .workout-cinema-media{opacity:0}
+.workout-cinema.is-dim .breath-track{opacity:0}
+.workout-cinema.is-dim .breath-disc{border-color:#FFFFFF33;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+/* the Dnevnik row of a breathing item: one line per set, no kg / reserve columns */
+.breath-journal-rows{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px}
+.breath-journal-row{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 4px;color:var(--text);font-size:15px;font-weight:600}
+.breath-journal-row>span{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #FFFFFF38;color:var(--text-2);font-size:14px}
+.breath-journal-row[data-state=done]>span{background:var(--player-accent);box-shadow:none;color:#0B1A10}
+.breath-journal-row>span svg{width:16px;height:16px}
+.breath-journal-row small{margin-left:auto;color:var(--text-2);font-size:13px;font-weight:500}
+/* the library page uses the exercise page's own header (round back button, title on the left) */
+.breath-page>.workout-cover-bar{flex:none}
+.breath-src-more summary{display:flex;align-items:center;min-height:44px;color:var(--text-2);font-size:13px;list-style:none;cursor:pointer}
+.breath-src-more summary::-webkit-details-marker{display:none}
+.breath-src-more summary b{margin-right:4px;color:var(--text)}
+.breath-src-more summary::after{content:"";width:6px;height:6px;margin-left:8px;border-right:1.5px solid var(--text-2);border-bottom:1.5px solid var(--text-2);transform:rotate(45deg) translateY(-2px)}
+.breath-src-more ul{margin:0 0 4px;padding-left:18px;color:var(--text-2);font-size:13px;line-height:1.45}
+.breath-when{margin:8px 0 0;color:var(--text-body);font-size:14px;line-height:1.45}
+.breath-when b{color:var(--text)}
+/* the exercise page's body font is a little wider: the three preset chips keep one row at 375 */
+.breath-page .breath-field .chips.wrap,.breath-editor .breath-field .chips.wrap{gap:6px}
+.breath-page .breath-field .chip,.breath-editor .breath-field .chip{padding-left:13px;padding-right:13px}
+/* the breath-hold sprints' work step: the how-to on glass in the stage (not paced; the check closes the set) */
+.workout-cinema.is-breath-sprint .workout-cinema-media .ph{visibility:hidden}
+.workout-cinema.is-breath-sprint .workout-cinema-stage{display:flex}
+.breath-howto{position:relative;z-index:1;flex:1;align-self:stretch;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 18px;overflow:auto}
+.breath-howto ol{margin:0;padding:14px 16px 14px 34px;border-radius:20px;background:#1A1E25CC;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px #FFFFFF2E;color:#fff;font-size:15px;font-weight:600;line-height:1.4}
+.breath-howto li+li{margin-top:6px}
+.breath-howto li:last-child{color:#C2CACE;font-weight:500}
+.workout-cinema.has-pause-overlay .breath-howto{opacity:0}

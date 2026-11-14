@@ -134,7 +134,7 @@ test('actual startup refuses an unsaved first checkpoint without losing its form
   const cfg={mode:'ex',title:'Replacement',ref:{kind:'protocol',id:'p'},items:[{...replacement,kg:10}],originalItems:[oldA],sessionOnly:true};
   const writes=new Map(),audio=[],ctx={P:null,S:{stack:[{v:'pr',id:'p'}],sheet:{kind:'startingLoad',values:{0:'10'},cfg},settings:{}},PlayerDose:D,clone,SessionClock:require('../session-clock.js'),
     PLAY_KEY:'mt.play',shouldCheckpoint:false,intervals:0,ticker:null,
-    lsGet:()=>null,openStartingLoad:()=>false,audioMode:on=>audio.push(on),ensureAudio(){},stepsFromItems:manualSteps,
+    lsGet:()=>null,openStartingLoad:()=>false,breathGateNeeded:()=>false,breathPlan:()=>null,audioMode:on=>audio.push(on),ensureAudio(){},stepsFromItems:manualSteps,
     beep(){},buzz(){},workoutSignal(){},render(){},keepAwake:()=>Promise.resolve(),wakeHint(){},clearInterval(){},setInterval:()=>++ctx.intervals,tick(){},toast(){},
     localStorage:{setItem:(key,value)=>{if(!ctx.shouldCheckpoint)throw Error('Synthetic checkpoint refusal');writes.set(key,value);}}};
   vm.createContext(ctx);
